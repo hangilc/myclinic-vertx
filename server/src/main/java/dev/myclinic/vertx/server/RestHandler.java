@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.util.HashMap;
+import java.util.Map;
 
 class RestHandler implements Handler<RoutingContext> {
 
@@ -24,41 +26,56 @@ class RestHandler implements Handler<RoutingContext> {
     private TableSet ts;
     private ObjectMapper mapper;
 
+    interface RestFunction {
+        void call(HttpServerRequest req, Connection conn) throws Exception;
+    }
+
     public RestHandler(DataSource ds, TableSet ts, ObjectMapper mapper){
         this.ds = ds;
         this.ts = ts;
         this.mapper = mapper;
     }
 
+    private void getPatient(HttpServerRequest req, Connection conn) throws Exception {
+        MultiMap params = req.params();
+        int patientId = Integer.parseInt(params.get("patient-id"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        PatientDTO patient = backend.getPatient(patientId);
+        conn.commit();
+        String result = mapper.writeValueAsString(patient);
+        req.response().end(result);
+    }
+
+    private Map<String, RestFunction> funcMap = new HashMap<>();
+
+    {
+        funcMap.put("get-patient", this::getPatient);
+    }
+
     @Override
     public void handle(RoutingContext routingContext) {
         HttpServerRequest req = routingContext.request();
-        String action = req.getParam("action");
-        if( action.equals("get-patient") ){
+        RestFunction f = funcMap.get(req.getParam("action"));
+        if( f == null ){
+            req.response().setStatusCode(404);
+        } else {
             Connection conn = null;
             try {
-                MultiMap params = req.params();
-                int patientId = Integer.parseInt(params.get("patient-id"));
-                conn = ds.getConnection();
-                Query query = new Query(conn);
-                Backend backend = new Backend(ts, query);
-                PatientDTO patient = backend.getPatient(patientId);
                 HttpServerResponse resp = req.response();
                 resp.putHeader("content-type", "application/json; charset=UTF-8");
-                String result = mapper.writeValueAsString(patient);
-                resp.end(result);
-            } catch(Exception e){
-                if( conn != null ){
+                conn = ds.getConnection();
+                f.call(req, conn);
+            } catch (Exception e) {
+                if (conn != null) {
                     try {
                         conn.rollback();
-                    } catch(Exception ex){
+                    } catch (Exception ex) {
                         logger.error("Rollback failed", ex);
                     }
                 }
                 throw new RuntimeException(e);
             }
-        } else {
-            routingContext.response().end("hello " + action);
         }
     }
 

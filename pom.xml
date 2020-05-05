@@ -68,9 +68,9 @@
         <module>server</module>
         <module>dto</module>
         <module>util</module>
-<!--        <module>consts</module>-->
+        <module>consts</module>
 <!--        <module>db</module>-->
-<!--        <module>hotlinelog-event</module>-->
+        <module>hotlinelog-event</module>
         <module>practicelog-event</module>
     </modules>
 

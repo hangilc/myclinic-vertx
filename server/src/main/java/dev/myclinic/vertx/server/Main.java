@@ -22,7 +22,7 @@ public class Main {
         Router router = Router.router(vertx);
         Route restRoute = router.route("/json/:action");
         restRoute.blockingHandler(new RestHandler(ds, ts));
-        restRoute.blockingHandler(new NoDatabaseRestHandler());
+        restRoute.handler(new NoDatabaseRestHandler());
         server.requestHandler(router);
         server.webSocketHandler(ws -> {
             System.out.println("opened");

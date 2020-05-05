@@ -61,6 +61,16 @@
                 <artifactId>vertx-web</artifactId>
                 <version>${vertx.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>3.4.2</version>
+            </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>8.0.19</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -69,7 +79,7 @@
         <module>dto</module>
         <module>util</module>
         <module>consts</module>
-<!--        <module>db</module>-->
+        <module>db</module>
         <module>hotlinelog-event</module>
         <module>practicelog-event</module>
     </modules>

@@ -35,6 +35,10 @@ class RestHandler implements Handler<RoutingContext> {
         void call(RoutingContext ctx, Connection conn) throws Exception;
     }
 
+    interface NoDatabaseRestFunction {
+        void call(RoutingContext ctx) throws Exception;
+    }
+
     public RestHandler(DataSource ds, TableSet ts, ObjectMapper mapper){
         this.ds = ds;
         this.ts = ts;
@@ -46,6 +50,7 @@ class RestHandler implements Handler<RoutingContext> {
     }
 
     private final Map<String, RestFunction> funcMap = new HashMap<>();
+    private final Map<String, NoDatabaseRestFunction> noDatabaseFuncMap = new HashMap<>();
 
     private void searchByoumeiMaster(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
@@ -2259,6 +2264,9 @@ class RestHandler implements Handler<RoutingContext> {
         funcMap.put("get-disease-full", this::getDiseaseFull);
     }
 
+    private void getClinicInfo(RoutingContext ctx){
+        throw new RuntimeException("not implemented");
+    }
 
 
     @Override

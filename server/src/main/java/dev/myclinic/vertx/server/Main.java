@@ -17,23 +17,18 @@ public class Main {
         MysqlDataSourceConfig mysqlConfig = new MysqlDataSourceConfig();
         DataSource ds = MysqlDataSourceFactory.create(mysqlConfig);
         TableSet ts = TableSet.create();
-        ObjectMapper mapper = createObjectMapper();
         Vertx vertx = Vertx.vertx();
         HttpServer server = vertx.createHttpServer();
         Router router = Router.router(vertx);
         Route restRoute = router.route("/json/:action");
-        restRoute.blockingHandler(new RestHandler(ds, ts, mapper));
+        restRoute.blockingHandler(new RestHandler(ds, ts));
+        restRoute.blockingHandler(new NoDatabaseRestHandler());
         server.requestHandler(router);
         server.webSocketHandler(ws -> {
             System.out.println("opened");
             ws.closeHandler(e -> System.out.println("closed"));
         });
         server.listen(28080);
-    }
-
-    private static ObjectMapper createObjectMapper(){
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper;
     }
 
 }

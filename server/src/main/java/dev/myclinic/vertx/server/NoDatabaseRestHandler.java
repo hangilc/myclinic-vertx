@@ -34,7 +34,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private final AppConfig appConfig;
     private final Vertx vertx;
 
-    NoDatabaseRestHandler(AppConfig appConfig, ObjectMapper mapper, Vertx vertx){
+    NoDatabaseRestHandler(AppConfig appConfig, ObjectMapper mapper, Vertx vertx) {
         super(mapper);
         this.appConfig = appConfig;
         this.vertx = vertx;
@@ -43,7 +43,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private String cacheListDiseaseExample;
 
     private void listDiseaseExample(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
-        if( cacheListDiseaseExample != null ){
+        if (cacheListDiseaseExample != null) {
             ctx.response().end(cacheListDiseaseExample);
         } else {
             HttpServerRequest req = ctx.request();
@@ -63,7 +63,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         String pat = String.format("glob:%d-hokensho-*.{jpg,jpeg,bmp}", patientId);
         PathMatcher matcher = FileSystems.getDefault().getPathMatcher(pat);
         Path patientDir = Paths.get(storageDir, "" + patientId);
-        if( Files.exists(patientDir) && Files.isDirectory(patientDir) ){
+        if (Files.exists(patientDir) && Files.isDirectory(patientDir)) {
             return Files.list(patientDir)
                     .filter(p -> matcher.matches(p.getFileName()))
                     .map(p -> p.getFileName().toString())
@@ -85,12 +85,11 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                                     List<String> hokenList = implListHokensho(scanDir, patientId);
                                     promise.complete(hokenList);
                                 } catch(Exception e){
-                                    logger.error("Failed to list hokensho.", e);
-                                    promise.fail(e);
+                                    throw new RuntimeException(e);
                                 }
                             },
                             ar2 -> {
-                                if( ar2.failed() ){
+                                if (ar2.failed()) {
                                     logger.error("Failed to list hokensho.", ar2.cause());
                                     ctx.response().setStatusCode(500).end("Failed to list hokensho.");
                                 } else {
@@ -98,40 +97,16 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                                 }
                             }
                     );
-
                 })
-                .onComplete(ar -> {
-                    if( ar.failed() ){
-                        ctx.response().setStatusCode(500).end("Failed to get scan dir.");
-                    } else {
-                        String scanDir = ar.result();
-                        vertx.<List<String>>executeBlocking(
-                                promise -> {
-                                    try {
-                                        List<String> hokenList = implListHokensho(scanDir, patientId);
-                                        promise.complete(hokenList);
-                                    } catch(Exception e){
-                                        logger.error("Failed to list hokensho.", e);
-                                        promise.fail(e);
-                                    }
-                                },
-                                ar2 -> {
-                                    if( ar2.failed() ){
-                                        logger.error("Failed to list hokensho.", ar2.cause());
-                                        ctx.response().setStatusCode(500).end("Failed to list hokensho.");
-                                    } else {
-                                        ctx.response().end(jsonEncode(ar2.result()));
-                                    }
-                                }
-                        );
-                    }
+                .onFailure(e -> {
+                    ctx.fail(500, e);
                 });
     }
 
     private String cacheClinicInfo;
 
     private void getClinicInfo(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
-        if( cacheClinicInfo != null ){
+        if (cacheClinicInfo != null) {
             ctx.response().end(cacheClinicInfo);
         } else {
             HttpServerRequest req = ctx.request();
@@ -152,9 +127,9 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     //ctx.response().end(jsonEncode(dto));
                 })
                 .onFailure(e -> {
-                    System.out.println("onFailure reached");
-                    ctx.response()
-                            .setStatusCode(404).end("Failed to get location of master map file.");
+                            System.out.println("onFailure reached");
+                            ctx.response()
+                                    .setStatusCode(404).end("Failed to get location of master map file.");
                         }
                 );
     }
@@ -222,14 +197,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     public void handle(RoutingContext routingContext) {
         String action = routingContext.request().getParam("action");
         NoDatabaseRestFunction f = noDatabaseFuncMap.get(action);
-        if( f == null ){
+        if (f == null) {
             routingContext.next();
         } else {
             try {
                 routingContext.response().putHeader("content-type", "application/json; charset=UTF-8");
                 NoDatabaseImpl impl = new NoDatabaseImpl(appConfig);
-                f.call(routingContext,impl);
-            } catch(Exception e){
+                f.call(routingContext, impl);
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }

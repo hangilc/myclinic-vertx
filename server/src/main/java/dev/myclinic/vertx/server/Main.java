@@ -17,16 +17,18 @@ import javax.sql.DataSource;
 public class Main {
 
     private static final ObjectMapper mapper;
+
     static {
         mapper = new ObjectMapper();
     }
 
     private static final ObjectMapper yamlMapper;
+
     static {
         yamlMapper = new ObjectMapper(new YAMLFactory());
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         MysqlDataSourceConfig mysqlConfig = new MysqlDataSourceConfig();
         DataSource ds = MysqlDataSourceFactory.create(mysqlConfig);
         TableSet ts = TableSet.create();
@@ -36,10 +38,16 @@ public class Main {
         Router router = Router.router(vertx);
         Route restRoute = router.route("/json/:action");
         restRoute.blockingHandler(new RestHandler(ds, ts, mapper));
-        restRoute.handler(new NoDatabaseRestHandler(config, mapper, vertx))
-            .failureHandler(ctx -> {
-                ctx.response().setStatusCode(ctx.statusCode()).setStatusMessage("managed failure").end();
-            });
+        restRoute.handler(new NoDatabaseRestHandler(config, mapper, vertx));
+        restRoute.failureHandler(ctx -> {
+            Throwable th = ctx.failure();
+            th.printStackTrace();
+            int statusCode = ctx.statusCode();
+            if (statusCode < 0) {
+                statusCode = 500;
+            }
+            ctx.response().setStatusCode(statusCode).end(th.getMessage());
+        });
         server.requestHandler(router);
         server.webSocketHandler(ws -> {
             System.out.println("opened");
@@ -48,9 +56,9 @@ public class Main {
         server.listen(28080);
     }
 
-    private static AppConfig createConfig(Vertx vertx){
+    private static AppConfig createConfig(Vertx vertx) {
         String configDir = System.getenv("MYCLINIC_CONFIG_DIR");
-        if( configDir == null ){
+        if (configDir == null) {
             throw new RuntimeException("Cannot find env var: MYCLINIC_CONFIG_DIR");
         }
         return new FileBasedAppConfig(configDir, vertx);

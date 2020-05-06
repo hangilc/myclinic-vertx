@@ -10,4 +10,5 @@ public interface AppConfig {
     Future<ClinicInfoDTO> getClinicInfo();
     Future<List<DiseaseExampleDTO>> listDiseaseExample();
     Future<String> getPaperScanDirectory();
+    Future<String> getMasterMapConfigFilePath();
 }

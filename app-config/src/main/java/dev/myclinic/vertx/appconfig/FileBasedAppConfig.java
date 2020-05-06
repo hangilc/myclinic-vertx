@@ -76,6 +76,12 @@ public class FileBasedAppConfig implements AppConfig {
         return promise.future();
     }
 
+    @Override
+    public Future<String> getMasterMapConfigFilePath() {
+        File file = new File(configDir, "master-map.txt");
+        return Future.succeededFuture(file.getAbsolutePath());
+    }
+
     private <T> Future<T> fromYamlFile(File file, TypeReference<T> typeRef){
         Promise<T> promise = Promise.promise();
         vertx.executeBlocking(

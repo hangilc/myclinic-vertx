@@ -13,10 +13,6 @@ class NoDatabaseImpl {
         this.appConfig = appConfig;
     }
 
-    public List<String> listHokensho(int patientId) throws Exception {
-        throw new RuntimeException("Not implemented: listHokensho");
-    }
-
     public StringResultDTO getMasterMapConfigFilePath() throws Exception {
         throw new RuntimeException("Not implemented: getMasterMapConfigFilePath");
     }

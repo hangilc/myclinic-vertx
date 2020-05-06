@@ -78,6 +78,28 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
         appConfig.getPaperScanDirectory()
+                .onSuccess(scanDir -> {
+                    vertx.<List<String>>executeBlocking(
+                            promise -> {
+                                try {
+                                    List<String> hokenList = implListHokensho(scanDir, patientId);
+                                    promise.complete(hokenList);
+                                } catch(Exception e){
+                                    logger.error("Failed to list hokensho.", e);
+                                    promise.fail(e);
+                                }
+                            },
+                            ar2 -> {
+                                if( ar2.failed() ){
+                                    logger.error("Failed to list hokensho.", ar2.cause());
+                                    ctx.response().setStatusCode(500).end("Failed to list hokensho.");
+                                } else {
+                                    ctx.response().end(jsonEncode(ar2.result()));
+                                }
+                            }
+                    );
+
+                })
                 .onComplete(ar -> {
                     if( ar.failed() ){
                         ctx.response().setStatusCode(500).end("Failed to get scan dir.");
@@ -114,22 +136,27 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         } else {
             HttpServerRequest req = ctx.request();
             appConfig.getClinicInfo()
-                    .onComplete(ar -> {
-                        if (ar.failed()) {
-                            req.response().setStatusCode(500).end("Cannot get clinic info.");
-                        } else {
-                            cacheClinicInfo = jsonEncode(ar.result());
-                            req.response().end(cacheClinicInfo);
-                        }
-                    });
+                    .onSuccess(dto -> ctx.response().end(jsonEncode(dto)))
+                    .onFailure(e -> ctx.response()
+                            .setStatusCode(500).end("Failed to get clinic info.")
+                    );
         }
     }
 
     private void getMasterMapConfigFilePath(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
-        HttpServerRequest req = ctx.request();
-        StringResultDTO _value = impl.getMasterMapConfigFilePath();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
+        appConfig.getMasterMapConfigFilePath()
+                .onSuccess(path -> {
+                    StringResultDTO dto = new StringResultDTO();
+                    dto.value = path;
+                    throw new RuntimeException("Failure");
+                    //ctx.response().end(jsonEncode(dto));
+                })
+                .onFailure(e -> {
+                    System.out.println("onFailure reached");
+                    ctx.response()
+                            .setStatusCode(404).end("Failed to get location of master map file.");
+                        }
+                );
     }
 
     private void getShinryouByoumeiMapConfigFilePath(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {

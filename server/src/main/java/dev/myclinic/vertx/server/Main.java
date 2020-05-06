@@ -36,7 +36,10 @@ public class Main {
         Router router = Router.router(vertx);
         Route restRoute = router.route("/json/:action");
         restRoute.blockingHandler(new RestHandler(ds, ts, mapper));
-        restRoute.handler(new NoDatabaseRestHandler(config, mapper, vertx));
+        restRoute.handler(new NoDatabaseRestHandler(config, mapper, vertx))
+            .failureHandler(ctx -> {
+                ctx.response().setStatusCode(ctx.statusCode()).setStatusMessage("managed failure").end();
+            });
         server.requestHandler(router);
         server.webSocketHandler(ws -> {
             System.out.println("opened");

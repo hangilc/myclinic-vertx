@@ -6,10 +6,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 class RestHandlerBase {
 
-    protected static final ObjectMapper mapper;
+    protected final ObjectMapper mapper;
 
-    static {
-        mapper = new ObjectMapper();
+    RestHandlerBase(ObjectMapper mapper){
+        this.mapper = mapper;
+    }
+
+    protected String jsonEncode(Object obj){
+        try {
+            return mapper.writeValueAsString(obj);
+        } catch(Exception ex){
+            throw new RuntimeException(ex);
+        }
     }
 
     protected <T> T _convertParam(String src, TypeReference<T> typeRef) throws JsonProcessingException {

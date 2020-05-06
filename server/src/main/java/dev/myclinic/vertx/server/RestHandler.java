@@ -34,7 +34,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         void call(RoutingContext ctx, Connection conn) throws Exception;
     }
 
-    public RestHandler(DataSource ds, TableSet ts){
+    public RestHandler(DataSource ds, TableSet ts, ObjectMapper mapper){
+        super(mapper);
         this.ds = ds;
         this.ts = ts;
     }

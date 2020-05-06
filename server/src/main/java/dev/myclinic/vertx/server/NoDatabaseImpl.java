@@ -1,10 +1,17 @@
 package dev.myclinic.vertx.server;
 
+import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.dto.*;
 
 import java.util.List;
 
 class NoDatabaseImpl {
+
+    private AppConfig appConfig;
+
+    NoDatabaseImpl(AppConfig appConfig){
+        this.appConfig = appConfig;
+    }
 
     public List<DiseaseExampleDTO> listDiseaseExample() throws Exception {
         throw new RuntimeException("Not implemented: listDiseaseExample");

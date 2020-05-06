@@ -1,14 +1,20 @@
 package dev.myclinic.vertx.server;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.dto.*;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
+import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static io.vertx.core.Promise.promise;
 
 class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingContext> {
 
@@ -17,6 +23,13 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private final Map<String, NoDatabaseRestFunction> noDatabaseFuncMap = new HashMap<>();
+
+    private final AppConfig appConfig;
+
+    NoDatabaseRestHandler(AppConfig appConfig, ObjectMapper mapper){
+        super(mapper);
+        this.appConfig = appConfig;
+    }
 
     private void listDiseaseExample(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
         HttpServerRequest req = ctx.request();
@@ -34,11 +47,23 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         req.response().end(result);
     }
 
+    private String cacheClinicInfo;
+
     private void getClinicInfo(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
-        HttpServerRequest req = ctx.request();
-        ClinicInfoDTO _value = impl.getClinicInfo();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
+        if( cacheClinicInfo != null ){
+            ctx.response().end(cacheClinicInfo);
+        } else {
+            HttpServerRequest req = ctx.request();
+            appConfig.getClinicInfo()
+                    .onComplete(ar -> {
+                        if (ar.failed()) {
+                            req.response().setStatusCode(500).end("Cannot get clinic info.");
+                        } else {
+                            cacheClinicInfo = jsonEncode(ar.result());
+                            req.response().end(cacheClinicInfo);
+                        }
+                    });
+        }
     }
 
     private void getMasterMapConfigFilePath(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
@@ -115,7 +140,8 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             routingContext.next();
         } else {
             try {
-                NoDatabaseImpl impl = new NoDatabaseImpl();
+                routingContext.response().putHeader("content-type", "application/json; charset=UTF-8");
+                NoDatabaseImpl impl = new NoDatabaseImpl(appConfig);
                 f.call(routingContext,impl);
             } catch(Exception e){
                 throw new RuntimeException(e);

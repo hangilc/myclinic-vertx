@@ -2,21 +2,28 @@ package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.appconfig.AppConfig;
-import dev.myclinic.vertx.dto.*;
-import io.vertx.core.Future;
+import dev.myclinic.vertx.dto.PracticeConfigDTO;
+import dev.myclinic.vertx.dto.ReferItemDTO;
+import dev.myclinic.vertx.dto.StringResultDTO;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
-import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static io.vertx.core.Promise.promise;
+import java.util.stream.Collectors;
 
 class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingContext> {
+
+    private static final Logger logger = LoggerFactory.getLogger(NoDatabaseRestHandler.class);
 
     interface NoDatabaseRestFunction {
         void call(RoutingContext ctx, NoDatabaseImpl impl) throws Exception;
@@ -25,26 +32,78 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private final Map<String, NoDatabaseRestFunction> noDatabaseFuncMap = new HashMap<>();
 
     private final AppConfig appConfig;
+    private final Vertx vertx;
 
-    NoDatabaseRestHandler(AppConfig appConfig, ObjectMapper mapper){
+    NoDatabaseRestHandler(AppConfig appConfig, ObjectMapper mapper, Vertx vertx){
         super(mapper);
         this.appConfig = appConfig;
+        this.vertx = vertx;
     }
 
+    private String cacheListDiseaseExample;
+
     private void listDiseaseExample(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
-        HttpServerRequest req = ctx.request();
-        List<DiseaseExampleDTO> _value = impl.listDiseaseExample();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
+        if( cacheListDiseaseExample != null ){
+            ctx.response().end(cacheListDiseaseExample);
+        } else {
+            HttpServerRequest req = ctx.request();
+            appConfig.listDiseaseExample()
+                    .onComplete(ar -> {
+                        if (ar.failed()) {
+                            req.response().setStatusCode(500).end("Cannot get disease examples.");
+                        } else {
+                            cacheClinicInfo = jsonEncode(ar.result());
+                            req.response().end(cacheClinicInfo);
+                        }
+                    });
+        }
+    }
+
+    private List<String> implListHokensho(String storageDir, int patientId) throws IOException {
+        String pat = String.format("glob:%d-hokensho-*.{jpg,jpeg,bmp}", patientId);
+        PathMatcher matcher = FileSystems.getDefault().getPathMatcher(pat);
+        Path patientDir = Paths.get(storageDir, "" + patientId);
+        if( Files.exists(patientDir) && Files.isDirectory(patientDir) ){
+            return Files.list(patientDir)
+                    .filter(p -> matcher.matches(p.getFileName()))
+                    .map(p -> p.getFileName().toString())
+                    .collect(Collectors.toList());
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     private void listHokensho(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
-        List<String> _value = impl.listHokensho(patientId);
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
+        appConfig.getPaperScanDirectory()
+                .onComplete(ar -> {
+                    if( ar.failed() ){
+                        ctx.response().setStatusCode(500).end("Failed to get scan dir.");
+                    } else {
+                        String scanDir = ar.result();
+                        vertx.<List<String>>executeBlocking(
+                                promise -> {
+                                    try {
+                                        List<String> hokenList = implListHokensho(scanDir, patientId);
+                                        promise.complete(hokenList);
+                                    } catch(Exception e){
+                                        logger.error("Failed to list hokensho.", e);
+                                        promise.fail(e);
+                                    }
+                                },
+                                ar2 -> {
+                                    if( ar2.failed() ){
+                                        logger.error("Failed to list hokensho.", ar2.cause());
+                                        ctx.response().setStatusCode(500).end("Failed to list hokensho.");
+                                    } else {
+                                        ctx.response().end(jsonEncode(ar2.result()));
+                                    }
+                                }
+                        );
+                    }
+                });
     }
 
     private String cacheClinicInfo;

@@ -7,22 +7,14 @@ import java.util.List;
 
 class NoDatabaseImpl {
 
-    private AppConfig appConfig;
+    private final AppConfig appConfig;
 
     NoDatabaseImpl(AppConfig appConfig){
         this.appConfig = appConfig;
     }
 
-    public List<DiseaseExampleDTO> listDiseaseExample() throws Exception {
-        throw new RuntimeException("Not implemented: listDiseaseExample");
-    }
-
     public List<String> listHokensho(int patientId) throws Exception {
         throw new RuntimeException("Not implemented: listHokensho");
-    }
-
-    public ClinicInfoDTO getClinicInfo() throws Exception {
-        throw new RuntimeException("getClinicInfo");
     }
 
     public StringResultDTO getMasterMapConfigFilePath() throws Exception {

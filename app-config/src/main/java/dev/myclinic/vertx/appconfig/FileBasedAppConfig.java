@@ -1,76 +1,96 @@
 package dev.myclinic.vertx.appconfig;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.dto.ClinicInfoDTO;
-import io.vertx.config.yaml.YamlProcessor;
+import dev.myclinic.vertx.dto.DiseaseExampleDTO;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.Vertx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.List;
 
 public class FileBasedAppConfig implements AppConfig {
 
+    private static final Logger logger = LoggerFactory.getLogger(FileBasedAppConfig.class);
+
     private final String configDir;
     private final Vertx vertx;
+    private final ObjectMapper yamlMapper;
+
+    private static class ClinicInfoMixIn {
+        @JsonProperty("postal-code")
+        public String postalCode;
+        @JsonProperty("doctor-name")
+        public String doctorName;
+    }
+
+    private static class DiseaseExampleMixIn {
+        @JsonProperty("adj-list")
+        public List<String> adjList;
+    }
 
     public FileBasedAppConfig(String configDir, Vertx vertx) {
         this.configDir = configDir;
         this.vertx = vertx;
+        this.yamlMapper = new ObjectMapper(new YAMLFactory())
+                .addMixIn(ClinicInfoDTO.class, ClinicInfoMixIn.class)
+                .addMixIn(DiseaseExampleDTO.class, DiseaseExampleMixIn.class);
     }
 
     @Override
     public Future<ClinicInfoDTO> getClinicInfo() {
         File file = new File(configDir, "clinic-info.yml");
-        Promise<ClinicInfoDTO> promise = Promise.promise();
-        vertx.fileSystem().readFile(file.toString(), ar -> {
-            if( ar.failed() ){
-                promise.fail(ar.cause());
-            } else {
+        return fromYamlFile(file, new TypeReference<>(){});
+    }
+
+    @Override
+    public Future<List<DiseaseExampleDTO>> listDiseaseExample() {
+        File file = new File(configDir, "disease-example.yml");
+        return fromYamlFile(file, new TypeReference<>() {});
+    }
+
+    @Override
+    public Future<String> getPaperScanDirectory() {
+        File file = new File(configDir, "app-config.yml");
+        Promise<String> promise = Promise.promise();
+        vertx.executeBlocking(
+            promise2 -> {
                 try {
-                    Buffer buffer = ar.result();
-                    YamlProcessor yamlProcessor = new YamlProcessor();
-                    yamlProcessor.process(vertx, null, buffer, ar2 -> {
-                        if (ar2.failed()) {
-                            promise.fail(ar2.cause());
-                        } else {
-                            try {
-                                JsonObject obj = ar2.result();
-                                ClinicInfoDTO dto = fromObject(obj);
-                                promise.complete(dto);
-                            } catch(Exception ex){
-                                promise.fail(ex);
-                            }
-                        }
-                    });
-                } catch(Exception ex){
-                    promise.fail(ex);
+                    JsonNode node = yamlMapper.readTree(file);
+                    String value = node.get("paper-scan-directory").asText();
+                    promise2.complete(value);
+                } catch(Exception e){
+                    logger.error("Failed to get data from app-config.yml", e);
+                    promise2.fail(e);
                 }
-            }
-        });
+            },
+            promise
+        );
         return promise.future();
     }
 
-    private ClinicInfoDTO fromObject(JsonObject obj) {
-        ClinicInfoDTO dto = new ClinicInfoDTO();
-        dto.name = obj.getString("name");
-        dto.postalCode = obj.getString("postal-code");
-        dto.address = obj.getString("address");
-        dto.tel = obj.getString("tel");
-        dto.fax = obj.getString("fax");
-        dto.todoufukencode = getAsString(obj, "todoufukencode");
-        dto.tensuuhyoucode = getAsString(obj, "tensuuhyoucode");
-        dto.kikancode = getAsString(obj, "kikancode");
-        dto.homepage = obj.getString("homepage");
-        dto.doctorName = obj.getString("doctor-name");
-        return dto;
+    private <T> Future<T> fromYamlFile(File file, TypeReference<T> typeRef){
+        Promise<T> promise = Promise.promise();
+        vertx.executeBlocking(
+            promise2 -> {
+                try {
+                    T dto = yamlMapper.readValue(file, typeRef);
+                    promise2.complete(dto);
+                } catch(Exception ex){
+                    logger.error("Failed to read YAML file.", ex);
+                    promise2.fail(ex);
+                }
+            },
+            promise
+        );
+        return promise.future();
     }
 
-    private String getAsString(JsonObject obj, String key){
-        return String.valueOf(obj.getValue(key));
-    }
 }

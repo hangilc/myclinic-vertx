@@ -88,6 +88,7 @@
         <module>hotlinelog-event</module>
         <module>practicelog-event</module>
         <module>app-config</module>
+        <module>master-map</module>
     </modules>
 
 </project>

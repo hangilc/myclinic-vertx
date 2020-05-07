@@ -7,6 +7,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.dto.ClinicInfoDTO;
 import dev.myclinic.vertx.dto.DiseaseExampleDTO;
+import dev.myclinic.vertx.dto.ReferItemDTO;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -86,6 +87,12 @@ public class FileBasedAppConfig implements AppConfig {
     public Future<String> getShinryouByoumeiMapConfigFilePath() {
         File file = new File(configDir, "shinryou-byoumei.yml");
         return Future.succeededFuture(file.getAbsolutePath());
+    }
+
+    @Override
+    public Future<List<ReferItemDTO>> getReferList() {
+        File file = new File(configDir, "refer-list.yml");
+        return fromYamlFile(file, new TypeReference<>(){});
     }
 
     private <T> Future<T> fromYamlFile(File file, TypeReference<T> typeRef){

@@ -9,11 +9,6 @@ import java.util.List;
 
 class NoDatabaseImpl {
 
-    public byte[] getHokensho(String storageDir, int patientId, String file) throws Exception {
-        Path path = Paths.get(storageDir, "" + patientId, file);
-        return Files.readAllBytes(path);
-    }
-
     public List<ReferItemDTO> getReferList() throws Exception {
         throw new RuntimeException("getReferList");
     }

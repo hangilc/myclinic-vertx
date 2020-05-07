@@ -199,10 +199,11 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private void getReferList(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
-        HttpServerRequest req = ctx.request();
-        List<ReferItemDTO> _value = impl.getReferList();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
+        appConfig.getReferList()
+                .onSuccess(result -> {
+                    ctx.response().end(jsonEncode(result));
+                })
+                .onFailure(e -> ctx.fail(500, e));
     }
 
     private void getNameMapConfigFilePath(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {

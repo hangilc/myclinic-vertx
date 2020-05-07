@@ -11,4 +11,5 @@ public interface AppConfig {
     Future<List<DiseaseExampleDTO>> listDiseaseExample();
     Future<String> getPaperScanDirectory();
     Future<String> getMasterMapConfigFilePath();
+    Future<String> getShinryouByoumeiMapConfigFilePath();
 }

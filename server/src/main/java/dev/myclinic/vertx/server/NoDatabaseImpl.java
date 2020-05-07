@@ -1,28 +1,17 @@
 package dev.myclinic.vertx.server;
 
-import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.dto.*;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 class NoDatabaseImpl {
 
-    private final AppConfig appConfig;
-
-    NoDatabaseImpl(AppConfig appConfig){
-        this.appConfig = appConfig;
-    }
-
-    public StringResultDTO getMasterMapConfigFilePath() throws Exception {
-        throw new RuntimeException("Not implemented: getMasterMapConfigFilePath");
-    }
-
-    public StringResultDTO getShinryouByoumeiMapConfigFilePath() throws Exception {
-        throw new RuntimeException("Not implemented: getShinryouByoumeiMapConfigFilePath");
-    }
-
-    public byte[] getHokensho(int patientId, String file) throws Exception {
-        throw new RuntimeException("getClinicInfo");
+    public byte[] getHokensho(String storageDir, int patientId, String file) throws Exception {
+        Path path = Paths.get(storageDir, "" + patientId, file);
+        return Files.readAllBytes(path);
     }
 
     public List<ReferItemDTO> getReferList() throws Exception {

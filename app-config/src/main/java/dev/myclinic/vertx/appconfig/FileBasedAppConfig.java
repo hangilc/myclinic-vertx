@@ -82,6 +82,12 @@ public class FileBasedAppConfig implements AppConfig {
         return Future.succeededFuture(file.getAbsolutePath());
     }
 
+    @Override
+    public Future<String> getShinryouByoumeiMapConfigFilePath() {
+        File file = new File(configDir, "shinryou-byoumei.yml");
+        return Future.succeededFuture(file.getAbsolutePath());
+    }
+
     private <T> Future<T> fromYamlFile(File file, TypeReference<T> typeRef){
         Promise<T> promise = Promise.promise();
         vertx.executeBlocking(

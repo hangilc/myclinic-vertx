@@ -1,6 +1,7 @@
 package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.protobuf.MapEntry;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.dto.PracticeConfigDTO;
 import dev.myclinic.vertx.dto.ReferItemDTO;
@@ -13,12 +14,12 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingContext> {
@@ -50,10 +51,10 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             appConfig.listDiseaseExample()
                     .onComplete(ar -> {
                         if (ar.failed()) {
-                            req.response().setStatusCode(500).end("Cannot get disease examples.");
+                            ctx.fail(500, new RuntimeException("Cannot get disease examples."));
                         } else {
-                            cacheClinicInfo = jsonEncode(ar.result());
-                            req.response().end(cacheClinicInfo);
+                            cacheListDiseaseExample = jsonEncode(ar.result());
+                            req.response().end(cacheListDiseaseExample);
                         }
                     });
         }
@@ -111,34 +112,67 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         } else {
             HttpServerRequest req = ctx.request();
             appConfig.getClinicInfo()
-                    .onSuccess(dto -> ctx.response().end(jsonEncode(dto)))
-                    .onFailure(e -> ctx.response()
-                            .setStatusCode(500).end("Failed to get clinic info.")
+                    .onSuccess(dto -> {
+                        cacheClinicInfo = jsonEncode(dto);
+                        ctx.response().end(cacheClinicInfo);
+                    })
+                    .onFailure(e ->
+                            ctx.fail(5000, new RuntimeException("Failed to get clinic info."))
                     );
         }
     }
 
+    private String cacheGetMasterMapConfigFilePath;
+
     private void getMasterMapConfigFilePath(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
-        appConfig.getMasterMapConfigFilePath()
-                .onSuccess(path -> {
-                    StringResultDTO dto = new StringResultDTO();
-                    dto.value = path;
-                    throw new RuntimeException("Failure");
-                    //ctx.response().end(jsonEncode(dto));
-                })
-                .onFailure(e -> {
-                            System.out.println("onFailure reached");
-                            ctx.response()
-                                    .setStatusCode(404).end("Failed to get location of master map file.");
-                        }
-                );
+        if( cacheGetMasterMapConfigFilePath != null ){
+            ctx.response().end(cacheGetMasterMapConfigFilePath);
+        } else {
+            appConfig.getMasterMapConfigFilePath()
+                    .onSuccess(path -> {
+                        StringResultDTO dto = new StringResultDTO();
+                        dto.value = path;
+                        ctx.response().end(jsonEncode(dto));
+                    })
+                    .onFailure(e -> {
+                                ctx.response()
+                                        .setStatusCode(404).end("Failed to get location of master map file.");
+                            }
+                    );
+        }
     }
 
     private void getShinryouByoumeiMapConfigFilePath(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
-        HttpServerRequest req = ctx.request();
-        StringResultDTO _value = impl.getShinryouByoumeiMapConfigFilePath();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
+        appConfig.getShinryouByoumeiMapConfigFilePath()
+                .onSuccess(path -> {
+                    StringResultDTO dto = new StringResultDTO();
+                    dto.value = path;
+                    ctx.response().end(jsonEncode(dto));
+                })
+                .onFailure(e -> {
+                    ctx.fail(500, e);
+                });
+    }
+
+    private static Map<String, String> mimeMap = new HashMap<>();
+
+    {
+        mimeMap.put("jpg", "image/jpeg");
+        mimeMap.put("jpeg", "image/jpeg");
+        mimeMap.put("png", "image/png");
+        mimeMap.put("gif", "image/gif");
+        mimeMap.put("pdf", "application/pdf");
+    }
+
+    private static Pattern fileExtPattern = Pattern.compile("\\.([^.]+)$");
+
+    private String getFileExtension(String file){
+        Matcher m = fileExtPattern.matcher(file);
+        if( m.find() ){
+            return m.group(1);
+        } else {
+            return null;
+        }
     }
 
     private void getHokensho(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
@@ -146,9 +180,22 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
         String file = params.get("file");
-        byte[] _value = impl.getHokensho(patientId, file);
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
+        String ext = getFileExtension(file);
+        if( ext == null ){
+            throw new RuntimeException("Cannot find file extension.");
+        }
+        String mime = mimeMap.get(ext);
+        if( mime == null ){
+            throw new RuntimeException("Invalid file extension.");
+        }
+        appConfig.getPaperScanDirectory()
+                .onSuccess(storageDir -> {
+                    String fullPath = Paths.get(storageDir, "" + patientId, file).toString();
+                    ctx.response()
+                            .putHeader("content-type", mime)
+                            .sendFile(fullPath);
+                })
+                .onFailure(e -> ctx.fail(5000, e));
     }
 
     private void getReferList(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
@@ -202,7 +249,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         } else {
             try {
                 routingContext.response().putHeader("content-type", "application/json; charset=UTF-8");
-                NoDatabaseImpl impl = new NoDatabaseImpl(appConfig);
+                NoDatabaseImpl impl = new NoDatabaseImpl();
                 f.call(routingContext, impl);
             } catch (Exception e) {
                 throw new RuntimeException(e);

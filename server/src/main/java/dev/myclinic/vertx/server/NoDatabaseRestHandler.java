@@ -207,17 +207,23 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private void getNameMapConfigFilePath(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
-        HttpServerRequest req = ctx.request();
-        StringResultDTO _value = impl.getNameMapConfigFilePath();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
+        appConfig.getNameMapConfigFilePath()
+                .onSuccess(path -> {
+                    StringResultDTO dto = new StringResultDTO();
+                    dto.value = path;
+                    ctx.response().end(jsonEncode(dto));
+                })
+                .onFailure(e -> ctx.fail(500, e));
     }
 
     private void getPowderDrugConfigFilePath(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
-        HttpServerRequest req = ctx.request();
-        StringResultDTO _value = impl.getPowderDrugConfigFilePath();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
+        appConfig.getPowderDrugConfigFilePath()
+                .onSuccess(path -> {
+                    StringResultDTO dto = new StringResultDTO();
+                    dto.value = path;
+                    ctx.response().end(jsonEncode(dto));
+                })
+                .onFailure(e -> ctx.fail(500, e));
     }
 
     private void getPracticeConfig(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {

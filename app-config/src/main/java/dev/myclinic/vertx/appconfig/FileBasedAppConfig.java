@@ -95,6 +95,18 @@ public class FileBasedAppConfig implements AppConfig {
         return fromYamlFile(file, new TypeReference<>(){});
     }
 
+    @Override
+    public Future<String> getNameMapConfigFilePath() {
+        File file = new File(configDir, "master-name.txt");
+        return Future.succeededFuture(file.getAbsolutePath());
+    }
+
+    @Override
+    public Future<String> getPowderDrugConfigFilePath() {
+        File file = new File(configDir, "powder-drug.txt");
+        return Future.succeededFuture(file.getAbsolutePath());
+    }
+
     private <T> Future<T> fromYamlFile(File file, TypeReference<T> typeRef){
         Promise<T> promise = Promise.promise();
         vertx.executeBlocking(

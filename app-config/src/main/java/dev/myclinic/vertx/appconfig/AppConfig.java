@@ -14,4 +14,6 @@ public interface AppConfig {
     Future<String> getMasterMapConfigFilePath();
     Future<String> getShinryouByoumeiMapConfigFilePath();
     Future<List<ReferItemDTO>> getReferList();
+    Future<String> getNameMapConfigFilePath();
+    Future<String> getPowderDrugConfigFilePath();
 }

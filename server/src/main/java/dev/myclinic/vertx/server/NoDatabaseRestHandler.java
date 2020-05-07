@@ -227,12 +227,10 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private void getPracticeConfig(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
-        HttpServerRequest req = ctx.request();
-        PracticeConfigDTO _value = impl.getPracticeConfig();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
+        appConfig.getPracticeConfig()
+                .onSuccess(config -> ctx.response().end(jsonEncode(config)))
+                .onFailure(e -> ctx.fail(500, e));
     }
-
 
     {
         noDatabaseFuncMap.put("list-disease-example", this::listDiseaseExample);

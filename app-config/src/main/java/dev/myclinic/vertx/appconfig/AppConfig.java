@@ -2,6 +2,7 @@ package dev.myclinic.vertx.appconfig;
 
 import dev.myclinic.vertx.dto.ClinicInfoDTO;
 import dev.myclinic.vertx.dto.DiseaseExampleDTO;
+import dev.myclinic.vertx.dto.PracticeConfigDTO;
 import dev.myclinic.vertx.dto.ReferItemDTO;
 import io.vertx.core.Future;
 
@@ -16,4 +17,5 @@ public interface AppConfig {
     Future<List<ReferItemDTO>> getReferList();
     Future<String> getNameMapConfigFilePath();
     Future<String> getPowderDrugConfigFilePath();
+    Future<PracticeConfigDTO> getPracticeConfig();
 }

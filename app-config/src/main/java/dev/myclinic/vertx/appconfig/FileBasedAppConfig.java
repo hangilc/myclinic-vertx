@@ -7,6 +7,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.dto.ClinicInfoDTO;
 import dev.myclinic.vertx.dto.DiseaseExampleDTO;
+import dev.myclinic.vertx.dto.PracticeConfigDTO;
 import dev.myclinic.vertx.dto.ReferItemDTO;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -37,12 +38,18 @@ public class FileBasedAppConfig implements AppConfig {
         public List<String> adjList;
     }
 
+    private static class PracticeConfigMixIn {
+        @JsonProperty("kouhatsu-kasan")
+        public String kouhatsuKasan;
+    }
+
     public FileBasedAppConfig(String configDir, Vertx vertx) {
         this.configDir = configDir;
         this.vertx = vertx;
         this.yamlMapper = new ObjectMapper(new YAMLFactory())
                 .addMixIn(ClinicInfoDTO.class, ClinicInfoMixIn.class)
-                .addMixIn(DiseaseExampleDTO.class, DiseaseExampleMixIn.class);
+                .addMixIn(DiseaseExampleDTO.class, DiseaseExampleMixIn.class)
+                .addMixIn(PracticeConfigDTO.class, PracticeConfigMixIn.class);
     }
 
     @Override
@@ -105,6 +112,12 @@ public class FileBasedAppConfig implements AppConfig {
     public Future<String> getPowderDrugConfigFilePath() {
         File file = new File(configDir, "powder-drug.txt");
         return Future.succeededFuture(file.getAbsolutePath());
+    }
+
+    @Override
+    public Future<PracticeConfigDTO> getPracticeConfig() {
+        File file = new File(configDir, "practice-config.yml");
+        return fromYamlFile(file, new TypeReference<>(){});
     }
 
     private <T> Future<T> fromYamlFile(File file, TypeReference<T> typeRef){

@@ -2826,27 +2826,66 @@ public class Backend {
     }
 
     public List<VisitFull2DTO> listVisitByPatientHavingHoken(int patientId, int year, int month) throws Exception {
-        throw new RuntimeException("Not implemented: listVisitByPatientHavingHoken");
+        String sql = "select visit_id from visit where patientId = ? " +
+                " and year(visitedAt) = ? and month(visitedAt) = ? " +
+                " and not (shahokokuhoId = 0 and koukikoureiId = 0 and roujinId = 0 " +
+                "   and kouhi1Id = 0 and kouhi2Id = 0 and kouhi3Id = 0) ";
+        List<Integer> visitIds = getQuery().query(xlate(sql, ts.visitTable), intProjector,
+                patientId, year, month);
+        return visitIds.stream()
+                .map(this::getVisitFull2)
+                .collect(toList());
     }
 
-    public HokenDTO convertToHoken(VisitDTO visit) throws Exception {
-        throw new RuntimeException("Not implemented: convertToHoken");
+    public HokenDTO convertToHoken(VisitDTO visitDTO) throws Exception {
+        HokenDTO hoken = new HokenDTO();
+        if( visitDTO.shahokokuhoId != 0 ){
+            hoken.shahokokuho = getShahokokuho(visitDTO.shahokokuhoId);
+        }
+        if( visitDTO.koukikoureiId != 0 ){
+            hoken.koukikourei = getKoukikourei(visitDTO.koukikoureiId);
+        }
+        if( visitDTO.roujinId != 0 ){
+            hoken.roujin = getRoujin(visitDTO.roujinId);
+        }
+        if( visitDTO.kouhi1Id != 0 ){
+            hoken.kouhi1 = getKouhi(visitDTO.kouhi1Id);
+        }
+        if( visitDTO.kouhi2Id != 0 ){
+            hoken.kouhi2 = getKouhi(visitDTO.kouhi2Id);
+        }
+        if( visitDTO.kouhi3Id != 0 ){
+            hoken.kouhi3 = getKouhi(visitDTO.kouhi3Id);
+        }
+        return hoken;
     }
 
-    public List<DiseaseExampleDTO> listDiseaseExample() throws Exception {
-        throw new RuntimeException("Not implemented: listDiseaseExample");
-    }
-
-    public List<DrugFullDTO> listDrugFullByDrugIds(List<Integer> drugId) throws Exception {
-        throw new RuntimeException("Not implemented: listDrugFullByDrugIds");
-    }
-
-    public List<String> listHokensho(int patientId) throws Exception {
-        throw new RuntimeException("Not implemented: listHokensho");
+    public List<DrugFullDTO> listDrugFullByDrugIds(List<Integer> drugIds) throws Exception {
+        return drugIds.stream().map(this::getDrugFull).collect(toList());
     }
 
     public VisitTextDrugPageDTO listVisitTextDrugByPatientAndIyakuhincode(int patientId, int iyakuhincode, int page) throws Exception {
-        throw new RuntimeException("Not implemented: listVisitTextDrugByPatientAndIyakuhincode");
+        String countSql = "select count(*) from Drug drug, Visit visit where drug.iyakuhincode = ? " +
+                " and visit.patientId = ? and visit.visitId = drug.visitId ";
+        int count = getQuery().get(xlate(countSql, ts.drugTable, "drug", ts.visitTable, "visit"),
+                intProjector, iyakuhincode, patientId);
+        String sql = "select visit.* from Drug drug, Visit visit where drug.iyakuhincode = ? " +
+                " and visit.patientId = ? and visit.visitId = drug.visitId order by visit.visitId desc " +
+                " limit ? offset ? ";
+        int itemsPerPage = 10;
+        List<VisitDTO> visits = getQuery().query(xlate(sql, ts.drugTable, "drug", ts.visitTable, "visit"),
+                ts.visitTable, iyakuhincode, patientId, itemsPerPage, itemsPerPage * page);
+        VisitTextDrugPageDTO result = new VisitTextDrugPageDTO();
+        result.page = page;
+        result.totalPages = numberOfPages(count, itemsPerPage);
+        result.visitTextDrugs = visits.stream().map(visit -> {
+            VisitTextDrugDTO dto = new VisitTextDrugDTO();
+            dto.visit = visit;
+            dto.texts = listText(visit.visitId);
+            dto.drugs = listDrugFull(visit.visitId);
+            return dto;
+        }).collect(toList());
+        return result;
     }
 
     public BatchEnterResultDTO batchEnterShinryouByName(List<String> name, int visitId) throws Exception {
@@ -2859,10 +2898,6 @@ public class Backend {
 
     public Map<Integer, IyakuhinMasterDTO> batchResolveIyakuhinMaster(List<Integer> iyakuhincode, LocalDate at) throws Exception {
         throw new RuntimeException("Not implemented: batchResolveIyakuhinMaster");
-    }
-
-    public ClinicInfoDTO getClinicInfo() throws Exception {
-        throw new RuntimeException("Not implemented: getClinicInfo");
     }
 
     public List<VisitIdVisitedAtDTO> listVisitIdVisitedAtByPatientAndIyakuhincode(int patientId, int iyakuhincode) throws Exception {

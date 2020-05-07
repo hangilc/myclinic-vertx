@@ -22,6 +22,9 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
 
@@ -72,7 +75,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void listRecentlyRegisteredPatients(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        Integer n = Integer.parseInt(params.get("n"));
+        Integer n = params.contains("n") ? Integer.parseInt(params.get("n")) : 20;
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<PatientDTO> _value = backend.listRecentlyRegisteredPatient(n);
@@ -107,7 +110,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void batchGetDrugAttr(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<Integer> drugIds = _convertParam(params.get("drug-ids"), new TypeReference<>(){});
+        List<Integer> drugIds = params.getAll("drug-ids").stream().map(Integer::valueOf).collect(toList());
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<DrugAttrDTO> _value = backend.batchGetDrugAttr(drugIds);
@@ -155,7 +158,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void batchDeleteDrugs(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<Integer> drugId = _convertParam(params.get("drug-id"), new TypeReference<>(){});
+        List<Integer> drugId = params.getAll("drug-id").stream().map(Integer::valueOf).collect(toList());
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         backend.batchDeleteDrugs(drugId);
@@ -191,7 +194,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void listDrugFullByDrugIds(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<Integer> drugId = _convertParam(params.get("drug-id"), new TypeReference<>(){});
+        List<Integer> drugId = params.getAll("drug-id").stream().map(Integer::valueOf).collect(toList());
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<DrugFullDTO> _value = backend.listDrugFullByDrugIds(drugId);
@@ -344,7 +347,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void listConductFullByIds(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<Integer> conductId = _convertParam(params.get("conduct-id"), new TypeReference<>(){});
+        List<Integer> conductId = params.getAll("conduct-id").stream().map(Integer::valueOf).collect(toList());
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<ConductFullDTO> _value = backend.listConductFullByIds(conductId);
@@ -450,7 +453,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
         int iyakuhincode = Integer.parseInt(params.get("iyakuhincode"));
-        int page = Integer.parseInt(params.get("page"));
+        Integer page = params.contains("page") ? Integer.parseInt(params.get("page")) : 0;
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         VisitTextDrugPageDTO _value = backend.listVisitTextDrugByPatientAndIyakuhincode(patientId, iyakuhincode, page);
@@ -499,7 +502,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void batchEnterShinryouByName(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<String> name = _convertParam(params.get("name"), new TypeReference<>(){});
+        List<String> name = params.getAll("name");
         int visitId = Integer.parseInt(params.get("visit-id"));
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -547,7 +550,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void batchResolveIyakuhinMaster(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<Integer> iyakuhincode = _convertParam(params.get("iyakuhincode"), new TypeReference<>(){});
+        List<Integer> iyakuhincode = params.getAll("iyakuhincode").stream().map(Integer::valueOf).collect(toList());
         LocalDate at = LocalDate.parse(params.get("at"));
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -595,7 +598,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void batchDeleteShinryou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<Integer> shinryouId = _convertParam(params.get("shinryou-id"), new TypeReference<>(){});
+        List<Integer> shinryouId = params.getAll("shinryou-id").stream().map(Integer::valueOf).collect(toList());
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         backend.batchDeleteShinryouWithAttr(shinryouId);
@@ -848,8 +851,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void listRecentVisits(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        Integer page = Integer.parseInt(params.get("page"));
-        Integer itemsPerPage = Integer.parseInt(params.get("items-per-page"));
+        Integer page = params.contains("page") ? Integer.parseInt(params.get("page")) : 0;
+        Integer itemsPerPage = params.contains("items-per-page") ? Integer.parseInt(params.get("items-per-page")) : 30;
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<VisitPatientDTO> _value = backend.listRecentVisits(page, itemsPerPage);
@@ -956,7 +959,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void batchGetShinryouAttr(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<Integer> shinryouIds = _convertParam(params.get("shinryou-ids"), new TypeReference<>(){});
+        List<Integer> shinryouIds = params.getAll("shinryou-ids").stream().map(Integer::valueOf).collect(toList());
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<ShinryouAttrDTO> _value = backend.batchGetShinryouAttr(shinryouIds);
@@ -968,7 +971,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void batchGetShouki(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<Integer> visitIds = _convertParam(params.get("visit-ids"), new TypeReference<>(){});
+        List<Integer> visitIds = params.getAll("visit-ids").stream().map(Integer::valueOf).collect(toList());
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<ShoukiDTO> _value = backend.batchGetShouki(visitIds);
@@ -1259,7 +1262,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String text = params.get("text");
-        LocalDate at = LocalDate.parse(params.get("at"));
+        LocalDate at = params.contains("at") ? LocalDate.parse(params.get("at")) : null;
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<ShuushokugoMasterDTO> _value = backend.searchShuushokugoMaster(text, at);
@@ -1444,7 +1447,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void searchPrevDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        String text = params.get("text");
+        String text = params.contains("text") ? params.get("text") : "";
         int patientId = Integer.parseInt(params.get("patient-id"));
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1457,7 +1460,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void listShinryouFullByIds(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<Integer> shinryouId = _convertParam(params.get("shinryou-id"), new TypeReference<>(){});
+        List<Integer> shinryouId = params.getAll("shinryou-id").stream().map(Integer::valueOf).collect(toList());
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<ShinryouFullDTO> _value = backend.listShinryouFullByIds(shinryouId);
@@ -1614,7 +1617,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
-        Integer n = Integer.parseInt(params.get("n"));
+        Integer n = params.contains("n") ? Integer.parseInt(params.get("n")) : 30;
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<PaymentVisitPatientDTO> _value = backend.listPaymentByPatient(patientId, n);
@@ -1687,7 +1690,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void batchUpdateDrugDays(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<Integer> drugId = _convertParam(params.get("drug-id"), new TypeReference<>(){});
+        List<Integer> drugId = params.getAll("drug-id").stream().map(Integer::valueOf).collect(toList());
         int days = Integer.parseInt(params.get("days"));
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1915,7 +1918,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void listRecentPayment(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        Integer n = Integer.parseInt(params.get("n"));
+        Integer n = params.contains("n") ? Integer.parseInt(params.get("n")) : 30;
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<PaymentVisitPatientDTO> _value = backend.listRecentPayment(n);
@@ -2253,6 +2256,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("delete-visit", this::deleteVisit);
         funcMap.put("get-disease-full", this::getDiseaseFull);
     }
+
+
 
     @Override
     public void handle(RoutingContext routingContext) {

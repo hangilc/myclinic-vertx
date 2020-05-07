@@ -1,10 +1,7 @@
 package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.MapEntry;
 import dev.myclinic.vertx.appconfig.AppConfig;
-import dev.myclinic.vertx.dto.PracticeConfigDTO;
-import dev.myclinic.vertx.dto.ReferItemDTO;
 import dev.myclinic.vertx.dto.StringResultDTO;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
@@ -14,7 +11,6 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
@@ -27,7 +23,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private static final Logger logger = LoggerFactory.getLogger(NoDatabaseRestHandler.class);
 
     interface NoDatabaseRestFunction {
-        void call(RoutingContext ctx, NoDatabaseImpl impl) throws Exception;
+        void call(RoutingContext ctx) throws Exception;
     }
 
     private final Map<String, NoDatabaseRestFunction> noDatabaseFuncMap = new HashMap<>();
@@ -43,7 +39,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private String cacheListDiseaseExample;
 
-    private void listDiseaseExample(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
+    private void listDiseaseExample(RoutingContext ctx) throws Exception {
         if (cacheListDiseaseExample != null) {
             ctx.response().end(cacheListDiseaseExample);
         } else {
@@ -74,7 +70,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void listHokensho(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
+    private void listHokensho(RoutingContext ctx) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -106,7 +102,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private String cacheClinicInfo;
 
-    private void getClinicInfo(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
+    private void getClinicInfo(RoutingContext ctx) throws Exception {
         if (cacheClinicInfo != null) {
             ctx.response().end(cacheClinicInfo);
         } else {
@@ -124,7 +120,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private String cacheGetMasterMapConfigFilePath;
 
-    private void getMasterMapConfigFilePath(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
+    private void getMasterMapConfigFilePath(RoutingContext ctx) throws Exception {
         if( cacheGetMasterMapConfigFilePath != null ){
             ctx.response().end(cacheGetMasterMapConfigFilePath);
         } else {
@@ -142,7 +138,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void getShinryouByoumeiMapConfigFilePath(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
+    private void getShinryouByoumeiMapConfigFilePath(RoutingContext ctx) throws Exception {
         appConfig.getShinryouByoumeiMapConfigFilePath()
                 .onSuccess(path -> {
                     StringResultDTO dto = new StringResultDTO();
@@ -175,7 +171,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void getHokensho(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
+    private void getHokensho(RoutingContext ctx) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -198,7 +194,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 .onFailure(e -> ctx.fail(5000, e));
     }
 
-    private void getReferList(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
+    private void getReferList(RoutingContext ctx) throws Exception {
         appConfig.getReferList()
                 .onSuccess(result -> {
                     ctx.response().end(jsonEncode(result));
@@ -206,7 +202,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 .onFailure(e -> ctx.fail(500, e));
     }
 
-    private void getNameMapConfigFilePath(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
+    private void getNameMapConfigFilePath(RoutingContext ctx) throws Exception {
         appConfig.getNameMapConfigFilePath()
                 .onSuccess(path -> {
                     StringResultDTO dto = new StringResultDTO();
@@ -216,7 +212,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 .onFailure(e -> ctx.fail(500, e));
     }
 
-    private void getPowderDrugConfigFilePath(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
+    private void getPowderDrugConfigFilePath(RoutingContext ctx) throws Exception {
         appConfig.getPowderDrugConfigFilePath()
                 .onSuccess(path -> {
                     StringResultDTO dto = new StringResultDTO();
@@ -226,7 +222,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 .onFailure(e -> ctx.fail(500, e));
     }
 
-    private void getPracticeConfig(RoutingContext ctx, NoDatabaseImpl impl) throws Exception {
+    private void getPracticeConfig(RoutingContext ctx) throws Exception {
         appConfig.getPracticeConfig()
                 .onSuccess(config -> ctx.response().end(jsonEncode(config)))
                 .onFailure(e -> ctx.fail(500, e));
@@ -254,8 +250,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         } else {
             try {
                 routingContext.response().putHeader("content-type", "application/json; charset=UTF-8");
-                NoDatabaseImpl impl = new NoDatabaseImpl();
-                f.call(routingContext, impl);
+                f.call(routingContext);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

@@ -531,19 +531,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end("true");
     }
 
-    private void batchResolveIyakuhinMaster(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        List<Integer> iyakuhincode = params.getAll("iyakuhincode").stream().map(Integer::valueOf).collect(toList());
-        LocalDate at = LocalDate.parse(params.get("at"));
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        Map<Integer, IyakuhinMasterDTO> _value = backend.batchResolveIyakuhinMaster(iyakuhincode, at);
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
-    }
-
     private void listAllPharmaDrugNames(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         Query query = new Query(conn);
@@ -621,19 +608,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         ChargeDTO _value = backend.getCharge(visitId);
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
-    }
-
-    private void batchCopyShinryou(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        int visitId = Integer.parseInt(params.get("visit-id"));
-        List<ShinryouDTO> srcList = _convertParam(ctx.getBodyAsString(), new TypeReference<>(){});
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        List<Integer> _value = backend.batchCopyShinryou(visitId, srcList);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
@@ -2110,7 +2084,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("enter-conduct-kizai", this::enterConductKizai);
         funcMap.put("batch-enter-drugs", this::batchEnterDrugs);
         funcMap.put("delete-disease", this::deleteDisease);
-        funcMap.put("batch-resolve-iyakuhin-master", this::batchResolveIyakuhinMaster);
         funcMap.put("list-all-pharma-drug-names", this::listAllPharmaDrugNames);
         funcMap.put("list-payment", this::listPayment);
         funcMap.put("list-visit-id-visited-at-by-patient-and-iyakuhincode", this::listVisitIdVisitedAtByPatientAndIyakuhincode);
@@ -2118,7 +2091,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("list-current-disease-full", this::listCurrentDiseaseFull);
         funcMap.put("enter-disease", this::enterDisease);
         funcMap.put("get-charge", this::getCharge);
-        funcMap.put("batch-copy-shinryou", this::batchCopyShinryou);
         funcMap.put("enter-conduct-shinryou", this::enterConductShinryou);
         funcMap.put("enter-kouhi", this::enterKouhi);
         funcMap.put("list-all-presc-example", this::listAllPrescExample);
@@ -2244,6 +2216,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
 
     {
         funcMap.put("batch-enter-shinryou-by-name", this::batchEnterShinryouByName);
+        funcMap.put("batch-resolve-iyakuhin-master", this::batchResolveIyakuhinMaster);
+        funcMap.put("batch-copy-shinryou", this::batchCopyShinryou);
     }
 
     private ConductShinryouDTO createConductShinryouReq(String name, LocalDate at){
@@ -2318,6 +2292,53 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
             }
         }
         return backend.batchEnter(req);
+    }
+
+    private void batchResolveIyakuhinMaster(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        List<Integer> iyakuhincodes = params.getAll("iyakuhincode").stream().map(Integer::valueOf).collect(toList());
+        LocalDate at = LocalDate.parse(params.get("at"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        Map<Integer, IyakuhinMasterDTO> _value = new HashMap<>();
+        for(int iyakuhincode: iyakuhincodes){
+            int resolvedCode = masterMap.resolve(MasterKind.Yakuzai, iyakuhincode, at);
+            _value.put(iyakuhincode, backend.getIyakuhinMaster(resolvedCode, at));
+        }
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
+    private List<Integer> batchCopyShinryou(Backend backend, int visitId, List<ShinryouDTO> srcList)
+            throws Exception {
+        VisitDTO visit = backend.getVisit(visitId);
+        LocalDate atDate = LocalDate.parse(visit.visitedAt.substring(0, 10));
+        List<Integer> shinryouIds = new ArrayList<>();
+        for(ShinryouDTO src: srcList){
+            int shinryoucode = masterMap.resolve(MasterKind.Shinryou, src.shinryoucode, atDate);
+            ShinryouMasterDTO master = backend.getShinryouMaster(shinryoucode, atDate);
+            ShinryouDTO newShinryou = new ShinryouDTO();
+            newShinryou.visitId = visitId;
+            newShinryou.shinryoucode = master.shinryoucode;
+            newShinryou.shinryouId = backend.enterShinryou(newShinryou);
+            shinryouIds.add(newShinryou.shinryouId);
+        }
+        return shinryouIds;
+    }
+
+    private void batchCopyShinryou(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        int visitId = Integer.parseInt(params.get("visit-id"));
+        List<ShinryouDTO> srcList = _convertParam(ctx.getBodyAsString(), new TypeReference<>(){});
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        List<Integer> _value = batchCopyShinryou(backend, visitId, srcList);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
     }
 
     @Override

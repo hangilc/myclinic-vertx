@@ -2889,54 +2889,26 @@ public class Backend {
         return result;
     }
 
-
-    public BatchEnterResultDTO batchEnterShinryouByName(List<String> names, int visitId) throws Exception {
-        throw new RuntimeException("not implemented");
-//        if( names == null ){
-//            names = Collections.emptyList();
-//        }
-//        VisitDTO visit = getVisit(visitId);
-//        LocalDate at = LocalDate.parse(visit.visitedAt.substring(0, 10));
-//        BatchEnterAccum accum = new BatchEnterAccum();
-//        if( names.size() > 0 ) {
-//            for (String name : names) {
-//                if (name.equals("骨塩定量")) {
-//                    addKotsuenTeiryou(accum, visitId, at);
-//                } else {
-//                    Optional<ShinryouMasterDTO> optMaster = resolveShinryouMaster(name, at);
-//                    if (optMaster.isPresent()) {
-//                        ShinryouDTO shinryouDTO = new ShinryouDTO();
-//                        shinryouDTO.visitId = visitId;
-//                        shinryouDTO.shinryoucode = optMaster.get().shinryoucode;
-//                        shinryouDTO.shinryouId = enterShinryou(shinryouDTO);
-//                        accum.shinryouIds.add(shinryouDTO.shinryouId);
-//                    } else {
-//                        accum.errorMessages.add(String.format("%sはその期日に使用できません。", name));
-//                    }
-//                }
-//            }
-//            if (accum.errorMessages.size() > 0) {
-//                accum.errorMessages.forEach(System.out::println);
-//                throw new RuntimeException(String.join("", accum.errorMessages));
-//            }
-//        }
-//        return accum.toBatchEnterResult();
-    }
-
     public List<Integer> batchEnterDrugs(List<DrugDTO> drugs) throws Exception {
-        throw new RuntimeException("Not implemented: batchEnterDrugs");
-    }
-
-    public Map<Integer, IyakuhinMasterDTO> batchResolveIyakuhinMaster(List<Integer> iyakuhincode, LocalDate at) throws Exception {
-        throw new RuntimeException("Not implemented: batchResolveIyakuhinMaster");
+        List<Integer> drugIds = new ArrayList<>();
+        drugs.forEach(drug -> {
+            drugIds.add(enterDrug(drug));
+        });
+        return drugIds;
     }
 
     public List<VisitIdVisitedAtDTO> listVisitIdVisitedAtByPatientAndIyakuhincode(int patientId, int iyakuhincode) throws Exception {
-        throw new RuntimeException("Not implemented: listVisitIdVisitedAtByPatientAndIyakuhincode");
-    }
-
-    public List<Integer> batchCopyShinryou(int visitId, List<ShinryouDTO> srcList) throws Exception {
-        throw new RuntimeException("Not implemented: batchCopyShinryou");
+        String sql = "select d.visitId, v.visitedAt from Drug d, Visit v " +
+                " where v.patientId = ? and v.visitId = d.visitId " +
+                " and d.iyakuhincode = ?";
+        return getQuery().query(xlate(sql, ts.drugTable, "d", ts.visitTable, "v"),
+                biProjector(intProjector, stringProjector, (visitId, visitedAt) -> {
+                    VisitIdVisitedAtDTO visitIdVisitedAtDTO = new VisitIdVisitedAtDTO();
+                    visitIdVisitedAtDTO.visitId = visitId;
+                    visitIdVisitedAtDTO.visitedAt = visitedAt;
+                    return visitIdVisitedAtDTO;
+                }),
+                patientId, iyakuhincode);
     }
 
     public List<PharmaQueueFullDTO> listPharmaQueueForToday() throws Exception {

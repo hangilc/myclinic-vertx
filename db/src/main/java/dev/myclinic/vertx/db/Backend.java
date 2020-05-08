@@ -2911,16 +2911,75 @@ public class Backend {
                 patientId, iyakuhincode);
     }
 
+    private List<Integer> listVisitIdForToday(){
+        String sql = "select visitId from Visit " +
+                " where date(visitedAt) = date(now()) order by visitId";
+        return getQuery().query(xlate(sql, ts.visitTable), intProjector);
+    }
+
+    private List<VisitPatientDTO> listVisitPatientByVisitIds(List<Integer> visitIds){
+        if( visitIds.size() == 0 ){
+            return Collections.emptyList();
+        } else {
+            String sql = String.format("select visit.*, patient.* from Visit visit, Patient patient " +
+                    " where visit.patientId = patient.patientId and visit.visitId in (%s) ",
+                    visitIds.stream().map(String::valueOf).collect(Collectors.joining(",")));
+            return getQuery().query(xlate(sql, ts.visitTable, "visit", ts.patientTable, "patient"),
+                    biProjector(ts.visitTable, ts.patientTable, VisitPatientDTO::new));
+        }
+    }
+
     public List<PharmaQueueFullDTO> listPharmaQueueForToday() throws Exception {
-        throw new RuntimeException("Not implemented: listPharmaQueueForToday");
+        List<Integer> visitIds = listVisitIdForToday();
+        Map<Integer, WqueueDTO> wqueueMap = new HashMap<>();
+        Map<Integer, PharmaQueueDTO> pharmaQueueMap = new HashMap<>();
+        listWqueue().forEach(wq -> wqueueMap.put(wq.visitId, wq));
+        listPharmaQueue().forEach(pq -> pharmaQueueMap.put(pq.visitId, pq));
+        return listVisitPatientByVisitIds(visitIds).stream()
+                .map(result -> {
+                    int visitId = result.visit.visitId;
+                    PharmaQueueFullDTO pharmaQueueFullDTO = new PharmaQueueFullDTO();
+                    pharmaQueueFullDTO.visitId = visitId;
+                    pharmaQueueFullDTO.patient = result.patient;
+                    pharmaQueueFullDTO.pharmaQueue = pharmaQueueMap.get(visitId);
+                    pharmaQueueFullDTO.wqueue = wqueueMap.get(visitId);
+                    return pharmaQueueFullDTO;
+                })
+                .collect(Collectors.toList());
     }
 
     public List<VisitPatientDTO> listRecentVisits(int page, int itemsPerPage) throws Exception {
-        throw new RuntimeException("Not implemented: listRecentVisits");
+        String sql = "select v.*, p.* from Visit v, Patient p " +
+                " where v.patient_id = p.patient_id " +
+                " order by v.visitId desc " +
+                " limit ? offset ? ";
+        return getQuery().query(xlate(sql, ts.visitTable, "v", ts.patientTable, "p"),
+                biProjector(ts.visitTable, ts.patientTable, VisitPatientDTO::new),
+                itemsPerPage, itemsPerPage * page);
+    }
+
+    private List<Query.Pair<PharmaQueueDTO, PatientDTO>> listPharmaQueuePatient(){
+        String sql = "select queue.*, patient.* from PharmaQueue queue, Visit visit, Patient patient " +
+                " where queue.visitId = visit.visitId and visit.patientId = patient.patientId " +
+                " order by queue.visitId ";
+        return getQuery().query(xlate(sql, ts.pharmaQueueTable, "queue", ts.visitTable, "visit",
+                ts.patientTable, "patient"),
+                biProjector(ts.pharmaQueueTable, ts.patientTable, Query.Pair::new));
     }
 
     public List<PharmaQueueFullDTO> listPharmaQueueForPrescription() throws Exception {
-        throw new RuntimeException("Not implemented: listPharmaQueueForPrescription");
+        return listPharmaQueuePatient().stream()
+                .map(result -> {
+                    PharmaQueueDTO pq = result.first;
+                    PatientDTO patient = result.second;
+                    PharmaQueueFullDTO pharmaQueueFullDTO = new PharmaQueueFullDTO();
+                    pharmaQueueFullDTO.pharmaQueue = pq;
+                    pharmaQueueFullDTO.patient = patient;
+                    pharmaQueueFullDTO.visitId = pq.visitId;
+                    pharmaQueueFullDTO.wqueue = getWqueue(pq.visitId);
+                    return pharmaQueueFullDTO;
+                })
+                .collect(Collectors.toList());
     }
 
     public List<DiseaseFullDTO> pageDiseaseFull(int patientId, int page, int itemsPerPage) throws Exception {

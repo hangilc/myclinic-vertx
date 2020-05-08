@@ -18,8 +18,8 @@ public class VisitDTO {
 	public int kouhi2Id;
 	public int kouhi3Id;
 
-	public static dev.myclinic.vertx.dto.VisitDTO copy(dev.myclinic.vertx.dto.VisitDTO src){
-		dev.myclinic.vertx.dto.VisitDTO dst = new dev.myclinic.vertx.dto.VisitDTO();
+	public static VisitDTO copy(VisitDTO src){
+		VisitDTO dst = new VisitDTO();
 		dst.visitId = src.visitId;
 		dst.patientId = src.patientId;
 		dst.visitedAt = src.visitedAt;
@@ -51,7 +51,7 @@ public class VisitDTO {
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		dev.myclinic.vertx.dto.VisitDTO visitDTO = (dev.myclinic.vertx.dto.VisitDTO) o;
+		VisitDTO visitDTO = (VisitDTO) o;
 		return visitId == visitDTO.visitId &&
 				patientId == visitDTO.patientId &&
 				shahokokuhoId == visitDTO.shahokokuhoId &&

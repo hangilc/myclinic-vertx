@@ -4,8 +4,8 @@ import java.util.List;
 
 public class VisitDrugDTO {
 
-    public dev.myclinic.vertx.dto.VisitDTO visit;
-    public List<dev.myclinic.vertx.dto.DrugFullDTO> drugs;
+    public VisitDTO visit;
+    public List<DrugFullDTO> drugs;
 
     @Override
     public String toString() {

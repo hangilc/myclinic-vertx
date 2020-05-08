@@ -11,8 +11,8 @@ public class ConductKizaiDTO {
 	public int kizaicode;
 	public double amount;
 
-	public static dev.myclinic.vertx.dto.ConductKizaiDTO copy(dev.myclinic.vertx.dto.ConductKizaiDTO src){
-		dev.myclinic.vertx.dto.ConductKizaiDTO dst = new dev.myclinic.vertx.dto.ConductKizaiDTO();
+	public static ConductKizaiDTO copy(ConductKizaiDTO src){
+		ConductKizaiDTO dst = new ConductKizaiDTO();
 		dst.conductKizaiId = src.conductKizaiId;
 		dst.conductId = src.conductId;
 		dst.kizaicode = src.kizaicode;

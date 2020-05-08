@@ -9,11 +9,11 @@ public class ShinryouAttrDTO {
     public int shinryouId;
     public String tekiyou;
 
-    public static dev.myclinic.vertx.dto.ShinryouAttrDTO copy(dev.myclinic.vertx.dto.ShinryouAttrDTO src){
+    public static ShinryouAttrDTO copy(ShinryouAttrDTO src){
         if( src == null ){
             return null;
         }
-        dev.myclinic.vertx.dto.ShinryouAttrDTO dst = new dev.myclinic.vertx.dto.ShinryouAttrDTO();
+        ShinryouAttrDTO dst = new dev.myclinic.vertx.dto.ShinryouAttrDTO();
         dst.shinryouId = src.shinryouId;
         dst.tekiyou = src.tekiyou;
         return dst;

@@ -13,8 +13,8 @@ public class KouhiDTO {
 	public String validFrom;
 	public String validUpto;
 
-	public dev.myclinic.vertx.dto.KouhiDTO copy(){
-		dev.myclinic.vertx.dto.KouhiDTO dst = new dev.myclinic.vertx.dto.KouhiDTO();
+	public KouhiDTO copy(){
+		KouhiDTO dst = new KouhiDTO();
 		dst.kouhiId = kouhiId;
 		dst.patientId = patientId;
 		dst.futansha = futansha;
@@ -24,7 +24,7 @@ public class KouhiDTO {
 		return dst;
 	}
 
-	public void assign(dev.myclinic.vertx.dto.KouhiDTO src){
+	public void assign(KouhiDTO src){
 		kouhiId = src.kouhiId;
 		patientId = src.patientId;
 		futansha = src.futansha;

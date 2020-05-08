@@ -5,7 +5,7 @@ import java.util.List;
 public class IntraclinicPostFullPageDTO {
     public int totalPages;
     public int page;
-    public List<dev.myclinic.vertx.dto.IntraclinicPostFullDTO> posts;
+    public List<IntraclinicPostFullDTO> posts;
 
     @Override
     public String toString() {

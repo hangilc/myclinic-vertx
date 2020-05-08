@@ -11,8 +11,8 @@ public class ConductDTO {
 	public int visitId;
 	public int kind;
 
-	public static dev.myclinic.vertx.dto.ConductDTO copy(dev.myclinic.vertx.dto.ConductDTO src){
-		dev.myclinic.vertx.dto.ConductDTO dst = new dev.myclinic.vertx.dto.ConductDTO();
+	public static ConductDTO copy(ConductDTO src){
+		ConductDTO dst = new ConductDTO();
 		dst.conductId = src.conductId;
 		dst.visitId = src.visitId;
 		dst.kind = src.kind;

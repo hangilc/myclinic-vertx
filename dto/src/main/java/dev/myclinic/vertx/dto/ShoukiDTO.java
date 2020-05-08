@@ -7,8 +7,8 @@ public class ShoukiDTO {
     public int visitId;
     public String shouki;
 
-    public static dev.myclinic.vertx.dto.ShoukiDTO copy(dev.myclinic.vertx.dto.ShoukiDTO src){
-        dev.myclinic.vertx.dto.ShoukiDTO dst = new dev.myclinic.vertx.dto.ShoukiDTO();
+    public static ShoukiDTO copy(ShoukiDTO src){
+        ShoukiDTO dst = new ShoukiDTO();
         dst.visitId = src.visitId;
         dst.shouki = src.shouki;
         return dst;

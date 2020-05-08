@@ -15,8 +15,8 @@ public class PrescExampleDTO {
     public int category;
     public String comment;
 
-    public dev.myclinic.vertx.dto.PrescExampleDTO copy(){
-        dev.myclinic.vertx.dto.PrescExampleDTO dst = new dev.myclinic.vertx.dto.PrescExampleDTO();
+    public PrescExampleDTO copy(){
+        PrescExampleDTO dst = new PrescExampleDTO();
         dst.prescExampleId = prescExampleId;
         dst.iyakuhincode = iyakuhincode;
         dst.masterValidFrom = masterValidFrom;

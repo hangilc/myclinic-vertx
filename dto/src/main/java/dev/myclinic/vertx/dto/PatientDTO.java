@@ -37,7 +37,7 @@ public class PatientDTO {
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		dev.myclinic.vertx.dto.PatientDTO that = (dev.myclinic.vertx.dto.PatientDTO) o;
+		PatientDTO that = (PatientDTO) o;
 		return patientId == that.patientId &&
 				Objects.equals(lastName, that.lastName) &&
 				Objects.equals(firstName, that.firstName) &&
@@ -55,8 +55,8 @@ public class PatientDTO {
 		return Objects.hash(patientId, lastName, firstName, lastNameYomi, firstNameYomi, birthday, sex, address, phone);
 	}
 
-	public static dev.myclinic.vertx.dto.PatientDTO copy(dev.myclinic.vertx.dto.PatientDTO src){
-		dev.myclinic.vertx.dto.PatientDTO dst = new dev.myclinic.vertx.dto.PatientDTO();
+	public static PatientDTO copy(PatientDTO src){
+		PatientDTO dst = new PatientDTO();
 		dst.patientId = src.patientId;
 		dst.lastName = src.lastName;
 		dst.firstName = src.firstName;

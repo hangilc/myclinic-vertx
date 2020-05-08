@@ -12,8 +12,8 @@ public class ShinryouFullDTO {
 				'}';
 	}
 
-	public static dev.myclinic.vertx.dto.ShinryouFullDTO create(ShinryouDTO shinryou, ShinryouMasterDTO master){
-		dev.myclinic.vertx.dto.ShinryouFullDTO result = new dev.myclinic.vertx.dto.ShinryouFullDTO();
+	public static ShinryouFullDTO create(ShinryouDTO shinryou, ShinryouMasterDTO master){
+		ShinryouFullDTO result = new ShinryouFullDTO();
 		result.shinryou = shinryou;
 		result.master = master;
 		return result;

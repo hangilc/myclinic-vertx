@@ -34,7 +34,7 @@ public class MasterNameMap {
         }
     }
 
-    private static final Pattern pattern = Pattern.compile("^(?:s|k|d|a|y),([^,]+),(\\d+)");
+    private static final Pattern pattern = Pattern.compile("^(s|k|d|a|y),([^,]+),(\\d+)");
 
     public void processLine(String line){
         Matcher matcher = pattern.matcher(line);

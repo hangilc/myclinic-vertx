@@ -14,8 +14,8 @@ public class RoujinDTO {
 	public String validFrom;
 	public String validUpto;
 
-	public dev.myclinic.vertx.dto.RoujinDTO copy(){
-		dev.myclinic.vertx.dto.RoujinDTO dst = new dev.myclinic.vertx.dto.RoujinDTO();
+	public RoujinDTO copy(){
+		RoujinDTO dst = new RoujinDTO();
 		dst.roujinId = roujinId;
 		dst.patientId = patientId;
 		dst.shichouson = shichouson;
@@ -26,7 +26,7 @@ public class RoujinDTO {
 		return dst;
 	}
 
-	public void assign(dev.myclinic.vertx.dto.RoujinDTO src){
+	public void assign(RoujinDTO src){
 		roujinId = src.roujinId;
 		patientId = src.patientId;
 		shichouson = src.shichouson;

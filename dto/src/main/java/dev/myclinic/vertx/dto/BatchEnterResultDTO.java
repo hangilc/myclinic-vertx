@@ -7,7 +7,7 @@ public class BatchEnterResultDTO {
     public List<Integer> shinryouIds;
     public List<Integer> conductIds;
 
-    public static void assign(dev.myclinic.vertx.dto.BatchEnterResultDTO dst, dev.myclinic.vertx.dto.BatchEnterResultDTO src){
+    public static void assign(BatchEnterResultDTO dst, dev.myclinic.vertx.dto.BatchEnterResultDTO src){
         dst.drugIds = src.drugIds;
         dst.shinryouIds = src.shinryouIds;
         dst.conductIds = src.conductIds;

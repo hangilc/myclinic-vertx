@@ -5,9 +5,9 @@ import java.util.List;
 
 public class BatchEnterRequestDTO {
 
-    public List<dev.myclinic.vertx.dto.DrugWithAttrDTO> drugs;
-    public List<dev.myclinic.vertx.dto.ShinryouWithAttrDTO> shinryouList;
-    public List<dev.myclinic.vertx.dto.ConductEnterRequestDTO> conducts;
+    public List<DrugWithAttrDTO> drugs;
+    public List<ShinryouWithAttrDTO> shinryouList;
+    public List<ConductEnterRequestDTO> conducts;
 
     @Override
     public String toString() {

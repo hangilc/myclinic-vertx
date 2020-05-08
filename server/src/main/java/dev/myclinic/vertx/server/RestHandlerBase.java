@@ -3,13 +3,16 @@ package dev.myclinic.vertx.server;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.mastermap.MasterMap;
 
 class RestHandlerBase {
 
     protected final ObjectMapper mapper;
+    protected final MasterMap masterMap;
 
-    RestHandlerBase(ObjectMapper mapper){
+    RestHandlerBase(ObjectMapper mapper, MasterMap masterMap){
         this.mapper = mapper;
+        this.masterMap = masterMap;
     }
 
     protected String jsonEncode(Object obj){

@@ -2,6 +2,7 @@ package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import dev.myclinic.mastermap.MasterMap;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.appconfig.FileBasedAppConfig;
 import dev.myclinic.vertx.db.MysqlDataSourceConfig;
@@ -34,11 +35,12 @@ public class Main {
         TableSet ts = TableSet.create();
         Vertx vertx = Vertx.vertx();
         AppConfig config = createConfig(vertx);
+        MasterMap masterMap = config.getMasterMap();
         HttpServer server = vertx.createHttpServer();
         Router router = Router.router(vertx);
         Route restRoute = router.route("/json/:action");
-        restRoute.blockingHandler(new RestHandler(ds, ts, mapper));
-        restRoute.handler(new NoDatabaseRestHandler(config, mapper, vertx));
+        restRoute.blockingHandler(new RestHandler(ds, ts, mapper, masterMap));
+        restRoute.handler(new NoDatabaseRestHandler(config, mapper, vertx, masterMap));
         restRoute.failureHandler(ctx -> {
             Throwable th = ctx.failure();
             th.printStackTrace();

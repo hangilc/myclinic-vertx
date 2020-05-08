@@ -1,5 +1,6 @@
 package dev.myclinic.vertx.appconfig;
 
+import dev.myclinic.mastermap.MasterMap;
 import dev.myclinic.vertx.dto.ClinicInfoDTO;
 import dev.myclinic.vertx.dto.DiseaseExampleDTO;
 import dev.myclinic.vertx.dto.PracticeConfigDTO;
@@ -18,4 +19,5 @@ public interface AppConfig {
     Future<String> getNameMapConfigFilePath();
     Future<String> getPowderDrugConfigFilePath();
     Future<PracticeConfigDTO> getPracticeConfig();
+    MasterMap getMasterMap();
 }

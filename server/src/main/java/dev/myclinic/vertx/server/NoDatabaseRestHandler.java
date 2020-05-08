@@ -1,6 +1,7 @@
 package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.mastermap.MasterMap;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.dto.StringResultDTO;
 import io.vertx.core.Handler;
@@ -31,8 +32,8 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private final AppConfig appConfig;
     private final Vertx vertx;
 
-    NoDatabaseRestHandler(AppConfig appConfig, ObjectMapper mapper, Vertx vertx) {
-        super(mapper);
+    NoDatabaseRestHandler(AppConfig appConfig, ObjectMapper mapper, Vertx vertx, MasterMap masterMap) {
+        super(mapper, masterMap);
         this.appConfig = appConfig;
         this.vertx = vertx;
     }

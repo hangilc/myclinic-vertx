@@ -1,15 +1,15 @@
 package dev.myclinic.vertx.server;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.mastermap.MasterKind;
+import dev.myclinic.mastermap.MasterMap;
 import dev.myclinic.vertx.db.Backend;
 import dev.myclinic.vertx.db.Query;
 import dev.myclinic.vertx.db.TableSet;
 import dev.myclinic.vertx.dto.*;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
@@ -19,10 +19,7 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 
@@ -37,8 +34,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         void call(RoutingContext ctx, Connection conn) throws Exception;
     }
 
-    public RestHandler(DataSource ds, TableSet ts, ObjectMapper mapper){
-        super(mapper);
+    public RestHandler(DataSource ds, TableSet ts, ObjectMapper mapper, MasterMap masterMap){
+        super(mapper, masterMap);
         this.ds = ds;
         this.ts = ts;
     }
@@ -494,19 +491,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<ShinryouMasterDTO> _value = backend.searchShinryouMaster(text, at);
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
-    }
-
-    private void batchEnterShinryouByName(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        List<String> name = params.getAll("name");
-        int visitId = Integer.parseInt(params.get("visit-id"));
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        BatchEnterResultDTO _value = backend.batchEnterShinryouByName(name, visitId);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
@@ -2123,7 +2107,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("get-wqueue-full", this::getWqueueFull);
         funcMap.put("list-shinryou-full", this::listShinryouFull);
         funcMap.put("search-shinryou-master", this::searchShinryouMaster);
-        funcMap.put("batch-enter-shinryou-by-name", this::batchEnterShinryouByName);
         funcMap.put("enter-conduct-kizai", this::enterConductKizai);
         funcMap.put("batch-enter-drugs", this::batchEnterDrugs);
         funcMap.put("delete-disease", this::deleteDisease);
@@ -2257,7 +2240,85 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("get-disease-full", this::getDiseaseFull);
     }
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////
 
+    {
+        funcMap.put("batch-enter-shinryou-by-name", this::batchEnterShinryouByName);
+    }
+
+    private ConductShinryouDTO createConductShinryouReq(String name, LocalDate at){
+        try {
+            ConductShinryouDTO dto = new ConductShinryouDTO();
+            dto.shinryoucode = masterMap.resolve(MasterKind.Shinryou, name, at);
+            return dto;
+        } catch(Exception e){
+            logger.info("Failed to enter " + name, e);
+            throw new RuntimeException(String.format("%sを入力できませんでした。", name), e);
+        }
+    }
+
+    private ConductKizaiDTO createConductKizaiReq(String name, double amount, LocalDate at){
+        try {
+            ConductKizaiDTO dto = new ConductKizaiDTO();
+            dto.kizaicode = masterMap.resolve(MasterKind.Kizai, name, at);
+            dto.amount = amount;
+            return dto;
+        } catch(Exception e){
+            logger.info("Failed to enter " + name, e);
+            throw new RuntimeException(String.format("%sを入力できませんでした。", name), e);
+        }
+    }
+
+    private ShinryouWithAttrDTO createShinryouReq(int visitId, String name, LocalDate at){
+        ShinryouWithAttrDTO result = new ShinryouWithAttrDTO();
+        ShinryouDTO shinryou = new ShinryouDTO();
+        shinryou.shinryoucode = masterMap.resolve(MasterKind.Shinryou, name, at);
+        result.shinryou = shinryou;
+        return result;
+    }
+
+    private ConductEnterRequestDTO createKotsuenTeiryouReq(int visitId, LocalDate at){
+        ConductEnterRequestDTO creq = new ConductEnterRequestDTO();
+        creq.visitId = visitId;
+        creq.gazouLabel = "骨塩定量に使用";
+        creq.shinryouList = List.of(createConductShinryouReq("骨塩定量ＭＤ法", at));
+        creq.kizaiList = List.of(createConductKizaiReq("四ツ切", 1, at));
+        return creq;
+    }
+
+    private void batchEnterShinryouByName(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        List<String> names = params.getAll("name");
+        int visitId = Integer.parseInt(params.get("visit-id"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        BatchEnterResultDTO _value = batchEnterShinryouByName(backend, names, visitId);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
+    public BatchEnterResultDTO batchEnterShinryouByName(Backend backend, List<String> names, int visitId)
+            throws Exception {
+        if( names == null ){
+            names = Collections.emptyList();
+        }
+        VisitDTO visit = backend.getVisit(visitId);
+        LocalDate at = LocalDate.parse(visit.visitedAt.substring(0, 10));
+        BatchEnterRequestDTO req = new BatchEnterRequestDTO();
+        req.shinryouList = new ArrayList<>();
+        req.drugs = new ArrayList<>();
+        req.conducts = new ArrayList<>();
+        for(String name: names){
+            if (name.equals("骨塩定量")) {
+                req.conducts.add(createKotsuenTeiryouReq(visitId, at));
+            } else {
+                req.shinryouList.add(createShinryouReq(visitId, name, at));
+            }
+        }
+        return backend.batchEnter(req);
+    }
 
     @Override
     public void handle(RoutingContext routingContext) {

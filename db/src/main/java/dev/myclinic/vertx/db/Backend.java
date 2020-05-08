@@ -2889,52 +2889,6 @@ public class Backend {
         return result;
     }
 
-    private static class BatchEnterAccum {
-        List<Integer> shinryouIds = new ArrayList<>();
-        List<Integer> conductIds = new ArrayList<>();
-        List<String> errorMessages = new ArrayList<>();
-
-        BatchEnterResultDTO toBatchEnterResult(){
-            BatchEnterResultDTO result = new BatchEnterResultDTO();
-            result.shinryouIds = shinryouIds;
-            result.conductIds = conductIds;
-            return result;
-        }
-    }
-
-    private void addKotsuenTeiryou(BatchEnterAccum accum, int visitId, LocalDate at){
-        throw new RuntimeException("not implemented");
-//        ConductDTO conduct = new ConductDTO();
-//        conduct.kind = ConductKind.Gazou.getCode();
-//        conduct.visitId = visitId;
-//        int conductId = dbGateway.enterConduct(conduct);
-//        GazouLabelDTO gazouLabel = new GazouLabelDTO();
-//        gazouLabel.conductId = conductId;
-//        gazouLabel.label = "骨塩定量に使用";
-//        dbGateway.enterGazouLabel(gazouLabel);
-//        Optional<ShinryouMasterDTO> optShinryouMaster = resolveShinryouMaster("骨塩定量ＭＤ法", at);
-//        if (!optShinryouMaster.isPresent()) {
-//            accum.errorMessages.add("骨塩定量ＭＤ法が適用できません。");
-//            return;
-//        }
-//        ShinryouMasterDTO shinryouMaster = optShinryouMaster.get();
-//        ConductShinryouDTO conductShinryou = new ConductShinryouDTO();
-//        conductShinryou.conductId = conductId;
-//        conductShinryou.shinryoucode = shinryouMaster.shinryoucode;
-//        dbGateway.enterConductShinryou(conductShinryou);
-//        Optional<KizaiMasterDTO> optKizaiMaster = masterMapUtil.resolveKizaiMaster("四ツ切", at);
-//        if( !optKizaiMaster.isPresent() ){
-//            accum.errorMessages.add("四ツ切が適用できません。");
-//            return;
-//        }
-//        KizaiMasterDTO kizaiMaster = optKizaiMaster.get();
-//        ConductKizaiDTO conductKizai = new ConductKizaiDTO();
-//        conductKizai.conductId = conductId;
-//        conductKizai.kizaicode = kizaiMaster.kizaicode;
-//        conductKizai.amount = 1.0;
-//        dbGateway.enterConductKizai(conductKizai);
-//        accum.conductIds.add(conductId);
-    }
 
     public BatchEnterResultDTO batchEnterShinryouByName(List<String> names, int visitId) throws Exception {
         throw new RuntimeException("not implemented");

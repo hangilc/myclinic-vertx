@@ -5,6 +5,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.mastermap.MasterChronoMap;
+import dev.myclinic.mastermap.MasterMap;
+import dev.myclinic.mastermap.MasterNameMap;
 import dev.myclinic.vertx.dto.ClinicInfoDTO;
 import dev.myclinic.vertx.dto.DiseaseExampleDTO;
 import dev.myclinic.vertx.dto.PracticeConfigDTO;
@@ -118,6 +121,19 @@ public class FileBasedAppConfig implements AppConfig {
     public Future<PracticeConfigDTO> getPracticeConfig() {
         File file = new File(configDir, "practice-config.yml");
         return fromYamlFile(file, new TypeReference<>(){});
+    }
+
+    @Override
+    public MasterMap getMasterMap() {
+        File nameMapFile = new File(configDir, "master-name.txt");
+        File chronoMapFile = new File(configDir, "master-map.txt");
+        try {
+            MasterNameMap nameMap = MasterNameMap.fromFile(nameMapFile);
+            MasterChronoMap chronoMap = MasterChronoMap.fromFile(chronoMapFile);
+            return new MasterMap(nameMap, chronoMap);
+        } catch(Exception e){
+            throw new RuntimeException("Failed to read master map.", e);
+        }
     }
 
     private <T> Future<T> fromYamlFile(File file, TypeReference<T> typeRef){

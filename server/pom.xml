@@ -53,6 +53,11 @@
             <artifactId>app-config</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>dev.myclinic.vertx</groupId>
+            <artifactId>master-map</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

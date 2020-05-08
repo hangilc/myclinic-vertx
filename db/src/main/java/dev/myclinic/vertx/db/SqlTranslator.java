@@ -18,7 +18,7 @@ public class SqlTranslator {
         List<String> getColumnNames();
     }
 
-    public class AliasedTable {
+    public static class AliasedTable {
         public TableInfo table;
         public String alias;
 
@@ -59,7 +59,7 @@ public class SqlTranslator {
         ));
     }
 
-    private static Pattern selectFromPattern = Pattern.compile("^\\s*select\\s+\\*\\s+from\\b",
+    private static final Pattern selectFromPattern = Pattern.compile("^\\s*select\\s+\\*\\s+from\\b",
             Pattern.CASE_INSENSITIVE);
 
     public String translate(String src, List<AliasedTable> tables){

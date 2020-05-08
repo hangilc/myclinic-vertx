@@ -4,9 +4,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DiseaseFullDTO {
-    public dev.myclinic.vertx.dto.DiseaseDTO disease;
-    public dev.myclinic.vertx.dto.ByoumeiMasterDTO master;
-    public List<dev.myclinic.vertx.dto.DiseaseAdjFullDTO> adjList;
+    public DiseaseDTO disease;
+    public ByoumeiMasterDTO master;
+    public List<DiseaseAdjFullDTO> adjList;
+
+    public DiseaseFullDTO(){
+
+    }
+
+    public DiseaseFullDTO(DiseaseDTO disease, ByoumeiMasterDTO master){
+        this.disease = disease;
+        this.master = master;
+    }
+
+    public DiseaseFullDTO(DiseaseDTO disease, ByoumeiMasterDTO master, List<DiseaseAdjFullDTO> adjList){
+        this.disease = disease;
+        this.master = master;
+        this.adjList = adjList;
+    }
 
     @Override
     public String toString() {
@@ -17,8 +32,8 @@ public class DiseaseFullDTO {
                 '}';
     }
 
-    public static dev.myclinic.vertx.dto.DiseaseFullDTO create(dev.myclinic.vertx.dto.DiseaseDTO disease, dev.myclinic.vertx.dto.ByoumeiMasterDTO master){
-        dev.myclinic.vertx.dto.DiseaseFullDTO result = new dev.myclinic.vertx.dto.DiseaseFullDTO();
+    public static DiseaseFullDTO create(DiseaseDTO disease, ByoumeiMasterDTO master){
+        DiseaseFullDTO result = new DiseaseFullDTO();
         result.disease = disease;
         result.master = master;
         result.adjList = new ArrayList<>();

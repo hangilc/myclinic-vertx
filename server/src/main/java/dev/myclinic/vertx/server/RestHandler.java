@@ -904,8 +904,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
-        int page = Integer.parseInt(params.get("page"));
-        int itemsPerPage = Integer.parseInt(params.get("items-per-page"));
+        Integer page = params.contains("page") ? Integer.parseInt(params.get("page")) : 0;
+        Integer itemsPerPage = params.contains("items-per-page") ? Integer.parseInt(params.get("items-per-page")) : 10;
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<DiseaseFullDTO> _value = backend.pageDiseaseFull(patientId, page, itemsPerPage);

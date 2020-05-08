@@ -1,6 +1,5 @@
 package dev.myclinic.vertx.db;
 
-import dev.myclinic.vertx.consts.ConductKind;
 import dev.myclinic.vertx.consts.DrugCategory;
 import dev.myclinic.vertx.consts.PharmaQueueState;
 import dev.myclinic.vertx.consts.WqueueWaitState;
@@ -46,6 +45,7 @@ public class Backend {
         });
         this.hotlineLogger = new HotlineLogger(hotlineLogs::add);
     }
+
     private static <S, T, U> Projector<U> biProjector(Projector<S> p1, Projector<T> p2, BiFunction<S, T, U> f) {
         return (rs, ctx) -> {
             S s = p1.project(rs, ctx);
@@ -383,7 +383,7 @@ public class Backend {
         return result;
     }
 
-    public int startVisit(int patientId){
+    public int startVisit(int patientId) {
         return startVisit(patientId, LocalDateTime.now()).visitId;
     }
 
@@ -540,9 +540,9 @@ public class Backend {
         practiceLogger.logChargeUpdated(prev, charge);
     }
 
-    public void modifyCharge(int visitId, int charge){
+    public void modifyCharge(int visitId, int charge) {
         ChargeDTO cur = getCharge(visitId);
-        if( cur == null ){
+        if (cur == null) {
             ChargeDTO dto = new ChargeDTO();
             dto.visitId = visitId;
             dto.charge = charge;
@@ -1351,7 +1351,7 @@ public class Backend {
         return shinryou.shinryouId;
     }
 
-    public void updateShinryou(ShinryouDTO shinryou){
+    public void updateShinryou(ShinryouDTO shinryou) {
         ShinryouDTO prev = ts.shinryouTable.getById(query, shinryou.shinryouId);
         ts.shinryouTable.update(query, shinryou);
         practiceLogger.logShinryouUpdated(prev, shinryou);
@@ -2079,7 +2079,7 @@ public class Backend {
         }
     }
 
-    public void deleteRoujinSafely(RoujinDTO roujin){
+    public void deleteRoujinSafely(RoujinDTO roujin) {
         deleteRoujinSafely(roujin.roujinId);
     }
 
@@ -2133,7 +2133,7 @@ public class Backend {
         }
     }
 
-    public void deleteKouhiSafely(KouhiDTO kouhi){
+    public void deleteKouhiSafely(KouhiDTO kouhi) {
         deleteKouhiSafely(kouhi.kouhiId);
     }
 
@@ -2298,6 +2298,15 @@ public class Backend {
             count += 1;
         }
         return count;
+    }
+
+    private List<DiseaseAdjFullDTO> getDiseaseAdjFull(int diseaseId) {
+        String sql = "select a.*, m.* from DiseaseAdj a, ShuushokugoMaster m " +
+                " where a.diseaseId = ? " +
+                " and a.shuushokugocode = m.shuushokugocode order by a.diseaseAdjId";
+        return getQuery().query(xlate(sql, ts.diseaseAdjTable, "a", ts.shuushokugoMasterTable, "m"),
+                biProjector(ts.diseaseAdjTable, ts.shuushokugoMasterTable, DiseaseAdjFullDTO::new),
+                diseaseId);
     }
 
     // PharmaQueue ///////////////////////////////////////////////////////////////////////
@@ -2840,22 +2849,22 @@ public class Backend {
 
     public HokenDTO convertToHoken(VisitDTO visitDTO) throws Exception {
         HokenDTO hoken = new HokenDTO();
-        if( visitDTO.shahokokuhoId != 0 ){
+        if (visitDTO.shahokokuhoId != 0) {
             hoken.shahokokuho = getShahokokuho(visitDTO.shahokokuhoId);
         }
-        if( visitDTO.koukikoureiId != 0 ){
+        if (visitDTO.koukikoureiId != 0) {
             hoken.koukikourei = getKoukikourei(visitDTO.koukikoureiId);
         }
-        if( visitDTO.roujinId != 0 ){
+        if (visitDTO.roujinId != 0) {
             hoken.roujin = getRoujin(visitDTO.roujinId);
         }
-        if( visitDTO.kouhi1Id != 0 ){
+        if (visitDTO.kouhi1Id != 0) {
             hoken.kouhi1 = getKouhi(visitDTO.kouhi1Id);
         }
-        if( visitDTO.kouhi2Id != 0 ){
+        if (visitDTO.kouhi2Id != 0) {
             hoken.kouhi2 = getKouhi(visitDTO.kouhi2Id);
         }
-        if( visitDTO.kouhi3Id != 0 ){
+        if (visitDTO.kouhi3Id != 0) {
             hoken.kouhi3 = getKouhi(visitDTO.kouhi3Id);
         }
         return hoken;
@@ -2911,18 +2920,18 @@ public class Backend {
                 patientId, iyakuhincode);
     }
 
-    private List<Integer> listVisitIdForToday(){
+    private List<Integer> listVisitIdForToday() {
         String sql = "select visitId from Visit " +
                 " where date(visitedAt) = date(now()) order by visitId";
         return getQuery().query(xlate(sql, ts.visitTable), intProjector);
     }
 
-    private List<VisitPatientDTO> listVisitPatientByVisitIds(List<Integer> visitIds){
-        if( visitIds.size() == 0 ){
+    private List<VisitPatientDTO> listVisitPatientByVisitIds(List<Integer> visitIds) {
+        if (visitIds.size() == 0) {
             return Collections.emptyList();
         } else {
             String sql = String.format("select visit.*, patient.* from Visit visit, Patient patient " +
-                    " where visit.patientId = patient.patientId and visit.visitId in (%s) ",
+                            " where visit.patientId = patient.patientId and visit.visitId in (%s) ",
                     visitIds.stream().map(String::valueOf).collect(Collectors.joining(",")));
             return getQuery().query(xlate(sql, ts.visitTable, "visit", ts.patientTable, "patient"),
                     biProjector(ts.visitTable, ts.patientTable, VisitPatientDTO::new));
@@ -2958,7 +2967,7 @@ public class Backend {
                 itemsPerPage, itemsPerPage * page);
     }
 
-    private List<Query.Pair<PharmaQueueDTO, PatientDTO>> listPharmaQueuePatient(){
+    private List<Query.Pair<PharmaQueueDTO, PatientDTO>> listPharmaQueuePatient() {
         String sql = "select queue.*, patient.* from PharmaQueue queue, Visit visit, Patient patient " +
                 " where queue.visitId = visit.visitId and visit.patientId = patient.patientId " +
                 " order by queue.visitId ";
@@ -2982,8 +2991,33 @@ public class Backend {
                 .collect(Collectors.toList());
     }
 
+    private int countDiseaseMasterByPatient(int patientId) {
+        String sql = "select count(*) from Disease d, ByoumeiMaster m where d.patientId = ? " +
+                " and m.shoubyoumeicode = d.shoubyoumeicode " +
+                " and m.validFrom <= d.startDate " +
+                " and (m.validUpto is null or m.validUpto >= d.startDate) ";
+        return getQuery().get(xlate(sql, ts.diseaseTable, "d", ts.byoumeiMasterTable, "m"),
+                intProjector, patientId);
+    }
+
+    private List<Query.Pair<DiseaseDTO, ByoumeiMasterDTO>> listDiseaseMasterByPatient(int patientId,
+                                                                                      int limit, int offset) {
+        String sql = "select d.*, m.* from Disease d, ByoumeiMaster m where d.patientId = ? " +
+                " and m.shoubyoumeicode = d.shoubyoumeicode " +
+                " and m.validFrom <= d.startDate " +
+                " and (m.validUpto is null or m.validUpto >= d.startDate) " +
+                " order by d.diseaseId desc limit ? offset ?";
+        return getQuery().query(xlate(sql, ts.diseaseTable, "d", ts.byoumeiMasterTable, "m"),
+                biProjector(ts.diseaseTable, ts.byoumeiMasterTable, Query.Pair::new),
+                patientId, limit, offset);
+    }
+
     public List<DiseaseFullDTO> pageDiseaseFull(int patientId, int page, int itemsPerPage) throws Exception {
-        throw new RuntimeException("Not implemented: pageDiseaseFull");
+        return listDiseaseMasterByPatient(patientId, itemsPerPage, page * itemsPerPage).stream()
+                .map(pair -> new DiseaseFullDTO(pair.first, pair.second))
+                .peek(diseaseFullDTO ->
+                        diseaseFullDTO.adjList = getDiseaseAdjFull(diseaseFullDTO.disease.diseaseId))
+                .collect(Collectors.toList());
     }
 
     public int enterInject(int visitId, int kind, int iyakuhincode, double amount) throws Exception {

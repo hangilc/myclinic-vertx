@@ -1,8 +1,17 @@
 package dev.myclinic.vertx.dto;
 
 public class DiseaseAdjFullDTO {
-    public dev.myclinic.vertx.dto.DiseaseAdjDTO diseaseAdj;
+    public DiseaseAdjDTO diseaseAdj;
     public ShuushokugoMasterDTO master;
+
+    public DiseaseAdjFullDTO(){
+
+    }
+
+    public DiseaseAdjFullDTO(DiseaseAdjDTO diseaseAdj, ShuushokugoMasterDTO master) {
+        this.diseaseAdj = diseaseAdj;
+        this.master = master;
+    }
 
     @Override
     public String toString() {

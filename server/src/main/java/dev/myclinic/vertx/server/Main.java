@@ -41,7 +41,7 @@ public class Main {
         HttpServer server = vertx.createHttpServer();
         Router router = Router.router(vertx);
         Route restRoute = router.route("/json/:action");
-        restRoute.blockingHandler(new RestHandler(ds, ts, mapper, masterMap));
+        restRoute.blockingHandler(new RestHandler(ds, ts, mapper, masterMap, houkatsuKensa));
         restRoute.handler(new NoDatabaseRestHandler(config, mapper, vertx, masterMap));
         restRoute.failureHandler(ctx -> {
             Throwable th = ctx.failure();

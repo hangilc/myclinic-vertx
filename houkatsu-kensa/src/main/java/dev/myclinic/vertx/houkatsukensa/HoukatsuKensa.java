@@ -80,6 +80,7 @@ public class HoukatsuKensa {
             }
             return Optional.empty();
         }
+
     }
 
     public List<Revision> revisions;

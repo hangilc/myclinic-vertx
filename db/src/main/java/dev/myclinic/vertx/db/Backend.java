@@ -306,7 +306,7 @@ public class Backend {
         visitFull2DTO.shinryouList = listShinryouFull(visitId);
         visitFull2DTO.drugs = listDrugFull(visitId);
         visitFull2DTO.conducts = listConductFull(visitId);
-        visitFull2DTO.hoken = getHoken(visit);
+        visitFull2DTO.hoken = getHokenForVisit(visit);
         visitFull2DTO.charge = getCharge(visitId);
         return visitFull2DTO;
     }
@@ -766,10 +766,10 @@ public class Backend {
 
     public HokenDTO getHoken(int visitId) {
         VisitDTO visit = getVisit(visitId);
-        return getHoken(visit);
+        return getHokenForVisit(visit);
     }
 
-    private HokenDTO getHoken(VisitDTO visit) {
+    public HokenDTO getHokenForVisit(VisitDTO visit) {
         HokenDTO hokenDTO = new HokenDTO();
         if (visit.shahokokuhoId > 0) {
             hokenDTO.shahokokuho = getShahokokuho(visit.shahokokuhoId);
@@ -3101,10 +3101,6 @@ public class Backend {
         dto.totalPages = numberOfPages(totalCount, itemsPerPage);
         dto.visitDrugs = visitDrugs;
         return dto;
-    }
-
-    public MeisaiDTO getVisitMeisai(int visitId) throws Exception {
-        throw new RuntimeException("Not implemented: getVisitMeisai");
     }
 
     public int countPageOfDiseaseByPatient(int patientId, int itemsPerPage) throws Exception {

@@ -1,5 +1,7 @@
 package dev.myclinic.vertx.meisai;
 
+import dev.myclinic.vertx.dto.SectionItemDTO;
+
 import java.util.List;
 
 public abstract class SectionItem {
@@ -38,6 +40,14 @@ public abstract class SectionItem {
 		} else {
 			return items.stream().mapToInt(item -> item.getTanka() * item.getCount()).sum();
 		}
+	}
+
+	public SectionItemDTO toSectionItemDTO(){
+		SectionItemDTO dto = new SectionItemDTO();
+		dto.label = getLabel();
+		dto.tanka = getTanka();
+		dto.count = getCount();
+		return dto;
 	}
 
 	@Override

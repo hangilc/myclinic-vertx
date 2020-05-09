@@ -2,6 +2,8 @@ package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.consts.MeisaiSection;
+import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
 import dev.myclinic.vertx.mastermap.MasterKind;
 import dev.myclinic.vertx.mastermap.MasterMap;
 import dev.myclinic.vertx.consts.ConductKind;
@@ -9,6 +11,12 @@ import dev.myclinic.vertx.db.Backend;
 import dev.myclinic.vertx.db.Query;
 import dev.myclinic.vertx.db.TableSet;
 import dev.myclinic.vertx.dto.*;
+import dev.myclinic.vertx.meisai.Meisai;
+import dev.myclinic.vertx.meisai.RcptVisit;
+import dev.myclinic.vertx.meisai.SectionItem;
+import dev.myclinic.vertx.util.DateTimeUtil;
+import dev.myclinic.vertx.util.HokenUtil;
+import dev.myclinic.vertx.util.RcptUtil;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
@@ -21,6 +29,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -30,15 +39,18 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
 
     private final DataSource ds;
     private final TableSet ts;
+    private final HoukatsuKensa houkatsuKensa;
 
     interface RestFunction {
         void call(RoutingContext ctx, Connection conn) throws Exception;
     }
 
-    public RestHandler(DataSource ds, TableSet ts, ObjectMapper mapper, MasterMap masterMap){
+    public RestHandler(DataSource ds, TableSet ts, ObjectMapper mapper, MasterMap masterMap,
+                       HoukatsuKensa houkatsuKensa){
         super(mapper, masterMap);
         this.ds = ds;
         this.ts = ts;
+        this.houkatsuKensa = houkatsuKensa;
     }
 
     private final Map<String, RestFunction> funcMap = new HashMap<>();
@@ -1287,18 +1299,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end(result);
     }
 
-    private void getVisitMeisai(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        int visitId = Integer.parseInt(params.get("visit-id"));
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        MeisaiDTO _value = backend.getVisitMeisai(visitId);
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
-    }
-
     private void countPageOfDiseaseByPatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
@@ -2082,7 +2082,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("search-text-by-page", this::searchTextByPage);
         funcMap.put("page-visit-drug", this::pageVisitDrug);
         funcMap.put("get-conduct-drug-full", this::getConductDrugFull);
-        funcMap.put("get-visit-meisai", this::getVisitMeisai);
         funcMap.put("count-page-of-disease-by-patient", this::countPageOfDiseaseByPatient);
         funcMap.put("start-exam", this::startExam);
         funcMap.put("get-shinryou-master", this::getShinryouMaster);
@@ -2152,6 +2151,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("resolve-iyakuhin-master", this::resolveIyakuhinMaster);
         funcMap.put("batch-resolve-byoumei-names", this::batchResolveByoumeiNames);
         funcMap.put("resolve-shinryou-master", this::resolveShinryouMaster);
+        funcMap.put("get-visit-meisai", this::getVisitMeisai);
     }
 
     private ConductShinryouDTO createConductShinryouReq(String name, LocalDate at){
@@ -2412,6 +2412,63 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
     }
+
+    private MeisaiDTO getVisitMeisai(Backend backend, int visitId) throws Exception {
+        RcptVisit rcptVisit = new RcptVisit();
+        VisitDTO visit = backend.getVisit(visitId);
+        List<ShinryouFullDTO> shinryouList = backend.listShinryouFull(visitId);
+        List<DrugFullDTO> drugs = backend.listDrugFull(visitId);
+        List<ConductFullDTO> conducts = backend.listConductFull(visitId);
+        LocalDate at = DateTimeUtil.parseSqlDateTime(visit.visitedAt).toLocalDate();
+        HoukatsuKensa.Revision revision = houkatsuKensa.findRevision(at);
+        rcptVisit.addShinryouList(shinryouList, revision);
+        rcptVisit.addDrugs(drugs);
+        rcptVisit.addConducts(conducts);
+        Meisai meisai = rcptVisit.getMeisai();
+        MeisaiDTO meisaiDTO = new MeisaiDTO();
+        meisaiDTO.sections = new ArrayList<>();
+        for (MeisaiSection section : MeisaiSection.values()) {
+            List<SectionItem> items = meisai.getItems(section);
+            if (items != null) {
+                MeisaiSectionDTO meisaiSectionDTO = new MeisaiSectionDTO();
+                meisaiSectionDTO.name = section.toString();
+                meisaiSectionDTO.label = section.getLabel();
+                meisaiSectionDTO.items = items.stream()
+                        .map(SectionItem::toSectionItemDTO)
+
+                        .collect(Collectors.toList());
+                meisaiSectionDTO.sectionTotalTen = SectionItem.sum(items);
+                meisaiDTO.sections.add(meisaiSectionDTO);
+            }
+        }
+        meisaiDTO.totalTen = meisai.totalTen();
+        PatientDTO patientDTO = backend.getPatient(visit.patientId);
+        if (patientDTO.birthday != null) {
+            HokenDTO hokenDTO = backend.getHokenForVisit(visit);
+            meisaiDTO.hoken = hokenDTO;
+            LocalDate birthdayDate = DateTimeUtil.parseSqlDate(patientDTO.birthday);
+            int rcptAge = HokenUtil.calcRcptAge(birthdayDate.getYear(), birthdayDate.getMonth().getValue(),
+                    birthdayDate.getDayOfMonth(), at.getYear(), at.getMonth().getValue());
+            meisaiDTO.futanWari = HokenUtil.calcFutanWari(hokenDTO, rcptAge);
+        } else {
+            meisaiDTO.futanWari = 10;
+        }
+        meisaiDTO.charge = RcptUtil.calcCharge(meisaiDTO.totalTen, meisaiDTO.futanWari);
+        return meisaiDTO;
+    }
+
+    private void getVisitMeisai(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        int visitId = Integer.parseInt(params.get("visit-id"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        MeisaiDTO _value = getVisitMeisai(backend, visitId);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
 
     @Override
     public void handle(RoutingContext routingContext) {

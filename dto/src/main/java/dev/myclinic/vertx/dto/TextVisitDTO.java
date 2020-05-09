@@ -5,6 +5,11 @@ public class TextVisitDTO {
     public TextDTO text;
     public VisitDTO visit;
 
+    public TextVisitDTO(TextDTO text, VisitDTO visit) {
+        this.text = text;
+        this.visit = visit;
+    }
+
     @Override
     public String toString() {
         return "TextVisitDTO{" +
@@ -13,10 +18,4 @@ public class TextVisitDTO {
                 '}';
     }
 
-    public static TextVisitDTO create(TextDTO text, VisitDTO visit){
-        TextVisitDTO result = new TextVisitDTO();
-        result.text = text;
-        result.visit = visit;
-        return result;
-    }
 }

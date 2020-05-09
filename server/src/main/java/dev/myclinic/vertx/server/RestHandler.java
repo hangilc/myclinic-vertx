@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.mastermap.MasterKind;
 import dev.myclinic.mastermap.MasterMap;
+import dev.myclinic.vertx.consts.ConductKind;
 import dev.myclinic.vertx.db.Backend;
 import dev.myclinic.vertx.db.Query;
 import dev.myclinic.vertx.db.TableSet;
@@ -950,21 +951,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end(result);
     }
 
-    private void enterInject(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        int visitId = Integer.parseInt(params.get("visit-id"));
-        int kind = Integer.parseInt(params.get("kind"));
-        int iyakuhincode = Integer.parseInt(params.get("iyakuhincode"));
-        double amount = Double.parseDouble(params.get("amount"));
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        int _value = backend.enterInject(visitId, kind, iyakuhincode, amount);
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
-    }
-
     private void deleteConductDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
@@ -1046,32 +1032,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end(result);
     }
 
-    private void resolveShinryoucode(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        int shinryoucode = Integer.parseInt(params.get("shinryoucode"));
-        LocalDate at = LocalDate.parse(params.get("at"));
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        int _value = backend.resolveShinryoucode(shinryoucode, at);
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
-    }
-
-    private void resolveIyakuhinMaster(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        int iyakuhincode = Integer.parseInt(params.get("iyakuhincode"));
-        LocalDate at = LocalDate.parse(params.get("at"));
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        IyakuhinMasterDTO _value = backend.resolveIyakuhinMaster(iyakuhincode, at);
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
-    }
-
     private void listDrugFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
@@ -1103,19 +1063,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.updateShouki(shouki);
         conn.commit();
         req.response().end("true");
-    }
-
-    private void batchResolveByoumeiNames(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        LocalDate at = LocalDate.parse(params.get("at"));
-        List<List<String>> args = _convertParam(ctx.getBodyAsString(), new TypeReference<>(){});
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        Map<String, Integer> _value = backend.batchResolveByoumeiNames(at, args);
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
     }
 
     private void prescDone(RoutingContext ctx, Connection conn) throws Exception {
@@ -1284,19 +1231,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<IyakuhinMasterDTO> _value = backend.searchIyakuhinMaster(text, at);
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
-    }
-
-    private void resolveShinryouMaster(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        int shinryoucode = Integer.parseInt(params.get("shinryoucode"));
-        LocalDate at = LocalDate.parse(params.get("at"));
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        ShinryouMasterDTO _value = backend.resolveShinryouMaster(shinryoucode, at);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
@@ -2120,7 +2054,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("batch-get-shinryou-attr", this::batchGetShinryouAttr);
         funcMap.put("batchy-get-shouki", this::batchGetShouki);
         funcMap.put("get-conduct", this::getConduct);
-        funcMap.put("enter-inject", this::enterInject);
         funcMap.put("delete-conduct-drug", this::deleteConductDrug);
         funcMap.put("search-presc-example-full-by-name", this::searchPrescExample);
         funcMap.put("search-patient", this::searchPatient);
@@ -2128,12 +2061,9 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("delete-roujin", this::deleteRoujin);
         funcMap.put("delete-drug-tekiyou", this::deleteDrugTekiyou);
         funcMap.put("find-pharma-drug", this::findPharmaDrug);
-        funcMap.put("resolve-shinryoucode", this::resolveShinryoucode);
-        funcMap.put("resolve-iyakuhin-master", this::resolveIyakuhinMaster);
         funcMap.put("list-drug-full", this::listDrugFull);
         funcMap.put("list-wqueue-full-for-exam", this::listWqueueFullForExam);
         funcMap.put("update-shouki", this::updateShouki);
-        funcMap.put("batch-resolve-byoumei-names", this::batchResolveByoumeiNames);
         funcMap.put("presc-done", this::prescDone);
         funcMap.put("search-text-globally", this::searchTextGlobally);
         funcMap.put("enter-shinryou", this::enterShinryou);
@@ -2148,7 +2078,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("delete-duplicate-shinryou", this::deleteDuplicateShinryou);
         funcMap.put("get-koukikourei", this::getKoukikourei);
         funcMap.put("search-iyakuhin-master-by-name", this::searchIyakuhinMaster);
-        funcMap.put("resolve-shinryou-master", this::resolveShinryouMaster);
         funcMap.put("delete-shinryou-tekiyou", this::deleteShinryouTekiyou);
         funcMap.put("search-text-by-page", this::searchTextByPage);
         funcMap.put("page-visit-drug", this::pageVisitDrug);
@@ -2218,6 +2147,11 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("batch-enter-shinryou-by-name", this::batchEnterShinryouByName);
         funcMap.put("batch-resolve-iyakuhin-master", this::batchResolveIyakuhinMaster);
         funcMap.put("batch-copy-shinryou", this::batchCopyShinryou);
+        funcMap.put("enter-inject", this::enterInject);
+        funcMap.put("resolve-shinryoucode", this::resolveShinryoucode);
+        funcMap.put("resolve-iyakuhin-master", this::resolveIyakuhinMaster);
+        funcMap.put("batch-resolve-byoumei-names", this::batchResolveByoumeiNames);
+        funcMap.put("resolve-shinryou-master", this::resolveShinryouMaster);
     }
 
     private ConductShinryouDTO createConductShinryouReq(String name, LocalDate at){
@@ -2228,6 +2162,18 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         } catch(Exception e){
             logger.info("Failed to enter " + name, e);
             throw new RuntimeException(String.format("%sを入力できませんでした。", name), e);
+        }
+    }
+
+    private ConductDrugDTO createConductDrugReq(int iyakuhincode, double amount, LocalDate at){
+        try {
+            ConductDrugDTO dto = new ConductDrugDTO();
+            dto.iyakuhincode = masterMap.resolve(MasterKind.Yakuzai, iyakuhincode, at);
+            dto.amount = amount;
+            return dto;
+        } catch(Exception e){
+            logger.info("Failed to enter {}", iyakuhincode, e);
+            throw new RuntimeException(String.format("%dを入力できませんでした。", iyakuhincode), e);
         }
     }
 
@@ -2336,6 +2282,132 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<Integer> _value = batchCopyShinryou(backend, visitId, srcList);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
+    public int enterInject(Backend backend, int visitId, int kind, int iyakuhincode, double amount)
+            throws Exception {
+        BatchEnterRequestDTO req = BatchEnterRequestDTO.create();
+        ConductEnterRequestDTO creq = ConductEnterRequestDTO.create(visitId, kind, null);
+        VisitDTO visit = backend.getVisit(visitId);
+        LocalDate at = LocalDate.parse(visit.visitedAt.substring(0, 10));
+        ConductKind conductKind = ConductKind.fromCode(kind);
+        if( conductKind == ConductKind.HikaChuusha ){
+            creq.shinryouList.add(createConductShinryouReq("皮下筋注", at));
+        } else if( conductKind == ConductKind.JoumyakuChuusha ){
+            creq.shinryouList.add(createConductShinryouReq("静注", at));
+        } else {
+            throw new RuntimeException(String.format("Invalid conduct kind: %s", conductKind));
+        }
+        creq.drugs.add(createConductDrugReq(iyakuhincode, amount, at));
+        req.conducts.add(creq);
+        BatchEnterResultDTO result = backend.batchEnter(req);
+        if( result.conductIds.size() == 1 && result.shinryouIds.size() == 0 && result.drugIds.size() == 0 ){
+            return result.conductIds.get(0);
+        } else {
+            throw new RuntimeException("注射を入力できませんでした。");
+        }
+    }
+
+    private void enterInject(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        int visitId = Integer.parseInt(params.get("visit-id"));
+        int kind = Integer.parseInt(params.get("kind"));
+        int iyakuhincode = Integer.parseInt(params.get("iyakuhincode"));
+        double amount = Double.parseDouble(params.get("amount"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        int _value = enterInject(backend, visitId, kind, iyakuhincode, amount);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
+    private int resolveShinryoucode(int shinryoucode, LocalDate at) throws Exception {
+        return masterMap.resolve(MasterKind.Shinryou, shinryoucode, at);
+    }
+
+    private void resolveShinryoucode(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        int shinryoucode = Integer.parseInt(params.get("shinryoucode"));
+        LocalDate at = LocalDate.parse(params.get("at"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        int _value = resolveShinryoucode(shinryoucode, at);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
+    private IyakuhinMasterDTO resolveIyakuhinMaster(Backend backend, int iyakuhincode, LocalDate at)
+            throws Exception {
+        iyakuhincode = masterMap.resolve(MasterKind.Yakuzai, iyakuhincode, at);
+        return backend.getIyakuhinMaster(iyakuhincode, at);
+    }
+
+    private void resolveIyakuhinMaster(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        int iyakuhincode = Integer.parseInt(params.get("iyakuhincode"));
+        LocalDate at = LocalDate.parse(params.get("at"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        IyakuhinMasterDTO _value = resolveIyakuhinMaster(backend, iyakuhincode, at);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
+    private Map<String, Integer> batchResolveByoumeiNames(LocalDate at, List<List<String>> args)
+            throws Exception {
+        Map<String, Integer> map = new HashMap<>();
+        for(List<String> names: args){
+            if( names.size() < 1 ){
+                continue;
+            }
+            String key = names.get(0);
+            for(String name: names){
+                Optional<Integer> optCode = masterMap.tryResolve(MasterKind.Byoumei, name);
+                if( optCode.isPresent() ){
+                    map.put(key, optCode.get());
+                    break;
+                }
+            }
+        }
+        return map;
+    }
+
+    private void batchResolveByoumeiNames(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        LocalDate at = LocalDate.parse(params.get("at"));
+        List<List<String>> args = _convertParam(ctx.getBodyAsString(), new TypeReference<>(){});
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        Map<String, Integer> _value = batchResolveByoumeiNames(at, args);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
+    public ShinryouMasterDTO resolveShinryouMaster(Backend backend, int shinryoucode, LocalDate at)
+            throws Exception {
+        shinryoucode = masterMap.resolve(MasterKind.Shinryou, shinryoucode, at);
+        return backend.getShinryouMaster(shinryoucode, at);
+    }
+
+    private void resolveShinryouMaster(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        int shinryoucode = Integer.parseInt(params.get("shinryoucode"));
+        LocalDate at = LocalDate.parse(params.get("at"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        ShinryouMasterDTO _value = resolveShinryouMaster(backend, shinryoucode, at);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);

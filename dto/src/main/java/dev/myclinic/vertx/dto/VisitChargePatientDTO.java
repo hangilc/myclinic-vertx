@@ -6,6 +6,15 @@ public class VisitChargePatientDTO {
     public ChargeDTO charge;
     public PatientDTO patient;
 
+    public VisitChargePatientDTO() {
+    }
+
+    public VisitChargePatientDTO(VisitDTO visit, ChargeDTO charge, PatientDTO patient) {
+        this.visit = visit;
+        this.charge = charge;
+        this.patient = patient;
+    }
+
     @Override
     public String toString() {
         return "VisitChargePatientDTO{" +

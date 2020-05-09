@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -54,6 +55,20 @@ public class Backend {
         };
     }
 
+    public interface TriFunction<S, T, U, V> {
+        V apply(S s, T t, U u);
+    }
+
+    private static <S, T, U, V> Projector<V> triProjector(Projector<S> p1, Projector<T> p2, Projector<U> p3,
+                                                          TriFunction<S, T, U, V> f) {
+        return (rs, ctx) -> {
+            S s = p1.project(rs, ctx);
+            T t = p2.project(rs, ctx);
+            U u = p3.project(rs, ctx);
+            return f.apply(s, t, u);
+        };
+    }
+
     private final Projector<Integer> intProjector =
             (rs, ctx) -> rs.getInt(ctx.nextIndex());
 
@@ -73,6 +88,11 @@ public class Backend {
     @ExcludeFromFrontend
     public String xlate(String sqlOrig, TableInfo tableInfo) {
         return sqlTranslator.translate(sqlOrig, tableInfo);
+    }
+
+    @ExcludeFromFrontend
+    private String xlate(String sqlOrig, TableInfo tableInfo1, String alias1) {
+        return sqlTranslator.translate(sqlOrig, tableInfo1, alias1);
     }
 
     @ExcludeFromFrontend
@@ -1293,7 +1313,7 @@ public class Backend {
                         " and t.content like ? order by t.textId limit ? offset ?",
                 ts.textTable, "t", ts.visitTable, "v");
         List<TextVisitDTO> textVisits = getQuery().query(sql,
-                biProjector(ts.textTable, ts.visitTable, TextVisitDTO::create),
+                biProjector(ts.textTable, ts.visitTable, TextVisitDTO::new),
                 patientId, searchText, itemsPerPage, itemsPerPage * page);
         TextVisitPageDTO result = new TextVisitPageDTO();
         result.page = page;
@@ -3020,40 +3040,66 @@ public class Backend {
                 .collect(Collectors.toList());
     }
 
-    public int enterInject(int visitId, int kind, int iyakuhincode, double amount) throws Exception {
-        throw new RuntimeException("Not implemented: enterInject");
-    }
-
-    public int resolveShinryoucode(int shinryoucode, LocalDate at) throws Exception {
-        throw new RuntimeException("Not implemented: resolveShinryoucode");
-    }
-
-    public IyakuhinMasterDTO resolveIyakuhinMaster(int iyakuhincode, LocalDate at) throws Exception {
-        throw new RuntimeException("Not implemented: resolveIyakuhinMaster");
-    }
-
-    public Map<String, Integer> batchResolveByoumeiNames(LocalDate at, List<List<String>> args) throws Exception {
-        throw new RuntimeException("Not implemented: batchResolveByoumeiNames");
+    private List<Integer> listDiseaseIdByPatientAt(int patientId, LocalDate validFrom, LocalDate validUpto){
+        String sql = "select d.diseaseId from Disease d where d.patientId = ? and " +
+                " ( ( d.endReason = 'N' ) or " +
+                "   ( d.startDate <= ? and " +
+                "     ( d.endDate = '0000-00-00' or d.endDate >= ? ) ) ) ";
+        return getQuery().query(xlate(sql, ts.diseaseTable, "d"), intProjector,
+                patientId, validUpto, validFrom);
     }
 
     public List<DiseaseFullDTO> listDiseaseByPatientAt(int patientId, int year, int month) throws Exception {
-        throw new RuntimeException("Not implemented: listDiseaseByPatientAt");
+        LocalDate validFrom = LocalDate.of(year, month, 1);
+        LocalDate validUpto = validFrom.plus(1, ChronoUnit.MONTHS).minus(1, ChronoUnit.DAYS);
+        return listDiseaseIdByPatientAt(patientId, validFrom, validUpto).stream()
+                .map(this::getDiseaseFull)
+                .collect(toList());
     }
 
     public List<VisitChargePatientDTO> listVisitChargePatientAt(LocalDate at) throws Exception {
-        throw new RuntimeException("Not implemented: listVisitChargePatientAt");
-    }
-
-    public ShinryouMasterDTO resolveShinryouMaster(int shinryoucode, LocalDate at) throws Exception {
-        throw new RuntimeException("Not implemented: resolveShinryouMaster");
+        String sql = "select v.*, c.*, p.* from Visit v, Charge c, Patient p where " +
+                " date(v.visitedAt) = date(?) and c.visitId = v.visitId and " +
+                " p.patientId = v.patientId order by v.visitId";
+        return getQuery().query(xlate(sql, ts.visitTable, "v", ts.chargeTable, "c", ts.patientTable, "p"),
+                triProjector(ts.visitTable, ts.chargeTable, ts.patientTable, VisitChargePatientDTO::new), at);
     }
 
     public TextVisitPageDTO searchTextByPage(int patientId, String text, int page) throws Exception {
-        throw new RuntimeException("Not implemented: searchTextByPage");
+        return searchText(patientId, text, page);
+    }
+
+    private int countPageVisitDrug(int patientId){
+        String sql = "select count(*) from (select count(*) from Visit visit, Drug drug where visit.visitId = drug.visitId " +
+                " and visit.patientId = ? group by visit.visitId having count(drug.drugId) > 0) as c";
+        return getQuery().get(xlate(sql, ts.visitTable, "visit", ts.drugTable, "drug"),
+                intProjector, patientId);
+    }
+
+    private List<Integer> doPageVisitDrug(int patientId, int page, int itemsPerPage){
+        String sql = "select visit.visitId from Visit visit, Drug drug where visit.visitId = drug.visitId " +
+                " and visit.patientId = ? group by visit.visitId having count(drug.drugId) > 0 " +
+                " order by visit.visitId desc limit ? offset ?";
+        return getQuery().query(xlate(sql, ts.visitTable, "visit", ts.drugTable, "drug"),
+                intProjector,
+                patientId, itemsPerPage, itemsPerPage * page);
     }
 
     public VisitDrugPageDTO pageVisitDrug(int patientId, int page) throws Exception {
-        throw new RuntimeException("Not implemented: pageVisitDrug");
+        int totalCount = countPageVisitDrug(patientId);
+        int itemsPerPage = 10;
+        List<VisitDrugDTO> visitDrugs = doPageVisitDrug(patientId, page, itemsPerPage).stream()
+                .map(visitId -> {
+                    VisitDrugDTO visitDrug = new VisitDrugDTO();
+                    visitDrug.visit = getVisit(visitId);
+                    visitDrug.drugs = listDrugFull(visitId);
+                    return visitDrug;
+                }).collect(toList());
+        VisitDrugPageDTO dto = new VisitDrugPageDTO();
+        dto.page = page;
+        dto.totalPages = numberOfPages(totalCount, itemsPerPage);
+        dto.visitDrugs = visitDrugs;
+        return dto;
     }
 
     public MeisaiDTO getVisitMeisai(int visitId) throws Exception {

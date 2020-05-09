@@ -1433,19 +1433,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end(result);
     }
 
-    private void batchResolveShuushokugoNames(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        LocalDate at = LocalDate.parse(params.get("at"));
-        List<List<String>> args = _convertParam(ctx.getBodyAsString(), new TypeReference<>(){});
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        Map<String, Integer> _value = backend.batchResolveShuushokugoNames(at, args);
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
-    }
-
     private void batchUpdateDiseaseEndReason(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
@@ -2093,7 +2080,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("list-visit-text-drug-for-patient", this::listVisitTextDrugForPatient);
         funcMap.put("end-exam", this::endExam);
         funcMap.put("search-kizai-master-by-name", this::searchKizaiMaster);
-        funcMap.put("batch-resolve-shuushokugo-names", this::batchResolveShuushokugoNames);
         funcMap.put("batch-update-disease-end-reason", this::batchUpdateDiseaseEndReason);
         funcMap.put("list-practice-log-in-range", this::listPracticeLogInRange);
         funcMap.put("get-hoken", this::getHoken);
@@ -2152,6 +2138,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("batch-resolve-byoumei-names", this::batchResolveByoumeiNames);
         funcMap.put("resolve-shinryou-master", this::resolveShinryouMaster);
         funcMap.put("get-visit-meisai", this::getVisitMeisai);
+        funcMap.put("batch-resolve-shuushokugo-names", this::batchResolveShuushokugoNames);
     }
 
     private ConductShinryouDTO createConductShinryouReq(String name, LocalDate at){
@@ -2469,6 +2456,35 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end(result);
     }
 
+    private void batchResolveShuushokugoNames(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        LocalDate at = LocalDate.parse(params.get("at"));
+        List<List<String>> args = _convertParam(ctx.getBodyAsString(), new TypeReference<>(){});
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        Map<String, Integer> _value = batchResolveShuushokugoNames(at, args);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
+    public Map<String, Integer> batchResolveShuushokugoNames(LocalDate at, List<List<String>> args) throws Exception {
+        Map<String, Integer> map = new HashMap<>();
+        for(List<String> names: args){
+            if( names.size() >= 1 ){
+                String key = names.get(0);
+                for(String name: names){
+                    Optional<Integer> optCode = masterMap.tryResolve(MasterKind.Shuushokugo, name, at);
+                    if( optCode.isPresent() ){
+                        map.put(key, optCode.get());
+                        break;
+                    }
+                }
+            }
+        }
+        return map;
+    }
 
     @Override
     public void handle(RoutingContext routingContext) {

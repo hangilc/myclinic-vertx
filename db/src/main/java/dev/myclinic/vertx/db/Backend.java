@@ -3104,15 +3104,16 @@ public class Backend {
     }
 
     public int countPageOfDiseaseByPatient(int patientId, int itemsPerPage) throws Exception {
-        throw new RuntimeException("Not implemented: countPageOfDiseaseByPatient");
-    }
-
-    public Map<String, Integer> batchResolveShuushokugoNames(LocalDate at, List<List<String>> args) throws Exception {
-        throw new RuntimeException("Not implemented: batchResolveShuushokugoNames");
+        String sql = "select count(*) from Disease where patient_id = ?";
+        int count = getQuery().get(xlate(sql, ts.diseaseTable), intProjector, patientId);
+        return numberOfPages(count, itemsPerPage);
     }
 
     public List<PracticeLogDTO> listPracticeLogInRange(LocalDate date, int afterId, int beforeId) throws Exception {
-        throw new RuntimeException("Not implemented: listPracticeLogInRange");
+        String sql = "select p.* from PracticeLog p where date(p.createdAt) = date(?) " +
+                " and p.serialId > ? and p.serialId < ? order by p.serialId";
+        return getQuery().query(xlate(sql, ts.practiceLogTable, "p"),
+                ts.practiceLogTable, date, afterId, beforeId);
     }
 
     public List<Integer> listVisitingPatientIdHavingHoken(int year, int month) throws Exception {

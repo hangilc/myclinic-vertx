@@ -57,7 +57,9 @@ public class Main {
             System.out.println("opened");
             ws.closeHandler(e -> System.out.println("closed"));
         });
-        server.listen(28080);
+        int port = 28080;
+        server.listen(port);
+        System.out.println(String.format("server started at port %d", port));
     }
 
     private static AppConfig createConfig(Vertx vertx) {

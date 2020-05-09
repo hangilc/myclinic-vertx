@@ -1,4 +1,4 @@
-package dev.myclinic.mastermap;
+package dev.myclinic.vertx.mastermap;
 
 import java.util.Optional;
 

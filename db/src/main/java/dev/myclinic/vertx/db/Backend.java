@@ -3070,7 +3070,8 @@ public class Backend {
     }
 
     private int countPageVisitDrug(int patientId){
-        String sql = "select count(*) from (select count(*) from Visit visit, Drug drug where visit.visitId = drug.visitId " +
+        String sql = "select count(*) " +
+                " from (select count(*) from Visit visit, Drug drug where visit.visitId = drug.visitId " +
                 " and visit.patientId = ? group by visit.visitId having count(drug.drugId) > 0) as c";
         return getQuery().get(xlate(sql, ts.visitTable, "visit", ts.drugTable, "drug"),
                 intProjector, patientId);

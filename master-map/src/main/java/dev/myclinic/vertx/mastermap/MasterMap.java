@@ -1,4 +1,4 @@
-package dev.myclinic.mastermap;
+package dev.myclinic.vertx.mastermap;
 
 import java.time.LocalDate;
 import java.util.Optional;

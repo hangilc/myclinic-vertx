@@ -57,6 +57,11 @@
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-xml</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.vertx</groupId>
                 <artifactId>vertx-core</artifactId>
                 <version>${vertx.version}</version>
@@ -89,6 +94,8 @@
         <module>practicelog-event</module>
         <module>app-config</module>
         <module>master-map</module>
+        <module>meisai</module>
+        <module>houkatsu-kensa</module>
     </modules>
 
 </project>

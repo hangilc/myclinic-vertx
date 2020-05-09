@@ -8,18 +8,13 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>app-config</artifactId>
-    <name>app-config</name>
+    <artifactId>houkatsu-kensa</artifactId>
+    <name>houkatsu-kensa</name>
     <version>1.0.0-SNAPSHOT</version>
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-core</artifactId>
-            <version>${vertx.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -37,18 +32,13 @@
             <version>${jackson.version}</version>
         </dependency>
         <dependency>
-            <groupId>dev.myclinic.vertx</groupId>
-            <artifactId>dto</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.myclinic.vertx</groupId>
-            <artifactId>master-map</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.myclinic.vertx</groupId>
-            <artifactId>houkatsu-kensa</artifactId>
+            <artifactId>consts</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

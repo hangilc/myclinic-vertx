@@ -1,7 +1,7 @@
 package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.myclinic.mastermap.MasterMap;
+import dev.myclinic.vertx.mastermap.MasterMap;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.dto.StringResultDTO;
 import io.vertx.core.Handler;

@@ -2,7 +2,8 @@ package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import dev.myclinic.mastermap.MasterMap;
+import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
+import dev.myclinic.vertx.mastermap.MasterMap;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.appconfig.FileBasedAppConfig;
 import dev.myclinic.vertx.db.MysqlDataSourceConfig;
@@ -36,6 +37,7 @@ public class Main {
         Vertx vertx = Vertx.vertx();
         AppConfig config = createConfig(vertx);
         MasterMap masterMap = config.getMasterMap();
+        HoukatsuKensa houkatsuKensa = config.getHoukatsuKensa();
         HttpServer server = vertx.createHttpServer();
         Router router = Router.router(vertx);
         Route restRoute = router.route("/json/:action");

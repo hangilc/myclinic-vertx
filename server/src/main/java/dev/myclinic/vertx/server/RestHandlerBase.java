@@ -3,7 +3,7 @@ package dev.myclinic.vertx.server;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.myclinic.mastermap.MasterMap;
+import dev.myclinic.vertx.mastermap.MasterMap;
 
 class RestHandlerBase {
 

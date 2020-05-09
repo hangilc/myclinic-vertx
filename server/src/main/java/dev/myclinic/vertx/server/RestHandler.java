@@ -2,8 +2,8 @@ package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.myclinic.mastermap.MasterKind;
-import dev.myclinic.mastermap.MasterMap;
+import dev.myclinic.vertx.mastermap.MasterKind;
+import dev.myclinic.vertx.mastermap.MasterMap;
 import dev.myclinic.vertx.consts.ConductKind;
 import dev.myclinic.vertx.db.Backend;
 import dev.myclinic.vertx.db.Query;

@@ -1,4 +1,4 @@
-package dev.myclinic.mastermap;
+package dev.myclinic.vertx.mastermap;
 
 import java.io.File;
 import java.io.IOException;

@@ -5,9 +5,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.myclinic.mastermap.MasterChronoMap;
-import dev.myclinic.mastermap.MasterMap;
-import dev.myclinic.mastermap.MasterNameMap;
+import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
+import dev.myclinic.vertx.mastermap.MasterChronoMap;
+import dev.myclinic.vertx.mastermap.MasterMap;
+import dev.myclinic.vertx.mastermap.MasterNameMap;
 import dev.myclinic.vertx.dto.ClinicInfoDTO;
 import dev.myclinic.vertx.dto.DiseaseExampleDTO;
 import dev.myclinic.vertx.dto.PracticeConfigDTO;
@@ -133,6 +134,16 @@ public class FileBasedAppConfig implements AppConfig {
             return new MasterMap(nameMap, chronoMap);
         } catch(Exception e){
             throw new RuntimeException("Failed to read master map.", e);
+        }
+    }
+
+    @Override
+    public HoukatsuKensa getHoukatsuKensa() {
+        File file = new File(configDir, "houkatsu-kensa.xml");
+        try {
+            return HoukatsuKensa.fromXmlFile(file);
+        } catch(Exception e){
+            throw new RuntimeException("Failed to read houkatsu-kensa from: " + file.toString());
         }
     }
 

@@ -1529,19 +1529,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end("true");
     }
 
-    private void resolveKizaiMasterByName(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        String name = params.get("name");
-        LocalDate at = LocalDate.parse(params.get("at"));
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        KizaiMasterDTO _value = backend.resolveKizaiMasterByName(name, at);
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
-    }
-
     private void listVisitIdByPatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
@@ -1624,19 +1611,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end("true");
     }
 
-    private void copyAllConducts(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        int targetVisitId = Integer.parseInt(params.get("target-visit-id"));
-        int sourceVisitId = Integer.parseInt(params.get("source-visit-id"));
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        List<Integer> _value = backend.copyAllConducts(targetVisitId, sourceVisitId);
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
-    }
-
     private void enterPrescExample(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
@@ -1709,19 +1683,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end(result);
     }
 
-    private void resolveKizaiMaster(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        int kizaicode = Integer.parseInt(params.get("kizaicode"));
-        LocalDate at = LocalDate.parse(params.get("at"));
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        KizaiMasterDTO _value = backend.resolveKizaiMaster(kizaicode, at);
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
-    }
-
     private void modifyGazouLabel(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
@@ -1781,14 +1742,26 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end(result);
     }
 
-    private void listAllPracticeLog(RoutingContext ctx, Connection conn) throws Exception {
+    private void listPracticeLogAt(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        LocalDate date = LocalDate.parse(params.get("date"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        List<PracticeLogDTO> _value = backend.listPracticeLogAt(date);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
+    private void listAllPracticeLogAfter(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate date = LocalDate.parse(params.get("date"));
         int lastId = Integer.parseInt(params.get("last-id"));
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        List<PracticeLogDTO> _value = backend.listAllPracticeLog(date, lastId);
+        List<PracticeLogDTO> _value = backend.listAllPracticeLogAfter(date, lastId);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
@@ -1824,19 +1797,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<HotlineDTO> _value = backend.listTodaysHotline();
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
-    }
-
-    private void resolveShinryouMasterByName(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        String name = params.get("name");
-        String at = params.get("at");
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        ShinryouMasterDTO _value = backend.resolveShinryouMasterByName(name, at);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
@@ -1961,7 +1921,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
     }
-
 
     {
         funcMap.put("search-byoumei-master", this::searchByoumeiMaster);
@@ -2088,7 +2047,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("list-payment-by-patient", this::listPaymentByPatient);
         funcMap.put("list-visiting-patient-id-having-hoken", this::listVisitingPatientIdHavingHoken);
         funcMap.put("update-text", this::updateText);
-        funcMap.put("resolve-kizai-master-by-name", this::resolveKizaiMasterByName);
         funcMap.put("list-visit-id-for-patient", this::listVisitIdByPatient);
         funcMap.put("get-pharma-drug", this::getPharmaDrug);
         funcMap.put("batch-update-drug-days", this::batchUpdateDrugDays);
@@ -2096,24 +2054,22 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("get-conduct-shinryou-full", this::getConductShinryouFull);
         funcMap.put("enter-conduct-drug", this::enterConductDrug);
         funcMap.put("delete-visit-from-reception", this::deleteVisitFromReception);
-        funcMap.put("copy-all-conducts", this::copyAllConducts);
         funcMap.put("enter-presc-example", this::enterPrescExample);
         funcMap.put("delete-presc-example", this::deletePrescExample);
         funcMap.put("find-shuushokugo-master-by-name", this::getShuushokugoMasterByName);
         funcMap.put("get-name-of-iyakuhin", this::getNameOfIyakuhin);
         funcMap.put("set-shinryou-tekiyou", this::setShinryouTekiyou);
         funcMap.put("get-visit", this::getVisit);
-        funcMap.put("resolve-kizai-master", this::resolveKizaiMaster);
         funcMap.put("modify-gazou-label", this::modifyGazouLabel);
         funcMap.put("update-pharma-drug", this::updatePharmaDrug);
         funcMap.put("list-recent-hotline", this::listRecentHotline);
         funcMap.put("list-text", this::listText);
         funcMap.put("get-roujin", this::getRoujin);
-        funcMap.put("list-practice-log-after", this::listAllPracticeLog);
+        funcMap.put("list-practice-log-at", this::listPracticeLogAt);
+        funcMap.put("list-practice-log-after", this::listAllPracticeLogAfter);
         funcMap.put("list-recent-payment", this::listRecentPayment);
         funcMap.put("batch-resolve-kizai-names", this::batchResolveKizaiNames);
         funcMap.put("list-todays-hotline", this::listTodaysHotline);
-        funcMap.put("resolve-shinryou-master-by-name", this::resolveShinryouMasterByName);
         funcMap.put("enter-xp", this::enterXp);
         funcMap.put("enter-shahokokuho", this::enterShahokokuho);
         funcMap.put("update-presc-example", this::updatePrescExample);
@@ -2139,6 +2095,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("resolve-shinryou-master", this::resolveShinryouMaster);
         funcMap.put("get-visit-meisai", this::getVisitMeisai);
         funcMap.put("batch-resolve-shuushokugo-names", this::batchResolveShuushokugoNames);
+        funcMap.put("resolve-kizai-master-by-name", this::resolveKizaiMasterByName);
+        funcMap.put("copy-all-conducts", this::copyAllConducts);
+        funcMap.put("resolve-kizai-master", this::resolveKizaiMaster);
+        funcMap.put("resolve-shinryou-master-by-name", this::resolveShinryouMasterByName);
     }
 
     private ConductShinryouDTO createConductShinryouReq(String name, LocalDate at){
@@ -2485,6 +2445,106 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         }
         return map;
     }
+
+    private KizaiMasterDTO resolveKizaiMasterByName(Backend backend, String name, LocalDate at)
+            throws Exception {
+        int code = masterMap.resolve(MasterKind.Kizai, name, at);
+        return backend.getKizaiMaster(code, at);
+    }
+
+    private void resolveKizaiMasterByName(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        String name = params.get("name");
+        LocalDate at = LocalDate.parse(params.get("at"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        KizaiMasterDTO _value = resolveKizaiMasterByName(backend, name, at);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
+    private List<Integer> copyAllConducts(Backend backend, int targetVisitId, int sourceVisitId)
+            throws Exception {
+        BatchEnterRequestDTO req = BatchEnterRequestDTO.create();
+        for(var src: backend.listConductFull(sourceVisitId)){
+            String gazouLabel = src.gazouLabel != null ? src.gazouLabel.label : null;
+            ConductEnterRequestDTO creq =
+                    ConductEnterRequestDTO.create(targetVisitId, src.conduct.kind, gazouLabel);
+            src.conductShinryouList.forEach(shinryou -> {
+                ConductShinryouDTO copy = new ConductShinryouDTO();
+                copy.shinryoucode = shinryou.conductShinryou.shinryoucode;
+                creq.shinryouList.add(copy);
+            });
+            src.conductDrugs.forEach(drug -> {
+                ConductDrugDTO copy = new ConductDrugDTO();
+                copy.iyakuhincode = drug.conductDrug.iyakuhincode;
+                copy.amount = drug.conductDrug.amount;
+                creq.drugs.add(copy);
+            });
+            src.conductKizaiList.forEach(kizai -> {
+                ConductKizaiDTO copy = new ConductKizaiDTO();
+                copy.kizaicode = kizai.conductKizai.kizaicode;
+                creq.kizaiList.add(copy);
+            });
+            req.conducts.add(creq);
+        }
+        BatchEnterResultDTO result = backend.batchEnter(req);
+        return result.conductIds;
+    }
+
+    private void copyAllConducts(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        int targetVisitId = Integer.parseInt(params.get("target-visit-id"));
+        int sourceVisitId = Integer.parseInt(params.get("source-visit-id"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        List<Integer> _value = copyAllConducts(backend, targetVisitId, sourceVisitId);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
+    private KizaiMasterDTO resolveKizaiMaster(Backend backend, int kizaicode, LocalDate at) throws Exception {
+        int code = masterMap.resolve(MasterKind.Kizai, kizaicode, at);
+        return backend.getKizaiMaster(code, at);
+    }
+
+    private void resolveKizaiMaster(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        int kizaicode = Integer.parseInt(params.get("kizaicode"));
+        LocalDate at = LocalDate.parse(params.get("at"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        KizaiMasterDTO _value = resolveKizaiMaster(backend, kizaicode, at);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
+    private ShinryouMasterDTO resolveShinryouMasterByName(Backend backend, String name, LocalDate at)
+            throws Exception {
+        int code = masterMap.resolve(MasterKind.Shinryou, name, at);
+        return backend.getShinryouMaster(code, at);
+    }
+
+    private void resolveShinryouMasterByName(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        String name = params.get("name");
+        LocalDate at = LocalDate.parse(params.get("at"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        ShinryouMasterDTO _value = resolveShinryouMasterByName(backend, name, at);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
+
 
     @Override
     public void handle(RoutingContext routingContext) {

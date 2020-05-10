@@ -2699,24 +2699,14 @@ public class Backend {
         return getQuery().query(sql, ts.practiceLogTable, afterThisId);
     }
 
-//    public List<PracticeLogDTO> listPracticeLogInRange(int afterThisId, int beforeThisId) {
-//        String sql = xlate("select * from PracticeLog where serialId > ? and serialId < ? " +
-//                        " order by serialID",
-//                ts.practiceLogTable);
-//        return getQuery().query(sql, ts.practiceLogTable, afterThisId, beforeThisId);
-//    }
-
-    public List<PracticeLogDTO> listAllPracticeLog(LocalDate date) {
+    public List<PracticeLogDTO> listPracticeLogAt(LocalDate date) {
         String sql = xlate("select * from PracticeLog where date(createdAt) = ? order by serialId",
                 ts.practiceLogTable);
         return getQuery().query(sql, ts.practiceLogTable, date.toString());
     }
 
     public List<PracticeLogDTO> listTodaysPracticeLog() {
-        String sql = xlate("select * from PracticeLog where date(createdAt) = current_date" +
-                        " order by serialId",
-                ts.practiceLogTable);
-        return getQuery().query(sql, ts.practiceLogTable);
+        return listPracticeLogAt(LocalDate.now());
     }
 
     public List<PracticeLogDTO> listTodaysPracticeLogBefore(int beforeThisId) {
@@ -3117,35 +3107,33 @@ public class Backend {
     }
 
     public List<Integer> listVisitingPatientIdHavingHoken(int year, int month) throws Exception {
-        throw new RuntimeException("Not implemented: listVisitingPatientIdHavingHoken");
+        String sql = "select distinct v.patientId from Visit v where year(v.visitedAt) = ? " +
+                " and month(v.visitedAt) = ? " +
+                " and not (v.shahokokuhoId = 0 and v.koukikoureiId = 0 and v.roujinId = 0 " +
+                "   and v.kouhi1Id = 0 and v.kouhi2Id = 0 and v.kouhi3Id = 0) " +
+                " order by v.patientId";
+        return getQuery().query(xlate(sql, ts.visitTable, "v"), intProjector,
+                year, month);
     }
 
     public List<Integer> listVisitIdByPatient(int patientId) throws Exception {
-        throw new RuntimeException("Not implemented: listVisitIdByPatient");
-    }
-
-    public KizaiMasterDTO resolveKizaiMasterByName(String name, LocalDate at) throws Exception {
-        throw new RuntimeException("Not implemented: resolveKizaiMasterByName");
-    }
-
-    public List<Integer> copyAllConducts(int targetVisitId, int sourceVisitId) throws Exception {
-        throw new RuntimeException("Not implemented: copyAllConducts");
+        String sql = "select visit.visitId from Visit visit where visit.patientId = ? " +
+                " order by visit.visitId desc ";
+        return getQuery().query(xlate(sql, ts.visitTable, "visit"), intProjector, patientId);
     }
 
     public String getNameOfIyakuhin(int iyakuhincode) throws Exception {
-        throw new RuntimeException("Not implemented: getNameOfIyakuhin");
+        String sql = "select m.name from IyakuhinMaster m " +
+                " where m.iyakuhincode = ? " +
+                " group by m.iyakuhincode, m.name order by m.validFrom desc limit 1";
+        return getQuery().get(xlate(sql, ts.iyakuhinMasterTable, "m"), stringProjector, iyakuhincode);
     }
 
-    public KizaiMasterDTO resolveKizaiMaster(int kizaicode, LocalDate at) throws Exception {
-        throw new RuntimeException("Not implemented: resolveKizaiMaster");
-    }
-
-    public List<PracticeLogDTO> listAllPracticeLog(LocalDate date, int lastId) throws Exception {
-        throw new RuntimeException("Not implemented: listAllPracticeLog");
-    }
-
-    public ShinryouMasterDTO resolveShinryouMasterByName(String name, String at) throws Exception {
-        throw new RuntimeException("Not implemented: resolveShinryouMasterByName");
+    public List<PracticeLogDTO> listAllPracticeLogAfter(LocalDate date, int afterThisId) throws Exception {
+        String sql = "select * from PracticeLog where date(createdAt) = date(?) " +
+                " and serialId > ? order by serialId ";
+        return getQuery().query(xlate(sql, ts.practiceLogTable), ts.practiceLogTable,
+                date, afterThisId);
     }
 
     public int enterXp(int visitId, String label, String film) throws Exception {

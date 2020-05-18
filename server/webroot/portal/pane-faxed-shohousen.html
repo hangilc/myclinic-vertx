@@ -30,15 +30,78 @@
     <div></div>
 </template>
 
+<template id="tmpl-textex">
+    <div>
+        <div part="content"></div>
+        <div part="commands">
+            <button part="command-edit">編集</button>
+        </div>
+    </div>
+</template>
+
+<template id="tmpl-textform">
+    <div>
+        <textarea></textarea>
+        <div part="commands">
+            <button part="enter">入力</button>
+            <button part="cancel">キャンセル</button>
+        </div>
+    </div>
+</template>
+
 <script>
     function compText(content){
-        // let tmpl = document.querySelector("#tmpl-text");
-        // let e = $(document.importNode(tmpl.content, true));
         let e = $($("#tmpl-text").html());
         e.html(content.replace(/\n/g, "<br/>"));
         return {
             ele: e
         };
+    }
+
+    function compTextForm(text){
+        let e = $($("#tmpl-textform").html());
+        let $textarea = e.find("textarea");
+        $textarea.html(text.content);
+        let comp = {
+            ele: e,
+            $textarea: $textarea,
+            $commands: e.find("[part=enter]"),
+            $enter: e.find("[part=enter]"),
+            $cancel: e.find("[part=cancel]"),
+            onEnter: () => {},
+            onCanel: () => {}
+        };
+        comp.$enter.on("click", event => {
+            comp.onEnter(comp.$textarea.val());
+        })
+        comp.$cancel.on("click", event => {
+            comp.onCancel();
+        });
+        return comp;
+    }
+
+    function compTextEx(text) {
+        let e = $($("#tmpl-textex").html());
+        let $content = e.find("[part=content]").html(text.content.replace(/\n/g, "<br/>"));
+        let $editButton = e.find("[part=command-edit]");
+        let comp = {
+            ele: e,
+            $content: $content,
+            $commandBox: e.find("[part=commands]"),
+            $editButton: $editButton,
+            onFormCreated: form => {},
+            onFormEnter: content => {}
+        }
+        $editButton.on("click", event => {
+            let form = compTextForm(text);
+            comp.onFormCreated(form);
+            e.replaceWith(form.ele);
+            form.onEnter = comp.onFormEnter;
+            form.onCancel = () => {
+                form.ele.replaceWith(e);
+            };
+        });
+        return comp;
     }
 
     (function () {
@@ -118,10 +181,13 @@
             $("#faxed-no-pharma-visited-at").text("診察日：" + visitedAt.format("YYYY-MM-DD"));
             let textWrapper = $("#faxed-no-pharma-texts").html("");
             texts.forEach(text => {
-                let c = compText(text.content);
+                let c = compTextEx(text);
                 let e = c.ele;
                 e.addClass("border border-secondary rounded my-2 p-2");
-                console.log(e);
+                c.$commandBox.addClass("mt-2");
+                c.onFormCreated = content => {
+                    console.log(content);
+                };
                 textWrapper.append(e);
             });
             $("#faxed-no-pharma-error").removeClass("d-none");

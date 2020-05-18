@@ -1,11 +1,22 @@
+
+<!--
 <div id="pane-faxed-shohousen">
 
-    <form class="form-inline">
-        <span>開始日</span>
-        <input type="date" class="form-control ml-1 my-from-date-input"/>
-        <span class="ml-2">終了日</span>
-        <input type="date" class="form-control ml-1 my-upto-date-input"/>
+    <form>
+        <div class="form-inline">
+            <span>開始日</span>
+            <input type="date" class="form-control ml-1 my-from-date-input"/>
+            <span class="ml-2">終了日</span>
+            <input type="date" class="form-control ml-1 my-upto-date-input"/>
+        </div>
+        <div class="form-inline mt-2">
+            <button type="button" class="btn btn-primary form-control my-create-button">作成</button>
+        </div>
     </form>
+
+    <div class="my-create-data-failure" style="display:none">
+        <div class="alert alert-error my-create-data-failure-message"></div>
+    </div>
 
     <ul class="nav nav-tabs mt-3">
         <li class="nav-item">
@@ -24,6 +35,7 @@
                 $.ajax({
                     type: "GET",
                     url: url,
+                    data: data,
                     cache: false,
                     dataType: "json",
                     success: resolve,
@@ -91,8 +103,33 @@
             }
         }
 
+        getElement("my-create-button").on("click", async event => {
+            data = {
+                from: getElement("my-from-date-input").val(),
+                upto: getElement("my-upto-date-input").val()
+            };
+            let result = await ajaxGet("../integration/faxed-shohousen-data/create-data", data);
+            if( result.stderr ){
+                let reWithoutPharma = /presc without pharma\s+<Visit\(visit_id='(\d+)'/;
+                let match = reWithoutPharma.exec(result.stderr);
+                if( match ){
+                    let visitId = match[1];
+                    console.log("No pharma", visitId);
+                    let visit = await ajaxGet("../json/get-visit", {"visit-id": visitId});
+                    let patient = await ajaxGet("../json/get-patient", {"patient-id": visit.patientId});
+                    let texts = await ajaxGet("../json/list-text", {"visit-id": visitId});
+                    console.log(visit, patient, texts);
+                } else {
+                    console.log(result.stderr);
+                }
+            }
+        });
+
         setup();
         doSubmenuPrevGroups();
 
     })();
+
 </script>
+
+-->

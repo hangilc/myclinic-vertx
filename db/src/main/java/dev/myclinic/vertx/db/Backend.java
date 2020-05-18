@@ -3136,10 +3136,6 @@ public class Backend {
                 date, afterThisId);
     }
 
-    public int enterXp(int visitId, String label, String film) throws Exception {
-        throw new RuntimeException("Not implemented: enterXp");
-    }
-
     public VisitFull2PatientPageDTO pageVisitFullWithPatientAt(LocalDate at, int page) throws Exception {
         throw new RuntimeException("Not implemented: pageVisitFullWithPatientAt");
     }

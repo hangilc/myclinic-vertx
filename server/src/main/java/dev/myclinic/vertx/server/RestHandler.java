@@ -1802,20 +1802,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end(result);
     }
 
-    private void enterXp(RoutingContext ctx, Connection conn) throws Exception {
-        HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        int visitId = Integer.parseInt(params.get("visit-id"));
-        String label = params.get("label");
-        String film = params.get("film");
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        int _value = backend.enterXp(visitId, label, film);
-        conn.commit();
-        String result = mapper.writeValueAsString(_value);
-        req.response().end(result);
-    }
-
     private void enterShahokokuho(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
@@ -2070,7 +2056,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("list-recent-payment", this::listRecentPayment);
         funcMap.put("batch-resolve-kizai-names", this::batchResolveKizaiNames);
         funcMap.put("list-todays-hotline", this::listTodaysHotline);
-        funcMap.put("enter-xp", this::enterXp);
         funcMap.put("enter-shahokokuho", this::enterShahokokuho);
         funcMap.put("update-presc-example", this::updatePrescExample);
         funcMap.put("modify-conduct-kind", this::modifyConductKind);
@@ -2099,6 +2084,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("copy-all-conducts", this::copyAllConducts);
         funcMap.put("resolve-kizai-master", this::resolveKizaiMaster);
         funcMap.put("resolve-shinryou-master-by-name", this::resolveShinryouMasterByName);
+        funcMap.put("enter-xp", this::enterXp);
     }
 
     private ConductShinryouDTO createConductShinryouReq(String name, LocalDate at){
@@ -2543,6 +2529,37 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
     }
+
+    private int enterXp(Backend backend, int visitId, String label, String film) throws Exception {
+        VisitDTO visit = backend.getVisit(visitId);
+        LocalDate at = LocalDate.parse(visit.visitedAt.substring(0, 10));
+        BatchEnterRequestDTO req = BatchEnterRequestDTO.create();
+        return createConduct(visitId, ConductKind.Gazou.getCode(), label,
+                new ConductShinryouDTO[]{
+                        createConductShinryou("単純撮影", at),
+                        createConductShinryou("単純撮影診断", at)
+                },
+                null,
+                new ConductKizaiDTO[]{ createConductKizai(film, at, 1) }
+        );
+        BatchEnterResultDTO result = backend.batchEnter(req);
+        return result.conductIds.get(0);
+    }
+
+    private void enterXp(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        int visitId = Integer.parseInt(params.get("visit-id"));
+        String label = params.get("label");
+        String film = params.get("film");
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        int _value = enterXp(backend, visitId, label, film);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
 
 
 

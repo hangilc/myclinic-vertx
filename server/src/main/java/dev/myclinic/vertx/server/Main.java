@@ -15,6 +15,7 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 
 import javax.sql.DataSource;
@@ -44,10 +45,12 @@ public class Main {
         HttpServer server = vertx.createHttpServer();
         Router router = Router.router(vertx);
         Route restRoute = router.route("/json/:action");
+        restRoute.handler(BodyHandler.create());
         restRoute.blockingHandler(new RestHandler(ds, ts, mapper, masterMap, houkatsuKensa));
         restRoute.handler(new NoDatabaseRestHandler(config, mapper, vertx, masterMap));
         restRoute.failureHandler(errorHandler);
         Router integrationRouter = IntegrationHandler.createRouter(vertx, mapper);
+        router.route("/integration/*").handler(BodyHandler.create());
         router.mountSubRouter("/integration", integrationRouter);
         router.route("/*").failureHandler(errorHandler);
         Route portalRoute = router.route("/portal/*");
@@ -56,7 +59,7 @@ public class Main {
                 .setDefaultContentEncoding("UTF-8").setFilesReadOnly(!isDevMode)
                 .setCachingEnabled(!isDevMode));
         router.route("/portal").handler(ctx -> ctx.response().setStatusCode(301)
-                .putHeader("Location", "portal/index.html")
+                .putHeader("Location", "/portal/index.html")
                 .end());
         server.requestHandler(router);
         server.webSocketHandler(ws -> {

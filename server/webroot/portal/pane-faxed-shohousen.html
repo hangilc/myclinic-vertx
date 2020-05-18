@@ -10,7 +10,7 @@
     </div>
 </form>
 
-<div id="faxed-no-pharma-error" class="d-none">
+<div id="faxed-no-pharma-error" class="faxed-creation-error d-none">
     <div class="alert alert-danger mt-3">
         <h5>薬局を見つけられません</h5>
     </div>
@@ -95,8 +95,9 @@
         $editButton.on("click", event => {
             let form = compTextForm(text);
             comp.onFormCreated(form);
-            e.replaceWith(form.ele);
-            form.onEnter = comp.onFormEnter;
+            e.after(form.ele);
+            e.detach();
+            form.onEnter = content => comp.onFormEnter(content);
             form.onCancel = () => {
                 form.ele.replaceWith(e);
             };
@@ -111,6 +112,20 @@
                     type: "GET",
                     url: url,
                     data: data,
+                    cache: false,
+                    dataType: "json",
+                    success: resolve,
+                    error: (xhr, status, err) => fail(err)
+                });
+            });
+        }
+
+        function ajaxPost(url, data) {
+            return new Promise((resolve, fail) => {
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: JSON.stringify(data),
                     cache: false,
                     dataType: "json",
                     success: resolve,
@@ -185,8 +200,15 @@
                 let e = c.ele;
                 e.addClass("border border-secondary rounded my-2 p-2");
                 c.$commandBox.addClass("mt-2");
-                c.onFormCreated = content => {
-                    console.log(content);
+                c.onFormCreated = form => {
+                    form.ele.addClass("form-group border border-warning rounded p-2");
+                    form.$textarea.addClass("form-control").attr("rows", "7");
+                    form.$commands.addClass("mt-2");
+                };
+                c.onFormEnter = async content => {
+                    let newText = $.extend({}, text);
+                    newText.content = content;
+                    await ajaxPost("../json/update-text", newText);
                 };
                 textWrapper.append(e);
             });
@@ -199,6 +221,7 @@
                 upto: $("#faxed-upto-date-input").val()
             };
             let result = await ajaxGet("../integration/faxed-shohousen-data/create-data", data);
+            $(".faxed-creation-error").addClass("d-none");
             if (result.stderr) {
                 let reWithoutPharma = /presc without pharma\s+<Visit\(visit_id='(\d+)'/;
                 let match = reWithoutPharma.exec(result.stderr);
@@ -211,6 +234,8 @@
                 } else {
                     console.log(result.stderr);
                 }
+            } else {
+                console.log(result.stdout);
             }
         });
 

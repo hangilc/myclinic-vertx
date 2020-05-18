@@ -9,10 +9,13 @@ import dev.myclinic.vertx.appconfig.FileBasedAppConfig;
 import dev.myclinic.vertx.db.MysqlDataSourceConfig;
 import dev.myclinic.vertx.db.MysqlDataSourceFactory;
 import dev.myclinic.vertx.db.TableSet;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.StaticHandler;
 
 import javax.sql.DataSource;
 
@@ -43,15 +46,18 @@ public class Main {
         Route restRoute = router.route("/json/:action");
         restRoute.blockingHandler(new RestHandler(ds, ts, mapper, masterMap, houkatsuKensa));
         restRoute.handler(new NoDatabaseRestHandler(config, mapper, vertx, masterMap));
-        restRoute.failureHandler(ctx -> {
-            Throwable th = ctx.failure();
-            th.printStackTrace();
-            int statusCode = ctx.statusCode();
-            if (statusCode < 0) {
-                statusCode = 500;
-            }
-            ctx.response().setStatusCode(statusCode).end(th.getMessage());
-        });
+        restRoute.failureHandler(errorHandler);
+        Router integrationRouter = IntegrationHandler.createRouter(vertx, mapper);
+        router.mountSubRouter("/integration", integrationRouter);
+        router.route("/*").failureHandler(errorHandler);
+        Route portalRoute = router.route("/portal/*");
+        boolean isDevMode = "dev".equals(System.getenv("VERTXWEB_ENVIRONMENT"));
+        portalRoute.handler(StaticHandler.create(isDevMode ? "server/webroot/portal" : "webroot/portal")
+                .setDefaultContentEncoding("UTF-8").setFilesReadOnly(!isDevMode)
+                .setCachingEnabled(!isDevMode));
+        router.route("/portal").handler(ctx -> ctx.response().setStatusCode(301)
+                .putHeader("Location", "portal/index.html")
+                .end());
         server.requestHandler(router);
         server.webSocketHandler(ws -> {
             System.out.println("opened");
@@ -69,5 +75,15 @@ public class Main {
         }
         return new FileBasedAppConfig(configDir, vertx);
     }
+
+    private static Handler<RoutingContext> errorHandler = ctx -> {
+        Throwable th = ctx.failure();
+        th.printStackTrace();
+        int statusCode = ctx.statusCode();
+        if (statusCode < 0) {
+            statusCode = 500;
+        }
+        ctx.response().setStatusCode(statusCode).end(th.getMessage());
+    };
 
 }

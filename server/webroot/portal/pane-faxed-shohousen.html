@@ -1,0 +1,98 @@
+<div id="pane-faxed-shohousen">
+
+    <form class="form-inline">
+        <span>開始日</span>
+        <input type="date" class="form-control ml-1 my-from-date-input"/>
+        <span class="ml-2">終了日</span>
+        <input type="date" class="form-control ml-1 my-upto-date-input"/>
+    </form>
+
+    <ul class="nav nav-tabs mt-3">
+        <li class="nav-item">
+            <a class="nav-link active" href="javascript:void(0)">処理済一覧</a>
+        </li>
+    </ul>
+
+    <div class="my-submenu-workarea"></div>
+
+</div>
+
+<script>
+    (function(){
+        function ajaxGet(url, data){
+            return new Promise((resolve, fail) => {
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    cache: false,
+                    dataType: "json",
+                    success: resolve,
+                    error: (xhr, status, err) => fail(err.getMessage())
+                });
+            });
+        }
+
+        function getElement(className){
+            return $("#pane-faxed-shohousen ." + className);
+        }
+
+        function getPrevGroups(){
+            return ajaxGet("../integration/faxed-shohousen-data/list-groups");
+        }
+
+        async function doSubmenuPrevGroups(){
+            let prevGroups = await getPrevGroups();
+            let ul = $("<ul>");
+            if( prevGroups ){
+                prevGroups.forEach(group => {
+                    let li = $("<li>").text(group);
+                    ul.append(li);
+                });
+            }
+            $("#pane-faxed-shohousen .my-submenu-workarea").html("").append(ul);
+        }
+
+        async function chooseNextGroup(){
+            let prevGroups = await getPrevGroups();
+            let momentLast = null;
+            prevGroups.forEach(group => {
+                let upto = group.split("-")[1];
+                let momentUpto = moment(upto, "YYYYMMDD");
+                if( momentLast == null ){
+                    momentLast = momentUpto;
+                } else {
+                    if( momentUpto.isAfter(momentLast) ){
+                        momentLast = momentUpto;
+                    }
+                }
+            });
+            if( momentLast == null ){
+                return null;
+            } else {
+                let momentStart = momentLast.add(1, "day");
+                let momentEnd = momentStart.clone();
+                if( momentStart.date() < 15 ){
+                    momentEnd.date(15);
+                } else {
+                    momentEnd = momentEnd.endOf("month");
+                }
+                return {
+                    from: momentStart,
+                    upto: momentEnd
+                }
+            }
+        }
+
+        async function setup(){
+            let nextGroup = await chooseNextGroup();
+            if( nextGroup ){
+                getElement("my-from-date-input").val(nextGroup.from.format("YYYY-MM-DD"));
+                getElement("my-upto-date-input").val(nextGroup.upto.format("YYYY-MM-DD"));
+            }
+        }
+
+        setup();
+        doSubmenuPrevGroups();
+
+    })();
+</script>

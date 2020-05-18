@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Myclinic Portal</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="js/jquery.min.js"></script>
+    <script src="js/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div class="container">
+    <div class="row pt-3 pb-2">
+        <h1 class="bg-dark text-white p-3 col-md-12">Myclinic Portal</h1>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-md-3 sidebar mb-2">
+            <ul class="list-unstyled menu-elements mt-1">
+                <li><a href="javascript:void(0)" class="scroll-link" id="faxed-shohousen">ファックス済処方箋</a></li>
+            </ul>
+        </div>
+
+        <div class="col-md-9" id="wrapper-pane"></div>
+
+    </div>
+</div>
+
+<script>
+
+function setActiveSideBarLink(e){
+    $(".sidebar a.active").removeClass("active");
+    e.addClass("active");
+}
+
+function setupSideBarLink(linkId, pageUrl){
+    $("#" + linkId).click(event => {
+        let target = $(event.target);
+        $("#wrapper-pane").load(pageUrl, event => {
+            setActiveSideBarLink(target);
+        });
+    });
+
+}
+
+setupSideBarLink("faxed-shohousen", "pane-faxed-shohousen.html");
+
+$("#link-get").click();
+
+</script>
+</body>
+</html>

@@ -2531,19 +2531,20 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     }
 
     private int enterXp(Backend backend, int visitId, String label, String film) throws Exception {
-        VisitDTO visit = backend.getVisit(visitId);
-        LocalDate at = LocalDate.parse(visit.visitedAt.substring(0, 10));
-        BatchEnterRequestDTO req = BatchEnterRequestDTO.create();
-        return createConduct(visitId, ConductKind.Gazou.getCode(), label,
-                new ConductShinryouDTO[]{
-                        createConductShinryou("単純撮影", at),
-                        createConductShinryou("単純撮影診断", at)
-                },
-                null,
-                new ConductKizaiDTO[]{ createConductKizai(film, at, 1) }
-        );
-        BatchEnterResultDTO result = backend.batchEnter(req);
-        return result.conductIds.get(0);
+        throw new RuntimeException("not implemented");
+//        VisitDTO visit = backend.getVisit(visitId);
+//        LocalDate at = LocalDate.parse(visit.visitedAt.substring(0, 10));
+//        BatchEnterRequestDTO req = BatchEnterRequestDTO.create();
+//        return createConduct(visitId, ConductKind.Gazou.getCode(), label,
+//                new ConductShinryouDTO[]{
+//                        createConductShinryou("単純撮影", at),
+//                        createConductShinryou("単純撮影診断", at)
+//                },
+//                null,
+//                new ConductKizaiDTO[]{ createConductKizai(film, at, 1) }
+//        );
+//        BatchEnterResultDTO result = backend.batchEnter(req);
+//        return result.conductIds.get(0);
     }
 
     private void enterXp(RoutingContext ctx, Connection conn) throws Exception {

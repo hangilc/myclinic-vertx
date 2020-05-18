@@ -1,36 +1,48 @@
-
-<!--
-<div id="pane-faxed-shohousen">
-
-    <form>
-        <div class="form-inline">
-            <span>開始日</span>
-            <input type="date" class="form-control ml-1 my-from-date-input"/>
-            <span class="ml-2">終了日</span>
-            <input type="date" class="form-control ml-1 my-upto-date-input"/>
-        </div>
-        <div class="form-inline mt-2">
-            <button type="button" class="btn btn-primary form-control my-create-button">作成</button>
-        </div>
-    </form>
-
-    <div class="my-create-data-failure" style="display:none">
-        <div class="alert alert-error my-create-data-failure-message"></div>
+<form>
+    <div class="form-inline">
+        <span>開始日</span>
+        <input type="date" class="form-control ml-1" id="faxed-from-date-input"/>
+        <span class="ml-2">終了日</span>
+        <input type="date" class="form-control ml-1" id="faxed-upto-date-input"/>
     </div>
+    <div class="form-inline mt-2">
+        <button type="button" class="btn btn-primary form-control" id="faxed-create-button">作成</button>
+    </div>
+</form>
 
-    <ul class="nav nav-tabs mt-3">
-        <li class="nav-item">
-            <a class="nav-link active" href="javascript:void(0)">処理済一覧</a>
-        </li>
-    </ul>
-
-    <div class="my-submenu-workarea"></div>
-
+<div id="faxed-no-pharma-error" class="d-none">
+    <div class="alert alert-danger mt-3">
+        <h5>薬局を見つけられません</h5>
+    </div>
+    <div id="faxed-no-pharma-patient"></div>
+    <div id="faxed-no-pharma-visited-at"></div>
+    <div id="faxed-no-pharma-texts"></div>
 </div>
 
+<ul class="nav nav-tabs mt-3">
+    <li class="nav-item">
+        <a class="nav-link active" href="javascript:void(0)">処理済一覧</a>
+    </li>
+</ul>
+<div id="faxed-nav-content"></div>
+
+<template id="tmpl-text">
+    <div></div>
+</template>
+
 <script>
-    (function(){
-        function ajaxGet(url, data){
+    function compText(content){
+        // let tmpl = document.querySelector("#tmpl-text");
+        // let e = $(document.importNode(tmpl.content, true));
+        let e = $($("#tmpl-text").html());
+        e.html(content.replace(/\n/g, "<br/>"));
+        return {
+            ele: e
+        };
+    }
+
+    (function () {
+        function ajaxGet(url, data) {
             return new Promise((resolve, fail) => {
                 $.ajax({
                     type: "GET",
@@ -39,51 +51,47 @@
                     cache: false,
                     dataType: "json",
                     success: resolve,
-                    error: (xhr, status, err) => fail(err.getMessage())
+                    error: (xhr, status, err) => fail(err)
                 });
             });
         }
 
-        function getElement(className){
-            return $("#pane-faxed-shohousen ." + className);
-        }
-
-        function getPrevGroups(){
+        function getPrevGroups() {
             return ajaxGet("../integration/faxed-shohousen-data/list-groups");
         }
 
-        async function doSubmenuPrevGroups(){
+        async function doSubmenuPrevGroups() {
             let prevGroups = await getPrevGroups();
             let ul = $("<ul>");
-            if( prevGroups ){
+            if (prevGroups) {
                 prevGroups.forEach(group => {
                     let li = $("<li>").text(group);
                     ul.append(li);
                 });
             }
-            $("#pane-faxed-shohousen .my-submenu-workarea").html("").append(ul);
+            $("#faxed-nav-content").html("").append(ul);
         }
 
-        async function chooseNextGroup(){
+        async function chooseNextGroup() {
             let prevGroups = await getPrevGroups();
             let momentLast = null;
             prevGroups.forEach(group => {
                 let upto = group.split("-")[1];
                 let momentUpto = moment(upto, "YYYYMMDD");
-                if( momentLast == null ){
+                if (momentLast == null) {
                     momentLast = momentUpto;
                 } else {
-                    if( momentUpto.isAfter(momentLast) ){
+                    if (momentUpto.isAfter(momentLast)) {
                         momentLast = momentUpto;
                     }
                 }
             });
-            if( momentLast == null ){
+            if (momentLast == null) {
                 return null;
             } else {
                 let momentStart = momentLast.add(1, "day");
                 let momentEnd = momentStart.clone();
-                if( momentStart.date() < 15 ){
+                if (momentStart.date() < 15) {
                     momentEnd.date(15);
                 } else {
                     momentEnd = momentEnd.endOf("month");
@@ -95,30 +103,45 @@
             }
         }
 
-        async function setup(){
+        async function setup() {
             let nextGroup = await chooseNextGroup();
-            if( nextGroup ){
-                getElement("my-from-date-input").val(nextGroup.from.format("YYYY-MM-DD"));
-                getElement("my-upto-date-input").val(nextGroup.upto.format("YYYY-MM-DD"));
+            if (nextGroup) {
+                $("#faxed-from-date-input").val(nextGroup.from.format("YYYY-MM-DD"));
+                $("#faxed-upto-date-input").val(nextGroup.upto.format("YYYY-MM-DD"));
             }
         }
 
-        getElement("my-create-button").on("click", async event => {
-            data = {
-                from: getElement("my-from-date-input").val(),
-                upto: getElement("my-upto-date-input").val()
+        function showNoPharma(patient, visit, texts) {
+            let name = patient.lastName + patient.firstName;
+            let visitedAt = moment(visit.visitedAt);
+            $("#faxed-no-pharma-patient").text("患者：" + name);
+            $("#faxed-no-pharma-visited-at").text("診察日：" + visitedAt.format("YYYY-MM-DD"));
+            let textWrapper = $("#faxed-no-pharma-texts").html("");
+            texts.forEach(text => {
+                let c = compText(text.content);
+                let e = c.ele;
+                e.addClass("border border-secondary rounded my-2 p-2");
+                console.log(e);
+                textWrapper.append(e);
+            });
+            $("#faxed-no-pharma-error").removeClass("d-none");
+        }
+
+        $("#faxed-create-button").on("click", async event => {
+            let data = {
+                from: $("#faxed-from-date-input").val(),
+                upto: $("#faxed-upto-date-input").val()
             };
             let result = await ajaxGet("../integration/faxed-shohousen-data/create-data", data);
-            if( result.stderr ){
+            if (result.stderr) {
                 let reWithoutPharma = /presc without pharma\s+<Visit\(visit_id='(\d+)'/;
                 let match = reWithoutPharma.exec(result.stderr);
-                if( match ){
+                if (match) {
                     let visitId = match[1];
-                    console.log("No pharma", visitId);
                     let visit = await ajaxGet("../json/get-visit", {"visit-id": visitId});
                     let patient = await ajaxGet("../json/get-patient", {"patient-id": visit.patientId});
                     let texts = await ajaxGet("../json/list-text", {"visit-id": visitId});
-                    console.log(visit, patient, texts);
+                    showNoPharma(patient, visit, texts);
                 } else {
                     console.log(result.stderr);
                 }
@@ -129,7 +152,6 @@
         doSubmenuPrevGroups();
 
     })();
-
 </script>
 
--->
+

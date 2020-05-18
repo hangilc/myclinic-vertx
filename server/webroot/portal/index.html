@@ -2,14 +2,13 @@
 <html>
 <head>
     <title>Myclinic Portal</title>
-    <!--
+    <script>$$ = {};</script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
     <script src="js/jquery.min.js"></script>
     <script src="js/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="css/main.css">
-    -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
@@ -24,39 +23,34 @@
     <div class="row">
         <div class="col-md-3 sidebar mb-2">
             <ul class="list-unstyled menu-elements mt-1">
-                <li><a href="javascript:void(0)" class="scroll-link" id="faxed-shohousen">ファックス済処方箋</a></li>
+                <li><a href="javascript:void(0)" class="scroll-link" id="index-faxed-link">ファックス済処方箋</a></li>
             </ul>
         </div>
 
-        <div class="col-md-9" id="wrapper-pane"></div>
+        <div class="col-md-9" id="index-pane-wrapper"></div>
 
     </div>
 </div>
 
 <script>
 
-async function main(){
-    const module = await import("externals.html");
-}
+    (function(){
+        function setActive(e){
+            $(".sidebar a.active").removeClass("active");
+            e.addClass("active");
+        }
 
-function setActiveSideBarLink(e){
-    $(".sidebar a.active").removeClass("active");
-    e.addClass("active");
-}
+        function bindLink(id, url){
+            let e = $("#" + id);
+            e.on("click", event => {
+                $("#index-pane-wrapper").load(url);
+                setActive(e)
+            });
+        }
 
-function setupSideBarLink(linkId, pageUrl){
-    $("#" + linkId).click(event => {
-        let target = $(event.target);
-        $("#wrapper-pane").load(pageUrl, event => {
-            setActiveSideBarLink(target);
-        });
-    });
-
-}
-
-setupSideBarLink("faxed-shohousen", "pane-faxed-shohousen.html");
-
-$("#link-get").click();
+        bindLink("index-faxed-link", "pane-faxed-shohousen.html");
+        $("#index-faxed-link").click();
+    })();
 
 </script>
 </body>

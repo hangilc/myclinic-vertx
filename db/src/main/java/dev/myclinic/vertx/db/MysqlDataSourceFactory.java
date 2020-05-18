@@ -22,7 +22,7 @@ public class MysqlDataSourceFactory {
         config.setUsername(mysqlConfig.getUser());
         config.setPassword(mysqlConfig.getPassword());
         config.setInitializationFailTimeout(-1);
-        config.setAutoCommit(false);
+        //config.setAutoCommit(false);
         HikariDataSource ds = new HikariDataSource(config);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.info("closing data souce");

@@ -2576,6 +2576,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
                 HttpServerResponse resp = req.response();
                 resp.putHeader("content-type", "application/json; charset=UTF-8");
                 conn = ds.getConnection();
+                conn.setAutoCommit(false);
                 f.call(routingContext, conn);
             } catch (Exception e) {
                 if (conn != null) {
@@ -2586,6 +2587,14 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
                     }
                 }
                 throw new RuntimeException(e);
+            } finally {
+                if( conn != null ){
+                    try {
+                        conn.close();
+                    } catch(Exception e){
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }

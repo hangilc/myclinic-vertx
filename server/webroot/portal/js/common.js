@@ -12,12 +12,13 @@ function ajaxGet(url, data) {
     });
 }
 
-function ajaxPost(url, data) {
+function ajaxPost(url, data, encodeJson=true) {
     return new Promise((resolve, fail) => {
+        let dataValue = encodeJson ? JSON.stringify(data) : data;
         $.ajax({
             type: "POST",
             url: url,
-            data: JSON.stringify(data),
+            data: dataValue,
             cache: false,
             dataType: "json",
             success: resolve,

@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class FaxedShohousenHandler {
@@ -82,22 +84,41 @@ public class FaxedShohousenHandler {
         String name = groupDirName(from, upto);
         Map<String, Object> map = new HashMap<>();
         map.put("name", name);
+        map.put("from", toSqlDateFormat(from));
+        map.put("upto", toSqlDateFormat(upto));
         boolean done = reportFileExists(map, groupDir,
-                shohousenFileName(from, upto), "shohousen-done", true);
+                shohousenFileName(from, upto), "shohousen_text_done", true);
         done = reportFileExists(map, groupDir,
-                shohousenPdfFileName(from, upto), "shohousen-pdf-done", done);
+                shohousenPdfFileName(from, upto), "shohousen_pdf_done", done);
         done = reportFileExists(map, groupDir,
-                clinicLabelPdfFileName(from, upto), "clinic-label-pdf-done", done);
+                clinicLabelPdfFileName(from, upto), "clinic_label_pdf_done", done);
         done = reportFileExists(map, groupDir,
-                dataFileName(from, upto), "data-done", done);
+                dataFileName(from, upto), "data_done", done);
         done = reportFileExists(map, groupDir,
-                pharmaLabelPdfFileName(from, upto), "pharma-label-pdf-done", done);
+                pharmaLabelPdfFileName(from, upto), "pharma_label_pdf_done", done);
         done = reportFileExists(map, groupDir,
-                pharmaLetterPdfFileName(from, upto), "pharma-letter-pdf-done", done);
+                pharmaLetterPdfFileName(from, upto), "pharma_letter_pdf_done", done);
         done = reportFileExists(map, groupDir,
-                pharmaLetterFileName(from, upto), "pharma-letter-done", done);
+                pharmaLetterFileName(from, upto), "pharma_letter_text_done", done);
         map.put("completed", done);
         return map;
+    }
+
+    private static final Pattern patDateSpec = Pattern.compile("(\\d{4})(\\d{2})(\\d{2})");
+    private static final Pattern patSqlDate = Pattern.compile("(\\d{4})-(\\d{2})-(\\d{2})");
+    private static final Pattern patGroupDir = Pattern.compile("\\d{8}-\\d{8}");
+
+    private String toSqlDateFormat(String fromOrUpto){
+        Matcher matcher = patDateSpec.matcher(fromOrUpto);
+        if( matcher.matches() ){
+            return String.format("%s-%s-%s", matcher.group(1), matcher.group(2), matcher.group(3));
+        }
+        matcher = patSqlDate.matcher(fromOrUpto);
+        if( matcher.matches() ){
+            return fromOrUpto;
+        } else {
+            throw new RuntimeException("Invalid Date: " + fromOrUpto);
+        }
     }
 
     private boolean reportFileExists(Map<String, Object> map, Path dir, String file, String key, boolean done){
@@ -185,7 +206,12 @@ public class FaxedShohousenHandler {
     private List<Path> listGroupDirs() throws IOException {
         String dir = getManagementRootDir();
         List<Path> result = new ArrayList<>();
-        Files.newDirectoryStream(Path.of(dir)).forEach(result::add);
+        Files.newDirectoryStream(Path.of(dir)).forEach(path -> {
+            Matcher matcher = patGroupDir.matcher(path.toFile().getName());
+            if( matcher.matches() ){
+                result.add(path);
+            }
+        });
         return result;
     }
 

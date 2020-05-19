@@ -28,6 +28,14 @@
 
 <div id="faxed-progress" class="d-none"></div>
 
+<div id="faxed-data-file-status" class="faxed-group-status"></div>
+<div id="faxed-shohousen-text-status" class="faxed-group-status"></div>
+<div id="faxed-shohousen-pdf-status" class="faxed-group-status"></div>
+<div id="faxed-pharma-letter-text-status" class="faxed-group-status"></div>
+<div id="faxed-pharma-letter-pdf-status" class="faxed-group-status"></div>
+<div id="faxed-pharma-label-pdf-status" class="faxed-group-status"></div>
+<div id="faxed-clinic-label-pdf-status" class="faxed-group-status"></div>
+
 <ul class="nav nav-tabs mt-3">
     <li class="nav-item">
         <a class="nav-link active" href="javascript:void(0)">処理済一覧</a>
@@ -59,7 +67,7 @@
 </template>
 
 <script>
-    function compText(content){
+    function compText(content) {
         let e = $($("#tmpl-text").html());
         e.html(content.replace(/\n/g, "<br/>"));
         return {
@@ -67,7 +75,7 @@
         };
     }
 
-    function compTextForm(text){
+    function compTextForm(text) {
         let e = $($("#tmpl-textform").html());
         let $textarea = e.find("textarea");
         $textarea.html(text.content);
@@ -77,8 +85,10 @@
             $commands: e.find("[part=enter]"),
             $enter: e.find("[part=enter]"),
             $cancel: e.find("[part=cancel]"),
-            onEnter: () => {},
-            onCanel: () => {}
+            onEnter: () => {
+            },
+            onCanel: () => {
+            }
         };
         comp.$enter.on("click", event => {
             comp.onEnter(comp.$textarea.val());
@@ -98,8 +108,10 @@
             $content: $content,
             $commandBox: e.find("[part=commands]"),
             $editButton: $editButton,
-            onFormCreated: form => {},
-            onFormEnter: (content, form) => {}
+            onFormCreated: form => {
+            },
+            onFormEnter: (content, form) => {
+            }
         }
         $editButton.on("click", event => {
             let form = compTextForm(text);
@@ -115,8 +127,16 @@
 
     (function () {
 
+        function shohousenUrl(path) {
+            return "../integration/faxed-shohousen-data/" + path;
+        }
+
         function getPrevGroups() {
-            return ajaxGet("../integration/faxed-shohousen-data/list-groups");
+            return ajaxGet(shohousenUrl("list-groups"));
+        }
+
+        function getLastGroup() {
+            return ajaxGet(shohousenUrl("get-last-group"));
         }
 
         async function doSubmenuPrevGroups() {
@@ -131,46 +151,49 @@
             $("#faxed-nav-content").html("").append(ul);
         }
 
-        async function chooseNextGroup() {
-            let prevGroups = await getPrevGroups();
-            let momentLast = null;
-            prevGroups.forEach(group => {
-                let upto = group.split("-")[1];
-                let momentUpto = moment(upto, "YYYYMMDD");
-                if (momentLast == null) {
-                    momentLast = momentUpto;
-                } else {
-                    if (momentUpto.isAfter(momentLast)) {
-                        momentLast = momentUpto;
-                    }
-                }
-            });
-            if (momentLast == null) {
-                return null;
+        function offerNextGroupDates(prevUpto){
+            let momentLast = moment(prevUpto);
+            let momentStart = momentLast.add(1, "day");
+            let momentEnd = momentStart.clone();
+            if (momentStart.date() < 15) {
+                momentEnd.date(15);
             } else {
-                let momentStart = momentLast.add(1, "day");
-                let momentEnd = momentStart.clone();
-                if (momentStart.date() < 15) {
-                    momentEnd.date(15);
-                } else {
-                    momentEnd = momentEnd.endOf("month");
-                }
-                return {
-                    from: momentStart,
-                    upto: momentEnd
-                }
+                momentEnd = momentEnd.endOf("month");
             }
+            return [momentStart.format("YYYY-MM-DD"), momentEnd.format("YYYY-MM-DD")];
         }
 
         async function setup() {
-            let nextGroup = await chooseNextGroup();
-            if (nextGroup) {
-                $("#faxed-from-date-input").val(nextGroup.from.format("YYYY-MM-DD"));
-                $("#faxed-upto-date-input").val(nextGroup.upto.format("YYYY-MM-DD"));
+            $(".faxed-group-status").html("");
+            let lastGroup = await getLastGroup();
+            let nextGroup;
+            if (lastGroup && !lastGroup.completed) {
+                nextGroup = lastGroup;
+            } else {
+                nextGroup = {};
+                if( lastGroup ){
+                    [nextGroup.from, nextGroup.upto] = offerNextGroupDates(lastGroup.upto);
+                }
             }
+            $("#faxed-from-date-input").val(nextGroup.from);
+            $("#faxed-upto-date-input").val(nextGroup.upto);
+            $("#faxed-data-file-status").html("データ：" +
+                (nextGroup.data_done ? "作成済" : "未作成"));
+            $("#faxed-shohousen-text-status").html("処方箋テキスト：" +
+                (nextGroup.shohousen_text_done ? "作成済" : "未作成"));
+            $("#faxed-shohousen-pdf-status").html("処方箋ＰＤＦ：" +
+                (nextGroup.shohousen_pdf_done ? "作成済" : "未作成"));
+            $("#faxed-pharma-letter-text-status").html("薬局レターテキスト" +
+                (nextGroup.pharma_letter_text_done ? "作成済" : "未作成"));
+            $("#faxed-pharma-letter-pdf-status").html("薬局レターＰＤＦ：" +
+                (nextGroup.pharma_letter_pdf_done ? "作成済" : "未作成"));
+            $("#faxed-pharma-label-pdf-status").html("薬局ラベルＰＤＦ：" +
+                (nextGroup.pharma_label_pdf_done ? "作成済" : "未作成"));
+            $("#faxed-clinic-label-pdf-status").html("クリニックラベルＰＤＦ：" +
+                (nextGroup.clinic_label_pdf_done ? "作成済" : "未作成"));
         }
 
-        function createTextComponent(text){
+        function createTextComponent(text) {
             let c = compTextEx(text);
             let e = c.ele;
             e.addClass("border border-secondary rounded my-2 p-2");
@@ -204,20 +227,20 @@
             $("#faxed-no-pharma-error").removeClass("d-none");
         }
 
-        function showOtherCreationError(message){
+        function showOtherCreationError(message) {
             $("#faxed-other-creation-error-cause").html(message);
             $("#faxed-other-creation-error").removeClass("d-none");
         }
 
-        function getFromDate(){
+        function getFromDate() {
             return $("#faxed-from-date-input").val();
         }
 
-        function getUptoDate(){
+        function getUptoDate() {
             return $("#faxed-upto-date-input").val();
         }
 
-        async function saveShohousenData(content){
+        async function saveShohousenData(content) {
             let from = getFromDate().replace(/-/g, "");
             let upto = getUptoDate().replace(/-/g, "");
             let url = `../integration/faxed-shohousen-data/save-data?from=${from}&upto=${upto}`;

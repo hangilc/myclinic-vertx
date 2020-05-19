@@ -90,49 +90,21 @@
             $commandBox: e.find("[part=commands]"),
             $editButton: $editButton,
             onFormCreated: form => {},
-            onFormEnter: content => {}
+            onFormEnter: (content, form) => {}
         }
         $editButton.on("click", event => {
             let form = compTextForm(text);
             comp.onFormCreated(form);
-            e.after(form.ele);
-            e.detach();
-            form.onEnter = content => comp.onFormEnter(content);
+            replaceElement(e, form.ele);
+            form.onEnter = content => comp.onFormEnter(content, form);
             form.onCancel = () => {
-                form.ele.replaceWith(e);
+                replaceElement(form.ele, e);
             };
         });
         return comp;
     }
 
     (function () {
-        function ajaxGet(url, data) {
-            return new Promise((resolve, fail) => {
-                $.ajax({
-                    type: "GET",
-                    url: url,
-                    data: data,
-                    cache: false,
-                    dataType: "json",
-                    success: resolve,
-                    error: (xhr, status, err) => fail(err)
-                });
-            });
-        }
-
-        function ajaxPost(url, data) {
-            return new Promise((resolve, fail) => {
-                $.ajax({
-                    type: "POST",
-                    url: url,
-                    data: JSON.stringify(data),
-                    cache: false,
-                    dataType: "json",
-                    success: resolve,
-                    error: (xhr, status, err) => fail(err)
-                });
-            });
-        }
 
         function getPrevGroups() {
             return ajaxGet("../integration/faxed-shohousen-data/list-groups");
@@ -189,6 +161,27 @@
             }
         }
 
+        function createTextComponent(text){
+            let c = compTextEx(text);
+            let e = c.ele;
+            e.addClass("border border-secondary rounded my-2 p-2");
+            c.$commandBox.addClass("mt-2");
+            c.onFormCreated = form => {
+                form.ele.addClass("form-group border border-warning rounded p-2");
+                form.$textarea.addClass("form-control").attr("rows", "7");
+                form.$commands.addClass("mt-2");
+            };
+            c.onFormEnter = async (content, form) => {
+                let newText = $.extend({}, text);
+                newText.content = content;
+                await ajaxPost("../json/update-text", newText);
+                let updatedText = await ajaxGet("../json/get-text", {"text-id": text.textId});
+                let newElement = createTextComponent(updatedText);
+                replaceElement(form.ele, newElement.ele);
+            };
+            return c;
+        }
+
         function showNoPharma(patient, visit, texts) {
             let name = patient.lastName + patient.firstName;
             let visitedAt = moment(visit.visitedAt);
@@ -196,21 +189,8 @@
             $("#faxed-no-pharma-visited-at").text("診察日：" + visitedAt.format("YYYY-MM-DD"));
             let textWrapper = $("#faxed-no-pharma-texts").html("");
             texts.forEach(text => {
-                let c = compTextEx(text);
-                let e = c.ele;
-                e.addClass("border border-secondary rounded my-2 p-2");
-                c.$commandBox.addClass("mt-2");
-                c.onFormCreated = form => {
-                    form.ele.addClass("form-group border border-warning rounded p-2");
-                    form.$textarea.addClass("form-control").attr("rows", "7");
-                    form.$commands.addClass("mt-2");
-                };
-                c.onFormEnter = async content => {
-                    let newText = $.extend({}, text);
-                    newText.content = content;
-                    await ajaxPost("../json/update-text", newText);
-                };
-                textWrapper.append(e);
+                let c = createTextComponent(text);
+                textWrapper.append(c.ele);
             });
             $("#faxed-no-pharma-error").removeClass("d-none");
         }

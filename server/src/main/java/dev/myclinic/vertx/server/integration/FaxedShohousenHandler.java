@@ -41,13 +41,12 @@ public class FaxedShohousenHandler {
         router.route("/get-last-group").handler(this::handleGetLastGroup);
         router.route("/get-group").handler(this::handleGetGroup);
         router.route("/create-data").handler(this::handleCreateData);
-        router.route("/save-data").handler(this::handleSaveData);
     }
 
     private void handleGetGroup(RoutingContext ctx) {
         String from = ctx.queryParam("from").get(0).replace("-", "");
         String upto = ctx.queryParam("upto").get(0).replace("-", "");
-        Path dir = Path.of(groupDirFullName(from, upto));
+        Path dir = groupDir(from, upto);
         if( !Files.isDirectory(dir) ){
             ctx.response().end("null");
         } else {
@@ -131,28 +130,6 @@ public class FaxedShohousenHandler {
         return Files.exists(dir.resolve(file));
     }
 
-    private void handleSaveData(RoutingContext ctx) {
-        String from = ctx.queryParam("from").get(0).replace("-", "");
-        String upto = ctx.queryParam("upto").get(0).replace("-", "");
-        String dir = ensureFaxedShohousenDataDir(from, upto);
-        vertx.<String>executeBlocking(promise -> {
-            try {
-                String body = ctx.getBodyAsString();
-                Path file = Path.of(dir, dataFileName(from, upto));
-                Files.write(file, body.getBytes(StandardCharsets.UTF_8));
-                promise.complete(mapper.writeValueAsString(file.toString()));
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        }, ar -> {
-            if (ar.succeeded()) {
-                ctx.response().end(ar.result());
-            } else {
-                ctx.fail(ar.cause());
-            }
-        });
-    }
-
     private void handleListGroups(RoutingContext ctx) {
         try {
             List<String> result = new ArrayList<>();
@@ -168,27 +145,36 @@ public class FaxedShohousenHandler {
     }
 
     private void handleCreateData(RoutingContext ctx) {
-        String from = ctx.queryParam("from").get(0).replace("-", "");
-        String upto = ctx.queryParam("upto").get(0).replace("-", "");
+        String fromDate = ctx.queryParam("from").get(0);
+        String uptoDate = ctx.queryParam("upto").get(0);
+        String from = fromDate.replace("-", "");
+        String upto = uptoDate.replace("-", "");
         vertx.<String>executeBlocking(promise -> {
             try {
-                String apiDir = System.getenv("MYCLINIC_API_PROJECT_DIR");
-                if (apiDir == null) {
-                    throw new RuntimeException("env var not defined: " + "MYCLINIC_API_PROJECT_DIR");
-                }
+                Path apiDir = getMyclinicApiProjectDir();
+                Path groupDir = groupDir(from, upto);
+                //noinspection ResultOfMethodCallIgnored
+                groupDir.toFile().mkdir();
+                String dataFileName = dataFileName(from, upto);
+                Path dataFile = groupDir.resolve(dataFileName);
                 ProcessBuilder pb = new ProcessBuilder("python",
-                        "presc.py", "data", from, upto)
-                        .directory(new File(apiDir));
+                        "presc.py", "data", fromDate, uptoDate, "-o", dataFile.toFile().getAbsolutePath())
+                        .directory(apiDir.toFile());
                 Map<String, String> env = pb.environment();
                 env.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
                 Process process = pb.start();
                 InputStream is = process.getInputStream();
                 InputStream es = process.getErrorStream();
-                String stdOut = readInputStream(is);
                 String stdErr = readInputStream(es);
-                Map<String, String> map = new HashMap<>();
-                map.put("stdout", stdOut);
-                map.put("stderr", stdErr);
+                boolean isSuccess = process.exitValue() == 0;
+                Map<String, Object> map = new HashMap<>();
+                map.put("success", isSuccess);
+                if( isSuccess ) {
+                    map.put("dataFileName", dataFileName);
+                    map.put("dataFileSize", dataFile.toFile().length());
+                } else {
+                    map.put("errorMessage", stdErr);
+                }
                 promise.complete(mapper.writeValueAsString(map));
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -204,9 +190,9 @@ public class FaxedShohousenHandler {
     }
 
     private List<Path> listGroupDirs() throws IOException {
-        String dir = getManagementRootDir();
+        Path dir = getManagementRootDir();
         List<Path> result = new ArrayList<>();
-        Files.newDirectoryStream(Path.of(dir)).forEach(path -> {
+        Files.newDirectoryStream(dir).forEach(path -> {
             Matcher matcher = patGroupDir.matcher(path.toFile().getName());
             if( matcher.matches() ){
                 result.add(path);
@@ -215,12 +201,21 @@ public class FaxedShohousenHandler {
         return result;
     }
 
-    private String getManagementRootDir() {
-        String dir = System.getenv("MYCLINIC_FAXED_SHOHOUSEN_DATA_DIR");
-        if (dir == null) {
+    private Path getMyclinicApiProjectDir(){
+        String apiDir = System.getenv("MYCLINIC_API_PROJECT_DIR");
+        if (apiDir == null) {
+            throw new RuntimeException("env var not defined: " + "MYCLINIC_API_PROJECT_DIR");
+        }
+        return Path.of(apiDir);
+    }
+
+    private Path getManagementRootDir() {
+        String dirStr = System.getenv("MYCLINIC_FAXED_SHOHOUSEN_DATA_DIR");
+        if (dirStr == null) {
             throw new RuntimeException("env var is not defined: " + "MYCLINIC_FAXED_SHOHOUSEN_DATA_DIR");
         }
-        if (!Files.isDirectory(Path.of(dir))) {
+        Path dir = Path.of(dirStr);
+        if( !Files.isDirectory(dir) ){
             throw new RuntimeException("is not directory: " + dir);
         }
         return dir;
@@ -236,21 +231,8 @@ public class FaxedShohousenHandler {
         return String.format("%s-%s", from, upto);
     }
 
-    private String groupDirFullName(String from, String upto) {
-        return Path.of(getManagementRootDir(),
-                groupDirName(from, upto)).toString();
-    }
-
-    private String ensureFaxedShohousenDataDir(String from, String upto) {
-        Path path = Path.of(groupDirFullName(from, upto));
-        if (!Files.isDirectory(path)) {
-            try {
-                Files.createDirectory(path);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return path.toString();
+    private Path groupDir(String from, String upto) {
+        return getManagementRootDir().resolve(groupDirName(from, upto));
     }
 
     private String shohousenFileName(String from, String upto) {

@@ -42,6 +42,237 @@ public class FaxedShohousenHandler {
         router.route("/create-data").handler(this::handleCreateData);
         router.route("/create-shohousen-text").handler(this::handleCreateShohousenText);
         router.route("/create-shohousen-pdf").handler(this::handleCreateShohousenPdf);
+        router.route("/create-pharma-letter-text").handler(this::handleCreatePharmaLetterText);
+        router.route("/create-pharma-letter-pdf").handler(this::handleCreatePharmaLetterPdf);
+        router.route("/create-pharma-label-pdf").handler(this::handleCreatePharmaLabelPdf);
+    }
+
+    private String getConfigDir(){
+        return System.getenv("MYCLINIC_CONFIG_DIR");
+    }
+
+    private Optional<Integer> getOptionalIntParam(RoutingContext ctx, String name){
+        List<String> list = ctx.queryParam(name);
+        if( list.size() == 0 ){
+            return Optional.empty();
+        } else if( list.size() == 1 ){
+            String para = list.get(0);
+            try {
+                int ival = Integer.parseInt(para);
+                return Optional.of(ival);
+            } catch(NumberFormatException e){
+                throw new RuntimeException(String.format("INvalid number (%s): %s", name, para));
+            }
+        } else {
+            throw new RuntimeException("Multiple values supplied: " + name);
+        }
+    }
+
+    private Map<String, Object> createPharmaLabelTextFile(File dataFile, File outFile) throws IOException {
+        Path apiDir = getMyclinicApiProjectDir();
+        ProcessBuilder pb1 = new ProcessBuilder("python",
+                "presc.py", "pharma-label",
+                "-i", dataFile.getAbsolutePath(),
+                "-o", outFile.getAbsolutePath())
+                .directory(apiDir.toFile());
+        Map<String, String> env1 = pb1.environment();
+        env1.put("MYCLINIC_CONFIG", getConfigDir());
+        return exec(pb1);
+    }
+
+    private Map<String, Object> createPharmaLabelDrawerFile(File textFile, File outFile,
+                                                            int row, int col) throws IOException {
+        Path sprintDir = getMyclinicSpringProjectDir();
+        ProcessBuilder pb1 = new ProcessBuilder(
+                "java", "-jar",
+                "multi-drawer-cli\\target\\multi-drawer-cli-1.0.0-SNAPSHOT.jar",
+                "seal8x3",
+                "-r", String.format("%d", row),
+                "-c", String.format("%d", col),
+                "-i", textFile.getAbsolutePath(),
+                "-o", outFile.getAbsolutePath())
+                .directory(sprintDir.toFile());
+        Map<String, String> env1 = pb1.environment();
+        env1.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+        return exec(pb1);
+    }
+
+    private Map<String, Object> createPdfFile(File drawerFile, File outFile, List<String> opts) throws IOException {
+        Path sprintDir = getMyclinicSpringProjectDir();
+        List<String> commands;
+        commands = new ArrayList<>(List.of(
+                "java",
+                "-jar", "drawer-printer\\target\\drawer-printer-1.0.0-SNAPSHOT.jar",
+                "-i", drawerFile.getAbsolutePath(),
+                "--pdf", outFile.getAbsolutePath()));
+        if( opts != null ) {
+            commands.addAll(opts);
+        }
+        ProcessBuilder pb = new ProcessBuilder(commands).directory(sprintDir.toFile());
+        Map<String, String> env = pb.environment();
+        env.put("MYCLINIC_CONFIG", getConfigDir());
+        return exec(pb);
+    }
+
+    private void handleCreatePharmaLabelPdf(RoutingContext ctx) {
+        String fromDate = ctx.queryParam("from").get(0);
+        String uptoDate = ctx.queryParam("upto").get(0);
+        String from = fromDate.replace("-", "");
+        String upto = uptoDate.replace("-", "");
+        Optional<Integer> optRow = getOptionalIntParam(ctx, "row");
+        Optional<Integer> optCol = getOptionalIntParam(ctx, "col");
+        int row = optRow.orElse(1);
+        int col = optCol.orElse(1);
+        vertx.<String>executeBlocking(promise -> {
+            Path tempFile1 = null;
+            Path tempFile2 = null;
+            try {
+                tempFile1 = Files.createTempFile("myclinic-", "-pharma-label.txt");
+                Path apiDir = getMyclinicApiProjectDir();
+                Path groupDir = groupDir(from, upto);
+                String dataFileName = dataFileName(from, upto);
+                Path dataFile = groupDir.resolve(dataFileName);
+                Map<String, Object> result = createPharmaLabelTextFile(dataFile.toFile(), tempFile1.toFile());
+                if (!result.get("success").equals(true)) {
+                    promise.complete(mapper.writeValueAsString(result));
+                    return;
+                }
+                tempFile2 = Files.createTempFile("myclinic-", "-pharma-label-drawer.txt");
+                result = createPharmaLabelDrawerFile(tempFile1.toFile(), tempFile2.toFile(),
+                        row, col);
+                if (!result.get("success").equals(true)) {
+                    promise.complete(mapper.writeValueAsString(result));
+                    return;
+                }
+                String pharmaLabelPdfFileName = pharmaLabelPdfFileName(from, upto);
+                Path pharmaLabelPdfFile = groupDir.resolve(pharmaLabelPdfFileName);
+                result = createPdfFile(tempFile2.toFile(), pharmaLabelPdfFile.toFile(), null);
+                if (!result.get("success").equals(true)) {
+                    promise.complete(mapper.writeValueAsString(result));
+                    return;
+                }
+                result.put("pharmaLabelPdfFie", pharmaLabelPdfFileName);
+                result.put("pharmaLabelPdfFileSize", pharmaLabelPdfFile.toFile().length());
+                promise.complete(mapper.writeValueAsString(result));
+            } catch(Exception e){
+                ctx.fail(e);
+            } finally {
+                if( tempFile1 != null ){
+                    //noinspection ResultOfMethodCallIgnored
+                    //tempFile1.toFile().delete();
+                }
+                if( tempFile2 != null ){
+                    //noinspection ResultOfMethodCallIgnored
+                    //tempFile2.toFile().delete();
+                }
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
+    }
+
+    private void handleCreatePharmaLetterPdf(RoutingContext ctx) {
+        String fromDate = ctx.queryParam("from").get(0);
+        String uptoDate = ctx.queryParam("upto").get(0);
+        String from = fromDate.replace("-", "");
+        String upto = uptoDate.replace("-", "");
+        vertx.<String>executeBlocking(promise -> {
+            Path tempFile = null;
+            try {
+                tempFile = Files.createTempFile("myclinic-", "-pharma-letter-drawer.txt");
+                Path sprintDir = getMyclinicSpringProjectDir();
+                Path groupDir = groupDir(from, upto);
+                String textFileName = pharmaLetterTextFileName(from, upto);
+                Path textFile = groupDir.resolve(textFileName);
+                ProcessBuilder pb1 = new ProcessBuilder(
+                        "java", "-jar",
+                        "multi-drawer-cli\\target\\multi-drawer-cli-1.0.0-SNAPSHOT.jar",
+                        "text",
+                        "-i", textFile.toFile().getAbsolutePath(),
+                        "-o", tempFile.toFile().getAbsolutePath())
+                        .directory(sprintDir.toFile());
+                Map<String, String> env1 = pb1.environment();
+                env1.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+                Map<String, Object> result1 = exec(pb1);
+                if( !result1.get("success").equals(true) ){
+                    promise.complete(mapper.writeValueAsString(result1));
+                    return;
+                }
+                String pdfFileName = pharmaLetterPdfFileName(from, upto);
+                Path pdfFile = groupDir.resolve(pdfFileName);
+                ProcessBuilder pb2 = new ProcessBuilder(
+                        "java", "-jar",
+                        "drawer-printer\\target\\drawer-printer-1.0.0-SNAPSHOT.jar",
+                        "-i", tempFile.toFile().getAbsolutePath(),
+                        "--pdf", pdfFile.toFile().getAbsolutePath())
+                        .directory(sprintDir.toFile());
+                Map<String, String> env2 = pb1.environment();
+                env2.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+                Map<String, Object> result2 = exec(pb2);
+                if( result2.get("success").equals(true) ){
+                    result2.put("pdfFile", pdfFileName);
+                    result2.put("pdfFileSize", pdfFile.toFile().length());
+                }
+                promise.complete(mapper.writeValueAsString(result2));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                if( tempFile != null ){
+                    //noinspection ResultOfMethodCallIgnored
+                    tempFile.toFile().delete();
+                }
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().putHeader("content-type", "application/json; charset=UTF-8")
+                        .end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
+    }
+
+    private void handleCreatePharmaLetterText(RoutingContext ctx) {
+        String fromDate = ctx.queryParam("from").get(0);
+        String uptoDate = ctx.queryParam("upto").get(0);
+        String from = fromDate.replace("-", "");
+        String upto = uptoDate.replace("-", "");
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                Path apiDir = getMyclinicApiProjectDir();
+                Path groupDir = groupDir(from, upto);
+                String dataFileName = dataFileName(from, upto);
+                Path dataFile = groupDir.resolve(dataFileName);
+                String textFileName = pharmaLetterTextFileName(from, upto);
+                Path textFile = groupDir.resolve(textFileName);
+                ProcessBuilder pb = new ProcessBuilder("python",
+                        "presc.py", "pharma-letter",
+                        "-i", dataFile.toFile().getAbsolutePath(),
+                        "-o", textFile.toFile().getAbsolutePath())
+                        .directory(apiDir.toFile());
+                Map<String, String> env = pb.environment();
+                env.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+                Map<String, Object> result = exec(pb);
+                boolean isSuccess = result.get("success").equals(true);
+                if( isSuccess ) {
+                    result.put("pharmaLetterTextFileName", textFileName);
+                    result.put("pharmaLetterTextFileSize", textFile.toFile().length());
+                }
+                promise.complete(mapper.writeValueAsString(result));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
     }
 
     private Map<String, Object> exec(ProcessBuilder pb) throws IOException {
@@ -106,7 +337,6 @@ public class FaxedShohousenHandler {
                 throw new RuntimeException(e);
             } finally {
                 if( tempFile != null ){
-                    System.out.println("deleting: " + tempFile.toFile().getAbsolutePath());
                     //noinspection ResultOfMethodCallIgnored
                     tempFile.toFile().delete();
                 }
@@ -225,7 +455,7 @@ public class FaxedShohousenHandler {
         done = reportFileExists(map, groupDir,
                 pharmaLetterPdfFileName(from, upto), "pharma_letter_pdf_done", done);
         done = reportFileExists(map, groupDir,
-                pharmaLetterFileName(from, upto), "pharma_letter_text_done", done);
+                pharmaLetterTextFileName(from, upto), "pharma_letter_text_done", done);
         map.put("completed", done);
         return map;
     }
@@ -394,7 +624,7 @@ public class FaxedShohousenHandler {
         return String.format("shohousen-pharma-letter-%s-%s.pdf", from, upto);
     }
 
-    private String pharmaLetterFileName(String from, String upto) {
+    private String pharmaLetterTextFileName(String from, String upto) {
         return String.format("shohousen-pharma-letter-%s-%s.txt", from, upto);
     }
 

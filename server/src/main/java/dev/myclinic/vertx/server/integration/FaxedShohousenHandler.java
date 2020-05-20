@@ -7,7 +7,6 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -41,6 +40,134 @@ public class FaxedShohousenHandler {
         router.route("/get-last-group").handler(this::handleGetLastGroup);
         router.route("/get-group").handler(this::handleGetGroup);
         router.route("/create-data").handler(this::handleCreateData);
+        router.route("/create-shohousen-text").handler(this::handleCreateShohousenText);
+        router.route("/create-shohousen-pdf").handler(this::handleCreateShohousenPdf);
+    }
+
+    private Map<String, Object> exec(ProcessBuilder pb) throws IOException {
+        Process process = pb.start();
+        InputStream os = process.getInputStream();
+        InputStream es = process.getErrorStream();
+        String stdOut = readInputStream(os);
+        String stdErr = readInputStream(es);
+        boolean isSuccess = process.exitValue() == 0;
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", isSuccess);
+        result.put("stdOut", stdOut);
+        result.put("stdErr", stdErr);
+        return result;
+    }
+
+    private void handleCreateShohousenPdf(RoutingContext ctx) {
+        String fromDate = ctx.queryParam("from").get(0);
+        String uptoDate = ctx.queryParam("upto").get(0);
+        String from = fromDate.replace("-", "");
+        String upto = uptoDate.replace("-", "");
+        vertx.<String>executeBlocking(promise -> {
+            Path tempFile = null;
+            try {
+                tempFile = Files.createTempFile("myclinic-", "-shohousen.txt");
+                Path sprintDir = getMyclinicSpringProjectDir();
+                Path groupDir = groupDir(from, upto);
+                String shohousenTextFileName = shohousenTextFileName(from, upto);
+                Path textFile = groupDir.resolve(shohousenTextFileName);
+                ProcessBuilder pb1 = new ProcessBuilder(
+                        "java", "-jar",
+                        "shohousen-drawer\\target\\shohousen-drawer-1.0.0-SNAPSHOT.jar",
+                        "-i", textFile.toFile().getAbsolutePath(),
+                        "-o", tempFile.toFile().getAbsolutePath())
+                        .directory(sprintDir.toFile());
+                Map<String, String> env1 = pb1.environment();
+                env1.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+                Map<String, Object> result1 = exec(pb1);
+                if( !result1.get("success").equals(true) ){
+                    promise.complete(mapper.writeValueAsString(result1));
+                    return;
+                }
+                String pdfFileName = shohousenPdfFileName(from, upto);
+                Path pdfFile = groupDir.resolve(pdfFileName);
+                ProcessBuilder pb2 = new ProcessBuilder(
+                        "java", "-jar",
+                        "drawer-printer\\target\\drawer-printer-1.0.0-SNAPSHOT.jar",
+                        "--pdf-page-size", "A5",
+                        "--pdf-shrink", "2",
+                        "-i", tempFile.toFile().getAbsolutePath(),
+                        "--pdf", pdfFile.toFile().getAbsolutePath())
+                        .directory(sprintDir.toFile());
+                Map<String, String> env2 = pb1.environment();
+                env2.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+                Map<String, Object> result2 = exec(pb2);
+                if( result2.get("success").equals(true) ){
+                    result2.put("pdfFile", pdfFileName);
+                    result2.put("pdfFileSize", pdfFile.toFile().length());
+                }
+                promise.complete(mapper.writeValueAsString(result2));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                if( tempFile != null ){
+                    System.out.println("deleting: " + tempFile.toFile().getAbsolutePath());
+                    //noinspection ResultOfMethodCallIgnored
+                    tempFile.toFile().delete();
+                }
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().putHeader("content-type", "application/json; charset=UTF-8")
+                        .end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
+    }
+
+    private void handleCreateShohousenText(RoutingContext ctx) {
+        String fromDate = ctx.queryParam("from").get(0);
+        String uptoDate = ctx.queryParam("upto").get(0);
+        String from = fromDate.replace("-", "");
+        String upto = uptoDate.replace("-", "");
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                Path apiDir = getMyclinicApiProjectDir();
+                Path groupDir = groupDir(from, upto);
+                //noinspection ResultOfMethodCallIgnored
+                groupDir.toFile().mkdir();
+                String dataFileName = dataFileName(from, upto);
+                Path dataFile = groupDir.resolve(dataFileName);
+                String textFileName = shohousenTextFileName(from, upto);
+                Path textFile = groupDir.resolve(textFileName);
+                ProcessBuilder pb = new ProcessBuilder("python",
+                        "presc.py", "print",
+                        "-i", dataFile.toFile().getAbsolutePath(),
+                        "-o", textFile.toFile().getAbsolutePath())
+                        .directory(apiDir.toFile());
+                Map<String, String> env = pb.environment();
+                env.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+                Process process = pb.start();
+                InputStream is = process.getInputStream();
+                InputStream es = process.getErrorStream();
+                String stdErr = readInputStream(es);
+                boolean isSuccess = process.exitValue() == 0;
+                Map<String, Object> map = new HashMap<>();
+                map.put("success", isSuccess);
+                if( isSuccess ) {
+                    map.put("shohousenTextFileName", textFileName);
+                    map.put("shohousenTextFileSize", textFile.toFile().length());
+                } else {
+                    map.put("errorMessage", stdErr);
+                }
+                promise.complete(mapper.writeValueAsString(map));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().putHeader("content-type", "application/json; charset=UTF-8")
+                        .end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
     }
 
     private void handleGetGroup(RoutingContext ctx) {
@@ -86,7 +213,7 @@ public class FaxedShohousenHandler {
         map.put("from", toSqlDateFormat(from));
         map.put("upto", toSqlDateFormat(upto));
         boolean done = reportFileExists(map, groupDir,
-                shohousenFileName(from, upto), "shohousen_text_done", true);
+                shohousenTextFileName(from, upto), "shohousen_text_done", true);
         done = reportFileExists(map, groupDir,
                 shohousenPdfFileName(from, upto), "shohousen_pdf_done", done);
         done = reportFileExists(map, groupDir,
@@ -202,11 +329,19 @@ public class FaxedShohousenHandler {
     }
 
     private Path getMyclinicApiProjectDir(){
-        String apiDir = System.getenv("MYCLINIC_API_PROJECT_DIR");
-        if (apiDir == null) {
+        String dir = System.getenv("MYCLINIC_API_PROJECT_DIR");
+        if (dir == null) {
             throw new RuntimeException("env var not defined: " + "MYCLINIC_API_PROJECT_DIR");
         }
-        return Path.of(apiDir);
+        return Path.of(dir);
+    }
+
+    private Path getMyclinicSpringProjectDir(){
+        String dir = System.getenv("MYCLINIC_SPRING_PROJECT_DIR");
+        if (dir == null) {
+            throw new RuntimeException("env var not defined: " + "MYCLINIC_SPRING_PROJECT_DIR");
+        }
+        return Path.of(dir);
     }
 
     private Path getManagementRootDir() {
@@ -235,7 +370,7 @@ public class FaxedShohousenHandler {
         return getManagementRootDir().resolve(groupDirName(from, upto));
     }
 
-    private String shohousenFileName(String from, String upto) {
+    private String shohousenTextFileName(String from, String upto) {
         return String.format("shohousen-%s-%s.json", from, upto);
     }
 

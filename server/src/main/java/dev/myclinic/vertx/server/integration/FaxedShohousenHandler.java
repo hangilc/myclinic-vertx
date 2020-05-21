@@ -44,10 +44,15 @@ public class FaxedShohousenHandler {
     }
 
     private void addRoutes(Router router) {
-        router.route("/list-groups").handler(this::handleListGroups);
-        router.route("/get-last-group").handler(this::handleGetLastGroup);
-        router.route("/get-group").handler(this::handleGetGroup);
-        router.route("/count-shohousen").handler(this::handleCountShohousen);
+        router.route(HttpMethod.GET, "/list-groups").handler(this::handleListGroups);
+        router.route(HttpMethod.GET, "/get-last-group").handler(this::handleGetLastGroup);
+        router.route(HttpMethod.GET, "/get-group").handler(this::handleGetGroup);
+        router.route(HttpMethod.GET, "/count-shohousen").handler(this::handleCountShohousen);
+        router.route(HttpMethod.GET, "/shohousen-pdf").handler(this::handleShohousenPdf);
+        router.route(HttpMethod.GET, "/pharma-letter-pdf").handler(this::handlePharmaLetterPdf);
+        router.route(HttpMethod.GET, "/pharma-label-pdf").handler(this::handlePharmaLabelPdf);
+        router.route(HttpMethod.GET, "/clinic-label-pdf").handler(this::handleClinicLabelPdf);
+
         router.route(HttpMethod.POST, "/create-data").handler(this::handleCreateData);
         router.route(HttpMethod.POST, "/create-shohousen-text").handler(this::handleCreateShohousenText);
         router.route(HttpMethod.POST, "/create-shohousen-pdf").handler(this::handleCreateShohousenPdf);
@@ -55,6 +60,34 @@ public class FaxedShohousenHandler {
         router.route(HttpMethod.POST, "/create-pharma-letter-pdf").handler(this::handleCreatePharmaLetterPdf);
         router.route(HttpMethod.POST, "/create-pharma-label-pdf").handler(this::handleCreatePharmaLabelPdf);
         router.route(HttpMethod.POST, "/create-clinic-label-pdf").handler(this::handleCreateClinicLabelPdf);
+    }
+
+    private void handleClinicLabelPdf(RoutingContext ctx) {
+        String from = ctx.queryParam("from").get(0).replace("-", "");
+        String upto = ctx.queryParam("upto").get(0).replace("-", "");
+        ctx.response().putHeader("content-type", "application/pdf")
+                .sendFile(clinicLabelPdf(from, upto).toFile().getAbsolutePath());
+    }
+
+    private void handlePharmaLabelPdf(RoutingContext ctx) {
+        String from = ctx.queryParam("from").get(0).replace("-", "");
+        String upto = ctx.queryParam("upto").get(0).replace("-", "");
+        ctx.response().putHeader("content-type", "application/pdf")
+                .sendFile(pharmaLabelPdf(from, upto).toFile().getAbsolutePath());
+    }
+
+    private void handlePharmaLetterPdf(RoutingContext ctx) {
+        String from = ctx.queryParam("from").get(0).replace("-", "");
+        String upto = ctx.queryParam("upto").get(0).replace("-", "");
+        ctx.response().putHeader("content-type", "application/pdf")
+                .sendFile(pharmaLetterPdf(from, upto).toFile().getAbsolutePath());
+    }
+
+    private void handleShohousenPdf(RoutingContext ctx) {
+        String from = ctx.queryParam("from").get(0).replace("-", "");
+        String upto = ctx.queryParam("upto").get(0).replace("-", "");
+        ctx.response().putHeader("content-type", "application/pdf")
+                .sendFile(shohousenPdfFile(from, upto).toFile().getAbsolutePath());
     }
 
     private void handleCountShohousen(RoutingContext ctx) {
@@ -800,8 +833,16 @@ public class FaxedShohousenHandler {
         return String.format("shohousen-%s-%s.pdf", from, upto);
     }
 
+    private Path shohousenPdfFile(String from, String upto){
+        return groupDir(from, upto).resolve(shohousenPdfFileName(from, upto));
+    }
+
     private String clinicLabelPdfFileName(String from, String upto) {
         return String.format("shohousen-clinic-label-%s-%s.pdf", from, upto);
+    }
+
+    private Path clinicLabelPdf(String from, String upto){
+        return groupDir(from, upto).resolve(clinicLabelPdfFileName(from, upto));
     }
 
     private String dataFileName(String from, String upto) {
@@ -817,8 +858,16 @@ public class FaxedShohousenHandler {
         return String.format("shohousen-pharma-label-%s-%s.pdf", from, upto);
     }
 
+    private Path pharmaLabelPdf(String from, String upto){
+        return groupDir(from, upto).resolve(pharmaLabelPdfFileName(from, upto));
+    }
+
     private String pharmaLetterPdfFileName(String from, String upto) {
         return String.format("shohousen-pharma-letter-%s-%s.pdf", from, upto);
+    }
+
+    private Path pharmaLetterPdf(String from, String upto){
+        return groupDir(from, upto).resolve(pharmaLetterPdfFileName(from, upto));
     }
 
     private String pharmaLetterTextFileName(String from, String upto) {

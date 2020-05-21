@@ -83,11 +83,26 @@
     </div>
 </div>
 
+<ul class="nav nav-tabs mt-3">
+    <li class="nav-item">
+        <a class="nav-link active faxed-part-prev-groups" href="javascript:void(0)">処理済一覧</a>
+    </li>
+</ul>
+<div id="faxed-nav-content"></div>
+
 <script>
     (function () {
 
-        function shohousenUrl(path) {
-            return "../integration/faxed-shohousen-data/" + path;
+        function shohousenUrl(path, attr=null) {
+            let url = "../integration/faxed-shohousen-data/" + path;
+            if( attr ){
+                url += "?" + $.param(attr);
+            }
+            return url;
+        }
+
+        function getPrevGroups() {
+            return ajaxGet(shohousenUrl("list-groups"));
         }
 
         function getLastGroup() {
@@ -166,7 +181,7 @@
             }
         }
 
-        function getDateInputsEx(){
+        function getDateInputsEx() {
             let from = getFromValue();
             let err = [];
             if (!from) {
@@ -177,24 +192,24 @@
                 err.push("終了日が設定されていません。");
             }
             let eles = err.map(e => $("<div>").text(e));
-            if( eles.length > 0 ) {
+            if (eles.length > 0) {
                 errorReport.setBody(...eles);
             }
             return [from, upto];
         }
 
-        function getRowAndColInputEx(){
+        function getRowAndColInputEx() {
             let err = []
             let row = getRowValue();
-            if( row == null ){
+            if (row == null) {
                 err.push("行の値が不適切です。");
             }
             let col = getColValue();
-            if( col == null ){
+            if (col == null) {
                 err.push("列の値が不適切です。")
             }
             let eles = err.map(msg => $("<div>").text(msg));
-            if( eles.length > 0 ){
+            if (eles.length > 0) {
                 errorReport.setBody(...eles);
             }
             return [row, col];
@@ -261,10 +276,8 @@
             constructor(ele, prefix) {
                 this.ele = ele;
                 this.prefix = prefix;
-                this.doCreate = () => {
-                };
-                this.doDisplay = () => {
-                };
+                this.doCreate = () => {};
+                this.displayLinkFun = null;
                 ele.find(".faxed-part-create").on("click", () => this.doCreate());
                 ele.find(".faxed-part-display").on("click", () => this.doDisplay());
             }
@@ -293,29 +306,48 @@
                 return this;
             }
 
-            setDoDisplay(f) {
-                this.doDisplay = f;
+            doDisplay() {
+                if( this.displayLinkFun ){
+                    let [from, upto] = getDateInputsEx();
+                    if( from && upto ){
+                        let url = this.displayLinkFun(from, upto);
+                        window.open(url, "_blank");
+                    }
+                }
+            }
+
+            setDisplayLinkFun(linkFun) {
+                this.displayLinkFun = linkFun;
                 return this;
             }
 
         }
 
         let dataStatusReport = new StatusReport($("#faxed-data-file-status"),
-            "dataFile").setDoCreate(async () => await createDataFileEx());
+            "dataFile")
+            .setDoCreate(async () => await createDataFileEx());
         let shohousenPdfStatusReport = new StatusReport($("#faxed-shohousen-pdf-status"),
-            "shohousenPdfFile").setDoCreate(async () => (await createShohousenTextFileEx()) &&
-            (await createShohousenPdfFileEx()));
+            "shohousenPdfFile")
+            .setDoCreate(async () => (await createShohousenTextFileEx()) &&
+                (await createShohousenPdfFileEx()))
+            .setDisplayLinkFun((from, upto) => shohousenUrl("shohousen-pdf", {from, upto}));
         let pharmaLetterPdfStatusReport = new StatusReport($("#faxed-pharma-letter-pdf-status"),
-            "pharmaLetterPdfFile").setDoCreate(async () => (await createPharmaLetterTextFileEx()) &&
-            (await createPharmaLetterPdfFileEx()));
+            "pharmaLetterPdfFile")
+            .setDoCreate(async () => (await createPharmaLetterTextFileEx()) &&
+                (await createPharmaLetterPdfFileEx()))
+            .setDisplayLinkFun((from, upto) => shohousenUrl("pharma-letter-pdf", {from, upto}));
         let pharmaLabelPdfStatusReport = new StatusReport($("#faxed-pharma-label-pdf-status"),
-            "pharmaLabelPdfFile").setDoCreate(async () => await createPharmaLabelPdfFileEx());
+            "pharmaLabelPdfFile")
+            .setDoCreate(async () => await createPharmaLabelPdfFileEx())
+            .setDisplayLinkFun((from, upto) => shohousenUrl("pharma-label-pdf", {from, upto}));
         let clinicLabelPdfStatusReport = new StatusReport($("#faxed-clinic-label-pdf-status"),
-            "clinicLabelPdfFile").setDoCreate(async () => await createClinicLabelPdfFileEx());
+            "clinicLabelPdfFile")
+            .setDoCreate(async () => await createClinicLabelPdfFileEx())
+            .setDisplayLinkFun((from, upto) => shohousenUrl("clinic-label-pdf", {from, upto}));
 
         async function createDataFileEx() { // returns true if success
             let [from, upto] = getDateInputsEx();
-            if( !(from && upto) ){
+            if (!(from && upto)) {
                 return false;
             }
             progressReport.report("データを作成しています...");
@@ -333,7 +365,7 @@
 
         async function createShohousenTextFileEx() { // returns true if success
             let [from, upto] = getDateInputsEx();
-            if( !(from && upto) ){
+            if (!(from && upto)) {
                 return false;
             }
             progressReport.report("処方箋テキストを作成しています...");
@@ -349,7 +381,7 @@
 
         async function createShohousenPdfFileEx() { // returns true if success
             let [from, upto] = getDateInputsEx();
-            if( !(from && upto) ){
+            if (!(from && upto)) {
                 return false;
             }
             progressReport.report("処方箋ＰＤＦを作成しています...");
@@ -367,7 +399,7 @@
 
         async function createPharmaLetterTextFileEx() { // returns true if success
             let [from, upto] = getDateInputsEx();
-            if( !(from && upto) ){
+            if (!(from && upto)) {
                 return false;
             }
             progressReport.report("薬局レターのテキストを作成しています...");
@@ -383,7 +415,7 @@
 
         async function createPharmaLetterPdfFileEx() { // returns true if success
             let [from, upto] = getDateInputsEx();
-            if( !(from && upto) ){
+            if (!(from && upto)) {
                 return false;
             }
             progressReport.report("薬局レターＰＤＦを作成しています...");
@@ -401,11 +433,11 @@
 
         async function createPharmaLabelPdfFileEx() { // returns true if success
             let [from, upto] = getDateInputsEx();
-            if( !(from && upto) ){
+            if (!(from && upto)) {
                 return false;
             }
             let [row, col] = getRowAndColInputEx();
-            if( row == null || col == null ){
+            if (row == null || col == null) {
                 return false;
             }
             progressReport.report("薬局住所ラベルＰＤＦを作成しています...");
@@ -423,15 +455,15 @@
 
         async function createClinicLabelPdfFileEx() { // returns true if success
             let [from, upto] = getDateInputsEx();
-            if( !(from && upto) ){
+            if (!(from && upto)) {
                 return false;
             }
             let [row, col] = getRowAndColInputEx();
-            if( row == null || col == null ){
+            if (row == null || col == null) {
                 return false;
             }
             let n = await countShohousen(from, upto);
-            if( !n ){
+            if (!n) {
                 errorReport.setBody("処方箋数を取得できません。");
                 return false;
             }
@@ -456,7 +488,7 @@
                 (await createPharmaLetterPdfFileEx());
             let pharmaLabelPdfOk = dataFileOk && (await createPharmaLabelPdfFileEx());
             let clinicLabelPdfOk = dataFileOk && (await createClinicLabelPdfFileEx());
-            if( dataFileOk && shohousenPdfOk && pharmaLetterPdfOk && pharmaLabelPdfOk && clinicLabelPdfOk ){
+            if (dataFileOk && shohousenPdfOk && pharmaLetterPdfOk && pharmaLabelPdfOk && clinicLabelPdfOk) {
                 progressReport.report("すべて作成しました。");
             }
         }
@@ -486,7 +518,34 @@
             } else {
                 return {};
             }
+        }
 
+        function packedToSqlDate(packed){
+            let m = /^(\d{4})(\d{2})(\d{2})$/.exec(packed);
+            return `${m[1]}-${m[2]}-${m[3]}`;
+        }
+
+        async function updatePrevGroups(){
+            let prevGroups = await getPrevGroups();
+            let ul = $("<ul>");
+            if (prevGroups) {
+                prevGroups.forEach(group => {
+                    let li = $("<li>");
+                    let a = $("<a>").text(group).attr("href", "javascript:void(0)");
+                    li.append(a);
+                    a.on("click", async event => {
+                        let [from, upto] = group.split("-");
+                        from = packedToSqlDate(from);
+                        upto = packedToSqlDate(upto);
+                        let g = await getGroup(from, upto);
+                        setFromValue(from);
+                        setUptoValue(upto);
+                        updateStatus(g);
+                    });
+                    ul.append(li);
+                });
+            }
+            $("#faxed-nav-content").html("").append(ul);
         }
 
         function updateStatus(group) {
@@ -505,5 +564,6 @@
         }
 
         setup();
+        updatePrevGroups();
     })();
 </script>

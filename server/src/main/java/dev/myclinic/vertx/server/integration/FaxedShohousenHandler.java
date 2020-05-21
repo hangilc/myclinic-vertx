@@ -3,18 +3,25 @@ package dev.myclinic.vertx.server.integration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class FaxedShohousenHandler {
+    private static final Logger logger = LoggerFactory.getLogger(FaxedShohousenHandler.class);
 
     private final Vertx vertx;
     private final ObjectMapper mapper;
@@ -39,13 +46,13 @@ public class FaxedShohousenHandler {
         router.route("/list-groups").handler(this::handleListGroups);
         router.route("/get-last-group").handler(this::handleGetLastGroup);
         router.route("/get-group").handler(this::handleGetGroup);
-        router.route("/create-data").handler(this::handleCreateData);
-        router.route("/create-shohousen-text").handler(this::handleCreateShohousenText);
-        router.route("/create-shohousen-pdf").handler(this::handleCreateShohousenPdf);
-        router.route("/create-pharma-letter-text").handler(this::handleCreatePharmaLetterText);
-        router.route("/create-pharma-letter-pdf").handler(this::handleCreatePharmaLetterPdf);
-        router.route("/create-pharma-label-pdf").handler(this::handleCreatePharmaLabelPdf);
-        router.route("/create-clinic-label-pdf").handler(this::handleCreateClinicLabelPdf);
+        router.route(HttpMethod.POST, "/create-data").handler(this::handleCreateData);
+        router.route(HttpMethod.POST, "/create-shohousen-text").handler(this::handleCreateShohousenText);
+        router.route(HttpMethod.POST, "/create-shohousen-pdf").handler(this::handleCreateShohousenPdf);
+        router.route(HttpMethod.POST, "/create-pharma-letter-text").handler(this::handleCreatePharmaLetterText);
+        router.route(HttpMethod.POST, "/create-pharma-letter-pdf").handler(this::handleCreatePharmaLetterPdf);
+        router.route(HttpMethod.POST, "/create-pharma-label-pdf").handler(this::handleCreatePharmaLabelPdf);
+        router.route(HttpMethod.POST, "/create-clinic-label-pdf").handler(this::handleCreateClinicLabelPdf);
     }
 
     private void handleCreateClinicLabelPdf(RoutingContext ctx) {
@@ -594,20 +601,20 @@ public class FaxedShohousenHandler {
         map.put("name", name);
         map.put("from", toSqlDateFormat(from));
         map.put("upto", toSqlDateFormat(upto));
-        boolean done = reportFileExists(map, groupDir,
-                shohousenTextFileName(from, upto), "shohousen_text_done", true);
-        done = reportFileExists(map, groupDir,
-                shohousenPdfFileName(from, upto), "shohousen_pdf_done", done);
-        done = reportFileExists(map, groupDir,
-                clinicLabelPdfFileName(from, upto), "clinic_label_pdf_done", done);
-        done = reportFileExists(map, groupDir,
-                dataFileName(from, upto), "data_done", done);
-        done = reportFileExists(map, groupDir,
-                pharmaLabelPdfFileName(from, upto), "pharma_label_pdf_done", done);
-        done = reportFileExists(map, groupDir,
-                pharmaLetterPdfFileName(from, upto), "pharma_letter_pdf_done", done);
-        done = reportFileExists(map, groupDir,
-                pharmaLetterTextFileName(from, upto), "pharma_letter_text_done", done);
+        boolean done = reportFileStatus(map, groupDir,
+                shohousenTextFileName(from, upto), "shohousenTextFile", true);
+        done = reportFileStatus(map, groupDir,
+                shohousenPdfFileName(from, upto), "shohousenPdfFile", done);
+        done = reportFileStatus(map, groupDir,
+                clinicLabelPdfFileName(from, upto), "clinicLabelPdfFile", done);
+        done = reportFileStatus(map, groupDir,
+                dataFileName(from, upto), "dataFile", done);
+        done = reportFileStatus(map, groupDir,
+                pharmaLabelPdfFileName(from, upto), "pharmaLabelPdfFile", done);
+        done = reportFileStatus(map, groupDir,
+                pharmaLetterPdfFileName(from, upto), "pharmaLetterPdfFile", done);
+        done = reportFileStatus(map, groupDir,
+                pharmaLetterTextFileName(from, upto), "pharmaLetterTextFile", done);
         map.put("completed", done);
         return map;
     }
@@ -629,14 +636,26 @@ public class FaxedShohousenHandler {
         }
     }
 
-    private boolean reportFileExists(Map<String, Object> map, Path dir, String file, String key, boolean done) {
-        boolean exists = fileExists(dir, file);
-        map.put(key, exists);
-        return exists && done;
+    private static DateTimeFormatter sqlDateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
+
+    private String getFileTimeRep(FileTime ft){
+        return ft.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().format(sqlDateTimeFormatter);
     }
 
-    private boolean fileExists(Path dir, String file) {
-        return Files.exists(dir.resolve(file));
+    private boolean reportFileStatus(Map<String, Object> map, Path dir, String file, String prefix, boolean done) {
+        Path path = dir.resolve(file);
+        boolean exists = path.toFile().exists();
+        if( exists ) {
+            map.put(prefix, file);
+            map.put(prefix + "Size", path.toFile().length());
+            try {
+                String modifiedAt = getFileTimeRep(Files.getLastModifiedTime(path));
+                map.put(prefix + "LastModifiedAt", modifiedAt);
+            } catch(Exception e){
+                logger.error("Cannot get file modification date.", e);
+            }
+        }
+        return exists && done;
     }
 
     private void handleListGroups(RoutingContext ctx) {

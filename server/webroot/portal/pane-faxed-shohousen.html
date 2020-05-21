@@ -435,7 +435,7 @@
                 errorReport.setBody("処方箋数を取得できません。");
                 return false;
             }
-            progressReport.report("薬局住所ラベルＰＤＦを作成しています...");
+            progressReport.report("クリニック住所ラベルＰＤＦを作成しています...");
             let result = await createClinicLabelPdf(from, upto, row, col, n);
             progressReport.report(null);
             if (!result.success) {
@@ -449,62 +449,16 @@
         }
 
         async function createAll() {
-            let from = getFromValue();
-            let upto = getUptoValue();
-            if (!(from && upto)) {
-                return;
-            }
-            let errs = [];
             let dataFileOk = await createDataFileEx();
-            if( dataFileOk ){
-                progressReport.report("処方箋テキストを作成しています...");
-                result = await createShohousenText(from, upto);
-                if (!result.success) {
-                    errs.push(result.errorMessage);
-                } else {
-                    progressReport.report("処方箋ＰＤＦを作成しています...");
-                    result = await createShohousenPdf(from, upto);
-                    if (!result.success) {
-                        errs.push(result.errorMessage);
-                    }
-                }
-                progressReport.report("処方箋レターのエキストを作成しています...");
-                result = await createPharmaLetterText(from, upto);
-                if (!result.success) {
-                    errs.push(result.errorMessage);
-                } else {
-                    progressReport.report("処方箋レターＰＤＦを作成しています...");
-                    result = await createPharmaLetterPdf(from, upto);
-                    if (!result.success) {
-                        errs.push(result.errorMessage);
-                    }
-                }
-                let row = getRowValue();
-                let col = getColValue();
-                progressReport.report("薬局住所ラベルＰＤＦを作成しています...");
-                result = await createPharmaLabelPdf(from, upto, row, col);
-                if (!result.success) {
-                    errs.push(result.errorMessage);
-                }
-                let n = await countShohousen(from, upto);
-                progressReport.report("クリニック住所ラベルＰＤＦを作成しています...");
-                result = await createClinicLabelPdf(from, upto, row, col, n);
-                if (!result.success) {
-                    errs.push(result.errorMessage);
-                }
-            }
-
-            if (errs.length > 0) {
-                let wrapper = $("<div>", {class: "my-3"});
-                errs.forEach(err => {
-                    let e = $("<div>", {class: "my-2"}).text(err);
-                    wrapper.append(e);
-                })
-                errorReport.setBody(wrapper);
-            } else {
+            let shohousenPdfOk = dataFileOk && (await createShohousenTextFileEx()) &&
+                (await createShohousenPdfFileEx());
+            let pharmaLetterPdfOk = dataFileOk && (await createPharmaLetterTextFileEx()) &&
+                (await createPharmaLetterPdfFileEx());
+            let pharmaLabelPdfOk = dataFileOk && (await createPharmaLabelPdfFileEx());
+            let clinicLabelPdfOk = dataFileOk && (await createClinicLabelPdfFileEx());
+            if( dataFileOk && shohousenPdfOk && pharmaLetterPdfOk && pharmaLabelPdfOk && clinicLabelPdfOk ){
                 progressReport.report("すべて作成しました。");
             }
-            updateStatus(await getGroup(from, upto));
         }
 
         function guessNextDates(lastUpdate) {

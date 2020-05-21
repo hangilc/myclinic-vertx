@@ -17,6 +17,13 @@
     </div>
 </form>
 
+<div id="faxed-progress-report" class="alert alert-info alert-dismissible my-3 d-none" role="alert">
+    <div class="faxed-part-message"></div>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
 <div id="faxed-error-report" class="card mt-3 d-none">
     <div class="card-header text-white bg-danger">エラー</div>
     <div class="card-body"></div>
@@ -68,11 +75,11 @@
             return ajaxGet(shohousenUrl("get-last-group"));
         }
 
-        function getGroup(from, upto){
+        function getGroup(from, upto) {
             return ajaxGet(shohousenUrl("get-group") + `?from=${from}&upto=${upto}`)
         }
 
-        function countShohousen(from, upto){
+        function countShohousen(from, upto) {
             return ajaxGet(shohousenUrl("count-shohousen") + `?from=${from}&upto=${upto}`);
         }
 
@@ -122,18 +129,18 @@
             return $("#faxed-upto-date-input").val();
         }
 
-        function getRowValue(){
+        function getRowValue() {
             let val = parseInt($("#faxed-row-input").val());
-            if( isNaN(val) ){
+            if (isNaN(val)) {
                 throw `Invalid row value`;
             } else {
                 return val;
             }
         }
 
-        function getColValue(){
+        function getColValue() {
             let val = parseInt($("#faxed-col-input").val());
-            if( isNaN(val) ){
+            if (isNaN(val)) {
                 throw `Invalid col value`;
             } else {
                 return val;
@@ -142,26 +149,51 @@
 
         $("#faxed-create-button").on("click", event => createAll());
 
-        class ErrorReport {
-            constructor() {
-                this.ele = $("#faxed-error-report");
-            }
-
-            show(){
-                this.ele.removeClass("d-none");
+        class ProgressReport {
+            constructor(){
+                this.ele = $("#faxed-progress-report");
             }
 
             hide(){
                 this.ele.addClass("d-none");
             }
 
-            findBody(){
+            show(){
+                this.ele.removeClass("d-none");
+            }
+
+            report(message){
+                this.ele.find(".faxed-part-message").text(message);
+                if( message ){
+                    this.show();
+                } else {
+                    this.hide();
+                }
+            }
+        }
+
+        let progressReport = new ProgressReport();
+
+        class ErrorReport {
+            constructor() {
+                this.ele = $("#faxed-error-report");
+            }
+
+            show() {
+                this.ele.removeClass("d-none");
+            }
+
+            hide() {
+                this.ele.addClass("d-none");
+            }
+
+            findBody() {
                 return this.ele.find(".card-body");
             }
 
-            setBody(body){
+            setBody(body) {
                 this.findBody().html("").append(body);
-                if( body ){
+                if (body) {
                     this.show();
                 } else {
                     this.hide();
@@ -181,7 +213,7 @@
                 this.ele.find(".faxed-part-message").text(message);
             }
 
-            updateByObject(groupInfo){
+            updateByObject(groupInfo) {
                 this.update(groupInfo[this.prefix], groupInfo[this.prefix + "Size"],
                     groupInfo[this.prefix + "LastModifiedAt"])
             }
@@ -208,54 +240,64 @@
         let clinicLabelPdfStatusReport = new StatusReport($("#faxed-clinic-label-pdf-status"),
             "clinicLabelPdfFile");
 
-        async function createAll(){
+        async function createAll() {
             let from = getFromValue();
             let upto = getUptoValue();
-            if( !(from && upto) ){
+            if (!(from && upto)) {
                 return;
             }
             let errs = [];
+            progressReport.report("データを作成しています...");
             let result = await createData(from, upto);
-            if( result.success ){
+            if (!result.success) {
+                errs.push(result.errorMessage);
+            } else {
+                progressReport.report("処方箋テキストを作成しています...");
                 result = await createShohousenText(from, upto);
-                if( result.success ){
+                if (!result.success) {
+                    errs.push(result.errorMessage);
+                } else {
+                    progressReport.report("処方箋ＰＤＦを作成しています...");
                     result = await createShohousenPdf(from, upto);
-                    if( result.success ){
+                    if (!result.success) {
                         errs.push(result.errorMessage);
                     }
-                } else {
-                    errs.push(result.errorMessage);
                 }
+                progressReport.report("処方箋レターのエキストを作成しています...");
                 result = await createPharmaLetterText(from, upto);
-                if( result.success ){
+                if (!result.success) {
+                    errs.push(result.errorMessage);
+                } else {
+                    progressReport.report("処方箋レターＰＤＦを作成しています...");
                     result = await createPharmaLetterPdf(from, upto);
-                    if( result.success ){
+                    if (!result.success) {
                         errs.push(result.errorMessage);
                     }
-                } else {
-                    errs.push(result.errorMessage);
                 }
                 let row = getRowValue();
                 let col = getColValue();
+                progressReport.report("薬局住所ラベルＰＤＦを作成しています...");
                 result = await createPharmaLabelPdf(from, upto, row, col);
-                if( !result.success ){
+                if (!result.success) {
                     errs.push(result.errorMessage);
                 }
                 let n = await countShohousen(from, upto);
+                progressReport.report("クリニック住所ラベルＰＤＦを作成しています...");
                 result = await createClinicLabelPdf(from, upto, row, col, n);
-                if( !result.success ){
+                if (!result.success) {
                     errs.push(result.errorMessage);
                 }
-            } else {
-                errs.push(result.errorMessage);
             }
-            if( errs.length > 0 ){
-                let wrapper = $("<div>", { class: "my-3" });
+
+            if (errs.length > 0) {
+                let wrapper = $("<div>", {class: "my-3"});
                 errs.forEach(err => {
-                    let e = $("<div>", { class: "my-2"}).text(err);
+                    let e = $("<div>", {class: "my-2"}).text(err);
                     wrapper.append(e);
                 })
                 errorReport.setBody(wrapper);
+            } else {
+                progressReport.report("すべて作成しました。");
             }
             updateStatus(await getGroup(from, upto));
         }

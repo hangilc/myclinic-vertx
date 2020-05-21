@@ -72,6 +72,10 @@
             return ajaxGet(shohousenUrl("get-group") + `?from=${from}&upto=${upto}`)
         }
 
+        function countShohousen(from, upto){
+            return ajaxGet(shohousenUrl("count-shohousen") + `?from=${from}&upto=${upto}`);
+        }
+
         function createData(from, upto) {
             return ajaxPost(shohousenUrl("create-data") + `?from=${from}&upto=${upto}`);
         }
@@ -122,6 +126,8 @@
             let val = parseInt($("#faxed-row-input").val());
             if( isNaN(val) ){
                 throw `Invalid row value`;
+            } else {
+                return val;
             }
         }
 
@@ -129,6 +135,8 @@
             let val = parseInt($("#faxed-col-input").val());
             if( isNaN(val) ){
                 throw `Invalid col value`;
+            } else {
+                return val;
             }
         }
 
@@ -233,7 +241,11 @@
                 if( !result.success ){
                     errs.push(result.errorMessage);
                 }
-
+                let n = await countShohousen(from, upto);
+                result = await createClinicLabelPdf(from, upto, row, col, n);
+                if( !result.success ){
+                    errs.push(result.errorMessage);
+                }
             } else {
                 errs.push(result.errorMessage);
             }

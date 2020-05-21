@@ -1,6 +1,11 @@
 package dev.myclinic.vertx.server.integration;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -46,6 +51,7 @@ public class FaxedShohousenHandler {
         router.route("/list-groups").handler(this::handleListGroups);
         router.route("/get-last-group").handler(this::handleGetLastGroup);
         router.route("/get-group").handler(this::handleGetGroup);
+        router.route("/count-shohousen").handler(this::handleCountShohousen);
         router.route(HttpMethod.POST, "/create-data").handler(this::handleCreateData);
         router.route(HttpMethod.POST, "/create-shohousen-text").handler(this::handleCreateShohousenText);
         router.route(HttpMethod.POST, "/create-shohousen-pdf").handler(this::handleCreateShohousenPdf);
@@ -53,6 +59,28 @@ public class FaxedShohousenHandler {
         router.route(HttpMethod.POST, "/create-pharma-letter-pdf").handler(this::handleCreatePharmaLetterPdf);
         router.route(HttpMethod.POST, "/create-pharma-label-pdf").handler(this::handleCreatePharmaLabelPdf);
         router.route(HttpMethod.POST, "/create-clinic-label-pdf").handler(this::handleCreateClinicLabelPdf);
+    }
+
+    private void handleCountShohousen(RoutingContext ctx) {
+        String from = ctx.queryParam("from").get(0).replace("-", "");
+        String upto = ctx.queryParam("upto").get(0).replace("-", "");
+        Path dir = groupDir(from, upto);
+        Path dataFile = dataFile(from, upto);
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                JsonNode root = mapper.readValue(dataFile.toFile(), JsonNode.class);
+                JsonNode groups = root.get("groups");
+                promise.complete(String.format("%d", groups.size()));
+            } catch(Exception e){
+                promise.fail(e);
+            }
+        }, ar -> {
+            if( ar.succeeded() ){
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
     }
 
     private void handleCreateClinicLabelPdf(RoutingContext ctx) {
@@ -785,6 +813,11 @@ public class FaxedShohousenHandler {
 
     private String dataFileName(String from, String upto) {
         return String.format("shohousen-data-%s-%s.json", from, upto);
+    }
+
+    private Path dataFile(String from, String upto){
+        Path dir = groupDir(from, upto);
+        return dir.resolve(dataFileName(from, upto));
     }
 
     private String pharmaLabelPdfFileName(String from, String upto) {

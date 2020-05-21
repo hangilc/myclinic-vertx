@@ -151,7 +151,7 @@
         function getRowValue() {
             let val = parseInt($("#faxed-row-input").val());
             if (isNaN(val)) {
-                throw `Invalid row value`;
+                return null;
             } else {
                 return val;
             }
@@ -160,30 +160,64 @@
         function getColValue() {
             let val = parseInt($("#faxed-col-input").val());
             if (isNaN(val)) {
-                throw `Invalid col value`;
+                return null;
             } else {
                 return val;
             }
         }
 
+        function getDateInputsEx(){
+            let from = getFromValue();
+            let err = [];
+            if (!from) {
+                err.push("開始日が設定されていません。");
+            }
+            let upto = getUptoValue();
+            if (!upto) {
+                err.push("終了日が設定されていません。");
+            }
+            let eles = err.map(e => $("<div>").text(e));
+            if( eles.length > 0 ) {
+                errorReport.setBody(...eles);
+            }
+            return [from, upto];
+        }
+
+        function getRowAndColInputEx(){
+            let err = []
+            let row = getRowValue();
+            if( row == null ){
+                err.push("行の値が不適切です。");
+            }
+            let col = getColValue();
+            if( col == null ){
+                err.push("列の値が不適切です。")
+            }
+            let eles = err.map(msg => $("<div>").text(msg));
+            if( eles.length > 0 ){
+                errorReport.setBody(...eles);
+            }
+            return [row, col];
+        }
+
         $("#faxed-create-button").on("click", event => createAll());
 
         class ProgressReport {
-            constructor(){
+            constructor() {
                 this.ele = $("#faxed-progress-report");
             }
 
-            hide(){
+            hide() {
                 this.ele.addClass("d-none");
             }
 
-            show(){
+            show() {
                 this.ele.removeClass("d-none");
             }
 
-            report(message){
+            report(message) {
                 this.ele.find(".faxed-part-message").text(message);
-                if( message ){
+                if (message) {
                     this.show();
                 } else {
                     this.hide();
@@ -210,9 +244,10 @@
                 return this.ele.find(".card-body");
             }
 
-            setBody(body) {
-                this.findBody().html("").append(body);
-                if (body) {
+            setBody(...elements) {
+                let body = this.findBody().html("");
+                elements.forEach(e => body.append(e));
+                if (elements.length > 0) {
                     this.show();
                 } else {
                     this.hide();
@@ -226,6 +261,12 @@
             constructor(ele, prefix) {
                 this.ele = ele;
                 this.prefix = prefix;
+                this.doCreate = () => {
+                };
+                this.doDisplay = () => {
+                };
+                ele.find(".faxed-part-create").on("click", () => this.doCreate());
+                ele.find(".faxed-part-display").on("click", () => this.doDisplay());
             }
 
             setMessage(message) {
@@ -246,18 +287,166 @@
                 }
                 this.setMessage(text);
             }
+
+            setDoCreate(f) {
+                this.doCreate = f;
+                return this;
+            }
+
+            setDoDisplay(f) {
+                this.doDisplay = f;
+                return this;
+            }
+
         }
 
         let dataStatusReport = new StatusReport($("#faxed-data-file-status"),
-            "dataFile");
+            "dataFile").setDoCreate(async () => await createDataFileEx());
         let shohousenPdfStatusReport = new StatusReport($("#faxed-shohousen-pdf-status"),
-            "shohousenPdfFile");
+            "shohousenPdfFile").setDoCreate(async () => (await createShohousenTextFileEx()) &&
+            (await createShohousenPdfFileEx()));
         let pharmaLetterPdfStatusReport = new StatusReport($("#faxed-pharma-letter-pdf-status"),
-            "pharmaLetterPdfFile");
+            "pharmaLetterPdfFile").setDoCreate(async () => (await createPharmaLetterTextFileEx()) &&
+            (await createPharmaLetterPdfFileEx()));
         let pharmaLabelPdfStatusReport = new StatusReport($("#faxed-pharma-label-pdf-status"),
-            "pharmaLabelPdfFile");
+            "pharmaLabelPdfFile").setDoCreate(async () => await createPharmaLabelPdfFileEx());
         let clinicLabelPdfStatusReport = new StatusReport($("#faxed-clinic-label-pdf-status"),
-            "clinicLabelPdfFile");
+            "clinicLabelPdfFile").setDoCreate(async () => await createClinicLabelPdfFileEx());
+
+        async function createDataFileEx() { // returns true if success
+            let [from, upto] = getDateInputsEx();
+            if( !(from && upto) ){
+                return false;
+            }
+            progressReport.report("データを作成しています...");
+            let result = await createData(from, upto);
+            progressReport.report(null);
+            if (!result.success) {
+                errorReport.setBody(result.errorMessage);
+                dataStatusReport.updateByObject(await getGroup(from, upto));
+                return false;
+            } else {
+                dataStatusReport.updateByObject(result);
+                return true;
+            }
+        }
+
+        async function createShohousenTextFileEx() { // returns true if success
+            let [from, upto] = getDateInputsEx();
+            if( !(from && upto) ){
+                return false;
+            }
+            progressReport.report("処方箋テキストを作成しています...");
+            let result = await createShohousenText(from, upto);
+            progressReport.report(null);
+            if (!result.success) {
+                errorReport.setBody(result.errorMessage);
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        async function createShohousenPdfFileEx() { // returns true if success
+            let [from, upto] = getDateInputsEx();
+            if( !(from && upto) ){
+                return false;
+            }
+            progressReport.report("処方箋ＰＤＦを作成しています...");
+            let result = await createShohousenPdf(from, upto);
+            progressReport.report(null);
+            if (!result.success) {
+                errorReport.setBody(result.errorMessage);
+                shohousenPdfStatusReport.updateByObject(await getGroup(from, upto));
+                return false;
+            } else {
+                shohousenPdfStatusReport.updateByObject(result);
+                return true;
+            }
+        }
+
+        async function createPharmaLetterTextFileEx() { // returns true if success
+            let [from, upto] = getDateInputsEx();
+            if( !(from && upto) ){
+                return false;
+            }
+            progressReport.report("薬局レターのテキストを作成しています...");
+            let result = await createPharmaLetterText(from, upto);
+            progressReport.report(null);
+            if (!result.success) {
+                errorReport.setBody(result.errorMessage);
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        async function createPharmaLetterPdfFileEx() { // returns true if success
+            let [from, upto] = getDateInputsEx();
+            if( !(from && upto) ){
+                return false;
+            }
+            progressReport.report("薬局レターＰＤＦを作成しています...");
+            let result = await createPharmaLetterPdf(from, upto);
+            progressReport.report(null);
+            if (!result.success) {
+                errorReport.setBody(result.errorMessage);
+                pharmaLetterPdfStatusReport.updateByObject(await getGroup(from, upto));
+                return false;
+            } else {
+                pharmaLetterPdfStatusReport.updateByObject(result);
+                return true;
+            }
+        }
+
+        async function createPharmaLabelPdfFileEx() { // returns true if success
+            let [from, upto] = getDateInputsEx();
+            if( !(from && upto) ){
+                return false;
+            }
+            let [row, col] = getRowAndColInputEx();
+            if( row == null || col == null ){
+                return false;
+            }
+            progressReport.report("薬局住所ラベルＰＤＦを作成しています...");
+            let result = await createPharmaLabelPdf(from, upto, row, col);
+            progressReport.report(null);
+            if (!result.success) {
+                errorReport.setBody(result.errorMessage);
+                pharmaLabelPdfStatusReport.updateByObject(await getGroup(from, upto));
+                return false;
+            } else {
+                pharmaLabelPdfStatusReport.updateByObject(result);
+                return true;
+            }
+        }
+
+        async function createClinicLabelPdfFileEx() { // returns true if success
+            let [from, upto] = getDateInputsEx();
+            if( !(from && upto) ){
+                return false;
+            }
+            let [row, col] = getRowAndColInputEx();
+            if( row == null || col == null ){
+                return false;
+            }
+            let n = await countShohousen(from, upto);
+            if( !n ){
+                errorReport.setBody("処方箋数を取得できません。");
+                return false;
+            }
+            progressReport.report("薬局住所ラベルＰＤＦを作成しています...");
+            let result = await createClinicLabelPdf(from, upto, row, col, n);
+            progressReport.report(null);
+            if (!result.success) {
+                errorReport.setBody(result.errorMessage);
+                clinicLabelPdfStatusReport.updateByObject(await getGroup(from, upto));
+                return false;
+            } else {
+                clinicLabelPdfStatusReport.updateByObject(result);
+                return true;
+            }
+        }
 
         async function createAll() {
             let from = getFromValue();
@@ -266,11 +455,8 @@
                 return;
             }
             let errs = [];
-            progressReport.report("データを作成しています...");
-            let result = await createData(from, upto);
-            if (!result.success) {
-                errs.push(result.errorMessage);
-            } else {
+            let dataFileOk = await createDataFileEx();
+            if( dataFileOk ){
                 progressReport.report("処方箋テキストを作成しています...");
                 result = await createShohousenText(from, upto);
                 if (!result.success) {

@@ -1,10 +1,6 @@
 package dev.myclinic.vertx.server.integration;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Vertx;
@@ -71,11 +67,11 @@ public class FaxedShohousenHandler {
                 JsonNode root = mapper.readValue(dataFile.toFile(), JsonNode.class);
                 JsonNode groups = root.get("groups");
                 promise.complete(String.format("%d", groups.size()));
-            } catch(Exception e){
+            } catch (Exception e) {
                 promise.fail(e);
             }
         }, ar -> {
-            if( ar.succeeded() ){
+            if (ar.succeeded()) {
                 ctx.response().end(ar.result());
             } else {
                 ctx.fail(ar.cause());
@@ -115,7 +111,7 @@ public class FaxedShohousenHandler {
                 )));
                 optRow.ifPresent(row -> commands.addAll(List.of("-r", String.format("%d", row))));
                 optCol.ifPresent(col -> commands.addAll(List.of("-c", String.format("%d", col))));
-                result = execinMyclinicSpring(commands);
+                result = execInMyclinicSpring(commands);
                 if (result.isError()) {
                     promise.complete(result.errorAsJson(mapper));
                     return;
@@ -129,15 +125,13 @@ public class FaxedShohousenHandler {
                         "-i", tempFile2.toFile().getAbsolutePath(),
                         "--pdf", pdfFile.toFile().getAbsolutePath()
                 ));
-                result = execinMyclinicSpring(commands);
+                result = execInMyclinicSpring(commands);
                 if (result.isError()) {
                     promise.complete(result.errorAsJson(mapper));
                 } else {
-                    Map<String, Object> map = Map.of(
-                            "success", true,
-                            "clinicPdfFile", pdfFileName,
-                            "clinicPdfFileSize", pdfFile.toFile().length()
-                    );
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("success", true);
+                    reportFileStatus(map, pdfFile, "clinicLabelPdfFile");
                     promise.complete(mapper.writeValueAsString(map));
                 }
             } catch (Exception e) {
@@ -249,7 +243,7 @@ public class FaxedShohousenHandler {
         return exec(commands, apiDir.toFile(), env);
     }
 
-    private ExecResult execinMyclinicSpring(List<String> commands) throws IOException {
+    private ExecResult execInMyclinicSpring(List<String> commands) throws IOException {
         Path springDir = getMyclinicSpringProjectDir();
         Map<String, String> env = Map.of("MYCLINIC_CONFIG", getConfigDir());
         return exec(commands, springDir.toFile(), env);
@@ -337,9 +331,9 @@ public class FaxedShohousenHandler {
                 if (!result.get("success").equals(true)) {
                     promise.complete(mapper.writeValueAsString(result));
                     return;
+                } else {
+                    reportFileStatus(result, pharmaLabelPdfFile, "pharmaLabelPdfFile");
                 }
-                result.put("pharmaLabelPdfFie", pharmaLabelPdfFileName);
-                result.put("pharmaLabelPdfFileSize", pharmaLabelPdfFile.toFile().length());
                 promise.complete(mapper.writeValueAsString(result));
             } catch (Exception e) {
                 ctx.fail(e);
@@ -401,8 +395,7 @@ public class FaxedShohousenHandler {
                 env2.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
                 Map<String, Object> result2 = execOld(pb2);
                 if (result2.get("success").equals(true)) {
-                    result2.put("pdfFile", pdfFileName);
-                    result2.put("pdfFileSize", pdfFile.toFile().length());
+                    reportFileStatus(result2, pdfFile, "pharmaLetterPdfFile");
                 }
                 promise.complete(mapper.writeValueAsString(result2));
             } catch (Exception e) {
@@ -446,8 +439,7 @@ public class FaxedShohousenHandler {
                 Map<String, Object> result = execOld(pb);
                 boolean isSuccess = result.get("success").equals(true);
                 if (isSuccess) {
-                    result.put("pharmaLetterTextFileName", textFileName);
-                    result.put("pharmaLetterTextFileSize", textFile.toFile().length());
+                    reportFileStatus(result, textFile, "pharmaLetterTextFile");
                 }
                 promise.complete(mapper.writeValueAsString(result));
             } catch (Exception e) {
@@ -516,8 +508,7 @@ public class FaxedShohousenHandler {
                 env2.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
                 Map<String, Object> result2 = execOld(pb2);
                 if (result2.get("success").equals(true)) {
-                    result2.put("pdfFile", pdfFileName);
-                    result2.put("pdfFileSize", pdfFile.toFile().length());
+                    reportFileStatus(result2, pdfFile, "shohousenPdfFile");
                 }
                 promise.complete(mapper.writeValueAsString(result2));
             } catch (Exception e) {
@@ -568,8 +559,7 @@ public class FaxedShohousenHandler {
                 Map<String, Object> map = new HashMap<>();
                 map.put("success", isSuccess);
                 if (isSuccess) {
-                    map.put("shohousenTextFileName", textFileName);
-                    map.put("shohousenTextFileSize", textFile.toFile().length());
+                    reportFileStatus(map, textFile, "shohousenTextFile");
                 } else {
                     map.put("errorMessage", stdErr);
                 }
@@ -629,20 +619,20 @@ public class FaxedShohousenHandler {
         map.put("name", name);
         map.put("from", toSqlDateFormat(from));
         map.put("upto", toSqlDateFormat(upto));
-        boolean done = reportFileStatus(map, groupDir,
-                shohousenTextFileName(from, upto), "shohousenTextFile", true);
-        done = reportFileStatus(map, groupDir,
-                shohousenPdfFileName(from, upto), "shohousenPdfFile", done);
-        done = reportFileStatus(map, groupDir,
-                clinicLabelPdfFileName(from, upto), "clinicLabelPdfFile", done);
-        done = reportFileStatus(map, groupDir,
-                dataFileName(from, upto), "dataFile", done);
-        done = reportFileStatus(map, groupDir,
-                pharmaLabelPdfFileName(from, upto), "pharmaLabelPdfFile", done);
-        done = reportFileStatus(map, groupDir,
-                pharmaLetterPdfFileName(from, upto), "pharmaLetterPdfFile", done);
-        done = reportFileStatus(map, groupDir,
-                pharmaLetterTextFileName(from, upto), "pharmaLetterTextFile", done);
+        boolean done = reportFileStatus(map, groupDir.resolve(shohousenTextFileName(from, upto)),
+                "shohousenTextFile", true);
+        done = reportFileStatus(map, groupDir.resolve(shohousenPdfFileName(from, upto)),
+                "shohousenPdfFile", done);
+        done = reportFileStatus(map, groupDir.resolve(clinicLabelPdfFileName(from, upto)),
+                "clinicLabelPdfFile", done);
+        done = reportFileStatus(map, groupDir.resolve(dataFileName(from, upto)),
+                "dataFile", done);
+        done = reportFileStatus(map, groupDir.resolve(pharmaLabelPdfFileName(from, upto)),
+                "pharmaLabelPdfFile", done);
+        done = reportFileStatus(map, groupDir.resolve(pharmaLetterPdfFileName(from, upto)),
+                "pharmaLetterPdfFile", done);
+        done = reportFileStatus(map, groupDir.resolve(pharmaLetterTextFileName(from, upto)),
+                "pharmaLetterTextFile", done);
         map.put("completed", done);
         return map;
     }
@@ -664,25 +654,29 @@ public class FaxedShohousenHandler {
         }
     }
 
-    private static DateTimeFormatter sqlDateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter sqlDateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
 
-    private String getFileTimeRep(FileTime ft){
+    private String getFileTimeRep(FileTime ft) {
         return ft.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().format(sqlDateTimeFormatter);
     }
 
-    private boolean reportFileStatus(Map<String, Object> map, Path dir, String file, String prefix, boolean done) {
-        Path path = dir.resolve(file);
+    private boolean reportFileStatus(Map<String, Object> map, Path path, String prefix) {
         boolean exists = path.toFile().exists();
-        if( exists ) {
-            map.put(prefix, file);
+        if (exists) {
+            map.put(prefix, prefix);
             map.put(prefix + "Size", path.toFile().length());
             try {
                 String modifiedAt = getFileTimeRep(Files.getLastModifiedTime(path));
                 map.put(prefix + "LastModifiedAt", modifiedAt);
-            } catch(Exception e){
+            } catch (Exception e) {
                 logger.error("Cannot get file modification date.", e);
             }
         }
+        return exists;
+    }
+
+    private boolean reportFileStatus(Map<String, Object> map, Path path, String prefix, boolean done) {
+        boolean exists = reportFileStatus(map, path, prefix);
         return exists && done;
     }
 
@@ -726,8 +720,7 @@ public class FaxedShohousenHandler {
                 Map<String, Object> map = new HashMap<>();
                 map.put("success", isSuccess);
                 if (isSuccess) {
-                    map.put("dataFileName", dataFileName);
-                    map.put("dataFileSize", dataFile.toFile().length());
+                    reportFileStatus(map, dataFile, "dataFile");
                 } else {
                     map.put("errorMessage", stdErr);
                 }
@@ -815,7 +808,7 @@ public class FaxedShohousenHandler {
         return String.format("shohousen-data-%s-%s.json", from, upto);
     }
 
-    private Path dataFile(String from, String upto){
+    private Path dataFile(String from, String upto) {
         Path dir = groupDir(from, upto);
         return dir.resolve(dataFileName(from, upto));
     }

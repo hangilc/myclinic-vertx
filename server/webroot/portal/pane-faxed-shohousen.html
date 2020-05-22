@@ -85,10 +85,10 @@
 
 <ul class="nav nav-tabs mt-3">
     <li class="nav-item">
-        <a class="nav-link active faxed-part-prev-groups" href="javascript:void(0)">処理済一覧</a>
+        <a class="nav-link faxed-part-prev-groups" href="javascript:void(0)">処理済一覧</a>
     </li>
 </ul>
-<div id="faxed-nav-content"></div>
+<div id="faxed-nav-content-prev-groups" class="faxed-nav-content d-none"></div>
 
 <script>
     (function () {
@@ -525,29 +525,6 @@
             return `${m[1]}-${m[2]}-${m[3]}`;
         }
 
-        async function updatePrevGroups(){
-            let prevGroups = await getPrevGroups();
-            let ul = $("<ul>");
-            if (prevGroups) {
-                prevGroups.forEach(group => {
-                    let li = $("<li>");
-                    let a = $("<a>").text(group).attr("href", "javascript:void(0)");
-                    li.append(a);
-                    a.on("click", async event => {
-                        let [from, upto] = group.split("-");
-                        from = packedToSqlDate(from);
-                        upto = packedToSqlDate(upto);
-                        let g = await getGroup(from, upto);
-                        setFromValue(from);
-                        setUptoValue(upto);
-                        updateStatus(g);
-                    });
-                    ul.append(li);
-                });
-            }
-            $("#faxed-nav-content").html("").append(ul);
-        }
-
         function updateStatus(group) {
             dataStatusReport.updateByObject(group);
             shohousenPdfStatusReport.updateByObject(group);
@@ -555,6 +532,53 @@
             pharmaLabelPdfStatusReport.updateByObject(group);
             clinicLabelPdfStatusReport.updateByObject(group);
         }
+
+        class Nav {
+            constructor(ele) {
+                this.ele = ele;
+                this.tabPrevGroups = ele.find(".faxed-part-prev-groups").on("click", event => {
+                    this.showPrevGroups();
+                });
+            }
+
+            setActive(e){
+                this.ele.find(".nav-link").removeClass("active");
+                e.addClass("active");
+            }
+
+            showPanel(panel){
+                this.ele.find(".faxed-nav-content").addClass("d-none");
+                panel.removeClass("d-none");
+            }
+
+            async showPrevGroups(){
+                let content = $("#faxed-nav-content-prev-groups");
+                let prevGroups = await getPrevGroups();
+                let ul = $("<ul>");
+                if (prevGroups) {
+                    prevGroups.forEach(group => {
+                        let li = $("<li>");
+                        let a = $("<a>").text(group).attr("href", "javascript:void(0)");
+                        li.append(a);
+                        a.on("click", async event => {
+                            let [from, upto] = group.split("-");
+                            from = packedToSqlDate(from);
+                            upto = packedToSqlDate(upto);
+                            let g = await getGroup(from, upto);
+                            setFromValue(from);
+                            setUptoValue(upto);
+                            updateStatus(g);
+                        });
+                        ul.append(li);
+                    });
+                }
+                this.setActive(this.tabPrevGroups);
+                content.html("").append(ul);
+                this.showPanel(content);
+            }
+        }
+
+        let nav = new Nav($(".nav"));
 
         async function setup() {
             let target = await guessNextTarget()
@@ -564,6 +588,7 @@
         }
 
         setup();
-        updatePrevGroups();
+        nav.tabPrevGroups.click();
+
     })();
 </script>

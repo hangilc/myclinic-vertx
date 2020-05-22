@@ -25,6 +25,7 @@
         <div class="col-md-3 sidebar">
             <ul class="list-unstyled menu-elements mt-1">
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-faxed-link">ファックス済処方箋</a></li>
+                <li><a href="javascript:void(0)" class="scroll-link" id="index-cashier-link">会計</a></li>
             </ul>
         </div>
 
@@ -50,7 +51,8 @@
         }
 
         bindLink("index-faxed-link", "pane-faxed-shohousen.html");
-        $("#index-faxed-link").click();
+        bindLink("index-cashier-link", "pane-cashier.html");
+        $("#index-cashier-link").click();
     })();
 
 </script>

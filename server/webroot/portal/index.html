@@ -26,6 +26,7 @@
             <ul class="list-unstyled menu-elements mt-1">
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-faxed-link">ファックス済処方箋</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-cashier-link">会計</a></li>
+                <li><a href="javascript:void(0)" class="scroll-link" id="index-houmon-kango-link">訪問看護</a></li>
             </ul>
         </div>
 
@@ -35,6 +36,8 @@
 </div>
 
 <script>
+
+    let rest = new Rest("../json");
 
     (function(){
         function setActive(e){
@@ -52,7 +55,8 @@
 
         bindLink("index-faxed-link", "pane-faxed-shohousen.html");
         bindLink("index-cashier-link", "pane-cashier.html");
-        $("#index-cashier-link").click();
+        bindLink("index-houmon-kango-link", "pane-houmon-kango.html");
+        $("#index-houmon-kango-link").click();
     })();
 
 </script>

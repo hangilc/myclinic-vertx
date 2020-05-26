@@ -1,0 +1,17 @@
+<h3>訪問看護指示書</h3>
+
+<div>
+    <button type="button" class="btn btn-secondary" id="houmon-kango-select-patient">患者選択</button>
+</div>
+
+<script>
+    (async function(){
+        let chooser = await import("./js/choose-patient.js");
+        $("#houmon-kango-select-patient").on("click", async event => {
+            let patient = await chooser.choosePatient();
+            if( patient ){
+                console.log(patient);
+            }
+        });
+    })();
+</script>

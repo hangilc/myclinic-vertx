@@ -59,6 +59,10 @@ class Rest {
         return await ajaxPost(this.url("/finish-cashier"), dto);
     }
 
+    async searchPatient(text){
+        return await ajaxGet(this.url("/search-patient"), {text: text});
+    }
+
 }
 
 const WqueueStateWaitExam = 0;

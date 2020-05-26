@@ -36,6 +36,10 @@ class Rest {
         return this.baseUrl + path;
     }
 
+    async get(path, data){
+        return await ajaxGet(this.url(path), data);
+    }
+
     async listWqueueFull(){
         return await ajaxGet(this.url("/list-wqueue-full"), {});
     }
@@ -61,6 +65,10 @@ class Rest {
 
     async searchPatient(text){
         return await ajaxGet(this.url("/search-patient"), {text: text});
+    }
+
+    async getClinicInfo(){
+        return await this.get("/get-clinic-info", {});
     }
 
 }

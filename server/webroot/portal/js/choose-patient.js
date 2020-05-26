@@ -1,3 +1,5 @@
+import * as kanjidate from "./kanjidate.js";
+
 let html = `
   <div class="modal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
@@ -43,9 +45,11 @@ function cmp(...props){
 
 let cmpPatient = cmp("lastNameYomi", "firstNameYomi", "patientId");
 
+
 function makePatientLabel(patient){
     let patientIdRep = ("" + patient.patientId).padStart(4, "0");
-    return `(${patientIdRep}) ${patient.lastName}${patient.firstName} [${patient.birthday}生]`;
+    let birthday = kanjidate.sqldateToKanji(patient.birthday);
+    return `(${patientIdRep}) ${patient.lastName}${patient.firstName} (${birthday}生)`;
 
 }
 

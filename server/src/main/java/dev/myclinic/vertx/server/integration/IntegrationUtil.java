@@ -67,6 +67,7 @@ class IntegrationUtil {
             Process process = pb.start();
             if( req.stdIn != null ){
                 process.getOutputStream().write(req.stdIn);
+                process.getOutputStream().close();
             }
             InputStream os = process.getInputStream();
             InputStream es = process.getErrorStream();

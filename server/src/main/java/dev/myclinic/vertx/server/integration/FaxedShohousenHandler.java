@@ -342,7 +342,6 @@ public class FaxedShohousenHandler {
             Path tempFile2 = null;
             try {
                 tempFile1 = Files.createTempFile("myclinic-", "-pharma-label.txt");
-                Path apiDir = getMyclinicApiProjectDir();
                 Path groupDir = groupDir(from, upto);
                 String dataFileName = dataFileName(from, upto);
                 Path dataFile = groupDir.resolve(dataFileName);

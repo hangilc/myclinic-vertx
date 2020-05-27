@@ -38,19 +38,21 @@ public class HoumonKangoHandler {
     }
 
     private void addRoutes(Router router) {
-        router.route(HttpMethod.GET, "/create-shijisho").handler(this::handleCreateShijisho);
+        router.route(HttpMethod.POST, "/create-shijisho").handler(this::handleCreateShijisho);
         router.route(HttpMethod.GET, "/list-params").handler(this::handleListParams);
     }
 
     private void handleCreateShijisho(RoutingContext ctx) {
-        ctx.response().end("done");
         Path springProjectDir = IntegrationUtil.getMyclinicSpringProjectDir();
         String url = "https://deno.myclinic.dev/houmon-kango/create-houmon-kango-form.ts";
         vertx.<Buffer>executeBlocking(promise -> {
             ExecRequest req1 = new ExecRequest();
-            req1.command = List.of("deno", "run", "--allow-net", url);
+            req1.command = List.of("deno", "run", "--allow-net", url, "-");
             Map<String, String> env = new HashMap<>();
             env.put("NO_COLOR", "yes");
+            req1.env = env;
+            req1.stdIn = ctx.getBody().getBytes();
+            System.err.println(new String(req1.stdIn, StandardCharsets.UTF_8));
             ExecResult er1 = IntegrationUtil.exec(req1);
             if (er1.isError()) {
                 promise.fail(er1.getErrorMessage());
@@ -68,6 +70,7 @@ public class HoumonKangoHandler {
                 return;
             }
             ctx.response().putHeader("content-type", "application/pdf");
+            promise.complete(Buffer.buffer(er2.stdOut));
         }, ar -> {
             if (ar.succeeded()) {
                 ctx.response().end(ar.result());

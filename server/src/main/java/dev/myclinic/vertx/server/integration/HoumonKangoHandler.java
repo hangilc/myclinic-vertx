@@ -6,8 +6,11 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +20,8 @@ import static dev.myclinic.vertx.server.integration.IntegrationUtil.ExecResult;
 import static dev.myclinic.vertx.server.integration.IntegrationUtil.ExecRequest;
 
 public class HoumonKangoHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(HoumonKangoHandler.class);
 
     private final Vertx vertx;
     private final ObjectMapper mapper;
@@ -40,6 +45,23 @@ public class HoumonKangoHandler {
     private void addRoutes(Router router) {
         router.route(HttpMethod.POST, "/create-shijisho").handler(this::handleCreateShijisho);
         router.route(HttpMethod.GET, "/list-params").handler(this::handleListParams);
+        router.route(HttpMethod.GET, "/get-clinic-param").handler(this::handleGetClinicParam);
+        router.route(HttpMethod.GET, "/get-record").handler(this::handleGetRecord);
+    }
+
+    private void handleGetClinicParam(RoutingContext ctx) {
+        Path path = getHoumonKangoConfigDir().resolve("clinic-param.json");
+        ctx.response().sendFile(path.toFile().getAbsolutePath());
+    }
+
+    private void handleGetRecord(RoutingContext ctx) {
+        int patientId = IntegrationUtil.getIntParam(ctx, "patient-id");
+        Path path = getRecordPath(patientId);
+        if( !Files.exists(path) ){
+            ctx.response().end("");
+        } else {
+            ctx.response().sendFile(path.toFile().getAbsolutePath());
+        }
     }
 
     private void handleCreateShijisho(RoutingContext ctx) {
@@ -51,7 +73,13 @@ public class HoumonKangoHandler {
             Map<String, String> env = new HashMap<>();
             env.put("NO_COLOR", "yes");
             req1.env = env;
-            req1.stdIn = ctx.getBody().getBytes();
+            String dataAttr = ctx.request().getFormAttribute("data");
+            if( dataAttr != null ){
+                System.err.println(String.format("data: %s", dataAttr));
+                req1.stdIn = dataAttr.getBytes(StandardCharsets.UTF_8);
+            } else {
+                req1.stdIn = ctx.getBody().getBytes();
+            }
             if( req1.stdIn.length == 0 ){
                 req1.stdIn = "{}".getBytes();
             }
@@ -103,6 +131,15 @@ public class HoumonKangoHandler {
                 ctx.fail(ar.cause());
             }
         });
+    }
+
+    private Path getHoumonKangoConfigDir(){
+        return Path.of(IntegrationUtil.getConfigDir(), "houmon-kango");
+    }
+
+    private Path getRecordPath(int patientId){
+        String file = String.format("record-%d.json", patientId);
+        return getHoumonKangoConfigDir().resolve(file);
     }
 
 }

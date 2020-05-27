@@ -105,6 +105,10 @@ class Integration extends Client {
     constructor(baseUrl) {
         super(baseUrl);
     }
+
+    async createHoumonKangoShijisho(data){
+        return await this.post(this.url("/create-shijisho"), data);
+    }
 }
 
 const WqueueStateWaitExam = 0;

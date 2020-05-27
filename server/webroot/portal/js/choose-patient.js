@@ -14,9 +14,9 @@ let html = `
         <form class="form-inline">
             <input class="form-control choose-patient-input"/> 
             <button type="submit" 
-                class="form-control choose-patient-search-button">検索</button>
+                class="form-control ml-2 choose-patient-search-button">検索</button>
         </form>
-        <select class="form-control choose-patient-select" size="10">
+        <select class="form-control mt-2 form-control choose-patient-select" size="10">
         </select>
       </div>
       <div class="modal-footer">

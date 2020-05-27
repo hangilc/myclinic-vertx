@@ -2,6 +2,7 @@ package dev.myclinic.vertx.server.integration;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.vertx.ext.web.RoutingContext;
 
 import javax.imageio.IIOException;
 import java.io.*;
@@ -10,9 +11,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 class IntegrationUtil {
+
+    public static String getConfigDir() {
+        return System.getenv("MYCLINIC_CONFIG_DIR");
+    }
 
     public static Path getMyclinicSpringProjectDir() {
         String dir = System.getenv("MYCLINIC_SPRING_PROJECT_DIR");
@@ -20,6 +24,22 @@ class IntegrationUtil {
             throw new RuntimeException("env var not defined: " + "MYCLINIC_SPRING_PROJECT_DIR");
         }
         return Path.of(dir);
+    }
+
+    public static int getIntParam(RoutingContext ctx, String name) {
+        List<String> list = ctx.queryParam(name);
+        if (list.size() == 0) {
+            throw new RuntimeException("Missing param: " + name);
+        } else if (list.size() == 1) {
+            String para = list.get(0);
+            try {
+                return Integer.parseInt(para);
+            } catch (NumberFormatException e) {
+                throw new RuntimeException(String.format("Invalid number (%s): %s", name, para));
+            }
+        } else {
+            throw new RuntimeException("Multiple values supplied: " + name);
+        }
     }
 
     static class ExecResult {

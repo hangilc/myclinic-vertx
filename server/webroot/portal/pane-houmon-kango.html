@@ -1,13 +1,28 @@
 <h3>訪問看護指示書</h3>
 
-<div>
-    <button type="button" class="btn btn-secondary" id="houmon-kango-select-patient">患者選択</button>
+<div class="form-inline">
+    <span>開始日</span>
+    <input type="date" class="form-control ml-2 houmon-kango-from-date"/>
+    <span class="ml-4">終了日</span>
+    <input type="date" class="form-control ml-2 houmon-kango-upto-date"/>
+</div>
+
+<div class="mt-2">
+    <button type="button" class="btn btn-secondary"
+            id="houmon-kango-select-patient">患者選択</button>
 </div>
 <div id="houmon-kango-patient" class="my-4"></div>
 
-<form class="form-inline houmon-kango-create-shijisho-form"
+<div class="form">
+    <textarea class="form-control houmon-kango-data" rows="10"></textarea>
+</div>
+
+<form class="form-inline mt-2 houmon-kango-create-shijisho-form"
+      enctype="application/x-www-form-urlencoded"
       target="_blank" action="javascript:void(0)" method="post">
-    <button type="submit" class="btn btn-primary houmon-kango-create-shijisho">指示書作成</button>
+    <button type="button"
+            class="btn btn-primary houmon-kango-create-shijisho">指示書作成</button>
+    <input type="text" name="data" formenctype="text/plain" class="d-none"/>
 </form>
 
 <script>
@@ -15,7 +30,8 @@
         let chooser = await import("./js/choose-patient.js");
         let displayer = await import("./js/disp-patient.js");
 
-        $(".houmon-kango-create-shijisho-form").attr("action", integration.url("/houmon-kango/create-shijisho"));
+        $(".houmon-kango-create-shijisho-form")
+            .attr("action", integration.url("/houmon-kango/create-shijisho"));
 
         $("#houmon-kango-select-patient").on("click", async event => {
             let patient = await chooser.choosePatient();
@@ -29,8 +45,10 @@
             $("#houmon-kango-patient").html("").append(disp);
         }
 
-        $(".houmon-kango-create").on("click", event => {
-
+        $(".houmon-kango-create-shijisho").on("click", event => {
+            let data = $(".houmon-kango-data").val();
+            $(".houmon-kango-create-shijisho-form input[name=data]").val(data);
+            $(".houmon-kango-create-shijisho-form").submit();
         });
     })();
 </script>

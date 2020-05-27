@@ -52,7 +52,9 @@ public class HoumonKangoHandler {
             env.put("NO_COLOR", "yes");
             req1.env = env;
             req1.stdIn = ctx.getBody().getBytes();
-            System.err.println(new String(req1.stdIn, StandardCharsets.UTF_8));
+            if( req1.stdIn.length == 0 ){
+                req1.stdIn = "{}".getBytes();
+            }
             ExecResult er1 = IntegrationUtil.exec(req1);
             if (er1.isError()) {
                 promise.fail(er1.getErrorMessage());

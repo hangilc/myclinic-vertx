@@ -5,14 +5,18 @@
 </div>
 <div id="houmon-kango-patient" class="my-4"></div>
 
-<div class="houmon-kango-commands">
-    <button type="button" class="btn btn-primary houmon-kango-create">指示書作成</button>
-</div>
+<form class="form-inline houmon-kango-create-shijisho-form"
+      target="_blank" action="javascript:void(0)" method="post">
+    <button type="submit" class="btn btn-primary houmon-kango-create-shijisho">指示書作成</button>
+</form>
 
 <script>
     (async function(){
         let chooser = await import("./js/choose-patient.js");
         let displayer = await import("./js/disp-patient.js");
+
+        $(".houmon-kango-create-shijisho-form").attr("action", integration.url("/houmon-kango/create-shijisho"));
+
         $("#houmon-kango-select-patient").on("click", async event => {
             let patient = await chooser.choosePatient();
             if( patient ){

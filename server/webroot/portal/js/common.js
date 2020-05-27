@@ -27,7 +27,7 @@ function ajaxPost(url, data, encodeJson=true) {
     });
 }
 
-class Rest {
+class Client {
     constructor(baseUrl){
         this.baseUrl = baseUrl;
     }
@@ -38,6 +38,34 @@ class Rest {
 
     async get(path, data){
         return await ajaxGet(this.url(path), data);
+    }
+
+    async post(path, data, opts = null){
+        let encodeData = true;
+        if( opts == null ){
+            opts = {};
+        }
+        let url = this.url(path);
+        if( opts.preventDataEncoding ){
+            encodeData = false;
+        }
+        if( opts.params ){
+            let parts = [];
+            for(let key of Object.keys(opts.params)){
+                key = encodeURIComponent(key);
+                let val = encodeURIComponent(opts.params[key]);
+                parts.push(`${key}=${val}`);
+            }
+            url += "?" + parts.join("&");
+        }
+        return await ajaxPost(url, data, encodeData);
+    }
+
+}
+
+class Rest extends Client {
+    constructor(baseUrl){
+        super(baseUrl);
     }
 
     async listWqueueFull(){
@@ -71,6 +99,12 @@ class Rest {
         return await this.get("/get-clinic-info", {});
     }
 
+}
+
+class Integration extends Client {
+    constructor(baseUrl) {
+        super(baseUrl);
+    }
 }
 
 const WqueueStateWaitExam = 0;

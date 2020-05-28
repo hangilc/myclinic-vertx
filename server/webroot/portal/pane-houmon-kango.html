@@ -35,7 +35,8 @@
             class="btn btn-primary houmon-kango-create-shijisho">指示書作成
     </button>
     <button type="button"
-            class="btn btn-secondary ml-2 houmon-kango-save-history">保存</button>
+            class="btn btn-secondary ml-2 houmon-kango-save-history">保存
+    </button>
     <a type="link" href="javascript:void(0)"
        class="btn btn-link form-control ml-2 houmon-kango-list-param"
        target="_blank">属性一覧</a>
@@ -61,12 +62,13 @@
     (async function () {
         let chooser = await import("./js/choose-patient.js");
         let displayer = await import("./js/disp-patient.js");
+        let Data = (await import("./houmon-kango/data.js")).Data;
 
         let clinicParam = await integration.getHoumonKangoClinicParam();
 
         let theRecord;
 
-        function initRecord(patientId){
+        function initRecord(patientId) {
             theRecord = {
                 patientId: patientId,
                 history: []
@@ -75,26 +77,35 @@
 
         initRecord(null);
 
-        function setRecord(record){
+        function setRecord(record) {
             theRecord = record;
         }
 
-        function addToRecordHistory(data){
+        function addToRecordHistory(data) {
             theRecord.history.push({
                 stamp: getTimeStamp(),
                 data: data
             });
         }
 
-        function getCurrentRecord(){
+        function getCurrentRecord() {
             return theRecord;
         }
 
-        function getRecordHistory(){
+        function getRecordHistory() {
             return theRecord.history;
         }
 
-        function getTimeStamp(){
+        function removeFromRecordHistory(stamp) {
+            theRecord.history = theRecord.history.filter(rec => rec.stamp !== stamp);
+        }
+
+        async function saveRecord() {
+            await integration.saveHoumonKangoRecord(theRecord);
+            return await integration.getHoumonKangoRecord(theRecord.patientId);
+        }
+
+        function getTimeStamp() {
             return moment().format("YYYY-MM-DD HH:mm:ss");
         }
 
@@ -115,6 +126,13 @@
         }
 
         setData(clinicParam);
+
+        function adaptToData() {
+            let data = new Data(getData());
+            $(".houmon-kango-from-date").val(data.getSubtitle1FromDate());
+            $(".houmon-kango-upto-date").val(data.getSubtitle1UptoDate());
+            $(".houmon-kango-recipient").val(data.getRecipient());
+        }
 
         $(".houmon-kango-from-date").on("change", event => {
             let data = getData();
@@ -151,6 +169,7 @@
         });
 
         $(".houmon-kango-issue-date").on("change", event => {
+
             let data = getData();
             let val = $(event.target).val();
             if (!val) {
@@ -219,7 +238,7 @@
             data["address"] = patient.address;
             setData(data);
             let record = await integration.getHoumonKangoRecord(patient.patientId);
-            if( Object.keys(record).length ===0 ){
+            if (Object.keys(record).length === 0) {
                 initRecord(patient.patientId);
             } else {
                 setRecord(record);
@@ -236,12 +255,9 @@
         $(".houmon-kango-save-history").on("click", async event => {
             let data = getData();
             addToRecordHistory(data);
-            let record = getCurrentRecord();
-            if( !record.patientId ){
-                alert("ERROR: No patientId");
-                return;
-            }
-            await integration.saveHoumonKangoRecord(record);
+            await saveRecord();
+            alert("保存されました。");
+            adaptToRecord();
         });
 
         function fromDateOfData(data) {
@@ -251,10 +267,14 @@
             if (!isNaN(nen) && !isNaN(month) && !isNaN(day)) {
                 let year = kanjidate.gengouToSeireki("令和", nen);
                 if (year != null) {
-                    return moment(year, month - 1, day);
+                    return moment({year, month: month - 1, date: day});
                 }
             }
             return null;
+        }
+
+        function adaptToRecord() {
+            updateHistory(getRecordHistory());
         }
 
         function uptoDateOfData(data) {
@@ -264,7 +284,7 @@
             if (!isNaN(nen) && !isNaN(month) && !isNaN(day)) {
                 let year = kanjidate.gengouToSeireki("令和", nen);
                 if (year != null) {
-                    return moment(year, month - 1, day);
+                    return moment({year, month: month - 1, date: day});
                 }
             }
             return null;
@@ -299,9 +319,23 @@
                     let td = $("<td>", {
                         class: "form-inline"
                     });
-                    let delBtn = new $("<button>", {
+                    let copyBtn = new $("<button>", {
                         class: "form-control btn btn-secondary"
-                    }).text("削除");
+                    }).text("複製").on("click", event => {
+                        setData(data);
+                        adaptToData();
+                    });
+                    let delBtn = new $("<button>", {
+                        class: "form-control btn btn-secondary ml-2"
+                    }).text("削除").on("click", async event => {
+                        if (!confirm("この記録を本当に削除していいですか？")) {
+                            return;
+                        }
+                        removeFromRecordHistory(stamp);
+                        await saveRecord();
+                        adaptToRecord();
+                    });
+                    td.append(copyBtn);
                     td.append(delBtn);
                     tr.append(td);
                 }

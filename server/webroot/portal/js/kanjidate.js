@@ -57,7 +57,7 @@ export function seirekiToGengou(year, month, day){
 export function gengouToSeireki(gengou, nen){
     for(let g of gengouList){
         if( g.name === gengou ){
-            return nen - gengou.start + 1;
+            return g.year + nen - 1;
         }
     }
     return null;

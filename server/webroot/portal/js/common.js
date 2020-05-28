@@ -106,8 +106,8 @@ class Integration extends Client {
         super(baseUrl);
     }
 
-    async createHoumonKangoShijisho(data){
-        return await this.post(this.url("/create-shijisho"), data);
+    async getHoumonKangoClinicParam() {
+        return this.get("/houmon-kango/get-clinic-param");
     }
 }
 

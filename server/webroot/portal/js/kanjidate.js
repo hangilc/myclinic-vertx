@@ -63,3 +63,14 @@ export function sqldateToKanji(sqldate, opts){
     return `${g}${n}年${d.month}月${d.day}日`;
 }
 
+export function sqldateToKanjiData(sqldate){
+    let d = parseSqldate(sqldate);
+    let [g, n] = seirekiToGengou(d.year, d.month, d.day);
+    return {
+        gengou: g,
+        nen: n,
+        year: d.year,
+        month: d.month,
+        day: d.day
+    };
+}

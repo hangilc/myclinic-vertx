@@ -7,6 +7,16 @@
     <input type="date" class="form-control ml-2 houmon-kango-upto-date"/>
 </div>
 
+<div class="form-inline mt-2">
+    <span>発行日</span>
+    <input type="date" class="form-control ml-2 houmon-kango-issue-date"/>
+</div>
+
+<div class="form-inline mt-2">
+    <span>送付先</span>
+    <input type="text" class="form-control ml-2 houmon-kango-recipient"/>
+</div>
+
 <div class="mt-2">
     <button type="button" class="btn btn-secondary"
             id="houmon-kango-select-patient">患者選択</button>
@@ -22,6 +32,8 @@
       target="_blank" action="javascript:void(0)" method="post">
     <button type="button"
             class="btn btn-primary houmon-kango-create-shijisho">指示書作成</button>
+    <a type="link" href="javascript:void(0)"
+            class="btn btn-link form-control ml-2 houmon-kango-list-param" target="_blank">属性一覧</a>
     <input type="text" name="data" formenctype="text/plain" class="d-none"/>
 </form>
 
@@ -30,19 +42,120 @@
         let chooser = await import("./js/choose-patient.js");
         let displayer = await import("./js/disp-patient.js");
 
+        let clinicParam = await integration.getHoumonKangoClinicParam();
+
+        setData(clinicParam);
+
+        function url(path){
+            return integration.url("/houmon-kango" + path);
+        }
+
+        function getData(){
+            let src = $(".houmon-kango-data").val();
+            if( !src ){
+                src = "{}";
+            }
+            return JSON.parse(src);
+        }
+
+        function setData(data){
+            $(".houmon-kango-data").val(JSON.stringify(data, null, 2));
+        }
+
+        $(".houmon-kango-from-date").on("change", event => {
+            let data = getData();
+            let val = $(event.target).val();
+            if( !val ){
+                data["subtitle1.from.nen"] = "";
+                data["subtitle1.from.month"] = "";
+                data["subtitle1.from.day"] = "";
+                setData(data);
+            } else {
+                let wareki = kanjidate.sqldateToKanjiData(val);
+                data["subtitle1.from.nen"] = wareki.nen;
+                data["subtitle1.from.month"] = wareki.month;
+                data["subtitle1.from.day"] = wareki.day;
+                setData(data);
+            }
+        });
+
+        $(".houmon-kango-upto-date").on("change", event => {
+            let data = getData();
+            let val = $(event.target).val();
+            if( !val ){
+                data["subtitle1.upto.nen"] = "";
+                data["subtitle1.upto.month"] = "";
+                data["subtitle1.upto.day"] = "";
+                setData(data);
+            } else {
+                let wareki = kanjidate.sqldateToKanjiData(val);
+                data["subtitle1.upto.nen"] = wareki.nen;
+                data["subtitle1.upto.month"] = wareki.month;
+                data["subtitle1.upto.day"] = wareki.day;
+                setData(data);
+            }
+        });
+
+        $(".houmon-kango-issue-date").on("change", event => {
+            let data = getData();
+            let val = $(event.target).val();
+            if( !val ){
+                data["issue-date.nen"] = "";
+                data["issue-date.month"] = "";
+                data["issue-date.day"] = "";
+                setData(data);
+            } else {
+                let wareki = kanjidate.sqldateToKanjiData(val);
+                data["issue-date.nen"] = wareki.nen;
+                data["issue-date.month"] = wareki.month;
+                data["issue-date.day"] = wareki.day;
+                setData(data);
+            }
+        });
+
+        $(".houmon-kango-recipient").on("change", event => {
+            let value = $(event.target).val();
+            let data = getData();
+            data["recipient"] = value;
+            setData(data);
+        });
+
+        $(".houmon-kango-issue-date").val(moment().format("YYYY-MM-DD")).trigger("change");
+
         $(".houmon-kango-create-shijisho-form")
-            .attr("action", integration.url("/houmon-kango/create-shijisho"));
+            .attr("action", url("/create-shijisho"));
+
+        $(".houmon-kango-list-param").attr("href", url("/list-params"));
 
         $("#houmon-kango-select-patient").on("click", async event => {
             let patient = await chooser.choosePatient();
             if( patient ){
-                start(patient);
+                startPatient(patient);
             }
         });
 
-        async function start(patient){
+        function startPatient(patient){
             let disp = displayer.disp(patient);
             $("#houmon-kango-patient").html("").append(disp);
+            let data = getData();
+            data["shimei"] = `${patient.lastName}${patient.firstName}`;
+            let birthday = kanjidate.sqldateToKanjiData(patient.birthday);
+            for(let key of ["birthday.gengou.meiji", "birthday.gengou.taishou",
+                "birthday.gengou.shouwa", "birthday.gengou.heisei"]){
+                data[key] = false;
+            }
+            switch(birthday.gengou){
+                case "明治": data["birthday.gengou.meiji"] = true; break;
+                case "大正": data["birthday.gengou.taishou"] = true; break;
+                case "昭和": data["birthday.gengou.shouwa"] = true; break;
+                case "平成": data["birthday.gengou.heisei"] = true; break;
+            }
+            data["birthday.nen"] = birthday.nen;
+            data["birthday.month"] = birthday.month;
+            data["birthday.day"] = birthday.day;
+            data["age"] = moment().diff(moment(patient.birthday), "years");
+            data["address"] = patient.address;
+            setData(data);
         }
 
         $(".houmon-kango-create-shijisho").on("click", event => {

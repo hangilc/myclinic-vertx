@@ -19,7 +19,8 @@
 
 <div class="mt-2">
     <button type="button" class="btn btn-secondary"
-            id="houmon-kango-select-patient">患者選択</button>
+            id="houmon-kango-select-patient">患者選択
+    </button>
 </div>
 <div id="houmon-kango-patient" class="my-4"></div>
 
@@ -31,10 +32,13 @@
       enctype="application/x-www-form-urlencoded"
       target="_blank" action="javascript:void(0)" method="post">
     <button type="button"
-            class="btn btn-primary houmon-kango-create-shijisho">指示書作成</button>
-    <button type="button" class="btn btn-secondary ml-2 houmon-kango-save-history">保存</button>
+            class="btn btn-primary houmon-kango-create-shijisho">指示書作成
+    </button>
+    <button type="button"
+            class="btn btn-secondary ml-2 houmon-kango-save-history">保存</button>
     <a type="link" href="javascript:void(0)"
-            class="btn btn-link form-control ml-2 houmon-kango-list-param" target="_blank">属性一覧</a>
+       class="btn btn-link form-control ml-2 houmon-kango-list-param"
+       target="_blank">属性一覧</a>
     <input type="text" name="data" formenctype="text/plain" class="d-none"/>
 </form>
 
@@ -46,6 +50,7 @@
             <th>送付先</th>
             <th>開始日</th>
             <th>終了日</th>
+            <th>操作</th>
         </tr>
         </thead>
         <tbody></tbody>
@@ -53,39 +58,68 @@
 </div>
 
 <script>
-    (async function(){
+    (async function () {
         let chooser = await import("./js/choose-patient.js");
         let displayer = await import("./js/disp-patient.js");
 
         let clinicParam = await integration.getHoumonKangoClinicParam();
 
-        let theRecord = {
-            patientId: undefined,
-            history: []
-        };
+        let theRecord;
 
-        setData(clinicParam);
+        function initRecord(patientId){
+            theRecord = {
+                patientId: patientId,
+                history: []
+            };
+        }
 
-        function url(path){
+        initRecord(null);
+
+        function setRecord(record){
+            theRecord = record;
+        }
+
+        function addToRecordHistory(data){
+            theRecord.history.push({
+                stamp: getTimeStamp(),
+                data: data
+            });
+        }
+
+        function getCurrentRecord(){
+            return theRecord;
+        }
+
+        function getRecordHistory(){
+            return theRecord.history;
+        }
+
+        function getTimeStamp(){
+            return moment().format("YYYY-MM-DD HH:mm:ss");
+        }
+
+        function url(path) {
             return integration.url("/houmon-kango" + path);
         }
 
-        function getData(){
+        function getData() {
             let src = $(".houmon-kango-data").val();
-            if( !src ){
+            if (!src) {
                 src = "{}";
             }
             return JSON.parse(src);
         }
 
-        function setData(data){
+        function setData(data) {
             $(".houmon-kango-data").val(JSON.stringify(data, null, 2));
         }
+
+        setData(clinicParam);
 
         $(".houmon-kango-from-date").on("change", event => {
             let data = getData();
             let val = $(event.target).val();
-            if( !val ){
+            if (!val) {
                 data["subtitle1.from.nen"] = "";
                 data["subtitle1.from.month"] = "";
                 data["subtitle1.from.day"] = "";
@@ -102,7 +136,7 @@
         $(".houmon-kango-upto-date").on("change", event => {
             let data = getData();
             let val = $(event.target).val();
-            if( !val ){
+            if (!val) {
                 data["subtitle1.upto.nen"] = "";
                 data["subtitle1.upto.month"] = "";
                 data["subtitle1.upto.day"] = "";
@@ -119,7 +153,7 @@
         $(".houmon-kango-issue-date").on("change", event => {
             let data = getData();
             let val = $(event.target).val();
-            if( !val ){
+            if (!val) {
                 data["issue-date.nen"] = "";
                 data["issue-date.month"] = "";
                 data["issue-date.day"] = "";
@@ -149,26 +183,34 @@
 
         $("#houmon-kango-select-patient").on("click", async event => {
             let patient = await chooser.choosePatient();
-            if( patient ){
+            if (patient) {
                 await startPatient(patient);
             }
         });
 
-        async function startPatient(patient){
+        async function startPatient(patient) {
             let disp = displayer.disp(patient);
             $("#houmon-kango-patient").html("").append(disp);
             let data = getData();
             data["shimei"] = `${patient.lastName}${patient.firstName}`;
             let birthday = kanjidate.sqldateToKanjiData(patient.birthday);
-            for(let key of ["birthday.gengou.meiji", "birthday.gengou.taishou",
-                "birthday.gengou.shouwa", "birthday.gengou.heisei"]){
+            for (let key of ["birthday.gengou.meiji", "birthday.gengou.taishou",
+                "birthday.gengou.shouwa", "birthday.gengou.heisei"]) {
                 data[key] = false;
             }
-            switch(birthday.gengou){
-                case "明治": data["birthday.gengou.meiji"] = true; break;
-                case "大正": data["birthday.gengou.taishou"] = true; break;
-                case "昭和": data["birthday.gengou.shouwa"] = true; break;
-                case "平成": data["birthday.gengou.heisei"] = true; break;
+            switch (birthday.gengou) {
+                case "明治":
+                    data["birthday.gengou.meiji"] = true;
+                    break;
+                case "大正":
+                    data["birthday.gengou.taishou"] = true;
+                    break;
+                case "昭和":
+                    data["birthday.gengou.shouwa"] = true;
+                    break;
+                case "平成":
+                    data["birthday.gengou.heisei"] = true;
+                    break;
             }
             data["birthday.nen"] = birthday.nen;
             data["birthday.month"] = birthday.month;
@@ -176,11 +218,13 @@
             data["age"] = moment().diff(moment(patient.birthday), "years");
             data["address"] = patient.address;
             setData(data);
-            theRecord = await integration.getHoumonKangoRecord(patient.patientId);
-            if( !theRecord ){
-                theRecord = {};
+            let record = await integration.getHoumonKangoRecord(patient.patientId);
+            if( Object.keys(record).length ===0 ){
+                initRecord(patient.patientId);
+            } else {
+                setRecord(record);
             }
-            console.log(theRecord);
+            updateHistory(getRecordHistory());
         }
 
         $(".houmon-kango-create-shijisho").on("click", event => {
@@ -191,17 +235,79 @@
 
         $(".houmon-kango-save-history").on("click", async event => {
             let data = getData();
-            theRecord.history.push(data);
-            await integration.saveHoumonKangoRecord(theRecord);
+            addToRecordHistory(data);
+            let record = getCurrentRecord();
+            if( !record.patientId ){
+                alert("ERROR: No patientId");
+                return;
+            }
+            await integration.saveHoumonKangoRecord(record);
         });
 
-        function updateHistory(history){
-            let ele =　$(".houmon-kango-history");
-            let tbody = ele.find("table tbody");
-            tbodyu.html("");
-            for(let h of history){
+        function fromDateOfData(data) {
+            let nen = parseInt(data["subtitle1.from.nen"]);
+            let month = parseInt(data["subtitle1.from.month"]);
+            let day = parseInt(data["subtitle1.from.day"]);
+            if (!isNaN(nen) && !isNaN(month) && !isNaN(day)) {
+                let year = kanjidate.gengouToSeireki("令和", nen);
+                if (year != null) {
+                    return moment(year, month - 1, day);
+                }
+            }
+            return null;
+        }
 
+        function uptoDateOfData(data) {
+            let nen = parseInt(data["subtitle1.upto.nen"]);
+            let month = parseInt(data["subtitle1.upto.month"]);
+            let day = parseInt(data["subtitle1.upto.day"]);
+            if (!isNaN(nen) && !isNaN(month) && !isNaN(day)) {
+                let year = kanjidate.gengouToSeireki("令和", nen);
+                if (year != null) {
+                    return moment(year, month - 1, day);
+                }
+            }
+            return null;
+        }
+
+        function updateHistory(history) {
+            let ele = $(".houmon-kango-history");
+            let tbody = ele.find("table tbody");
+            tbody.html("");
+            for (let {stamp, data} of history) {
+                let from = fromDateOfData(data);
+                let upto = uptoDateOfData(data);
+                let recipient = data.recipient;
+                let tr = $("<tr>");
+                {
+                    let td = $("<td>").text(recipient);
+                    tr.append(td);
+                }
+                {
+                    let td = $("<td>").text(
+                        from ? kanjidate.sqldateToKanji(from.format("YYYY-MM-DD")) : ""
+                    );
+                    tr.append(td);
+                }
+                {
+                    let td = $("<td>").text(
+                        upto ? kanjidate.sqldateToKanji(upto.format("YYYY-MM-DD")) : ""
+                    );
+                    tr.append(td);
+                }
+                {
+                    let td = $("<td>", {
+                        class: "form-inline"
+                    });
+                    let delBtn = new $("<button>", {
+                        class: "form-control btn btn-secondary"
+                    }).text("削除");
+                    td.append(delBtn);
+                    tr.append(td);
+                }
+                tbody.append(tr);
             }
         }
+
     })();
 </script>

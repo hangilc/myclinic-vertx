@@ -9,6 +9,7 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,21 +48,48 @@ public class HoumonKangoHandler {
         router.route(HttpMethod.GET, "/list-params").handler(this::handleListParams);
         router.route(HttpMethod.GET, "/get-clinic-param").handler(this::handleGetClinicParam);
         router.route(HttpMethod.GET, "/get-record").handler(this::handleGetRecord);
+        router.route(HttpMethod.POST, "/save-record").handler(this::handleSaveRecord);
     }
 
-    private void handleGetClinicParam(RoutingContext ctx) {
-        Path path = getHoumonKangoConfigDir().resolve("clinic-param.json");
-        ctx.response().sendFile(path.toFile().getAbsolutePath());
+    private void handleSaveRecord(RoutingContext ctx) {
+        int patientId = IntegrationUtil.getIntParam(ctx, "patient-id");
+        Path path = getRecordPath(patientId);
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                Files.write(path, ctx.getBody().getBytes());
+                promise.complete("true");
+            } catch (IOException e) {
+                promise.fail(e);
+            }
+        }, ar -> {
+            if( ar.succeeded() ){
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
+//        vertx.fileSystem().writeFile(path.toFile().getAbsolutePath(), ctx.getBody(), ar -> {
+//            if( ar.succeeded() ){
+//                ctx.response().end("true");
+//            } else {
+//                ctx.fail(ar.cause());
+//            }
+//        });
     }
 
     private void handleGetRecord(RoutingContext ctx) {
         int patientId = IntegrationUtil.getIntParam(ctx, "patient-id");
         Path path = getRecordPath(patientId);
         if( !Files.exists(path) ){
-            ctx.response().end("");
+            ctx.response().end(String.format("{\"patientId\": %d, \"history\": []}", patientId));
         } else {
             ctx.response().sendFile(path.toFile().getAbsolutePath());
         }
+    }
+
+    private void handleGetClinicParam(RoutingContext ctx) {
+        Path path = getHoumonKangoConfigDir().resolve("clinic-param.json");
+        ctx.response().sendFile(path.toFile().getAbsolutePath());
     }
 
     private void handleCreateShijisho(RoutingContext ctx) {
@@ -75,7 +103,6 @@ public class HoumonKangoHandler {
             req1.env = env;
             String dataAttr = ctx.request().getFormAttribute("data");
             if( dataAttr != null ){
-                System.err.println(String.format("data: %s", dataAttr));
                 req1.stdIn = dataAttr.getBytes(StandardCharsets.UTF_8);
             } else {
                 req1.stdIn = ctx.getBody().getBytes();

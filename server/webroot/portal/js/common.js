@@ -12,7 +12,7 @@ function ajaxGet(url, data) {
     });
 }
 
-function ajaxPost(url, data, encodeJson=true) {
+function ajaxPost(url, data, encodeJson = true) {
     return new Promise((resolve, fail) => {
         let dataValue = encodeJson ? JSON.stringify(data) : data;
         $.ajax({
@@ -28,30 +28,30 @@ function ajaxPost(url, data, encodeJson=true) {
 }
 
 class Client {
-    constructor(baseUrl){
+    constructor(baseUrl) {
         this.baseUrl = baseUrl;
     }
 
-    url(path){
+    url(path) {
         return this.baseUrl + path;
     }
 
-    async get(path, data){
+    async get(path, data) {
         return await ajaxGet(this.url(path), data);
     }
 
-    async post(path, data, opts = null){
+    async post(path, data, opts = null) {
         let encodeData = true;
-        if( opts == null ){
+        if (opts == null) {
             opts = {};
         }
         let url = this.url(path);
-        if( opts.preventDataEncoding ){
+        if (opts.preventDataEncoding) {
             encodeData = false;
         }
-        if( opts.params ){
+        if (opts.params) {
             let parts = [];
-            for(let key of Object.keys(opts.params)){
+            for (let key of Object.keys(opts.params)) {
                 key = encodeURIComponent(key);
                 let val = encodeURIComponent(opts.params[key]);
                 parts.push(`${key}=${val}`);
@@ -64,23 +64,23 @@ class Client {
 }
 
 class Rest extends Client {
-    constructor(baseUrl){
+    constructor(baseUrl) {
         super(baseUrl);
     }
 
-    async listWqueueFull(){
+    async listWqueueFull() {
         return await ajaxGet(this.url("/list-wqueue-full"), {});
     }
 
-    async getMeisai(visitId){
+    async getMeisai(visitId) {
         return await ajaxGet(this.url("/get-visit-meisai"), {"visit-id": visitId});
     }
 
-    async finishCharge(visitId, amount, payTime){
-        if( moment.isMoment(payTime) ){
+    async finishCharge(visitId, amount, payTime) {
+        if (moment.isMoment(payTime)) {
             payTime = payTime.format("YYYY-MM-DD HH:mm:ss");
         }
-        if( typeof payTime !== "string" ){
+        if (typeof payTime !== "string") {
             throw `Invalid paytime: ${payTime}`;
         }
         let dto = {
@@ -91,11 +91,11 @@ class Rest extends Client {
         return await ajaxPost(this.url("/finish-cashier"), dto);
     }
 
-    async searchPatient(text){
+    async searchPatient(text) {
         return await ajaxGet(this.url("/search-patient"), {text: text});
     }
 
-    async getClinicInfo(){
+    async getClinicInfo() {
         return await this.get("/get-clinic-info", {});
     }
 
@@ -107,7 +107,24 @@ class Integration extends Client {
     }
 
     async getHoumonKangoClinicParam() {
-        return this.get("/houmon-kango/get-clinic-param");
+        return await this.get("/houmon-kango/get-clinic-param");
+    }
+
+    async getHoumonKangoRecord(patientId) {
+        return await this.get("/houmon-kango/get-record", {"patient-id": patientId});
+    }
+
+    async saveHoumonKangoRecord(record) {
+        let patientId = record.patientId;
+        if (!patientId) {
+            throw new Error(`"Cannot find patientId: ${record}`);
+        }
+        let data = JSON.stringify(record, null, 2);
+        return await this.post("/houmon-kango/save-record", data,
+            {
+                params: {"patient-id": patientId},
+                preventDataEncoding: true
+            });
     }
 }
 
@@ -126,20 +143,23 @@ const WqueueStateRep = {
     [WqueueStateWaitReExam]: "再待"
 };
 
-function wqueueStateCodeToRep(code){
+function wqueueStateCodeToRep(code) {
     return WqueueStateRep[code];
 }
 
-function sexToRep(sex){
-    switch(sex){
-        case "M": return "男";
-        case "F": return "女";
-        default: return sex;
+function sexToRep(sex) {
+    switch (sex) {
+        case "M":
+            return "男";
+        case "F":
+            return "女";
+        default:
+            return sex;
     }
 }
 
 
-function replaceElement(prevElement, newElement){
+function replaceElement(prevElement, newElement) {
     prevElement.after(newElement);
     prevElement.detach();
 }

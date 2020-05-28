@@ -32,10 +32,25 @@
       target="_blank" action="javascript:void(0)" method="post">
     <button type="button"
             class="btn btn-primary houmon-kango-create-shijisho">指示書作成</button>
+    <button type="button" class="btn btn-secondary ml-2 houmon-kango-save-history">保存</button>
     <a type="link" href="javascript:void(0)"
             class="btn btn-link form-control ml-2 houmon-kango-list-param" target="_blank">属性一覧</a>
     <input type="text" name="data" formenctype="text/plain" class="d-none"/>
 </form>
+
+<div class="houmon-kango-history mt-3">
+    <h5>履歴</h5>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>送付先</th>
+            <th>開始日</th>
+            <th>終了日</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
 
 <script>
     (async function(){
@@ -43,6 +58,11 @@
         let displayer = await import("./js/disp-patient.js");
 
         let clinicParam = await integration.getHoumonKangoClinicParam();
+
+        let theRecord = {
+            patientId: undefined,
+            history: []
+        };
 
         setData(clinicParam);
 
@@ -130,11 +150,11 @@
         $("#houmon-kango-select-patient").on("click", async event => {
             let patient = await chooser.choosePatient();
             if( patient ){
-                startPatient(patient);
+                await startPatient(patient);
             }
         });
 
-        function startPatient(patient){
+        async function startPatient(patient){
             let disp = displayer.disp(patient);
             $("#houmon-kango-patient").html("").append(disp);
             let data = getData();
@@ -156,6 +176,11 @@
             data["age"] = moment().diff(moment(patient.birthday), "years");
             data["address"] = patient.address;
             setData(data);
+            theRecord = await integration.getHoumonKangoRecord(patient.patientId);
+            if( !theRecord ){
+                theRecord = {};
+            }
+            console.log(theRecord);
         }
 
         $(".houmon-kango-create-shijisho").on("click", event => {
@@ -163,5 +188,20 @@
             $(".houmon-kango-create-shijisho-form input[name=data]").val(data);
             $(".houmon-kango-create-shijisho-form").submit();
         });
+
+        $(".houmon-kango-save-history").on("click", async event => {
+            let data = getData();
+            theRecord.history.push(data);
+            await integration.saveHoumonKangoRecord(theRecord);
+        });
+
+        function updateHistory(history){
+            let ele =　$(".houmon-kango-history");
+            let tbody = ele.find("table tbody");
+            tbodyu.html("");
+            for(let h of history){
+
+            }
+        }
     })();
 </script>

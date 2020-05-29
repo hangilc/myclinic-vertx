@@ -1,0 +1,4 @@
+@docker run -d -p 13306:3306 -e MYSQL_ROOT_PASSWORD=%MYCLINIC_DB_ROOT_PASS% ^
+  -e MYSQL_USER=%MYCLINIC_DB_USER% -e MYSQL_PASSWORD=%MYCLINIC_DB_PASS% ^
+  -e MYSQL_DATABASE=myclinic ^
+  --name mysql-dev mysql:5.7

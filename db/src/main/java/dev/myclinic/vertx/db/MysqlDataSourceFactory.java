@@ -11,7 +11,7 @@ public class MysqlDataSourceFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(dev.myclinic.vertx.db.MysqlDataSourceFactory.class);
 
-    public static DataSource create(dev.myclinic.vertx.db.MysqlDataSourceConfig mysqlConfig){
+    public static DataSource create(MysqlDataSourceConfig mysqlConfig){
         String url = String.format("jdbc:mysql://%s:%d/%s?zeroDateTimeBehavior=convertToNull" +
                         "&noDatetimeStringSync=true&useUnicode=true&characterEncoding=utf8" +
                         "&useSSL=%s&serverTimezone=JST",

@@ -2531,20 +2531,21 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     }
 
     private int enterXp(Backend backend, int visitId, String label, String film) throws Exception {
-        throw new RuntimeException("not implemented");
-//        VisitDTO visit = backend.getVisit(visitId);
-//        LocalDate at = LocalDate.parse(visit.visitedAt.substring(0, 10));
-//        BatchEnterRequestDTO req = BatchEnterRequestDTO.create();
-//        return createConduct(visitId, ConductKind.Gazou.getCode(), label,
-//                new ConductShinryouDTO[]{
-//                        createConductShinryou("単純撮影", at),
-//                        createConductShinryou("単純撮影診断", at)
-//                },
-//                null,
-//                new ConductKizaiDTO[]{ createConductKizai(film, at, 1) }
-//        );
-//        BatchEnterResultDTO result = backend.batchEnter(req);
-//        return result.conductIds.get(0);
+        BatchEnterRequestDTO req = BatchEnterRequestDTO.create();
+        ConductEnterRequestDTO creq = ConductEnterRequestDTO.create(visitId,
+                ConductKind.Gazou.getCode(), label);
+        VisitDTO visit = backend.getVisit(visitId);
+        LocalDate at = LocalDate.parse(visit.visitedAt.substring(0, 10));
+        creq.shinryouList.add(createConductShinryouReq("単純撮影", at));
+        creq.shinryouList.add(createConductShinryouReq("単純撮影診断", at));
+        creq.kizaiList.add(createConductKizaiReq(film, 1, at));
+        req.conducts.add(creq);
+        BatchEnterResultDTO result = backend.batchEnter(req);
+        if( result.conductIds.size() == 1 && result.shinryouIds.size() == 0 && result.drugIds.size() == 0 ){
+            return result.conductIds.get(0);
+        } else {
+            throw new RuntimeException("処置（X線写真）を入力できませんでした。");
+        }
     }
 
     private void enterXp(RoutingContext ctx, Connection conn) throws Exception {
@@ -2560,9 +2561,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
     }
-
-
-
 
     @Override
     public void handle(RoutingContext routingContext) {

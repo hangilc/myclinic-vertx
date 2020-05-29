@@ -3140,8 +3140,31 @@ public class Backend {
                 date, afterThisId);
     }
 
+    private int countVisitAt(LocalDate at){
+        String sql = "select count(*) from Visit where date(visitedAt) = ?";
+        return getQuery().getInt(xlate(sql, ts.visitTable), at);
+    }
+
+    private List<VisitDTO> listVisitAt(LocalDate at, int limit, int offset){
+        String sql = "select * from Visit where date(visitedAt) = ? order by visitId desc " +
+                " limit ? offset ?";
+        return getQuery().query(xlate(sql, ts.visitTable), ts.visitTable, at, limit, offset);
+    }
+
     public VisitFull2PatientPageDTO pageVisitFullWithPatientAt(LocalDate at, int page) throws Exception {
-        throw new RuntimeException("Not implemented: pageVisitFullWithPatientAt");
+        int count = countVisitAt(at);
+        int itemsPerPage = 10;
+        List<VisitDTO> visits = listVisitAt(at, itemsPerPage, page * itemsPerPage);
+        VisitFull2PatientPageDTO result = new VisitFull2PatientPageDTO();
+        result.page = page;
+        result.totalPages = numberOfPages(count, itemsPerPage);
+        result.visitPatients = visits.stream().map(visit -> {
+            VisitFull2PatientDTO dto = new VisitFull2PatientDTO();
+            dto.patient = getPatient(visit.patientId);
+            dto.visitFull = getVisitFull2(visit);
+            return dto;
+        }).collect(toList());
+        return result;
     }
 
 }

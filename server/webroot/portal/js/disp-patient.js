@@ -22,7 +22,6 @@ let html = `
         </div>
     </div>
 </div>
-</div>
 `;
 
 function birthdayRep(birthday){

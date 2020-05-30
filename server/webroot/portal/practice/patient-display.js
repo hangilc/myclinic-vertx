@@ -1,14 +1,14 @@
 import * as kanjidate from "../js/kanjidate.js";
 
 export class PatientDisplay {
-    constructor(props){
-        this.patientId = props["patient-id"];
-        this.patientName = props["patient-name"];
-        this.patientYomi = props["patient-yomi"];
-        this.patientBirthday = props["patient-birthday"];
-        this.patientSex = props["patient-sex"];
-        this.patientAddress = props["patient-address"];
-        this.patientPhone = props["patient-phone"];
+    constructor(map){
+        this.patientId = map.patientId.ele;
+        this.patientName = map.patientName.ele;
+        this.patientYomi = map.patientYomi.ele;
+        this.patientBirthday = map.patientBirthday.ele;
+        this.patientSex = map.patientSex.ele;
+        this.patientAddress = map.patientAddress.ele;
+        this.patientPhone = map.patientPhone.ele;
     }
 
     setPatient(patient){

@@ -14,14 +14,6 @@
     </div>
 </div>
 
-<template id="practice-search-patient-template">
-    <form class="form-inline x-form">
-        <input class="form-control x-input"/>
-        <button type="submit" class="form-control ml-2">検索</button>
-    </form>
-    <select class="form-control mt-2 form-control x-select" size="5"></select>
-</template>
-
 <template id="practice-choose-patient-dialog-template">
     <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
         <div class="modal-dialog" role="document">
@@ -42,7 +34,7 @@
                     </div>
                     <div class="card mt-2">
                         <div class="card-body">
-                            <div class="row x-disp">
+                            <div class="row x-display">
                                 <div class="col-sm-3">患者番号</div>
                                 <div class="col-sm-9 x-patient-id"></div>
                                 <div class="col-sm-3">氏名</div>
@@ -62,15 +54,25 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary choose-patient-enter">入力</button>
-                    <button type="button" class="btn btn-secondary choose-patient-cancel">キャンセル</button>
+                    <button type="button" class="btn btn-primary x-enter">入力</button>
+                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
                 </div>
             </div>
         </div>
     </div>
+
 </template>
 
 <script>
+    function hyphenToCamel(s){
+        let ps = s.split(/-+/);
+        for(let i=1;i<ps.length;i++){
+            let p = ps[i];
+            ps[i] = p[0].toUpperCase() + p.substring(1);
+        }
+        return ps.join("");
+    }
+
     function parseElement(ele) {
         ele = $(ele);
         if (ele.length === 1) {
@@ -81,6 +83,7 @@
                         let name = cls.substring(2);
                         ele.removeClass(cls);
                         let m = {};
+                        name = hyphenToCamel(name);
                         m[name] = {ele: ele};
                         Object.assign(m[name], parseElement(ele.children()));
                         return m;
@@ -99,25 +102,20 @@
 
     function parseTemplate(templateId) {
         let ele = $($("template#" + templateId).html());
-        return [ele, parseElement(ele)];
+        return parseElement(ele);
     }
 
     (async function () {
         let ChoosePatientDialog = (await import("./practice/choose-patient-dialog.js")).ChoosePatientDialog;
-        let PatientSearch = (await import("./practice/patient-search.js")).PatientSearch;
-        let PatientDisplay = (await import("./practice/patient-display.js")).PatientDisplay;
 
         let choosePatientButtonElement = $(".practice-choose-patient-button");
-        let choosePatientDialogElement = $(".choose-patient-dialog");
 
         choosePatientButtonElement.on("click", async event => {
-            let [ele, map] = parseTemplate("practice-choose-patient-dialog-template");
+            let map = parseTemplate("practice-choose-patient-dialog-template");
             console.log(map);
-            let dialog = new ChoosePatientDialog({
-                dialog: ele
-            });
-            await dialog.open();
-            console.log("done");
+            let dialog = new ChoosePatientDialog(map, rest);
+            let patient = await dialog.open();
+            console.log(patient);
         });
     })();
 </script>

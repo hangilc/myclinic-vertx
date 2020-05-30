@@ -1,17 +1,18 @@
 import * as kanjidate from "../js/kanjidate.js";
 
 export class PatientSearch {
-    constructor(props) {
+    constructor(map, rest) {
         this.rest = rest;
-        this.form = props["form"];
-        this.textInput = props["input"];
-        this.resultSelect = props["select"];
+        this.form = map.form.ele;
+        this.textInput = map.form.input.ele;
+        this.resultSelect = map.select.ele;
         this.onSelectCallbacks = [];
 
         this.form.on("submit", async event => {
             event.preventDefault();
             let result = await this.rest.searchPatient(this.textInput.val());
             sortPatients(result);
+            console.log("result", result);
             let select = this.resultSelect;
             select.html("");
             for(let p of result){

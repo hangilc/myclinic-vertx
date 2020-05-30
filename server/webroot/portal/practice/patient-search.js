@@ -3,16 +3,15 @@ import * as kanjidate from "../js/kanjidate.js";
 export class PatientSearch {
     constructor(map, rest) {
         this.rest = rest;
-        this.form = map.form.ele;
-        this.textInput = map.form.input.ele;
-        this.resultSelect = map.select.ele;
+        this.form = map.form;
+        this.textInput = map.input;
+        this.resultSelect = map.select;
         this.onSelectCallbacks = [];
 
         this.form.on("submit", async event => {
             event.preventDefault();
             let result = await this.rest.searchPatient(this.textInput.val());
             sortPatients(result);
-            console.log("result", result);
             let select = this.resultSelect;
             select.html("");
             for(let p of result){

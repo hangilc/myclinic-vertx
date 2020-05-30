@@ -2,13 +2,13 @@ import * as kanjidate from "../js/kanjidate.js";
 
 export class PatientDisplay {
     constructor(map){
-        this.patientId = map.patientId.ele;
-        this.patientName = map.patientName.ele;
-        this.patientYomi = map.patientYomi.ele;
-        this.patientBirthday = map.patientBirthday.ele;
-        this.patientSex = map.patientSex.ele;
-        this.patientAddress = map.patientAddress.ele;
-        this.patientPhone = map.patientPhone.ele;
+        this.patientId = map.patientId;
+        this.patientName = map.patientName;
+        this.patientYomi = map.patientYomi;
+        this.patientBirthday = map.patientBirthday;
+        this.patientSex = map.patientSex;
+        this.patientAddress = map.patientAddress;
+        this.patientPhone = map.patientPhone;
     }
 
     setPatient(patient){

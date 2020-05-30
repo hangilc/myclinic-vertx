@@ -85,8 +85,11 @@
                         ele.removeClass(cls);
                         let m = {};
                         name = hyphenToCamel(name);
-                        m[name] = {ele: ele};
-                        Object.assign(m[name], parseElement(ele.children()));
+                        m[name] = ele;
+                        let sub = parseElement(ele.children());
+                        if( Object.keys(sub).length > 0 ){
+                            m[name + "_"] = sub;
+                        }
                         return m;
                     }
                 }
@@ -106,6 +109,18 @@
         return parseElement(ele);
     }
 
+    function flatten(map){
+        let result = {};
+        for(let key of Object.keys(map) ){
+            if( key.endsWith("_") ){
+                Object.assign(result, flatten(map[key]));
+            } else {
+                result[key] = map[key];
+            }
+        }
+        return result;
+    }
+
     (async function () {
         let ChoosePatientDialog = (await import("./practice/choose-patient-dialog.js")).ChoosePatientDialog;
 
@@ -113,10 +128,17 @@
 
         choosePatientButtonElement.on("click", async event => {
             let map = parseTemplate("practice-choose-patient-dialog-template");
-            console.log(map);
-            let dialog = new ChoosePatientDialog(map, rest);
-            let patient = await dialog.open();
-            console.log(patient);
+            let props = {
+                dialog: map.dialog,
+                registerEnter: map.dialog_.registerEnter,
+                enter: map.dialog_.enter,
+                cancel: map.dialog_.cancel,
+                search: flatten(map.dialog_.search_),
+                display: flatten(map.dialog_.display_)
+            }
+            let dialog = new ChoosePatientDialog(props, rest);
+            let result = await dialog.open();
+            console.log(result);
         });
     })();
 </script>

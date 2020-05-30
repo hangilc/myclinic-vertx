@@ -4,17 +4,42 @@ import { PatientDisplay } from "./patient-display.js";
 
 export class ChoosePatientDialog {
     constructor(map, rest){
-        let dialog = map.dialog;
-        this.dialog = dialog.ele;
-        this.search = new PatientSearch(dialog.search, rest);
-        this.display = new PatientDisplay(dialog.display);
-        this.enter = dialog.enter.ele;
-        this.cancel = dialog.cancel.ele;
-        this.theResult = {mode: "cancel", patient: null};
+        this.dialog = map.dialog;
+        this.search = new PatientSearch(map.search, rest);
+        this.display = new PatientDisplay(map.display);
+        this.registerEnter = map.registerEnter;
+        this.enter = map.enter;
+        this.cancel = map.cancel;
+        this.thePatient = null;
+        this.theResult = {
+            mode: "cancel",
+            patient: null
+        };
 
         this.dialog.on("shown.bs.modal", event => this.search.focus());
         this.search.onSelect(patient => {
             this.display.setPatient(patient);
+            this.thePatient = patient;
+        });
+        this.registerEnter.on("click", event => {
+            if( !this.thePatient ){
+                return;
+            }
+            this.theResult = {
+                mode: "register-enter",
+                patient: this.thePatient
+            };
+            this.dialog.modal("hide");
+        });
+        this.enter.on("click", event => {
+            if( !this.thePatient ){
+                return;
+            }
+            this.theResult = {
+                mode: "enter",
+                patient: this.thePatient
+            };
+            this.dialog.modal("hide");
         });
         this.cancel.on("click", event => {
             this.dialog.modal("hide");

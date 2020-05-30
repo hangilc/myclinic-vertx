@@ -22,6 +22,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <jackson.version>2.10.3</jackson.version>
         <vertx.version>3.9.0</vertx.version>
+        <junit.version>5.6.2</junit.version>
     </properties>
 
     <dependencyManagement>
@@ -81,6 +82,18 @@
                 <artifactId>mysql-connector-java</artifactId>
                 <version>8.0.19</version>
             </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-engine</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -92,6 +105,11 @@
                     <artifactId>exec-maven-plugin</artifactId>
                     <version>1.6.0</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.22.2</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
@@ -102,7 +120,6 @@
         <module>util</module>
         <module>consts</module>
         <module>db</module>
-        <module>db-test</module>
         <module>hotlinelog-event</module>
         <module>practicelog-event</module>
         <module>app-config</module>

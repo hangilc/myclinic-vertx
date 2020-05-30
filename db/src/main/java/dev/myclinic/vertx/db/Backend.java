@@ -47,6 +47,14 @@ public class Backend {
         this.hotlineLogger = new HotlineLogger(hotlineLogs::add);
     }
 
+    public List<PracticeLogDTO> getPracticeLogs(){
+        return practiceLogs;
+    }
+
+    public List<HotlineLogDTO> getHotlineLogs(){
+        return hotlineLogs;
+    }
+
     private static <S, T, U> Projector<U> biProjector(Projector<S> p1, Projector<T> p2, BiFunction<S, T, U> f) {
         return (rs, ctx) -> {
             S s = p1.project(rs, ctx);

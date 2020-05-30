@@ -10,7 +10,7 @@ export class ChoosePatientDialog {
         this.display = new PatientDisplay(dialog.display);
         this.enter = dialog.enter.ele;
         this.cancel = dialog.cancel.ele;
-        this.thePatient = null;
+        this.theResult = {mode: "cancel", patient: null};
 
         this.dialog.on("shown.bs.modal", event => this.search.focus());
         this.search.onSelect(patient => {
@@ -24,7 +24,7 @@ export class ChoosePatientDialog {
     async open(){
         return new Promise(resolve => {
             this.dialog.on("hidden.bs.modal", event => {
-                resolve(this.thePatient);
+                resolve(this.theResult);
             });
             this.dialog.modal("show");
         });

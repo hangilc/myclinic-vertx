@@ -5,8 +5,18 @@
     </div>
 </div>
 
-<div id="practice-patient-id">
-    <span class="x-patient-id"></span> <span class="x-name"></span>
+<div id="practice-patient-info" class="d-none mx-2">
+    <span class="x-patient-id"></span>
+    <span class="x-last-name"></span><span class="x-first-name"></span>
+    <span class="x-last-name-yomi"></span><span class="x-first-name-yomi"></span>
+    <span class="x-birthday"></span>
+    <span class="x-age"></span>
+    <span class="x-sex"></span>
+    <button type="button" class="x-detail-link btn btn-link">詳細</button>
+    <div class="x-detail d-none row">
+        <div class="col-sm-3">住所</div><div class="x-address col-sm-9"></div>
+        <div class="col-sm-3">電話番号</div><div class="x-phone col-sm-9"></div>
+    </v>
 </div>
 
 <div class="row practice-wrapper">
@@ -136,6 +146,7 @@
 
     (async function () {
         let ChoosePatientDialog = (await import("./practice/choose-patient-dialog.js")).ChoosePatientDialog;
+        let PatientDisplay = (await import("./practice/patient-display.js")).PatientDisplay;
 
         let choosePatientButtonElement = $(".practice-choose-patient-button");
 
@@ -166,8 +177,69 @@
             }
         });
 
+        class PatientInfo {
+            constructor(ele){
+                this.ele = ele;
+                let map = parseElement(ele);
+                this.detail = map.detail;
+                map.detailLink.on("click", event => this.toggleDetail());
+                this.display = new PatientDisplay(flatten(map), {
+                    formatter: {
+                        patientId: patientId => `[${patientId}]`,
+                        lastNameYomi: value => `（${value}`,
+                        firstNameYomi: value => `${value}）`,
+                        birthday: data => `${data.kanji}生`,
+                        age: value => `（${value}才）`,
+                        sex: data => `${data.kanji}性`
+                    }
+                });
+            }
+
+            setPatient(patient){
+                this.display.setPatient(patient);
+            }
+
+            show(){
+                this.ele.removeClass("d-none");
+            }
+
+            hide(){
+                this.ele.addClass("d-none");
+            }
+
+            showDetail(){
+                console.log("in showDetail");
+                console.log(this.detail.html());
+                this.detail.removeClass("d-none");
+            }
+
+            hideDetail(){
+                this.detail.addClass("d-none");
+            }
+
+            toggleDetail(){
+                if( this.detail.hasClass("d-none") ){
+                    console.log("showing detail");
+                    this.showDetail();
+                } else {
+                    this.hideDetail();
+                }
+            }
+        }
+
+        let patientInfo = new PatientInfo($("#practice-patient-info"));
+
         $("body").on("patientChanged", (event, param) => {
-            console.log("event", param);
+            let patient = param.patient;
+            if( patient ){
+                patientInfo.setPatient(patient);
+                patientInfo.hideDetail();
+                patientInfo.show();
+            } else {
+
+            }
         });
+
+
     })();
 </script>

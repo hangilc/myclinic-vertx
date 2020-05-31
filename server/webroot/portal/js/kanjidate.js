@@ -45,6 +45,15 @@ export function parseSqldate(sqldate){
     return {year, month, day};
 }
 
+export function seirekiToGengouData(year, month, day){
+    let sqldate = toSqldate(year, month, day);
+    for(let g of gengouList){
+        if( sqldate >= g.start ){
+            return [g, year - g.year + 1];
+        }
+    }
+}
+
 export function seirekiToGengou(year, month, day){
     let sqldate = toSqldate(year, month, day);
     for(let g of gengouList){
@@ -72,14 +81,29 @@ export function sqldateToKanji(sqldate, opts){
     return `${g}${n}年${d.month}月${d.day}日`;
 }
 
-export function sqldateToKanjiData(sqldate){
+let dayOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+let youbi = ["日", "月", "火", "水", "木", "金", "土"];
+
+export function sqldateToData(sqldate){
     let d = parseSqldate(sqldate);
-    let [g, n] = seirekiToGengou(d.year, d.month, d.day);
+    let [g, n] = seirekiToGengouData(d.year, d.month, d.day);
+    let date = new Date(d.year, d.month - 1, d.day);
+    let dayOfWeekIndex = date.getDay();
     return {
         gengou: g,
         nen: n,
         year: d.year,
         month: d.month,
-        day: d.day
+        day: d.day,
+        dayOfWeekIndex: dayOfWeekIndex,
+        dayOfWeek: dayOfWeek[dayOfWeekIndex],
+        youbi: youbi[dayOfWeekIndex],
+        kanji: `${g.name}${n}年${d.month}月${d.day}日`,
+        sqldate: sqldate
     };
+}
+
+export function calcAge(birthday){
+    birthday = moment(birthday);
+    return moment().diff(birthday, "years");
 }

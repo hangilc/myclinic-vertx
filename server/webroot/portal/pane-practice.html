@@ -5,6 +5,10 @@
     </div>
 </div>
 
+<div id="practice-patient-id">
+    <span class="x-patient-id"></span> <span class="x-name"></span>
+</div>
+
 <div class="row practice-wrapper">
     <div class="col-sm-9 practice-main">
         MAIN
@@ -38,17 +42,26 @@
                                 <div class="col-sm-3">患者番号</div>
                                 <div class="col-sm-9 x-patient-id"></div>
                                 <div class="col-sm-3">氏名</div>
-                                <div class="col-sm-9 x-patient-name"></div>
+                                <div class="col-sm-9">
+                                    <span class="x-last-name"></span><span
+                                        class="x-first-name"></span>
+                                </div>
                                 <div class="col-sm-3">よみ</div>
-                                <div class="col-sm-9 x-patient-yomi"></div>
+                                <div class="col-sm-9 x-yomi">
+                                    <span class="x-last-name-yomi"></span><span
+                                        class="x-first-name-yomi"></span>
+                                </div>
                                 <div class="col-sm-3">生年月日</div>
-                                <div class="col-sm-9 x-patient-birthday"></div>
+                                <div class="col-sm-9">
+                                    <span class="x-birthday"></span>
+                                    <span class="x-age"></span>
+                                </div>
                                 <div class="col-sm-3">性別</div>
-                                <div class="col-sm-9 x-patient-sex"></div>
+                                <div class="col-sm-9 x-sex"></div>
                                 <div class="col-sm-3">住所</div>
-                                <div class="col-sm-9 x-patient-address"></div>
+                                <div class="col-sm-9 x-address"></div>
                                 <div class="col-sm-3">電話</div>
-                                <div class="col-sm-9 x-patient-phone"></div>
+                                <div class="col-sm-9 x-phone"></div>
                             </div>
                         </div>
                     </div>
@@ -134,11 +147,27 @@
                 enter: map.dialog_.enter,
                 cancel: map.dialog_.cancel,
                 search: flatten(map.dialog_.search_),
-                display: flatten(map.dialog_.display_)
+                display: flatten(map.dialog_.display_),
+                displayOpts: {
+                    formatter: {
+                        birthday: data => data.kanji + "生",
+                        sex: data => data.kanji + "性",
+                        age: age => `（${age}才）`
+                    }
+                }
             }
             let dialog = new ChoosePatientDialog(props, rest);
             let result = await dialog.open();
-            console.log(result);
+            if( result.mode !== "cancel" ){
+                let patient = result.patient;
+                $("body").trigger("patientChanged", {patient: patient});
+                let visits = await rest.listWqueueFull(patient.patientId, 0);
+                console.log(visits);
+            }
+        });
+
+        $("body").on("patientChanged", (event, param) => {
+            console.log("event", param);
         });
     })();
 </script>

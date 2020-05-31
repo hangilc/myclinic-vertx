@@ -143,7 +143,7 @@
                 data["subtitle1.from.day"] = "";
                 setData(data);
             } else {
-                let wareki = kanjidate.sqldateToKanjiData(val);
+                let wareki = kanjidate.sqldateToData(val);
                 data["subtitle1.from.nen"] = wareki.nen;
                 data["subtitle1.from.month"] = wareki.month;
                 data["subtitle1.from.day"] = wareki.day;
@@ -160,7 +160,7 @@
                 data["subtitle1.upto.day"] = "";
                 setData(data);
             } else {
-                let wareki = kanjidate.sqldateToKanjiData(val);
+                let wareki = kanjidate.sqldateToData(val);
                 data["subtitle1.upto.nen"] = wareki.nen;
                 data["subtitle1.upto.month"] = wareki.month;
                 data["subtitle1.upto.day"] = wareki.day;
@@ -178,7 +178,7 @@
                 data["issue-date.day"] = "";
                 setData(data);
             } else {
-                let wareki = kanjidate.sqldateToKanjiData(val);
+                let wareki = kanjidate.sqldateToData(val);
                 data["issue-date.nen"] = wareki.nen;
                 data["issue-date.month"] = wareki.month;
                 data["issue-date.day"] = wareki.day;
@@ -212,7 +212,7 @@
             $("#houmon-kango-patient").html("").append(disp);
             let data = getData();
             data["shimei"] = `${patient.lastName}${patient.firstName}`;
-            let birthday = kanjidate.sqldateToKanjiData(patient.birthday);
+            let birthday = kanjidate.sqldateToData(patient.birthday);
             for (let key of ["birthday.gengou.meiji", "birthday.gengou.taishou",
                 "birthday.gengou.shouwa", "birthday.gengou.heisei"]) {
                 data[key] = false;

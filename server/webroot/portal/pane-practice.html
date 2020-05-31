@@ -87,8 +87,20 @@
     <div>
         <div class="x-title"></div>
         <div class="row">
-            <div class="x-left col-sm-6 rp-1"></div>
+            <div class="x-left col-sm-6 rp-1">
+                <button type="button" class="btn btn-link x-enter-text">[文章入力]</button>
+            </div>
             <div class="x-right col-sm-6 lp-1"></div>
+        </div>
+    </div>
+</template>
+
+<template id="practice-enter-text-template">
+    <div class="mt-2">
+        <textarea class="form-control x-textarea" rows="6"></textarea>
+        <div class="form-inline">
+            <button type="button" class="btn btn-link x-enter">入力</button>
+            <button type="button" class="btn btn-link x-cancel">キャンセル</button>
         </div>
     </div>
 </template>
@@ -148,6 +160,11 @@
             }
         }
         return result;
+    }
+
+    function replaceElement(prevElement, newElement) {
+        prevElement.after(newElement);
+        prevElement.detach();
     }
 
     (async function () {
@@ -243,10 +260,22 @@
         });
 
         class Record {
-            constructor(html, visit) {
-                this.ele = $(html);
-                let map = parseElement(this.ele);
+            constructor(ele, visit, enterTextFactory) {
+                this.ele = ele;
+                this.visit = visit;
+                this.enterTextFactory = enterTextFactory;
+                let map = flatten(parseElement(this.ele));
                 map.title.text(this.titleRep(visit.visit.visitedAt));
+                map.enterText.on("click", event => {
+                    let enterText = this.enterTextFactory.create();
+                    enterText.onEnter((event, text) => {
+                        console.log("enterText", text);
+                    });
+                    enterText.onCancel(event => {
+                        enterText.remove();
+                    });
+                    map.enterText.before(enterText.ele);
+                });
             }
 
             titleRep(sqldatetime){
@@ -261,12 +290,45 @@
             }
         }
 
+        class EnterText {
+            constructor(ele, map){
+                this.ele = ele;
+                this.map = map;
+                this.map.cancel.on("click", event => {
+                    ele.trigger("cancel");
+                });
+                this.map.enter.on("click", event => {
+                    this.ele.trigger("enter", this.map.textarea.val());
+                });
+            }
+
+            onEnter(cb){
+                this.ele.on("enter", cb);
+            }
+
+            onCancel(cb){
+                this.ele.on("cancel", cb);
+            }
+
+            remove(){
+                this.ele.remove();
+            }
+        }
+
+        class EnterTextFactory {
+            create(){
+                let ele = $($("#practice-enter-text-template").html());
+                return new EnterText(ele, flatten(parseElement(ele)));
+            }
+        }
+
         $("body").on("visitsChanged", (event, page) => {
             let html = $("template#practice-record-template").html();
             let wrapper = $("#practice-record-area");
             wrapper.html("");
+            let enterTextFactory = new EnterTextFactory();
             for(let visit of page.visits){
-                let rec = new Record(html, visit);
+                let rec = new Record($(html), visit, enterTextFactory);
                 wrapper.append(rec.ele);
             }
         });

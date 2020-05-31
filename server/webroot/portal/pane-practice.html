@@ -84,7 +84,13 @@
 </template>
 
 <template id="practice-record-template">
-    <div class="x-title"></div>
+    <div>
+        <div class="x-title"></div>
+        <div class="row">
+            <div class="x-left col-sm-6 rp-1"></div>
+            <div class="x-right col-sm-6 lp-1"></div>
+        </div>
+    </div>
 </template>
 
 <script>
@@ -240,7 +246,18 @@
             constructor(html, visit) {
                 this.ele = $(html);
                 let map = parseElement(this.ele);
-                map.title.text("診療");
+                map.title.text(this.titleRep(visit.visit.visitedAt));
+            }
+
+            titleRep(sqldatetime){
+                let data = kanjidate.sqldatetimeToData(sqldatetime);
+                let nen = (data.nen + "").padStart(2, "0");
+                let month = (data.month + "").padStart(2, "0");
+                let day = (data.day + "").padStart(2, "0");
+                let hour = (data.hour + "").padStart(2, "0");
+                let minute = (data.minute + "").padStart(2, "0");
+                let rep = `${data.gengou.name}${nen}年${month}月${day}日（${data.youbi}） ${hour}時${minute}分`;
+                return rep;
             }
         }
 
@@ -249,7 +266,6 @@
             let wrapper = $("#practice-record-area");
             wrapper.html("");
             for(let visit of page.visits){
-                console.log(visit);
                 let rec = new Record(html, visit);
                 wrapper.append(rec.ele);
             }

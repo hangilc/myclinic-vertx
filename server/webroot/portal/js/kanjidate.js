@@ -45,6 +45,13 @@ export function parseSqldate(sqldate){
     return {year, month, day};
 }
 
+export function parseSqltime(sqltime){
+    let hour = +sqltime.slice(0, 2);
+    let minute = +sqltime.slice(3, 5);
+    let second = +sqltime.slice(6, 8);
+    return {hour, minute, second};
+}
+
 export function seirekiToGengouData(year, month, day){
     let sqldate = toSqldate(year, month, day);
     for(let g of gengouList){
@@ -101,6 +108,13 @@ export function sqldateToData(sqldate){
         kanji: `${g.name}${n}年${d.month}月${d.day}日`,
         sqldate: sqldate
     };
+}
+
+export function sqldatetimeToData(sqldatetime){
+    let data = sqldateToData(sqldatetime.substring(0, 10));
+    Object.assign(data, parseSqltime(sqldatetime.substring(11)));
+    data.kanji += ` ${data.hour}時${data.minute}分${data.second}秒`
+    return data;
 }
 
 export function calcAge(birthday){

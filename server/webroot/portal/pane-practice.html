@@ -1,3 +1,4 @@
+<!--suppress ALL -->
 <div class="row">
     <h3 class="col-sm-2">診察</h3>
     <div class="col-sm-10">
@@ -14,19 +15,15 @@
     <span class="x-sex"></span>
     <button type="button" class="x-detail-link btn btn-link">詳細</button>
     <div class="x-detail d-none row">
-        <div class="col-sm-3">住所</div><div class="x-address col-sm-9"></div>
-        <div class="col-sm-3">電話番号</div><div class="x-phone col-sm-9"></div>
-    </v>
+        <div class="col-sm-3">住所</div>
+        <div class="x-address col-sm-9"></div>
+        <div class="col-sm-3">電話番号</div>
+        <div class="x-phone col-sm-9"></div>
+        </v>
+    </div>
 </div>
 
-<div class="row practice-wrapper">
-    <div class="col-sm-9 practice-main">
-        MAIN
-    </div>
-    <div class="col-sm-3 practice-side">
-        SIDE
-    </div>
-</div>
+<div id="practice-record-area"></div>
 
 <template id="practice-choose-patient-dialog-template">
     <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
@@ -84,13 +81,16 @@
             </div>
         </div>
     </div>
+</template>
 
+<template id="practice-record-template">
+    <div class="x-title"></div>
 </template>
 
 <script>
-    function hyphenToCamel(s){
+    function hyphenToCamel(s) {
         let ps = s.split(/-+/);
-        for(let i=1;i<ps.length;i++){
+        for (let i = 1; i < ps.length; i++) {
             let p = ps[i];
             ps[i] = p[0].toUpperCase() + p.substring(1);
         }
@@ -110,7 +110,7 @@
                         name = hyphenToCamel(name);
                         m[name] = ele;
                         let sub = parseElement(ele.children());
-                        if( Object.keys(sub).length > 0 ){
+                        if (Object.keys(sub).length > 0) {
                             m[name + "_"] = sub;
                         }
                         return m;
@@ -132,10 +132,10 @@
         return parseElement(ele);
     }
 
-    function flatten(map){
+    function flatten(map) {
         let result = {};
-        for(let key of Object.keys(map) ){
-            if( key.endsWith("_") ){
+        for (let key of Object.keys(map)) {
+            if (key.endsWith("_")) {
                 Object.assign(result, flatten(map[key]));
             } else {
                 result[key] = map[key];
@@ -169,16 +169,16 @@
             }
             let dialog = new ChoosePatientDialog(props, rest);
             let result = await dialog.open();
-            if( result.mode !== "cancel" ){
+            if (result.mode !== "cancel") {
                 let patient = result.patient;
-                $("body").trigger("patientChanged", {patient: patient});
-                let visits = await rest.listWqueueFull(patient.patientId, 0);
-                console.log(visits);
+                $("body").trigger("patientChanged", patient);
+                let visits = await rest.listVisit(patient.patientId, 0);
+                $("body").trigger("visitsChanged", visits);
             }
         });
 
         class PatientInfo {
-            constructor(ele){
+            constructor(ele) {
                 this.ele = ele;
                 let map = parseElement(ele);
                 this.detail = map.detail;
@@ -195,31 +195,28 @@
                 });
             }
 
-            setPatient(patient){
+            setPatient(patient) {
                 this.display.setPatient(patient);
             }
 
-            show(){
+            show() {
                 this.ele.removeClass("d-none");
             }
 
-            hide(){
+            hide() {
                 this.ele.addClass("d-none");
             }
 
-            showDetail(){
-                console.log("in showDetail");
-                console.log(this.detail.html());
+            showDetail() {
                 this.detail.removeClass("d-none");
             }
 
-            hideDetail(){
+            hideDetail() {
                 this.detail.addClass("d-none");
             }
 
-            toggleDetail(){
-                if( this.detail.hasClass("d-none") ){
-                    console.log("showing detail");
+            toggleDetail() {
+                if (this.detail.hasClass("d-none")) {
                     this.showDetail();
                 } else {
                     this.hideDetail();
@@ -229,14 +226,32 @@
 
         let patientInfo = new PatientInfo($("#practice-patient-info"));
 
-        $("body").on("patientChanged", (event, param) => {
-            let patient = param.patient;
-            if( patient ){
+        $("body").on("patientChanged", (event, patient) => {
+            if (patient) {
                 patientInfo.setPatient(patient);
                 patientInfo.hideDetail();
                 patientInfo.show();
             } else {
 
+            }
+        });
+
+        class Record {
+            constructor(html, visit) {
+                this.ele = $(html);
+                let map = parseElement(this.ele);
+                map.title.text("診療");
+            }
+        }
+
+        $("body").on("visitsChanged", (event, page) => {
+            let html = $("template#practice-record-template").html();
+            let wrapper = $("#practice-record-area");
+            wrapper.html("");
+            for(let visit of page.visits){
+                console.log(visit);
+                let rec = new Record(html, visit);
+                wrapper.append(rec.ele);
             }
         });
 

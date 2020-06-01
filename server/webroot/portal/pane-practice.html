@@ -91,7 +91,13 @@
                     <button type="button" class="btn btn-link x-enter-text">[文章入力]</button>
                 </div>
             </div>
-            <div class="x-right_ col-sm-6 lp-1"></div>
+            <div class="x-right_ col-sm-6 lp-1">
+                <div class="x-hoken-wrapper"></div>
+                <button type="button" class="btn btn-link x-shinryou-menu">[診療行為]</button>
+                <div class="x-shinryou-wrapper"></div>
+                <button type="button" class="btn btn-link x-shochi-menu">[処置]</button>
+                <div class="x-shochi-wrapper"></div>
+            </div>
         </div>
     </div>
 </template>
@@ -106,6 +112,16 @@
 
 <template id="practice-hoken-template">
     <div></div>
+</template>
+
+<template id="practice-enter-text-template">
+    <div class="mt-2">
+        <textarea class="form-control x-textarea" rows="6"></textarea>
+        <div class="form-inline">
+            <button type="button" class="btn btn-link x-enter">入力</button>
+            <button type="button" class="btn btn-link x-cancel">キャンセル</button>
+        </div>
+    </div>
 </template>
 
 <script>
@@ -169,6 +185,12 @@
         return html;
     }
 
+    function assert(value){
+        if( !value ){
+            throw new Error("assetion failed.");
+        }
+    }
+
     (async function () {
         let modChoosePatientDialog = await import("./practice/choose-patient-dialog.js");
         let modPatientDisplay = await import("./practice/patient-display.js");
@@ -227,14 +249,23 @@
             constructor(ele, map, titleFactory, textFactory, hokenFactory) {
                 this.ele = ele;
                 this.titleElement = map.title;
+                this.enterTextElement = map.left.enterText;
                 this.textWrapperElement = map.left.textWrapper;
                 this.rightElement = map.right_;
+                this.hokenWrapperElement = map.right.hokenWrapper;
+                this.shinryouMenuElement = map.right.shinryouMenu;
+                this.shinryouWrapperElement = map.right.shinryouWrapper;
+                this.shochiMenuElement = map.right.shochiMenu;
+                this.shochiWrapperElement = map.right.shochiWrapper;
                 this.titleFactory = titleFactory;
                 this.textFactory = textFactory;
                 this.hokenFactory = hokenFactory;
+                this.shinryouMenuElement.on("click", event => console.log("Shinryou Menu"));
+                this.shochiMenuElement.on("click", event => console.log("Shochi Menu"));
             }
 
-            async setData(visitFull){
+            async init(visitFull){
+                this.visitFull = visitFull;
                 let visit = visitFull.visit;
                 this.titleFactory.create(visit).appendTo(this.titleElement);
                 for (let text of visitFull.texts) {
@@ -242,7 +273,16 @@
                     comp.appendTo(this.textWrapperElement);
                 }
                 let hoken = await this.hokenFactory.create(visitFull.hoken);
-                hoken.appendTo(this.rightElement);
+                hoken.appendTo(this.hokenWrapperElement);
+            }
+
+            bindToEnterTextElement(enterTextFactory){
+                let visit = this.visitFull.visit;
+                this.enterTextElement.on("click", event => {
+                    let comp = enterTextFactory.create(visit.visitId);
+                    comp.onCancel(event => comp.remove());
+                    this.enterTextElement.before(comp.ele);
+                });
             }
 
             appendTo(element) {
@@ -261,7 +301,8 @@
                 let map = parseElement(ele);
                 let record = new Record(ele, map, new TitleFactory(), new TextFactory(),
                     new HokenFactory());
-                await record.setData(visitFull);
+                await record.init(visitFull);
+                record.bindToEnterTextElement(new EnterTextFactory());
                 return record;
             }
         }
@@ -347,6 +388,79 @@
                     hokenRep = "[保険なし]";
                 }
                 return new Hoken(ele, map, hoken, hokenRep);
+            }
+        }
+
+        class Component {
+            constructor(ele, map, rest){
+                this.ele = ele;
+                this.map = map;
+                this.rest = rest;
+            }
+
+            appendTo(element){
+                element.append(this.ele);
+            }
+
+            remove(){
+                this.ele.remove();
+            }
+
+            putBefore(element){
+                element.before(this.ele);
+            }
+        }
+
+        class EnterText extends Component {
+            constructor(ele, map, rest){
+                super(ele, map, rest);
+                this.textAreaElement = map.textarea;
+                this.enterElement = map.enter;
+                this.cancelElement = map.cancel;
+                assert(this.textAreaElement && this.enterElement && this.cancelElement);
+            }
+
+            setVisitId(visitId){
+                this.visitId = visitId;
+                this.enterElement.on("click", event => this.doEnter());
+                this.cancelElement.on("click", event => {
+                    this.ele.trigger("cancel");
+                });
+            }
+
+            async doEnter(){
+                assert(this.visitId > 0);
+                let content = this.textAreaElement.val();
+                let text = {
+                    content: content,
+                    visitId: this.visitId
+                };
+                let textId = await rest.enterText(text);
+                let entered = await rest.getText(textId);
+                this.ele.trigger("onEntered", entered);
+            }
+
+            onEntered(cb){
+                this.ele.on("onEntered", cb);
+            }
+
+            onCancel(cb){
+                this.ele.on("cancel", cb);
+            }
+        }
+
+        class EnterTextFactory {
+            constructor(){
+                this.html = getTemplateHtml("practice-enter-text-template");
+                this.rest = rest;
+            }
+
+            create(visitId){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new EnterText(ele, map, this.rest);
+                comp.setVisitId(visitId);
+                return comp;
             }
         }
 

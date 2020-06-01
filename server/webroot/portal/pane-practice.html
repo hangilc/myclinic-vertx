@@ -76,7 +76,6 @@
         <div class="x-address col-sm-9"></div>
         <div class="col-sm-3">電話番号</div>
         <div class="x-phone col-sm-9"></div>
-        </v>
     </div>
 </div>
 
@@ -105,6 +104,10 @@
     <div class="my-1"></div>
 </template>
 
+<template id="practice-hoken-template">
+    <div></div>
+</template>
+
 <script>
     function hyphenToCamel(s) {
         let ps = s.split(/-+/);
@@ -115,11 +118,11 @@
         return ps.join("");
     }
 
-    function probeXClass(e){
+    function probeXClass(e) {
         let attrClass = e.attr("class");
-        if( attrClass ){
-            for(let cls of attrClass.split(/\s+/)){
-                if( cls.startsWith("x-") ){
+        if (attrClass) {
+            for (let cls of attrClass.split(/\s+/)) {
+                if (cls.startsWith("x-")) {
                     e.removeClass(cls);
                     return hyphenToCamel(cls.substring(2));
                 }
@@ -132,7 +135,7 @@
         ele = $(ele);
         if (ele.length === 1) {
             let name = probeXClass(ele);
-            if( name ){
+            if (name) {
                 map[name] = ele;
                 if (name.endsWith("_")) {
                     name = name.substring(0, name.length - 1);
@@ -158,11 +161,19 @@
         return map;
     }
 
+    function getTemplateHtml(templateId) {
+        let html = $("template#" + templateId).html();
+        if (!html) {
+            console.error(`cannot find "${templateId}"`);
+        }
+        return html;
+    }
+
     (async function () {
         let modChoosePatientDialog = await import("./practice/choose-patient-dialog.js");
         let modPatientDisplay = await import("./practice/patient-display.js");
 
-        let choosePatientDialog = (function(){
+        let choosePatientDialog = (function () {
             let ele = $("#practice-choose-patient-dialog");
             let map = parseElement(ele);
             return new modChoosePatientDialog.ChoosePatientDialog(map, rest);
@@ -206,52 +217,62 @@
             }
         }
 
-        let patientInfo = (function(){
+        let patientInfo = (function () {
             let ele = $("#practice-patient-info");
             let map = parseElement(ele);
             return new PatientInfo(ele, map);
         })();
 
         class Record {
-            constructor(ele, map, visitFull, titleFactory, textFactory){
+            constructor(ele, map, titleFactory, textFactory, hokenFactory) {
                 this.ele = ele;
                 this.titleElement = map.title;
                 this.textWrapperElement = map.left.textWrapper;
-                this.visitFull = visitFull;
-                this.visit = visitFull.visit;
-                titleFactory.create(this.visit).appendTo(this.titleElement);
-                for(let text of visitFull.texts){
-                    let comp = textFactory.create(text);
-                    comp.appendTo(this.textWrapperElement);
-                }
+                this.rightElement = map.right_;
+                this.titleFactory = titleFactory;
+                this.textFactory = textFactory;
+                this.hokenFactory = hokenFactory;
             }
 
-            appendTo(element){
+            async setData(visitFull){
+                let visit = visitFull.visit;
+                this.titleFactory.create(visit).appendTo(this.titleElement);
+                for (let text of visitFull.texts) {
+                    let comp = this.textFactory.create(text);
+                    comp.appendTo(this.textWrapperElement);
+                }
+                let hoken = await this.hokenFactory.create(visitFull.hoken);
+                hoken.appendTo(this.rightElement);
+            }
+
+            appendTo(element) {
                 element.append(this.ele);
             }
         }
 
         class RecordFactory {
-            constructor(html){
-                this.html = html;
+            constructor() {
+                this.html = getTemplateHtml("practice-record-template");
+                this.rest = rest;
             }
 
-            create(visitFull){
+            async create(visitFull) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
-                return new Record(ele, map, visitFull, new TitleFactory(), new TextFactory());
+                let record = new Record(ele, map, new TitleFactory(), new TextFactory(),
+                    new HokenFactory());
+                await record.setData(visitFull);
+                return record;
             }
         }
 
-        let recordFactory = new RecordFactory($("template#practice-record-template").html());
-
         class Title {
-            constructor(ele, visit){
+            constructor(ele, visit) {
                 this.ele = ele;
                 this.ele.text(this.rep(visit.visitedAt));
             }
 
-            rep(sqldatetime){
+            rep(sqldatetime) {
                 let data = kanjidate.sqldatetimeToData(sqldatetime);
                 let nen = (data.nen + "").padStart(2, "0");
                 let month = (data.month + "").padStart(2, "0");
@@ -261,55 +282,85 @@
                 return `${data.gengou.name}${nen}年${month}月${day}日（${data.youbi}） ${hour}時${minute}分`;
             }
 
-            appendTo(element){
+            appendTo(element) {
                 element.append(this.ele);
             }
         }
 
         class TitleFactory {
-            constructor(){
+            constructor() {
                 this.html = $("template#practice-title-template").html();
             }
 
-            create(visit){
+            create(visit) {
                 let ele = $(this.html);
                 return new Title(ele, visit);
             }
         }
 
         class Text {
-            constructor(ele, rest, text){
+            constructor(ele, rest, text) {
                 this.ele = ele;
                 this.rest = rest;
                 this.ele.html(text.content.replace(/\r\n|\n|\r/g, "<br/>\n"));
             }
 
-            appendTo(element){
+            appendTo(element) {
                 element.append(this.ele);
             }
         }
 
         class TextFactory {
-            constructor(){
+            constructor() {
                 this.html = $("template#practice-text-template").html();
             }
 
-            create(text){
+            create(text) {
                 let ele = $(this.html);
                 return new Text(ele, rest, text);
             }
         }
 
+        class Hoken {
+            constructor(ele, map, hoken, hokenRep) {
+                this.ele = ele;
+                this.hoken = hoken;
+                this.ele.text(hokenRep);
+            }
+
+            appendTo(element) {
+                element.append(this.ele);
+            }
+        }
+
+        class HokenFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-hoken-template");
+                this.rest = rest;
+            }
+
+            async create(hoken) {
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let hokenRep = await this.rest.hokenRep(hoken);
+                if( hokenRep === "" ){
+                    hokenRep = "[保険なし]";
+                }
+                return new Hoken(ele, map, hoken, hokenRep);
+            }
+        }
+
         $("#practice-choose-patient-button").on("click", async event => {
             let result = await choosePatientDialog.open();
-            if( result.mode === "enter" || result.mode === "registerEnter"){
+            if (result.mode === "enter" || result.mode === "registerEnter") {
                 let recordWrapperElement = $("#practice-record-wrapper").html("");
                 let patient = result.patient;
                 patientInfo.setPatient(patient);
                 patientInfo.show();
                 let page = await rest.listVisit(patient.patientId, 0);
-                for(let visitFull of page.visits){
-                    let record = recordFactory.create(visitFull);
+                let recordFactory = new RecordFactory();
+                for (let visitFull of page.visits) {
+                    let record = await recordFactory.create(visitFull);
                     record.appendTo(recordWrapperElement);
                 }
             }

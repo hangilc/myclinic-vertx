@@ -115,6 +115,9 @@ class Rest extends Client {
         return await ajaxGet(this.url("/get-text"), {"text-id": textId});
     }
 
+    async hokenRep(hoken){
+        return await ajaxPost(this.url("/hoken-rep"), hoken);
+    }
 }
 
 class Integration extends Client {

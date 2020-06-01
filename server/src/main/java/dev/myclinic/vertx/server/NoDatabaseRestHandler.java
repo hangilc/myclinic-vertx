@@ -1,9 +1,11 @@
 package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.dto.HokenDTO;
 import dev.myclinic.vertx.mastermap.MasterMap;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.dto.StringResultDTO;
+import dev.myclinic.vertx.util.HokenUtil;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -240,6 +242,17 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("get-name-map-config-file-path", this::getNameMapConfigFilePath);
         noDatabaseFuncMap.put("get-powder-drug-config-file-path", this::getPowderDrugConfigFilePath);
         noDatabaseFuncMap.put("get-practice-config", this::getPracticeConfig);
+        noDatabaseFuncMap.put("hoken-rep", this::hokenRep);
+    }
+
+    private void hokenRep(RoutingContext ctx) {
+        try {
+            HokenDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), HokenDTO.class);
+            String rep = mapper.writeValueAsString(HokenUtil.hokenRep(hoken));
+            ctx.response().end(rep);
+        } catch(Exception e){
+            ctx.fail(e);
+        }
     }
 
     @Override

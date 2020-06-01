@@ -243,6 +243,11 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("get-powder-drug-config-file-path", this::getPowderDrugConfigFilePath);
         noDatabaseFuncMap.put("get-practice-config", this::getPracticeConfig);
         noDatabaseFuncMap.put("hoken-rep", this::hokenRep);
+        noDatabaseFuncMap.put("shohousen-drawer", this::shohousenDrawer);
+    }
+
+    private void shohousenDrawer(RoutingContext ctx) {
+
     }
 
     private void hokenRep(RoutingContext ctx) {

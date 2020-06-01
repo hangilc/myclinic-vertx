@@ -130,6 +130,7 @@
         <div class="form-inline">
             <button type="button" class="btn btn-link x-enter">入力</button>
             <button type="button" class="btn btn-link x-cancel">キャンセル</button>
+            <button type="button" class="btn btn-link x-delete">削除</button>
         </div>
     </div>
 </template>
@@ -397,6 +398,7 @@
                         let compUpdatedText = textFactory.create(updatedText);
                         compUpdatedText.replace(compEdit.ele);
                     });
+                    compEdit.onDeleted(event => compEdit.remove());
                     compEdit.replace(this.ele);
                 });
             }
@@ -505,6 +507,7 @@
                 this.textareaElement = map.textarea;
                 this.enterElement = map.enter;
                 this.cancelElement = map.cancel;
+                this.deleteElement = map.delete;
             }
 
             init(text){
@@ -512,6 +515,7 @@
                 this.textareaElement.val(text.content);
                 this.enterElement.on("click", event => this.doEnter());
                 this.cancelElement.on("click", event => this.ele.trigger("cancel"));
+                this.deleteElement.on("click", event => this.doDelete());
             }
 
             async doEnter(){
@@ -522,6 +526,19 @@
                 await this.rest.updateText(text);
                 let updatedText = await this.rest.getText(text.textId);
                 this.ele.trigger("updated", updatedText);
+            }
+
+            async doDelete(){
+                if( confirm("本当にこの文章を削除していいですか？") ){
+                    let textId = this.text.textId;
+                    assert(textId > 0);
+                    await this.rest.deleteText(textId);
+                    this.ele.trigger("deleted");
+                }
+            }
+
+            onDeleted(cb){
+                this.ele.on("deleted", cb);
             }
 
             onUpdated(cb){

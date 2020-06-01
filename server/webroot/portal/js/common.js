@@ -99,27 +99,35 @@ class Rest extends Client {
         return await ajaxGet(this.url("/search-patient"), {text: text});
     }
 
-    async startVisit(patientId){
+    async startVisit(patientId) {
         return await ajaxGet(this.url("/start-visit"), {"patient-id": patientId});
     }
 
-    async listVisit(patientId, page){
+    async listVisit(patientId, page) {
         return await ajaxGet(this.url("/list-visit-full2"), {"patient-id": patientId, page: page});
     }
 
-    async enterText(text){
+    async enterText(text) {
         return await ajaxPost(this.url("/enter-text"), text);
     }
 
-    async updateText(text){
+    async updateText(text) {
         return await ajaxPost(this.url("/update-text"), text);
     }
 
-    async getText(textId){
+    async getText(textId) {
         return await ajaxGet(this.url("/get-text"), {"text-id": textId});
     }
 
-    async hokenRep(hoken){
+    async deleteText(textId) {
+        return await this.post("/delete-text", {}, {
+            params: {
+                "text-id": textId
+            }
+        });
+    }
+
+    async hokenRep(hoken) {
         return await ajaxPost(this.url("/hoken-rep"), hoken);
     }
 }

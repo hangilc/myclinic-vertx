@@ -2,17 +2,74 @@
 <div class="row">
     <h3 class="col-sm-2">診察</h3>
     <div class="col-sm-10">
-        <button class="btn btn-secondary practice-choose-patient-button">患者選択</button>
+        <button class="btn btn-secondary" id="practice-choose-patient-button">患者選択</button>
+    </div>
+</div>
+
+<div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true"
+     id="practice-choose-patient-dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">患者選択</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="x-search_">
+                    <form class="form-inline x-form">
+                        <input class="form-control x-input"/>
+                        <button type="submit" class="form-control ml-2">検索</button>
+                    </form>
+                    <select class="form-control mt-2 form-control x-select" size="5"></select>
+                </div>
+                <div class="card mt-2">
+                    <div class="card-body">
+                        <div class="row x-display_">
+                            <div class="col-sm-3">患者番号</div>
+                            <div class="col-sm-9 x-patient-id"></div>
+                            <div class="col-sm-3">氏名</div>
+                            <div class="col-sm-9">
+                                <span class="x-last-name"></span><span
+                                    class="x-first-name"></span>
+                            </div>
+                            <div class="col-sm-3">よみ</div>
+                            <div class="col-sm-9 x-yomi">
+                                <span class="x-last-name-yomi"></span><span
+                                    class="x-first-name-yomi"></span>
+                            </div>
+                            <div class="col-sm-3">生年月日</div>
+                            <div class="col-sm-9">
+                                <span class="x-birthday"></span>
+                                <span class="x-age"></span>
+                            </div>
+                            <div class="col-sm-3">性別</div>
+                            <div class="col-sm-9 x-sex"></div>
+                            <div class="col-sm-3">住所</div>
+                            <div class="col-sm-9 x-address"></div>
+                            <div class="col-sm-3">電話</div>
+                            <div class="col-sm-9 x-phone"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary x-register-enter">受付・選択</button>
+                <button type="button" class="btn btn-primary x-enter">選択</button>
+                <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <div id="practice-patient-info" class="d-none mx-2">
-    <span class="x-patient-id"></span>
+    [<span class="x-patient-id"></span>]
     <span class="x-last-name"></span><span class="x-first-name"></span>
-    <span class="x-last-name-yomi"></span><span class="x-first-name-yomi"></span>
-    <span class="x-birthday"></span>
-    <span class="x-age"></span>
-    <span class="x-sex"></span>
+    (<span class="x-last-name-yomi"></span><span class="x-first-name-yomi"></span>)
+    <span class="x-birthday"></span>生
+    (<span class="x-age"></span>才)
+    <span class="x-sex"></span>性
     <button type="button" class="x-detail-link btn btn-link">詳細</button>
     <div class="x-detail d-none row">
         <div class="col-sm-3">住所</div>
@@ -23,86 +80,29 @@
     </div>
 </div>
 
-<div id="practice-record-area"></div>
-
-<template id="practice-choose-patient-dialog-template">
-    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">患者選択</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="x-search">
-                        <form class="form-inline x-form">
-                            <input class="form-control x-input"/>
-                            <button type="submit" class="form-control ml-2">検索</button>
-                        </form>
-                        <select class="form-control mt-2 form-control x-select" size="5"></select>
-                    </div>
-                    <div class="card mt-2">
-                        <div class="card-body">
-                            <div class="row x-display">
-                                <div class="col-sm-3">患者番号</div>
-                                <div class="col-sm-9 x-patient-id"></div>
-                                <div class="col-sm-3">氏名</div>
-                                <div class="col-sm-9">
-                                    <span class="x-last-name"></span><span
-                                        class="x-first-name"></span>
-                                </div>
-                                <div class="col-sm-3">よみ</div>
-                                <div class="col-sm-9 x-yomi">
-                                    <span class="x-last-name-yomi"></span><span
-                                        class="x-first-name-yomi"></span>
-                                </div>
-                                <div class="col-sm-3">生年月日</div>
-                                <div class="col-sm-9">
-                                    <span class="x-birthday"></span>
-                                    <span class="x-age"></span>
-                                </div>
-                                <div class="col-sm-3">性別</div>
-                                <div class="col-sm-9 x-sex"></div>
-                                <div class="col-sm-3">住所</div>
-                                <div class="col-sm-9 x-address"></div>
-                                <div class="col-sm-3">電話</div>
-                                <div class="col-sm-9 x-phone"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary x-register-enter">受付・選択</button>
-                    <button type="button" class="btn btn-primary x-enter">選択</button>
-                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
+<div id="practice-record-wrapper"></div>
 
 <template id="practice-record-template">
     <div>
         <div class="x-title"></div>
         <div class="row">
-            <div class="x-left col-sm-6 rp-1">
-                <button type="button" class="btn btn-link x-enter-text">[文章入力]</button>
+            <div class="x-left_ col-sm-6 rp-1">
+                <div class="x-text-wrapper"></div>
+                <div class="x-command-wrapper">
+                    <button type="button" class="btn btn-link x-enter-text">[文章入力]</button>
+                </div>
             </div>
-            <div class="x-right col-sm-6 lp-1"></div>
+            <div class="x-right_ col-sm-6 lp-1"></div>
         </div>
     </div>
 </template>
 
-<template id="practice-enter-text-template">
-    <div class="mt-2">
-        <textarea class="form-control x-textarea" rows="6"></textarea>
-        <div class="form-inline">
-            <button type="button" class="btn btn-link x-enter">入力</button>
-            <button type="button" class="btn btn-link x-cancel">キャンセル</button>
-        </div>
-    </div>
+<template id="practice-title-template">
+    <div class="mt-2"></div>
+</template>
+
+<template id="practice-text-template">
+    <div class="my-1"></div>
 </template>
 
 <script>
@@ -115,107 +115,66 @@
         return ps.join("");
     }
 
-    function parseElement(ele) {
-        ele = $(ele);
-        if (ele.length === 1) {
-            let attrClass = ele.attr("class");
-            if (attrClass) {
-                for (let cls of attrClass.split(/\s+/)) {
-                    if (cls.startsWith("x-")) {
-                        let name = cls.substring(2);
-                        ele.removeClass(cls);
-                        let m = {};
-                        name = hyphenToCamel(name);
-                        m[name] = ele;
-                        let sub = parseElement(ele.children());
-                        if (Object.keys(sub).length > 0) {
-                            m[name + "_"] = sub;
-                        }
-                        return m;
-                    }
+    function probeXClass(e){
+        let attrClass = e.attr("class");
+        if( attrClass ){
+            for(let cls of attrClass.split(/\s+/)){
+                if( cls.startsWith("x-") ){
+                    e.removeClass(cls);
+                    return hyphenToCamel(cls.substring(2));
                 }
             }
-            return parseElement(ele.children());
-        } else {
-            let map = {};
-            for (let e of ele.toArray()) {
-                Object.assign(map, parseElement(e));
-            }
-            return map;
         }
+        return null;
     }
 
-    function parseTemplate(templateId) {
-        let ele = $($("template#" + templateId).html());
-        return parseElement(ele);
-    }
-
-    function flatten(map) {
-        let result = {};
-        for (let key of Object.keys(map)) {
-            if (key.endsWith("_")) {
-                Object.assign(result, flatten(map[key]));
+    function parseElementIter(ele, map) {
+        ele = $(ele);
+        if (ele.length === 1) {
+            let name = probeXClass(ele);
+            if( name ){
+                map[name] = ele;
+                if (name.endsWith("_")) {
+                    name = name.substring(0, name.length - 1);
+                    let submap = {};
+                    parseElementIter(ele.children(), submap);
+                    map[name] = submap;
+                } else {
+                    parseElementIter(ele.children(), map);
+                }
             } else {
-                result[key] = map[key];
+                parseElementIter(ele.children(), map);
+            }
+        } else {
+            for (let e of ele.toArray()) {
+                parseElementIter(e, map);
             }
         }
-        return result;
     }
 
-    function replaceElement(prevElement, newElement) {
-        prevElement.after(newElement);
-        prevElement.detach();
+    function parseElement(ele) {
+        let map = {};
+        parseElementIter(ele, map);
+        return map;
     }
 
     (async function () {
-        let ChoosePatientDialog = (await import("./practice/choose-patient-dialog.js")).ChoosePatientDialog;
-        let PatientDisplay = (await import("./practice/patient-display.js")).PatientDisplay;
+        let modChoosePatientDialog = await import("./practice/choose-patient-dialog.js");
+        let modPatientDisplay = await import("./practice/patient-display.js");
 
-        let choosePatientButtonElement = $(".practice-choose-patient-button");
-
-        choosePatientButtonElement.on("click", async event => {
-            let map = parseTemplate("practice-choose-patient-dialog-template");
-            let props = {
-                dialog: map.dialog,
-                registerEnter: map.dialog_.registerEnter,
-                enter: map.dialog_.enter,
-                cancel: map.dialog_.cancel,
-                search: flatten(map.dialog_.search_),
-                display: flatten(map.dialog_.display_),
-                displayOpts: {
-                    formatter: {
-                        birthday: data => data.kanji + "生",
-                        sex: data => data.kanji + "性",
-                        age: age => `（${age}才）`
-                    }
-                }
-            }
-            let dialog = new ChoosePatientDialog(props, rest);
-            let result = await dialog.open();
-            if (result.mode !== "cancel") {
-                let patient = result.patient;
-                $("body").trigger("patientChanged", patient);
-                let visits = await rest.listVisit(patient.patientId, 0);
-                $("body").trigger("visitsChanged", visits);
-            }
-        });
+        let choosePatientDialog = (function(){
+            let ele = $("#practice-choose-patient-dialog");
+            let map = parseElement(ele);
+            return new modChoosePatientDialog.ChoosePatientDialog(map, rest);
+        })();
 
         class PatientInfo {
-            constructor(ele) {
+            constructor(ele, map) {
                 this.ele = ele;
-                let map = parseElement(ele);
+                this.map = map;
                 this.detail = map.detail;
                 map.detailLink.on("click", event => this.toggleDetail());
-                this.display = new PatientDisplay(flatten(map), {
-                    formatter: {
-                        patientId: patientId => `[${patientId}]`,
-                        lastNameYomi: value => `（${value}`,
-                        firstNameYomi: value => `${value}）`,
-                        birthday: data => `${data.kanji}生`,
-                        age: value => `（${value}才）`,
-                        sex: data => `${data.kanji}性`
-                    }
-                });
+                this.display = new modPatientDisplay.PatientDisplay(map);
             }
 
             setPatient(patient) {
@@ -247,92 +206,115 @@
             }
         }
 
-        let patientInfo = new PatientInfo($("#practice-patient-info"));
-
-        $("body").on("patientChanged", (event, patient) => {
-            if (patient) {
-                patientInfo.setPatient(patient);
-                patientInfo.hideDetail();
-                patientInfo.show();
-            } else {
-
-            }
-        });
+        let patientInfo = (function(){
+            let ele = $("#practice-patient-info");
+            let map = parseElement(ele);
+            return new PatientInfo(ele, map);
+        })();
 
         class Record {
-            constructor(ele, visit, enterTextFactory) {
+            constructor(ele, map, visitFull, titleFactory, textFactory){
                 this.ele = ele;
-                this.visit = visit;
-                this.enterTextFactory = enterTextFactory;
-                let map = flatten(parseElement(this.ele));
-                map.title.text(this.titleRep(visit.visit.visitedAt));
-                map.enterText.on("click", event => {
-                    let enterText = this.enterTextFactory.create();
-                    enterText.onEnter((event, text) => {
-                        console.log("enterText", text);
-                    });
-                    enterText.onCancel(event => {
-                        enterText.remove();
-                    });
-                    map.enterText.before(enterText.ele);
-                });
+                this.titleElement = map.title;
+                this.textWrapperElement = map.left.textWrapper;
+                this.visitFull = visitFull;
+                this.visit = visitFull.visit;
+                titleFactory.create(this.visit).appendTo(this.titleElement);
+                for(let text of visitFull.texts){
+                    let comp = textFactory.create(text);
+                    comp.appendTo(this.textWrapperElement);
+                }
             }
 
-            titleRep(sqldatetime){
+            appendTo(element){
+                element.append(this.ele);
+            }
+        }
+
+        class RecordFactory {
+            constructor(html){
+                this.html = html;
+            }
+
+            create(visitFull){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                return new Record(ele, map, visitFull, new TitleFactory(), new TextFactory());
+            }
+        }
+
+        let recordFactory = new RecordFactory($("template#practice-record-template").html());
+
+        class Title {
+            constructor(ele, visit){
+                this.ele = ele;
+                this.ele.text(this.rep(visit.visitedAt));
+            }
+
+            rep(sqldatetime){
                 let data = kanjidate.sqldatetimeToData(sqldatetime);
                 let nen = (data.nen + "").padStart(2, "0");
                 let month = (data.month + "").padStart(2, "0");
                 let day = (data.day + "").padStart(2, "0");
                 let hour = (data.hour + "").padStart(2, "0");
                 let minute = (data.minute + "").padStart(2, "0");
-                let rep = `${data.gengou.name}${nen}年${month}月${day}日（${data.youbi}） ${hour}時${minute}分`;
-                return rep;
+                return `${data.gengou.name}${nen}年${month}月${day}日（${data.youbi}） ${hour}時${minute}分`;
+            }
+
+            appendTo(element){
+                element.append(this.ele);
             }
         }
 
-        class EnterText {
-            constructor(ele, map){
+        class TitleFactory {
+            constructor(){
+                this.html = $("template#practice-title-template").html();
+            }
+
+            create(visit){
+                let ele = $(this.html);
+                return new Title(ele, visit);
+            }
+        }
+
+        class Text {
+            constructor(ele, rest, text){
                 this.ele = ele;
-                this.map = map;
-                this.map.cancel.on("click", event => {
-                    ele.trigger("cancel");
-                });
-                this.map.enter.on("click", event => {
-                    this.ele.trigger("enter", this.map.textarea.val());
-                });
+                this.rest = rest;
+                this.ele.html(text.content.replace(/\r\n|\n|\r/g, "<br/>\n"));
             }
 
-            onEnter(cb){
-                this.ele.on("enter", cb);
-            }
-
-            onCancel(cb){
-                this.ele.on("cancel", cb);
-            }
-
-            remove(){
-                this.ele.remove();
+            appendTo(element){
+                element.append(this.ele);
             }
         }
 
-        class EnterTextFactory {
-            create(){
-                let ele = $($("#practice-enter-text-template").html());
-                return new EnterText(ele, flatten(parseElement(ele)));
+        class TextFactory {
+            constructor(){
+                this.html = $("template#practice-text-template").html();
+            }
+
+            create(text){
+                let ele = $(this.html);
+                return new Text(ele, rest, text);
             }
         }
 
-        $("body").on("visitsChanged", (event, page) => {
-            let html = $("template#practice-record-template").html();
-            let wrapper = $("#practice-record-area");
-            wrapper.html("");
-            let enterTextFactory = new EnterTextFactory();
-            for(let visit of page.visits){
-                let rec = new Record($(html), visit, enterTextFactory);
-                wrapper.append(rec.ele);
+        $("#practice-choose-patient-button").on("click", async event => {
+            let result = await choosePatientDialog.open();
+            if( result.mode === "enter" || result.mode === "registerEnter"){
+                let recordWrapperElement = $("#practice-record-wrapper").html("");
+                let patient = result.patient;
+                patientInfo.setPatient(patient);
+                patientInfo.show();
+                let page = await rest.listVisit(patient.patientId, 0);
+                for(let visitFull of page.visits){
+                    let record = recordFactory.create(visitFull);
+                    record.appendTo(recordWrapperElement);
+                }
             }
         });
 
-
     })();
+
 </script>

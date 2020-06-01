@@ -107,6 +107,14 @@ class Rest extends Client {
         return await ajaxGet(this.url("/list-visit-full2"), {"patient-id": patientId, page: page});
     }
 
+    async enterText(text){
+        return await ajaxPost(this.url("/enter-text"), text);
+    }
+
+    async getText(textId){
+        return await ajaxGet(this.url("/get-text"), {"text-id": textId});
+    }
+
 }
 
 class Integration extends Client {

@@ -106,12 +106,12 @@
     <div class="mt-2"></div>
 </template>
 
-<template id="practice-text-template">
-    <div class="my-1"></div>
-</template>
-
 <template id="practice-hoken-template">
     <div></div>
+</template>
+
+<template id="practice-text-template">
+    <div class="my-1"></div>
 </template>
 
 <template id="practice-enter-text-template">
@@ -196,8 +196,8 @@
         return html;
     }
 
-    function assert(value){
-        if( !value ){
+    function assert(value) {
+        if (!value) {
             throw new Error("assetion failed.");
         }
     }
@@ -275,7 +275,7 @@
                 this.shochiMenuElement.on("click", event => console.log("Shochi Menu"));
             }
 
-            async init(visitFull){
+            async init(visitFull) {
                 this.visitFull = visitFull;
                 let visit = visitFull.visit;
                 this.titleFactory.create(visit).appendTo(this.titleElement);
@@ -287,7 +287,7 @@
                 hoken.appendTo(this.hokenWrapperElement);
             }
 
-            bindToEnterTextElement(enterTextFactory){
+            bindToEnterTextElement(enterTextFactory) {
                 let visit = this.visitFull.visit;
                 this.enterTextElement.on("click", event => {
                     let comp = enterTextFactory.create(visit.visitId);
@@ -357,25 +357,25 @@
         }
 
         class Component {
-            constructor(ele, map, rest){
+            constructor(ele, map, rest) {
                 this.ele = ele;
                 this.map = map;
                 this.rest = rest;
             }
 
-            appendTo(element){
+            appendTo(element) {
                 element.append(this.ele);
             }
 
-            remove(){
+            remove() {
                 this.ele.remove();
             }
 
-            putBefore(element){
+            putBefore(element) {
                 element.before(this.ele);
             }
 
-            replace(element){
+            replace(element) {
                 element.after(this.ele);
                 element.detach();
             }
@@ -386,7 +386,7 @@
                 super(ele, map, rest);
             }
 
-            init(text){
+            init(text) {
                 this.ele.html(text.content.replace(/\r\n|\n|\r/g, "<br/>\n"));
                 let self = this;
                 this.ele.on("click", event => {
@@ -441,7 +441,7 @@
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let hokenRep = await this.rest.hokenRep(hoken);
-                if( hokenRep === "" ){
+                if (hokenRep === "") {
                     hokenRep = "[保険なし]";
                 }
                 return new Hoken(ele, map, hoken, hokenRep);
@@ -449,7 +449,7 @@
         }
 
         class EnterText extends Component {
-            constructor(ele, map, rest){
+            constructor(ele, map, rest) {
                 super(ele, map, rest);
                 this.textAreaElement = map.textarea;
                 this.enterElement = map.enter;
@@ -457,7 +457,7 @@
                 assert(this.textAreaElement && this.enterElement && this.cancelElement);
             }
 
-            setVisitId(visitId){
+            setVisitId(visitId) {
                 this.visitId = visitId;
                 this.enterElement.on("click", event => this.doEnter());
                 this.cancelElement.on("click", event => {
@@ -465,7 +465,7 @@
                 });
             }
 
-            async doEnter(){
+            async doEnter() {
                 assert(this.visitId > 0);
                 let content = this.textAreaElement.val();
                 let text = {
@@ -477,22 +477,22 @@
                 this.ele.trigger("onEntered", entered);
             }
 
-            onEntered(cb){
+            onEntered(cb) {
                 this.ele.on("onEntered", cb);
             }
 
-            onCancel(cb){
+            onCancel(cb) {
                 this.ele.on("cancel", cb);
             }
         }
 
         class EnterTextFactory {
-            constructor(){
+            constructor() {
                 this.html = getTemplateHtml("practice-enter-text-template");
                 this.rest = rest;
             }
 
-            create(visitId){
+            create(visitId) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new EnterText(ele, map, this.rest);
@@ -502,7 +502,7 @@
         }
 
         class EditText extends Component {
-            constructor(ele, map, rest){
+            constructor(ele, map, rest) {
                 super(ele, map, rest);
                 this.textareaElement = map.textarea;
                 this.enterElement = map.enter;
@@ -510,7 +510,7 @@
                 this.deleteElement = map.delete;
             }
 
-            init(text){
+            init(text) {
                 this.text = text;
                 this.textareaElement.val(text.content);
                 this.enterElement.on("click", event => this.doEnter());
@@ -518,7 +518,7 @@
                 this.deleteElement.on("click", event => this.doDelete());
             }
 
-            async doEnter(){
+            async doEnter() {
                 let content = this.textareaElement.val();
                 let text = Object.assign({}, this.text, {content: content});
                 assert(text.textId > 0);
@@ -528,8 +528,8 @@
                 this.ele.trigger("updated", updatedText);
             }
 
-            async doDelete(){
-                if( confirm("本当にこの文章を削除していいですか？") ){
+            async doDelete() {
+                if (confirm("本当にこの文章を削除していいですか？")) {
                     let textId = this.text.textId;
                     assert(textId > 0);
                     await this.rest.deleteText(textId);
@@ -537,15 +537,15 @@
                 }
             }
 
-            onDeleted(cb){
+            onDeleted(cb) {
                 this.ele.on("deleted", cb);
             }
 
-            onUpdated(cb){
+            onUpdated(cb) {
                 this.ele.on("updated", cb);
             }
 
-            onCancel(cb){
+            onCancel(cb) {
                 this.ele.on("cancel", cb);
             }
         }
@@ -556,7 +556,7 @@
                 this.rest = rest;
             }
 
-            create(text){
+            create(text) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new EditText(ele, map, this.rest);

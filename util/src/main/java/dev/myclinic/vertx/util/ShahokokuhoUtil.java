@@ -42,4 +42,9 @@ public class ShahokokuhoUtil {
 			default: return "不明";
 		}
 	}
+
+	public static String hokenshaBangouRep(int hokenshaBangou){
+		return String.format("%08d", hokenshaBangou);
+	}
+
 }

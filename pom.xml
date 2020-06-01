@@ -148,6 +148,7 @@
         <module>meisai</module>
         <module>houkatsu-kensa</module>
         <module>drawer</module>
+        <module>shohousen-drawer</module>
     </modules>
 
 </project>

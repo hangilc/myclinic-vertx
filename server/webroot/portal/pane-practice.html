@@ -281,6 +281,12 @@
                 this.enterTextElement.on("click", event => {
                     let comp = enterTextFactory.create(visit.visitId);
                     comp.onCancel(event => comp.remove());
+                    comp.onEntered((event, text) => {
+                        let factory = new TextFactory();
+                        let newComp = factory.create(text);
+                        newComp.appendTo(this.textWrapperElement);
+                        comp.remove();
+                    });
                     this.enterTextElement.before(comp.ele);
                 });
             }

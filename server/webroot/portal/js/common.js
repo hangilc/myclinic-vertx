@@ -111,6 +111,10 @@ class Rest extends Client {
         return await ajaxPost(this.url("/enter-text"), text);
     }
 
+    async updateText(text){
+        return await ajaxPost(this.url("/update-text"), text);
+    }
+
     async getText(textId){
         return await ajaxGet(this.url("/get-text"), {"text-id": textId});
     }

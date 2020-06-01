@@ -124,6 +124,16 @@
     </div>
 </template>
 
+<template id="practice-edit-text-template">
+    <div class="mt-2">
+        <textarea class="form-control x-textarea" rows="6"></textarea>
+        <div class="form-inline">
+            <button type="button" class="btn btn-link x-enter">入力</button>
+            <button type="button" class="btn btn-link x-cancel">キャンセル</button>
+        </div>
+    </div>
+</template>
+
 <script>
     function hyphenToCamel(s) {
         let ps = s.split(/-+/);
@@ -345,26 +355,65 @@
             }
         }
 
-        class Text {
-            constructor(ele, rest, text) {
+        class Component {
+            constructor(ele, map, rest){
                 this.ele = ele;
+                this.map = map;
                 this.rest = rest;
-                this.ele.html(text.content.replace(/\r\n|\n|\r/g, "<br/>\n"));
             }
 
-            appendTo(element) {
+            appendTo(element){
                 element.append(this.ele);
+            }
+
+            remove(){
+                this.ele.remove();
+            }
+
+            putBefore(element){
+                element.before(this.ele);
+            }
+
+            replace(element){
+                element.after(this.ele);
+                element.detach();
+            }
+        }
+
+        class Text extends Component {
+            constructor(ele, map, rest) {
+                super(ele, map, rest);
+            }
+
+            init(text){
+                this.ele.html(text.content.replace(/\r\n|\n|\r/g, "<br/>\n"));
+                let self = this;
+                this.ele.on("click", event => {
+                    let editTextFactory = new EditTextFactory();
+                    let compEdit = editTextFactory.create(text);
+                    compEdit.onCancel(event => self.replace(compEdit.ele));
+                    compEdit.onUpdated((event, updatedText) => {
+                        let textFactory = new TextFactory();
+                        let compUpdatedText = textFactory.create(updatedText);
+                        compUpdatedText.replace(compEdit.ele);
+                    });
+                    compEdit.replace(this.ele);
+                });
             }
         }
 
         class TextFactory {
             constructor() {
                 this.html = $("template#practice-text-template").html();
+                this.rest = rest;
             }
 
             create(text) {
                 let ele = $(this.html);
-                return new Text(ele, rest, text);
+                let map = parseElement(ele);
+                let comp = new Text(ele, map, this.rest);
+                comp.init(text);
+                return comp;
             }
         }
 
@@ -394,26 +443,6 @@
                     hokenRep = "[保険なし]";
                 }
                 return new Hoken(ele, map, hoken, hokenRep);
-            }
-        }
-
-        class Component {
-            constructor(ele, map, rest){
-                this.ele = ele;
-                this.map = map;
-                this.rest = rest;
-            }
-
-            appendTo(element){
-                element.append(this.ele);
-            }
-
-            remove(){
-                this.ele.remove();
-            }
-
-            putBefore(element){
-                element.before(this.ele);
             }
         }
 
@@ -466,6 +495,55 @@
                 let map = parseElement(ele);
                 let comp = new EnterText(ele, map, this.rest);
                 comp.setVisitId(visitId);
+                return comp;
+            }
+        }
+
+        class EditText extends Component {
+            constructor(ele, map, rest){
+                super(ele, map, rest);
+                this.textareaElement = map.textarea;
+                this.enterElement = map.enter;
+                this.cancelElement = map.cancel;
+            }
+
+            init(text){
+                this.text = text;
+                this.textareaElement.val(text.content);
+                this.enterElement.on("click", event => this.doEnter());
+                this.cancelElement.on("click", event => this.ele.trigger("cancel"));
+            }
+
+            async doEnter(){
+                let content = this.textareaElement.val();
+                let text = Object.assign({}, this.text, {content: content});
+                assert(text.textId > 0);
+                assert(text.visitId > 0);
+                await this.rest.updateText(text);
+                let updatedText = await this.rest.getText(text.textId);
+                this.ele.trigger("updated", updatedText);
+            }
+
+            onUpdated(cb){
+                this.ele.on("updated", cb);
+            }
+
+            onCancel(cb){
+                this.ele.on("cancel", cb);
+            }
+        }
+
+        class EditTextFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-edit-text-template");
+                this.rest = rest;
+            }
+
+            create(text){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new EditText(ele, map, this.rest);
+                comp.init(text);
                 return comp;
             }
         }

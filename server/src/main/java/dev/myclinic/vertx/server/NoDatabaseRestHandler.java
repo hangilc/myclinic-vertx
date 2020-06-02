@@ -1,7 +1,10 @@
 package dev.myclinic.vertx.server;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.drawer.Op;
+import dev.myclinic.vertx.drawer.printer.DrawerPrinter;
+import dev.myclinic.vertx.dto.CalcFutanWariRequestDTO;
 import dev.myclinic.vertx.dto.HokenDTO;
 import dev.myclinic.vertx.dto.ShohousenRequestDTO;
 import dev.myclinic.vertx.mastermap.MasterMap;
@@ -249,6 +252,54 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("get-practice-config", this::getPracticeConfig);
         noDatabaseFuncMap.put("hoken-rep", this::hokenRep);
         noDatabaseFuncMap.put("shohousen-drawer", this::shohousenDrawer);
+        noDatabaseFuncMap.put("calc-rcpt-age", this::calcRcptAge);
+        noDatabaseFuncMap.put("calc-futan-wari", this::calcFutanWari);
+        noDatabaseFuncMap.put("print-drawer", this::printDrawer);
+    }
+
+    private void printDrawer(RoutingContext ctx) {
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                byte[] bytes = ctx.getBody().getBytes();
+                List<List<Op>> pages = mapper.readValue(bytes, new TypeReference<>(){});
+                DrawerPrinter printer = new DrawerPrinter();
+                printer.printPages(pages);
+                promise.complete("true");
+            } catch(Exception e){
+                promise.fail(e);
+            }
+        }, ar -> {
+            if( ar.succeeded() ){
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
+    }
+
+    private void calcRcptAge(RoutingContext ctx) {
+        try {
+            String birthdayArg = ctx.request().getParam("birthday");
+            String atArg = ctx.request().getParam("at");
+            LocalDate birthday = LocalDate.parse(birthdayArg);
+            LocalDate at = LocalDate.parse(atArg);
+            int age = HokenUtil.calcRcptAge(birthday.getYear(), birthday.getMonthValue(),
+                    birthday.getDayOfMonth(), at.getYear(), at.getMonthValue());
+            ctx.response().end(String.format("%d", age));
+        } catch(Exception e){
+            ctx.fail(e);
+        }
+    }
+
+    private void calcFutanWari(RoutingContext ctx) {
+        try {
+            byte[] bytes = ctx.getBody().getBytes();
+            CalcFutanWariRequestDTO req = mapper.readValue(bytes, CalcFutanWariRequestDTO.class);
+            int futanWari = HokenUtil.calcFutanWari(req.hoken, req.rcptAge);
+            ctx.response().end(String.format("%d", futanWari));
+        } catch(Exception e){
+            ctx.fail(e);
+        }
     }
 
     private void shohousenDrawer(RoutingContext ctx) {

@@ -127,8 +127,36 @@ class Rest extends Client {
         });
     }
 
+    async getHoken(visitId){
+        return await this.get("/get-hoken", {"visit-id": visitId});
+    }
+
     async hokenRep(hoken) {
         return await ajaxPost(this.url("/hoken-rep"), hoken);
+    }
+
+    async getVisit(visitId){
+        return await this.get("/get-visit", {"visit-id": visitId});
+    }
+
+    async getPatient(patientId){
+        return await this.get("/get-patient", {"patient-id": patientId});
+    }
+
+    async calcRcptAge(birthday, at){
+        return await this.get("/calc-rcpt-age", {"birthday": birthday, "at": at});
+    }
+
+    async calcFutanWari(hoken, rcptAge){
+        let req = {
+            hoken: hoken,
+            rcptAge: rcptAge
+        };
+        return await this.post("/calc-futan-wari", req);
+    }
+
+    async printDrawer(pages){
+        return await this.post("/print-drawer", pages);
     }
 
     async shohousenDrawer(shohousenRequest){

@@ -140,7 +140,7 @@
 
 <template id="practice-shohousen-preview-dialog-template">
     <div class="modal" tabindex="-1" role="dialog" data-backdrop="true">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">処方箋</h5>
@@ -149,7 +149,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="x-disp" style="width:148mm;height:210mm;border:1px solid black"></div>
+                    <div class="x-disp" style="width:148mm;height:210mm"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary x-print">印刷</button>
@@ -551,7 +551,15 @@
             }
 
             async doShohousen(){
+                let visit = await this.rest.getVisit(this.text.visitId);
                 let req = {};
+                req.clinicInfo = await this.rest.getClinicInfo();
+                req.hoken = await this.rest.getHoken(this.text.visitId);
+                req.patient = await this.rest.getPatient(visit.patientId);
+                let rcptAge = await this.rest.calcRcptAge(req.patient.birthday,
+                    visit.visitedAt.substring(0, 10));
+                req.futanWari = await this.rest.calcFutanWari(req.hoken, rcptAge);
+                req.drugs = this.text.content;
                 let ops = await this.rest.shohousenDrawer(req);
                 this.ele.trigger("cancel");
                 let result = await shohousenPreviewController.open(ops);
@@ -624,9 +632,15 @@
                 let map = parseElement(ele);
                 let printElement = map.print;
                 let closeElement = map.close;
-                let svg = modDrawerSvg.drawerToSvg(ops, {width: "148mm", height: "210mm", viewBox: "0 0 148 210"});
+                let svg = modDrawerSvg.drawerToSvg(ops,
+                    {width: "148mm", height: "210mm", viewBox: "0 0 148 210"});
                 map.disp.append(svg);
                 return new Promise(resolve => {
+                    printElement.on("click", async event => {
+                        await this.rest.printDrawer([ops]);
+                        ele.modal("hide");
+                        resolve(true);
+                    });
                     closeElement.on("click", event => {
                         ele.modal("hide");
                         resolve(null);

@@ -138,6 +138,28 @@
     </div>
 </template>
 
+<template id="practice-shohousen-preview-dialog-template">
+    <div class="modal" tabindex="-1" role="dialog" data-backdrop="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">処方箋</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="x-disp" style="width:148mm;height:210mm;border:1px solid black"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary x-print">印刷</button>
+                    <button type="button" class="btn btn-secondary x-close">閉じる</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
 <script>
     function hyphenToCamel(s) {
         let ps = s.split(/-+/);
@@ -208,6 +230,7 @@
     (async function () {
         let modChoosePatientDialog = await import("./practice/choose-patient-dialog.js");
         let modPatientDisplay = await import("./practice/patient-display.js");
+        let modDrawerSvg = await import("./js/drawer-svg.js");
 
         let choosePatientDialog = (function () {
             let ele = $("#practice-choose-patient-dialog");
@@ -530,6 +553,9 @@
             async doShohousen(){
                 let req = {};
                 let ops = await this.rest.shohousenDrawer(req);
+                this.ele.trigger("cancel");
+                let result = await shohousenPreviewController.open(ops);
+                console.log(result);
             }
 
             doShohousenFax(){
@@ -586,6 +612,34 @@
                 return comp;
             }
         }
+
+        class ShohousenPreviewController {
+            constructor(html, rest){
+                this.html = html;
+                this.rest = rest;
+            }
+
+            async open(ops){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let printElement = map.print;
+                let closeElement = map.close;
+                let svg = modDrawerSvg.drawerToSvg(ops, {width: "148mm", height: "210mm", viewBox: "0 0 148 210"});
+                map.disp.append(svg);
+                return new Promise(resolve => {
+                    closeElement.on("click", event => {
+                        ele.modal("hide");
+                        resolve(null);
+                    });
+                    ele.modal("show");
+                });
+            }
+        }
+
+        let shohousenPreviewController = new ShohousenPreviewController(
+            getTemplateHtml("practice-shohousen-preview-dialog-template"),
+            rest
+        );
 
         $("#practice-choose-patient-button").on("click", async event => {
             let result = await choosePatientDialog.open();

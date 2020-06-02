@@ -1,30 +1,17 @@
-"use strict";
-
-// TODO: implement text_vertically_justified
-
-(function(exports){
-
-exports.drawerToSvg = function(ops, options){
+export function drawerToSvg(ops, options){
     options = options || {};
 
-    // var attr = {};
-    // ['width', 'height'].forEach(function(key){
-    //     if( key in options ){
-    //         attr[key] = options[key];
-    //     }
-    // })
+    let ns = "http://www.w3.org/2000/svg";
+    let pen_color = "rgb(0,0,0)";
+    let pen_width = "1px";
+    let pen_dict = {};
+    let font_name, font_size, font_weight, font_italic;
+    let font_dict = {};
+    let text_color = "rgb(0,0,0)";
+    let i, n, op;
+    let curr_x, curr_y;
 
-    var ns = "http://www.w3.org/2000/svg";
-    var pen_color = "rgb(0,0,0)";
-    var pen_width = "1px";
-    var pen_dict = {};
-    var font_name, font_size, font_weight, font_italic;
-    var font_dict = {};
-    var text_color = "rgb(0,0,0)";
-    var i, n, op;
-    var curr_x, curr_y;
-
-    var svg = document.createElementNS(ns, "svg");
+    let svg = document.createElementNS(ns, "svg");
     ['width', 'height', "viewBox"].forEach(function(key){
         if( key in options ){
             svg.setAttributeNS(null, key, options[key]);
@@ -37,7 +24,7 @@ exports.drawerToSvg = function(ops, options){
     }
 
     function draw_line_to(x, y){
-    	var e = document.createElementNS(ns, "line");
+    	let e = document.createElementNS(ns, "line");
     	e.setAttributeNS(null, "x1", curr_x);
     	e.setAttributeNS(null, "y1", curr_y);
     	e.setAttributeNS(null, "x2", x);
@@ -49,23 +36,23 @@ exports.drawerToSvg = function(ops, options){
     }
 
     function create_pen(name, r, g, b, width){
-        var color = "rgb(" + r + "," + g + "," + b + ")";
+        let color = "rgb(" + r + "," + g + "," + b + ")";
         pen_dict[name] = {width: width + "px", color: color};
     }
 
     function set_pen(name){
-        var pen = pen_dict[name];
+        let pen = pen_dict[name];
         pen_color = pen.color;
         pen_width = pen.width;
     }
 
     function mmToPixel(dpi, mm){
-        var inch = mm/25.4;
+        let inch = mm/25.4;
         return Math.floor(dpi * inch);
-    };
+    }
     
     function pixelToMm(dpi, px){
-        var inch = px / dpi;
+        let inch = px / dpi;
         return inch * 25.4;
     }
 
@@ -74,7 +61,7 @@ exports.drawerToSvg = function(ops, options){
     }
 
     function set_font(name){
-        var font = font_dict[name];
+        let font = font_dict[name];
         font_name = font.font_name;
         font_size = font.font_size;
         font_weight = font.font_weight;
@@ -86,8 +73,8 @@ exports.drawerToSvg = function(ops, options){
     }
 
     function draw_chars(chars, xs, ys){
-        var e = document.createElementNS(ns, "text");
-        var attrs = {
+        let e = document.createElementNS(ns, "text");
+        let attrs = {
             fill: text_color,
             "font-family": font_name,
             "font-size": font_size,
@@ -143,9 +130,7 @@ exports.drawerToSvg = function(ops, options){
                 break;
             default:
                 throw new Error("unknown drawer op:", op);
-                break;
         }
     }
     return svg;	
 }
-})(typeof exports === "undefined" ? window : exports);

@@ -131,6 +131,9 @@
             <button type="button" class="btn btn-link x-enter">入力</button>
             <button type="button" class="btn btn-link x-cancel">キャンセル</button>
             <button type="button" class="btn btn-link x-delete">削除</button>
+            <button type="button" class="btn btn-link x-shohousen">処方箋発行</button>
+            <button type="button" class="btn btn-link x-shohousen-fax">処方箋FAX</button>
+            <button type="button" class="btn btn-link x-copy">コピー</button>
         </div>
     </div>
 </template>
@@ -508,6 +511,9 @@
                 this.enterElement = map.enter;
                 this.cancelElement = map.cancel;
                 this.deleteElement = map.delete;
+                this.shohousenElement = map.shohousen;
+                this.shohousenFaxElement = map.shohousenFax;
+                this.copyElement = map.copy;
             }
 
             init(text) {
@@ -516,6 +522,22 @@
                 this.enterElement.on("click", event => this.doEnter());
                 this.cancelElement.on("click", event => this.ele.trigger("cancel"));
                 this.deleteElement.on("click", event => this.doDelete());
+                this.shohousenElement.on("click", event => this.doShohousen());
+                this.shohousenFaxElement.on("click", event => this.doShohousenFax());
+                this.copyElement.on("click", event => this.doCopy());
+            }
+
+            async doShohousen(){
+                let req = {};
+                let ops = await this.rest.shohousenDrawer(req);
+            }
+
+            doShohousenFax(){
+                console.log("doShohousenFax");
+            }
+
+            doCopy(){
+                console.log("doCopy");
             }
 
             async doEnter() {

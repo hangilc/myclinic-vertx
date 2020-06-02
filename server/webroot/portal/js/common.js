@@ -130,6 +130,10 @@ class Rest extends Client {
     async hokenRep(hoken) {
         return await ajaxPost(this.url("/hoken-rep"), hoken);
     }
+
+    async shohousenDrawer(shohousenRequest){
+        return await this.post("/shohousen-drawer", shohousenRequest);
+    }
 }
 
 class Integration extends Client {

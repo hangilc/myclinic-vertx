@@ -1,7 +1,11 @@
 package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import dev.myclinic.vertx.drawer.JacksonOpDeserializer;
+import dev.myclinic.vertx.drawer.JacksonOpSerializer;
+import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
 import dev.myclinic.vertx.mastermap.MasterMap;
 import dev.myclinic.vertx.appconfig.AppConfig;
@@ -26,6 +30,10 @@ public class Main {
 
     static {
         mapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(Op.class, new JacksonOpSerializer());
+        module.addDeserializer(Op.class, new JacksonOpDeserializer());
+        mapper.registerModule(module);
     }
 
     private static final ObjectMapper yamlMapper;

@@ -1,10 +1,14 @@
 package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.dto.HokenDTO;
+import dev.myclinic.vertx.dto.ShohousenRequestDTO;
 import dev.myclinic.vertx.mastermap.MasterMap;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.dto.StringResultDTO;
+import dev.myclinic.vertx.shohousendrawer.ShohousenData;
+import dev.myclinic.vertx.shohousendrawer.ShohousenDrawer;
 import dev.myclinic.vertx.util.HokenUtil;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
@@ -16,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -247,7 +252,40 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private void shohousenDrawer(RoutingContext ctx) {
-
+        try {
+            byte[] bytes = ctx.getBody().getBytes();
+            ShohousenRequestDTO req = mapper.readValue(bytes, ShohousenRequestDTO.class);
+            ShohousenData data = new ShohousenData();
+            if( req.clinicInfo != null ){
+                data.setClinicInfo(req.clinicInfo);
+            }
+            if( req.hoken != null ){
+                data.setHoken(req.hoken);
+            }
+            if( req.futanWari != null ){
+                data.setFutanWari(req.futanWari);
+            }
+            if( req.patient != null ){
+                data.setPatient(req.patient);
+            }
+            if( req.drugs !=  null ){
+                data.setDrugs(req.drugs);
+            }
+            if( req.issueDate != null ){
+                LocalDate date = LocalDate.parse(req.issueDate);
+                data.setKoufuDate(date);
+            }
+            if( req.validUpto != null ){
+                LocalDate date = LocalDate.parse(req.validUpto);
+                data.setValidUptoDate(date);
+            }
+            ShohousenDrawer drawer = new ShohousenDrawer();
+            data.applyTo(drawer);
+            List<Op> ops = drawer.getOps();
+            ctx.response().end(mapper.writeValueAsString(ops));
+        } catch(Exception e){
+            ctx.fail(e);
+        }
     }
 
     private void hokenRep(RoutingContext ctx) {

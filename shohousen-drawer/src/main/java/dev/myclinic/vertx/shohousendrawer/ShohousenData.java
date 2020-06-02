@@ -151,13 +151,8 @@ public class ShohousenData {
         sex = patient.sex;
     }
 
-    public void setFutanWari(HokenDTO hoken, PatientDTO patient, LocalDate visitedAt){
-        if( patient.birthday != null && !"0000-00-00".equals(patient.birthday) ){
-            LocalDate bd = LocalDate.parse(patient.birthday);
-            int rcptAge = HokenUtil.calcRcptAge(bd.getYear(), bd.getMonthValue(), bd.getDayOfMonth(),
-                    visitedAt.getYear(), visitedAt.getMonthValue());
-            futanWari = HokenUtil.calcFutanWari(hoken, rcptAge);
-        }
+    public void setFutanWari(int futanWari){
+        this.futanWari = futanWari;
     }
 
     public void setKoufuDate(LocalDate koufuDate){

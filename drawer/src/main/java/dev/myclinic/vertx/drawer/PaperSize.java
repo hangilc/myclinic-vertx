@@ -1,5 +1,8 @@
 package dev.myclinic.vertx.drawer;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by hangil on 2017/05/14.
  */
@@ -19,6 +22,22 @@ public class PaperSize {
     public static PaperSize B5_Landscape = B5.transpose();
     public static PaperSize B6 = new PaperSize(128, 182);
     public static PaperSize B6_Landscape = B6.transpose();
+
+    public static final Map<String, PaperSize> standard = new HashMap<>();
+    static {
+        standard.put("A4", A4);
+        standard.put("A4_Landscape", A4_Landscape);
+        standard.put("A5", A5);
+        standard.put("A5_Landscape", A5_Landscape);
+        standard.put("A6", A6);
+        standard.put("A6_Landscape", A6_Landscape);
+        standard.put("B4", B4);
+        standard.put("B4_Landscape", B4_Landscape);
+        standard.put("B5", B5);
+        standard.put("B5_Landscape", B5_Landscape);
+        standard.put("B6", B6);
+        standard.put("B6_Landscape", B6_Landscape);
+    }
 
     public PaperSize(double width, double height){
         this.width = width;

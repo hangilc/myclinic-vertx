@@ -550,7 +550,7 @@
                 this.copyElement.on("click", event => this.doCopy());
             }
 
-            async doShohousen(){
+            async createShohousenOps() {
                 let visit = await this.rest.getVisit(this.text.visitId);
                 let req = {};
                 req.clinicInfo = await this.rest.getClinicInfo();
@@ -561,16 +561,24 @@
                 req.futanWari = await this.rest.calcFutanWari(req.hoken, rcptAge);
                 req.drugs = this.text.content;
                 let ops = await this.rest.shohousenDrawer(req);
-                this.ele.trigger("cancel");
+                return ops;
+            }
+
+            async doShohousen() {
+                let ops = await this.createShohousenOps();
                 let result = await shohousenPreviewController.open(ops);
-                console.log(result);
+                this.ele.trigger("cancel");
             }
 
-            doShohousenFax(){
-                console.log("doShohousenFax");
+            async doShohousenFax() {
+                if (confirm("この処方箋をPDFとして保存しますか？")) {
+                    let ops = await this.createShohousenOps();
+                    await this.rest.saveDrawerAsPdf([ops], "A5", "./work/test.pdf");
+                    this.ele.trigger("cancel");
+                }
             }
 
-            doCopy(){
+            doCopy() {
                 console.log("doCopy");
             }
 
@@ -622,12 +630,12 @@
         }
 
         class ShohousenPreviewController {
-            constructor(html, rest){
+            constructor(html, rest) {
                 this.html = html;
                 this.rest = rest;
             }
 
-            async open(ops){
+            async open(ops) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let printElement = map.print;

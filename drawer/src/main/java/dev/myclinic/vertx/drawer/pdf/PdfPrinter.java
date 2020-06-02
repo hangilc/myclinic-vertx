@@ -11,6 +11,8 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfWriter;
 import dev.myclinic.vertx.drawer.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -20,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 public class PdfPrinter {
+
+    private static Logger logger = LoggerFactory.getLogger(PdfPrinter.class);
 
     private final double paperWidth;
     private final double paperHeight;
@@ -131,17 +135,11 @@ public class PdfPrinter {
         cb.concatCTM(scale, 0, 0, scale, uMargin, uMargin);
     }
 
-    public void print(List<List<Op>> pages, String savePath) throws Exception {
+    public void print(List<List<Op>> pages, OutputStream outStream) throws Exception {
         Map<String, BaseFontData> fontMap = new HashMap<>();
         Map<String, DrawerFont> drawerFontMap = new HashMap<>();
         Map<String, StrokeData> strokeMap = new HashMap<>();
         Document doc = new Document(new Rectangle((float)paperWidth, (float)paperHeight), 0, 0, 0, 0);
-        OutputStream outStream;
-        if( "-".equals(savePath) ){
-            outStream = System.out;
-        } else {
-            outStream = new FileOutputStream(savePath);
-        }
         PdfWriter pdfWriter = PdfWriter.getInstance(doc, outStream);
         doc.open();
         PdfContentByte cb = pdfWriter.getDirectContent();
@@ -287,8 +285,9 @@ public class PdfPrinter {
                         cb.stroke();
                         break;
                     }
-//                default:
-//                    throw new RuntimeException("Unknown op");
+                    default:
+                        logger.warn("Unknown op in PdfPrinter (ignored): " + op.toString());
+                        break;
                 }
             }
             if (inText) {
@@ -299,6 +298,16 @@ public class PdfPrinter {
             }
         }
         doc.close();
+    }
+
+    public void print(List<List<Op>> pages, String savePath) throws Exception {
+        OutputStream outStream;
+        if( "-".equals(savePath) ){
+            outStream = System.out;
+        } else {
+            outStream = new FileOutputStream(savePath);
+        }
+        print(pages, outStream);
     }
 
 }

@@ -3,6 +3,8 @@ package dev.myclinic.vertx.server;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.drawer.Op;
+import dev.myclinic.vertx.drawer.PaperSize;
+import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
 import dev.myclinic.vertx.drawer.printer.DrawerPrinter;
 import dev.myclinic.vertx.dto.CalcFutanWariRequestDTO;
 import dev.myclinic.vertx.dto.HokenDTO;
@@ -16,11 +18,13 @@ import dev.myclinic.vertx.util.HokenUtil;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDate;
@@ -255,6 +259,52 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("calc-rcpt-age", this::calcRcptAge);
         noDatabaseFuncMap.put("calc-futan-wari", this::calcFutanWari);
         noDatabaseFuncMap.put("print-drawer", this::printDrawer);
+        noDatabaseFuncMap.put("save-drawer-as-pdf", this::saveDrawerAsPdf);
+    }
+
+    private PaperSize resolvePaperSize(String arg){
+        if( PaperSize.standard.containsKey(arg) ){
+            return PaperSize.standard.get(arg);
+        } else {
+            String[] parts = arg.split(",");
+            if( parts.length == 2 ){
+                double width = Double.parseDouble(parts[0].trim());
+                double height = Double.parseDouble(parts[1].trim());
+                return new PaperSize(width, height);
+            } else {
+                throw new RuntimeException("Invalid paper size: " + arg);
+            }
+        }
+    }
+
+    public static class SaveDrawerAsPdfRequest {
+        public List<List<Op>> pages;
+        public String paperSize;
+        public String savePath;
+    }
+
+    private void saveDrawerAsPdf(RoutingContext ctx) {
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                byte[] bytes = ctx.getBody().getBytes();
+                SaveDrawerAsPdfRequest req = mapper.readValue(bytes, SaveDrawerAsPdfRequest.class);
+                PaperSize paperSize = resolvePaperSize(req.paperSize);
+                ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+                PdfPrinter printer = new PdfPrinter(paperSize);
+                printer.print(req.pages, outStream);
+                byte[] pdfBytes = outStream.toByteArray();
+                Files.write(Path.of(req.savePath), pdfBytes);
+                promise.complete("true");
+            } catch(Exception e){
+                ctx.fail(e);
+            }
+        }, ar -> {
+            if( ar.succeeded() ){
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
     }
 
     private void printDrawer(RoutingContext ctx) {

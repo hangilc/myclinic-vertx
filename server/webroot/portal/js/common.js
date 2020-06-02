@@ -159,6 +159,12 @@ class Rest extends Client {
         return await this.post("/print-drawer", pages);
     }
 
+    async saveDrawerAsPdf(pages, paperSize, savePath){
+        return await this.post("/save-drawer-as-pdf", {
+            pages, paperSize, savePath
+        });
+    }
+
     async shohousenDrawer(shohousenRequest){
         return await this.post("/shohousen-drawer", shohousenRequest);
     }

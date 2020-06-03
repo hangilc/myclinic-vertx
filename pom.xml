@@ -149,6 +149,7 @@
         <module>houkatsu-kensa</module>
         <module>drawer</module>
         <module>shohousen-drawer</module>
+        <module>romaji</module>
     </modules>
 
 </project>

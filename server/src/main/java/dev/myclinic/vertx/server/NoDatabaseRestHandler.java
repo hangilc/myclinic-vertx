@@ -18,7 +18,6 @@ import dev.myclinic.vertx.util.HokenUtil;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
@@ -260,6 +259,34 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("calc-futan-wari", this::calcFutanWari);
         noDatabaseFuncMap.put("print-drawer", this::printDrawer);
         noDatabaseFuncMap.put("save-drawer-as-pdf", this::saveDrawerAsPdf);
+        noDatabaseFuncMap.put("get-shohousen-save-pdf-path", this::getShohousenSavePdfPath);
+    }
+
+    private void getShohousenSavePdfPath(RoutingContext ctx) {
+        String textId = ctx.request().getParam("text-id");
+        String patientId = ctx.request().getParam("patient-id");
+        String name = ctx.request().getParam("name");
+        String date = ctx.request().getParam("date");
+        if( !(textId != null && patientId != null && name != null && date != null) ){
+            throw new RuntimeException("Missing parameter");
+        }
+        String mkdir = ctx.request().getParam("mkdir");
+        String dir = System.getenv("MYCLINIC_SHOHOUSEN_DIR");
+        if( dir == null ){
+            throw new RuntimeException("Cannot find env var: MYCLINIC_SHOHOUSEN_DIR");
+        }
+        String month = date.substring(0, 7);
+        Path shohousenDir = Path.of(dir, month);
+        if( "true".equals(mkdir) && !Files.exists(shohousenDir) ){
+            try {
+                Files.createDirectories(shohousenDir);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        String datePart = date.substring(0, 10).replace("-", "");
+        String file = String.format("%s-%s-%s-%s-stamped.pdf", name, textId, patientId, datePart);
+        ctx.response().end("\"" + shohousenDir.resolve(file).toFile().getAbsolutePath() + "\"");
     }
 
     private PaperSize resolvePaperSize(String arg){

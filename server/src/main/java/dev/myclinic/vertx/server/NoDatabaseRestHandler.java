@@ -2,7 +2,9 @@ package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itextpdf.text.Image;
 import dev.myclinic.vertx.appconfig.AppConfig;
+import dev.myclinic.vertx.drawer.DrawerColor;
 import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.drawer.PaperSize;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
@@ -262,6 +264,17 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("save-drawer-as-pdf", this::saveDrawerAsPdf);
         noDatabaseFuncMap.put("get-shohousen-save-pdf-path", this::getShohousenSavePdfPath);
         noDatabaseFuncMap.put("convert-to-romaji", this::convertToRomaji);
+        noDatabaseFuncMap.put("shohousen-gray-stamp-info", this::shohousenGrayStampInfo);
+    }
+
+    private void shohousenGrayStampInfo(RoutingContext ctx) {
+        try {
+            var info = appConfig.getShohousenGrayStampInfo();
+            String rep = mapper.writeValueAsString(info);
+            ctx.response().end(rep);
+        } catch(Exception e){
+            ctx.fail(e);
+        }
     }
 
     private void convertToRomaji(RoutingContext ctx) {
@@ -315,10 +328,18 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
+    public static class StampRequest {
+        public String path;
+        public double scale;
+        public double offsetX;
+        public double offsetY;
+    }
+
     public static class SaveDrawerAsPdfRequest {
         public List<List<Op>> pages;
         public String paperSize;
         public String savePath;
+        public StampRequest stamp;
     }
 
     private void saveDrawerAsPdf(RoutingContext ctx) {
@@ -329,7 +350,18 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 PaperSize paperSize = resolvePaperSize(req.paperSize);
                 ByteArrayOutputStream outStream = new ByteArrayOutputStream();
                 PdfPrinter printer = new PdfPrinter(paperSize);
-                printer.print(req.pages, outStream);
+                PdfPrinter.Callback callback = null;
+                if( req.stamp != null ){
+                    StampRequest stamp = req.stamp;
+                    callback = (cb, page, graphicMode, textMode) -> {
+                        graphicMode.run();
+                        Image image = Image.getInstance(stamp.path);
+                        image.scalePercent((float)(stamp.scale * 100));
+                        image.setAbsolutePosition((float)stamp.offsetX, (float)stamp.offsetY);
+                        cb.addImage(image);
+                    };
+                }
+                printer.print(req.pages, outStream, callback);
                 byte[] pdfBytes = outStream.toByteArray();
                 Files.write(Path.of(req.savePath), pdfBytes);
                 promise.complete("true");
@@ -430,6 +462,11 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 data.setValidUptoDate(date);
             }
             ShohousenDrawer drawer = new ShohousenDrawer();
+            if( req.color != null ){
+                DrawerColor defaultColor = DrawerColor.resolve(req.color);
+                drawer.setDefaultColor(defaultColor);
+            }
+            drawer.init();
             data.applyTo(drawer);
             List<Op> ops = drawer.getOps();
             ctx.response().end(mapper.writeValueAsString(ops));

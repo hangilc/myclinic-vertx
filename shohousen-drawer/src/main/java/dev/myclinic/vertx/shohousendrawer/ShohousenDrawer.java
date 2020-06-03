@@ -1,13 +1,10 @@
 package dev.myclinic.vertx.shohousendrawer;
 
-import dev.myclinic.vertx.drawer.Box;
+import dev.myclinic.vertx.drawer.*;
 import dev.myclinic.vertx.drawer.Box.HorizAnchor;
 import dev.myclinic.vertx.drawer.Box.VertAnchor;
-import dev.myclinic.vertx.drawer.DrawerCompiler;
 import dev.myclinic.vertx.drawer.DrawerCompiler.HAlign;
 import dev.myclinic.vertx.drawer.DrawerCompiler.VAlign;
-import dev.myclinic.vertx.drawer.Op;
-import dev.myclinic.vertx.drawer.PaperSize;
 
 import java.util.List;
 
@@ -45,32 +42,14 @@ public class ShohousenDrawer {
     private String NAME_FONT;
     private String NAME_SMALLER_FONT;
     private String NAME_MULTILINE_FONT;
+    private DrawerColor defaultColor = DrawerColor.GREEN;
 
-    public static class ShohousenDrawerSettings {
-        public int red = 0;
-        public int green = 255;
-        public int blue = 0;
-
-        public void setColor(int red, int green, int blue){
-            this.red = red;
-            this.green = green;
-            this.blue = blue;
-        }
-    }
-
-    private ShohousenDrawerSettings settings;
-
-    public ShohousenDrawer(){
-        this(new ShohousenDrawerSettings());
-    }
-
-    public ShohousenDrawer(ShohousenDrawerSettings settings){
-        this.settings = settings;
+    public void init(){
         compiler.setPaperSize(PaperSize.A5);
         compiler.inset(3);
         setupFonts();
-        compiler.setTextColor(settings.red, settings.green, settings.blue);
-        compiler.createPen("default-pen", settings.red, settings.green, settings.blue, 0.16);
+        compiler.setTextColor(defaultColor.r, defaultColor.g, defaultColor.b);
+        compiler.createPen("default-pen", defaultColor.r, defaultColor.g, defaultColor.b, 0.16);
         compiler.setPen("default-pen");
         wrap = compiler.getPaperBox();
         drawTitle();
@@ -101,6 +80,10 @@ public class ShohousenDrawer {
         drawPharmacy(pharma);
     }
 
+    public void setDefaultColor(DrawerColor defaultColor){
+        this.defaultColor = defaultColor;
+    }
+
     public List<Op> getOps(){
         return compiler.getOps();
     }
@@ -110,7 +93,7 @@ public class ShohousenDrawer {
         Box clinic_info = clinicInfoBox;
         Box clinic_phone = clinicPhoneBox;
         Box r = clinic_info.shift(2, 1);
-        c.setTextColor(settings.red, settings.green, settings.blue);
+        c.setTextColor(defaultColor.r, defaultColor.g, defaultColor.b);
         c.setFont("mincho-3");
         c.textIn(address, r, HAlign.Left, VAlign.Top);
         r = r.shift(4, 4);
@@ -129,7 +112,7 @@ public class ShohousenDrawer {
     public void setDoctorName(String name){
         DrawerCompiler c = this.compiler;
         Box r = clinicDoctorBox.shift(35, 0);
-        c.setTextColor(settings.red, settings.green, settings.blue);
+        c.setTextColor(defaultColor.r, defaultColor.g, defaultColor.b);
         c.setFont("mincho-3.5");
         c.textIn(name, r, HAlign.Left, VAlign.Top);
     }

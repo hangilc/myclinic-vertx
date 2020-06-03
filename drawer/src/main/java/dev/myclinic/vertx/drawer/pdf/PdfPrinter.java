@@ -135,7 +135,29 @@ public class PdfPrinter {
         cb.concatCTM(scale, 0, 0, scale, uMargin, uMargin);
     }
 
-    public void print(List<List<Op>> pages, OutputStream outStream) throws Exception {
+    private void textMode(PdfContentByte cb){
+        if( !inText ){
+            cb.stroke();
+            cb.beginText();
+            cb.setFontAndSize(textFont, textSize);
+            cb.setColorFill(textColor);
+            inText = true;
+        }
+    }
+
+    private void graphicMode(PdfContentByte cb){
+        if( inText ){
+            cb.endText();
+            inText = false;
+        }
+    }
+
+    public interface Callback {
+        void proc(PdfContentByte cb, int page, Runnable graphicMode, Runnable textMode)
+                throws Exception;
+    }
+
+    public void print(List<List<Op>> pages, OutputStream outStream, Callback callback) throws Exception {
         Map<String, BaseFontData> fontMap = new HashMap<>();
         Map<String, DrawerFont> drawerFontMap = new HashMap<>();
         Map<String, StrokeData> strokeMap = new HashMap<>();
@@ -145,6 +167,9 @@ public class PdfPrinter {
         PdfContentByte cb = pdfWriter.getDirectContent();
         for (int i = 0; i < pages.size(); i++) {
             if (i != 0) {
+                if( callback != null ){
+                    callback.proc(cb, i, () -> graphicMode(cb), () -> textMode(cb));
+                }
                 doc.newPage();
             }
             if( shrinkMargin != 0.0 ){
@@ -191,13 +216,7 @@ public class PdfPrinter {
                         break;
                     }
                     case DrawChars: {
-                        if( !inText ){
-                            cb.stroke();
-                            cb.beginText();
-                            cb.setFontAndSize(textFont, textSize);
-                            cb.setColorFill(textColor);
-                            inText = true;
-                        }
+                        textMode(cb);
                         OpDrawChars opDrawChars = (OpDrawChars) op;
                         String chars = opDrawChars.getChars();
                         List<Double> xs = opDrawChars.getXs();
@@ -253,10 +272,7 @@ public class PdfPrinter {
                         break;
                     }
                     case MoveTo: {
-                        if( inText ){
-                            cb.endText();
-                            inText = false;
-                        }
+                        graphicMode(cb);
                         cb.stroke();
                         OpMoveTo opMoveTo = (OpMoveTo)op;
                         float x = getX(opMoveTo.getX());
@@ -272,10 +288,7 @@ public class PdfPrinter {
                         break;
                     }
                     case Circle: {
-                        if( inText ){
-                            cb.endText();
-                            inText = false;
-                        }
+                        graphicMode(cb);
                         cb.stroke();
                         OpCircle opCircle = (OpCircle)op;
                         float x = getX(opCircle.getCx());
@@ -296,8 +309,15 @@ public class PdfPrinter {
             } else {
                 cb.stroke();
             }
+            if( callback != null ){
+                callback.proc(cb, pages.size(), () -> graphicMode(cb), () -> textMode(cb));
+            }
         }
         doc.close();
+    }
+
+    public void print(List<List<Op>> pages, OutputStream outStream) throws Exception {
+        print(pages, outStream, null);
     }
 
     public void print(List<List<Op>> pages, String savePath) throws Exception {

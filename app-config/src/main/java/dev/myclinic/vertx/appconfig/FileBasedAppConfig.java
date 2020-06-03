@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.appconfig.types.ShohousenGrayStampInfo;
 import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
 import dev.myclinic.vertx.mastermap.MasterChronoMap;
 import dev.myclinic.vertx.mastermap.MasterMap;
@@ -29,6 +30,7 @@ public class FileBasedAppConfig implements AppConfig {
     private final String configDir;
     private final Vertx vertx;
     private final ObjectMapper yamlMapper;
+    private final ObjectMapper mapper;
 
     private static class ClinicInfoMixIn {
         @JsonProperty("postal-code")
@@ -54,6 +56,7 @@ public class FileBasedAppConfig implements AppConfig {
                 .addMixIn(ClinicInfoDTO.class, ClinicInfoMixIn.class)
                 .addMixIn(DiseaseExampleDTO.class, DiseaseExampleMixIn.class)
                 .addMixIn(PracticeConfigDTO.class, PracticeConfigMixIn.class);
+        this.mapper = new ObjectMapper();
     }
 
     @Override
@@ -144,6 +147,19 @@ public class FileBasedAppConfig implements AppConfig {
             return HoukatsuKensa.fromXmlFile(file);
         } catch(Exception e){
             throw new RuntimeException("Failed to read houkatsu-kensa from: " + file.toString());
+        }
+    }
+
+    @Override
+    public ShohousenGrayStampInfo getShohousenGrayStampInfo() {
+        try {
+            File file = new File(configDir, "shohousen-bw-stamp.json");
+            var info = mapper.readValue(file, ShohousenGrayStampInfo.class);
+            File pathFile = new File(configDir, info.path);
+            info.path = pathFile.getAbsolutePath();
+            return info;
+        } catch(Exception e){
+            throw new RuntimeException(e);
         }
     }
 

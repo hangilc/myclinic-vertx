@@ -550,7 +550,7 @@
                 this.copyElement.on("click", event => this.doCopy());
             }
 
-            async createShohousenOps() {
+            async createShohousenOps(reqOpts) {
                 let visit = await this.rest.getVisit(this.text.visitId);
                 let req = {};
                 req.clinicInfo = await this.rest.getClinicInfo();
@@ -560,6 +560,7 @@
                     visit.visitedAt.substring(0, 10));
                 req.futanWari = await this.rest.calcFutanWari(req.hoken, rcptAge);
                 req.drugs = this.text.content;
+                Object.assign(req, reqOpts);
                 let ops = await this.rest.shohousenDrawer(req);
                 return ops;
             }
@@ -572,8 +573,9 @@
 
             async doShohousenFax() {
                 if (confirm("この処方箋をPDFとして保存しますか？")) {
-                    let ops = await this.createShohousenOps();
-                    await this.rest.saveDrawerAsPdf([ops], "A5", "./work/test.pdf");
+                    let stampInfo = await this.rest.shohousenGrayStampInfo();
+                    let ops = await this.createShohousenOps({color: "black"});
+                    await this.rest.saveDrawerAsPdf([ops], "A5", "./work/test.pdf", {stamp: stampInfo});
                     this.ele.trigger("cancel");
                 }
             }

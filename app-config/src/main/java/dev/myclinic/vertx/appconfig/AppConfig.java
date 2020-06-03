@@ -1,5 +1,6 @@
 package dev.myclinic.vertx.appconfig;
 
+import dev.myclinic.vertx.appconfig.types.ShohousenGrayStampInfo;
 import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
 import dev.myclinic.vertx.mastermap.MasterMap;
 import dev.myclinic.vertx.dto.ClinicInfoDTO;
@@ -22,4 +23,5 @@ public interface AppConfig {
     Future<PracticeConfigDTO> getPracticeConfig();
     MasterMap getMasterMap();
     HoukatsuKensa getHoukatsuKensa();
+    ShohousenGrayStampInfo getShohousenGrayStampInfo();
 }

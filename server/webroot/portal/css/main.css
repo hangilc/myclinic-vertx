@@ -1,2 +1,5 @@
 .sidebar { background-color:#eee; }
 .nav a.active { font-weight: bold; }
+
+.current-visit { background-color: #ff9; }
+.temp-visit { background-color: #9ff; }

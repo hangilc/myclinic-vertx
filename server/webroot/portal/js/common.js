@@ -192,6 +192,14 @@ class Rest extends Client {
         });
         return result.value;
     }
+
+    async suspendExam(visitId){
+        return await this.get("/suspend-exam", { "visit-id": visitId });
+    }
+
+    async startExam(visitId){
+        return await this.get("/start-exam", { "visit-id": visitId });
+    }
 }
 
 class Integration extends Client {

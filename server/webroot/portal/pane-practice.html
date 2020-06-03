@@ -55,7 +55,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary x-register-enter">受付・選択</button>
+                <button type="button" class="btn btn-primary x-register-enter">受付・診察</button>
                 <button type="button" class="btn btn-primary x-enter">選択</button>
                 <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
             </div>
@@ -231,6 +231,14 @@
         let modChoosePatientDialog = await import("./practice/choose-patient-dialog.js");
         let modPatientDisplay = await import("./practice/patient-display.js");
         let modDrawerSvg = await import("./js/drawer-svg.js");
+        let { CurrentVisitManager } = await import("./practice/current-visit-manager.js");
+        let { CurrentPatientManager } = await import("./practice/current-patient-manager.js");
+
+        let currentVisitManager = new CurrentVisitManager();
+        let currentPatientManager = new CurrentPatientManager();
+
+        currentVisitManager.onChanged((event, info) => console.log("currentVisitChanged", info));
+        currentVisitManager.onChanged((event, info) => console.log("currentPatientChange", info));
 
         let choosePatientDialog = (function () {
             let ele = $("#practice-choose-patient-dialog");
@@ -350,38 +358,6 @@
             }
         }
 
-        class Title {
-            constructor(ele, visit) {
-                this.ele = ele;
-                this.ele.text(this.rep(visit.visitedAt));
-            }
-
-            rep(sqldatetime) {
-                let data = kanjidate.sqldatetimeToData(sqldatetime);
-                let nen = (data.nen + "").padStart(2, "0");
-                let month = (data.month + "").padStart(2, "0");
-                let day = (data.day + "").padStart(2, "0");
-                let hour = (data.hour + "").padStart(2, "0");
-                let minute = (data.minute + "").padStart(2, "0");
-                return `${data.gengou.name}${nen}年${month}月${day}日（${data.youbi}） ${hour}時${minute}分`;
-            }
-
-            appendTo(element) {
-                element.append(this.ele);
-            }
-        }
-
-        class TitleFactory {
-            constructor() {
-                this.html = $("template#practice-title-template").html();
-            }
-
-            create(visit) {
-                let ele = $(this.html);
-                return new Title(ele, visit);
-            }
-        }
-
         class Component {
             constructor(ele, map, rest) {
                 this.ele = ele;
@@ -406,6 +382,53 @@
                 element.detach();
             }
         }
+
+        class Title extends Component {
+            constructor(ele, map, rest) {
+                super(ele, map, rest);
+            }
+
+            async init(visit, currentVisitId, tempVisitId){
+                this.ele.text(this.rep(visit.visitedAt));
+                if( currentVisitId == visit.visitId ){
+                    this.ele.addClass("current-visit");
+                } else if( tempVisitId == visit.visitId ){
+                    this.ele.addClass("temp-visit");
+                }
+            }
+
+            rep(sqldatetime) {
+                let data = kanjidate.sqldatetimeToData(sqldatetime);
+                let nen = (data.nen + "").padStart(2, "0");
+                let month = (data.month + "").padStart(2, "0");
+                let day = (data.day + "").padStart(2, "0");
+                let hour = (data.hour + "").padStart(2, "0");
+                let minute = (data.minute + "").padStart(2, "0");
+                return `${data.gengou.name}${nen}年${month}月${day}日（${data.youbi}） ${hour}時${minute}分`;
+            }
+
+            appendTo(element) {
+                element.append(this.ele);
+            }
+        }
+
+        class TitleFactory {
+            constructor() {
+                this.html = $("template#practice-title-template").html();
+                this.rest = rest;
+                this.currentVisitManager = currentVisitManager;
+            }
+
+            create(visit) {
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new Title(ele, map, rest);
+                comp.init(visit, currentVisitManager.getCurrentVisitId(),
+                    currentVisitManager.getTempVisitId());
+                return comp;
+            }
+        }
+
 
         class Text extends Component {
             constructor(ele, map, rest) {
@@ -672,18 +695,31 @@
 
         $("#practice-choose-patient-button").on("click", async event => {
             let result = await choosePatientDialog.open();
-            if (result.mode === "enter" || result.mode === "registerEnter") {
-                let recordWrapperElement = $("#practice-record-wrapper").html("");
+            if( result.mode === "enter" ){
                 let patient = result.patient;
-                patientInfo.setPatient(patient);
-                patientInfo.show();
-                let page = await rest.listVisit(patient.patientId, 0);
-                let recordFactory = new RecordFactory();
-                for (let visitFull of page.visits) {
-                    let record = await recordFactory.create(visitFull);
-                    record.appendTo(recordWrapperElement);
+                currentVisitManager.setCurrentVisitId(0);
+            } else if( result.mode === "register-enter" ){
+                let patient = result.patient;
+                let visitId = result.visitId;
+                let curr = currentVisitManager.getCurrentVisitId();
+                if( curr > 0 ){
+                    await rest.suspendExam(curr);
                 }
+                await rest.startExam(visitId);
+                currentVisitManager.setCurrentVisitId(visitId);
             }
+            // if (result.mode === "enter" || result.mode === "registerEnter") {
+            //     let recordWrapperElement = $("#practice-record-wrapper").html("");
+            //     let patient = result.patient;
+            //     patientInfo.setPatient(patient);
+            //     patientInfo.show();
+            //     let page = await rest.listVisit(patient.patientId, 0);
+            //     let recordFactory = new RecordFactory();
+            //     for (let visitFull of page.visits) {
+            //         let record = await recordFactory.create(visitFull);
+            //         record.appendTo(recordWrapperElement);
+            //     }
+            // }
         });
 
     })();

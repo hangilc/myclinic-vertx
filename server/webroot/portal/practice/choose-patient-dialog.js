@@ -1,4 +1,3 @@
-import * as kanjidate from "../js/kanjidate.js";
 import { PatientSearch } from "./patient-search.js";
 import { PatientDisplay } from "./patient-display.js";
 

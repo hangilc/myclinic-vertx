@@ -1,8 +1,10 @@
 package dev.myclinic.vertx.drawer;
 
-/**
- * Created by hangil on 2017/06/14.
- */
+import com.itextpdf.kernel.colors.Color;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class DrawerColor {
     public int r;
     public int g;
@@ -16,5 +18,16 @@ public class DrawerColor {
         this.r = r;
         this.g = g;
         this.b = b;
+    }
+
+    public static DrawerColor red = new DrawerColor(255, 0, 0);
+    public static DrawerColor green = new DrawerColor(0, 255, 0);
+    public static DrawerColor blue = new DrawerColor(0, 0, 255);
+
+    public static Map<String, DrawerColor> colorMap = new HashMap<>();
+    static {
+        colorMap.put("red", red);
+        colorMap.put("green", green);
+        colorMap.put("blue", blue);
     }
 }

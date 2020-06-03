@@ -2,16 +2,14 @@ package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.drawer.PaperSize;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
 import dev.myclinic.vertx.drawer.printer.DrawerPrinter;
-import dev.myclinic.vertx.dto.CalcFutanWariRequestDTO;
-import dev.myclinic.vertx.dto.HokenDTO;
-import dev.myclinic.vertx.dto.ShohousenRequestDTO;
+import dev.myclinic.vertx.dto.*;
 import dev.myclinic.vertx.mastermap.MasterMap;
-import dev.myclinic.vertx.appconfig.AppConfig;
-import dev.myclinic.vertx.dto.StringResultDTO;
+import dev.myclinic.vertx.romaji.Romaji;
 import dev.myclinic.vertx.shohousendrawer.ShohousenData;
 import dev.myclinic.vertx.shohousendrawer.ShohousenDrawer;
 import dev.myclinic.vertx.util.HokenUtil;
@@ -27,7 +25,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -260,6 +261,16 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("print-drawer", this::printDrawer);
         noDatabaseFuncMap.put("save-drawer-as-pdf", this::saveDrawerAsPdf);
         noDatabaseFuncMap.put("get-shohousen-save-pdf-path", this::getShohousenSavePdfPath);
+        noDatabaseFuncMap.put("convert-to-romaji", this::convertToRomaji);
+    }
+
+    private void convertToRomaji(RoutingContext ctx) {
+        String text = ctx.request().getParam("text");
+        if(text == null){
+            throw new RuntimeException("Missing parameter (text).");
+        }
+        String romaji = Romaji.toRomaji(text);
+        ctx.response().end("\"" + romaji + "\"");
     }
 
     private void getShohousenSavePdfPath(RoutingContext ctx) {
@@ -379,10 +390,21 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
+    public static class ShohousenRequest {
+        public ClinicInfoDTO clinicInfo;
+        public HokenDTO hoken;
+        public Integer futanWari;
+        public PatientDTO patient;
+        public String drugs;
+        public String issueDate;
+        public String validUpto;
+        public String color;
+    }
+
     private void shohousenDrawer(RoutingContext ctx) {
         try {
             byte[] bytes = ctx.getBody().getBytes();
-            ShohousenRequestDTO req = mapper.readValue(bytes, ShohousenRequestDTO.class);
+            ShohousenRequest req = mapper.readValue(bytes, ShohousenRequest.class);
             ShohousenData data = new ShohousenData();
             if( req.clinicInfo != null ){
                 data.setClinicInfo(req.clinicInfo);

@@ -6,6 +6,8 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
+
 public class DrawerCompiler {
 
     public enum HAlign {
@@ -25,14 +27,59 @@ public class DrawerCompiler {
     }
 
     private List<Op> ops = new ArrayList<>();
-    private Map<String, Double> fontMap = new HashMap<>();
+    private final Map<String, Double> fontMap = new HashMap<>();
     private String currentFont;
-    private Stack<String> fontStack = new Stack<>();
-    private Map<String, Point> pointDict = new HashMap<>();
-    private Map<String, Box> boxDict = new HashMap<>();
+    private final Stack<String> fontStack = new Stack<>();
+    private final Map<String, Point> pointDict = new HashMap<>();
+    private final Map<String, Box> boxDict = new HashMap<>();
+    private double scale = 1.0;
+    private double offsetX = 0;
+    private double offsetY = 0;
+    private PaperSize paperSize = null;
 
     public DrawerCompiler() {
 
+    }
+
+    public void setPaperSize(PaperSize paperSize){
+        this.paperSize = paperSize;
+    }
+
+    public Box getPaperBox(){
+        if( this.paperSize == null ){
+            throw new RuntimeException("Paper size is not specified.");
+        }
+        return new Box(0, 0, this.paperSize.getWidth(), this.paperSize.getHeight());
+    }
+
+    public void inset(double margin){
+        if( this.paperSize == null ){
+            throw new RuntimeException("Paper size is not specified.");
+        }
+        double scale = (paperSize.getWidth() - 2 * margin) / paperSize.getWidth();
+        setScale(scale);
+        setOffsetX(margin);
+        setOffsetY(margin);
+    }
+
+    public void setScale(double scale){
+        this.scale = scale;
+    }
+
+    public void setOffsetX(double offsetX){
+        this.offsetX = offsetX;
+    }
+
+    public void setOffsetY(double offsetY){
+        this.offsetY = offsetY;
+    }
+
+    private double transX(double x){
+        return x * scale + offsetX;
+    }
+
+    private double transY(double y){
+        return y * scale + offsetY;
     }
 
     public List<Op> getOps() {
@@ -47,12 +94,59 @@ public class DrawerCompiler {
         this.ops = ops;
     }
 
-    public void moveTo(double x, double y) {
+    private void opMoveTo(double x, double y){
+        x = transX(x);
+        y = transY(y);
         ops.add(new OpMoveTo(x, y));
     }
 
-    public void lineTo(double x, double y) {
+    private void opLineTo(double x, double y){
+        x = transX(x);
+        y = transY(y);
         ops.add(new OpLineTo(x, y));
+    }
+
+    private void opCreateFont(String name, String fontName, double size, int weight, boolean italic){
+        ops.add(new OpCreateFont(name, fontName, size * scale, weight, italic));
+    }
+
+    private void opSetFont(String name){
+        ops.add(new OpSetFont(name));
+    }
+
+    private void opDrawChars(String text, List<Double> xs, List<Double> ys){
+        xs = xs.stream().map(this::transX).collect(toList());
+        ys = ys.stream().map(this::transY).collect(toList());
+        ops.add(new OpDrawChars(text, xs, ys));
+    }
+
+    private void opSetTextColor(int r, int g, int b){
+        ops.add(new OpSetTextColor(r, g, b));
+
+    }
+
+    // TODO: adjust penStyle
+    private void opCreatePen(String name, int red, int green, int blue, double width, int penStyle){
+        ops.add(new OpCreatePen(name, red, green, blue, width * scale, penStyle));
+    }
+
+    private void opSetPen(String name){
+        ops.add(new OpSetPen(name));
+    }
+
+    private void opCircle(double cx, double cy, double r){
+        cx = transX(cx);
+        cy = transY(cy);
+        r *= scale;
+        ops.add(new OpCircle(cx, cy, r));
+    }
+
+    public void moveTo(double x, double y) {
+        opMoveTo(x, y);
+    }
+
+    public void lineTo(double x, double y) {
+        opLineTo(x, y);
     }
 
     public void line(double x1, double y1, double x2, double y2) {
@@ -73,7 +167,7 @@ public class DrawerCompiler {
     }
 
     public void createFont(String name, String fontName, double size, int weight, boolean italic) {
-        ops.add(new OpCreateFont(name, fontName, size, weight, italic));
+        opCreateFont(name, fontName, size, weight, italic);
         fontMap.put(name, size);
     }
 
@@ -91,7 +185,7 @@ public class DrawerCompiler {
 
     public void setFont(String name) {
         if( !Objects.equals(currentFont, name) ){
-            ops.add(new OpSetFont(name));
+            opSetFont(name);
             currentFont = name;
         }
     }
@@ -149,7 +243,7 @@ public class DrawerCompiler {
         }
         List<Double> xs = composeXs(mes, left, extraSpace);
         List<Double> ys = Collections.singletonList(top);
-        ops.add(new OpDrawChars(text, xs, ys));
+        opDrawChars(text, xs, ys);
     }
 
     public void textAt(String text, double x, double y, HAlign halign, VAlign valign) {
@@ -186,7 +280,7 @@ public class DrawerCompiler {
             double extra = ((right - left) - totalWidth) / (text.length() - 1);
             List<Double> xs = composeXs(mes, left, extra);
             List<Double> ys = Collections.singletonList(top);
-            ops.add(new OpDrawChars(text, xs, ys));
+            opDrawChars(text, xs, ys);
         }
     }
 
@@ -204,7 +298,7 @@ public class DrawerCompiler {
                 default:
                     throw new RuntimeException("unknown halign: " + halign);
             }
-        }).collect(Collectors.toList());
+        }).collect(toList());
         double top;
         switch (valign) {
             case Top:
@@ -220,7 +314,7 @@ public class DrawerCompiler {
                 throw new RuntimeException("invalid valign: " + valign);
         }
         List<Double> ys = composeYs(text.length(), top, getCurrentFontSize(), 0);
-        ops.add(new OpDrawChars(text, xs, ys));
+        opDrawChars(text, xs, ys);
     }
 
     public void textAtVertJustified(String text, double x, double top, double bottom, HAlign halign) {
@@ -243,11 +337,11 @@ public class DrawerCompiler {
                 default:
                     throw new RuntimeException("unknown halign: " + halign);
             }
-        }).collect(Collectors.toList());
+        }).collect(toList());
         double totalHeight = getCurrentFontSize() * text.length();
         double extra = ((bottom - top) - totalHeight) / (text.length() - 1);
         List<Double> ys = composeYs(text.length(), top, getCurrentFontSize(), extra);
-        ops.add(new OpDrawChars(text, xs, ys));
+        opDrawChars(text, xs, ys);
     }
 
     public void textIn(String text, Box box, HAlign halign, VAlign valign){
@@ -468,16 +562,15 @@ public class DrawerCompiler {
     }
 
     public void setTextColor(int red, int green, int blue) {
-        ops.add(new OpSetTextColor(red, green, blue));
+        opSetTextColor(red, green, blue);
     }
 
-    public void createPen(String name, int red, int green, int blue, double width, int penStyle) {
-        ops.add(new OpCreatePen(name, red, green, blue, width, penStyle));
-
-    }
+//    private void createPen(String name, int red, int green, int blue, double width, int penStyle) {
+//        opCreatePen(name, red, green, blue, width, penStyle);
+//    }
 
     public void createPen(String name, int red, int green, int blue, double width) {
-        createPen(name, red, green, blue, width, OpCreatePen.PS_SOLID);
+        opCreatePen(name, red, green, blue, width, OpCreatePen.PS_SOLID);
     }
 
     public void createPen(String name, int red, int green, int blue) {
@@ -485,7 +578,7 @@ public class DrawerCompiler {
     }
 
     public void setPen(String name) {
-        ops.add(new OpSetPen(name));
+        opSetPen(name);
     }
 
     public void setPoint(String name, double x, double y) {
@@ -722,7 +815,7 @@ public class DrawerCompiler {
     }
 
     public void circle(double cx, double cy, double r){
-        ops.add(new OpCircle(cx, cy, r));
+        opCircle(cx, cy, r);
     }
 
     public void circle(Point c, double r){
@@ -730,7 +823,7 @@ public class DrawerCompiler {
     }
 
     private static List<Double> doMeasureChars(String str, double fontSize) {
-        return str.codePoints().mapToDouble(code -> doCalcCharWidth(code, fontSize)).boxed().collect(Collectors.toList());
+        return str.codePoints().mapToDouble(code -> doCalcCharWidth(code, fontSize)).boxed().collect(toList());
     }
 
     private static double doCalcCharWidth(int code, double fontSize) {

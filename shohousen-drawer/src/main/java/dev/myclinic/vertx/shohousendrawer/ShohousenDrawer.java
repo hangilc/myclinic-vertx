@@ -66,13 +66,16 @@ public class ShohousenDrawer {
 
     public ShohousenDrawer(ShohousenDrawerSettings settings){
         this.settings = settings;
+        compiler.setPaperSize(PaperSize.A5);
+        compiler.inset(3);
         setupFonts();
         compiler.setTextColor(settings.red, settings.green, settings.blue);
         compiler.createPen("default-pen", settings.red, settings.green, settings.blue, 0.16);
         compiler.setPen("default-pen");
-        wrap = Box.of(PaperSize.A5);
+        wrap = compiler.getPaperBox();
         drawTitle();
         Box r = wrap.shiftDown(13).setHeight(10.5, VertAnchor.Top);
+        compiler.box(r);
         Box[] rr1 = r.splitToColumns(62);
         drawKouhi(rr1[0].shrinkWidth(2, HorizAnchor.Left));
         drawHoken(rr1[1]);

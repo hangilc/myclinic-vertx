@@ -183,6 +183,7 @@ public class Romaji {
         regularMap.put('ぷ', "pu");
         regularMap.put('ぺ', "pe");
         regularMap.put('ぽ', "po");
+        regularMap.put('ー', "");
     }
 
 }

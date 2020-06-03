@@ -3,7 +3,7 @@ package dev.myclinic.vertx.romaji;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class TestRomaji {
+public class RomajiTest {
 
     @Test
     public void testRegular(){
@@ -24,6 +24,13 @@ class TestRomaji {
         String src = "いっせい";
         String result = Romaji.toRomaji(src);
         assertEquals("issei", result);
+    }
+
+    @Test
+    public void testBar(){
+        String src = "ー";
+        String result = Romaji.toRomaji(src);
+        assertEquals("", result);
     }
 
 }

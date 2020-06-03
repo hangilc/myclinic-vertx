@@ -1,5 +1,6 @@
 package dev.myclinic.vertx.server;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itextpdf.text.Image;
@@ -283,7 +284,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             throw new RuntimeException("Missing parameter (text).");
         }
         String romaji = Romaji.toRomaji(text);
-        ctx.response().end("\"" + romaji + "\"");
+        StringResultDTO result = new StringResultDTO();
+        result.value = romaji;
+        try {
+            String json = mapper.writeValueAsString(result);
+            ctx.response().end(json);
+        } catch(Exception e){
+            ctx.fail(e);
+        }
     }
 
     private void getShohousenSavePdfPath(RoutingContext ctx) {
@@ -310,7 +318,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
         String datePart = date.substring(0, 10).replace("-", "");
         String file = String.format("%s-%s-%s-%s-stamped.pdf", name, textId, patientId, datePart);
-        ctx.response().end("\"" + shohousenDir.resolve(file).toFile().getAbsolutePath() + "\"");
+        StringResultDTO result = new StringResultDTO();
+        result.value = shohousenDir.resolve(file).toFile().getAbsolutePath();
+        try {
+            String json = mapper.writeValueAsString(result);
+            ctx.response().end(json);
+        } catch (JsonProcessingException e) {
+            ctx.fail(e);
+        }
     }
 
     private PaperSize resolvePaperSize(String arg){

@@ -176,6 +176,22 @@ class Rest extends Client {
     async shohousenGrayStampInfo(){
         return await this.get("/shohousen-gray-stamp-info");
     }
+
+    async convertToRomaji(text){
+        let result = await this.get("/convert-to-romaji", {text: text});
+        return result.value;
+    }
+
+    async getShohousenSavePdfPath(name, textId, patientId, date){
+        let result = await this.get("/get-shohousen-save-pdf-path", {
+            "name": name,
+            "text-id": textId,
+            "patient-id": patientId,
+            "date": date,
+            "mkdir": true
+        });
+        return result.value;
+    }
 }
 
 class Integration extends Client {

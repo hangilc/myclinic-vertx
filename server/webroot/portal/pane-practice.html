@@ -573,9 +573,14 @@
 
             async doShohousenFax() {
                 if (confirm("この処方箋をPDFとして保存しますか？")) {
+                    let visit = await this.rest.getVisit(this.text.visitId);
+                    let patient = await this.rest.getPatient(visit.patientId);
+                    let name = await this.rest.convertToRomaji(patient.lastNameYomi + patient.firstNameYomi);
+                    let savePath = await this.rest.getShohousenSavePdfPath(name, this.text.textId,
+                        patient.patientId, visit.visitedAt.substring(0, 10));
                     let stampInfo = await this.rest.shohousenGrayStampInfo();
                     let ops = await this.createShohousenOps({color: "black"});
-                    await this.rest.saveDrawerAsPdf([ops], "A5", "./work/test.pdf", {stamp: stampInfo});
+                    await this.rest.saveDrawerAsPdf([ops], "A5", savePath, {stamp: stampInfo});
                     this.ele.trigger("cancel");
                 }
             }

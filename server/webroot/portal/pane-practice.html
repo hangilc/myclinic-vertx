@@ -103,7 +103,18 @@
 </template>
 
 <template id="practice-title-template">
-    <div class="mt-2"></div>
+    <div class="mt-2 practice-title form-inline">
+        <div class="x-text"></div>
+        <div class="dropdown ml-auto">
+            <button class="btn btn-link dropdown-toggle" type="button"
+                data-toggle="dropdown" aria-haspopup="true"
+                    aria-expanded="false">
+                操作
+            </button>
+            <div class="dropdown-menu x-menu" aria-labelledby="dropdownMenuButton">
+            </div>
+        </div>
+    </div>
 </template>
 
 <template id="practice-hoken-template">
@@ -231,14 +242,16 @@
         let modChoosePatientDialog = await import("./practice/choose-patient-dialog.js");
         let modPatientDisplay = await import("./practice/patient-display.js");
         let modDrawerSvg = await import("./js/drawer-svg.js");
-        let { CurrentVisitManager } = await import("./practice/current-visit-manager.js");
-        let { CurrentPatientManager } = await import("./practice/current-patient-manager.js");
+        let {CurrentVisitManager} = await import("./practice/current-visit-manager.js");
+        let {CurrentPatientManager} = await import("./practice/current-patient-manager.js");
+        let {Component} = await import("./practice/component.js");
+        let {Title} = await import("./practice/title.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
 
         currentVisitManager.onChanged((event, info) => console.log("currentVisitChanged", info));
-        currentVisitManager.onChanged((event, info) => console.log("currentPatientChange", info));
+        currentPatientManager.onChanged((event, info) => console.log("currentPatientChanged", info));
 
         let choosePatientDialog = (function () {
             let ele = $("#practice-choose-patient-dialog");
@@ -257,6 +270,10 @@
 
             setPatient(patient) {
                 this.display.setPatient(patient);
+            }
+
+            clear() {
+                this.display.clear();
             }
 
             show() {
@@ -284,10 +301,20 @@
             }
         }
 
-        let patientInfo = (function () {
+        (function () {
             let ele = $("#practice-patient-info");
             let map = parseElement(ele);
-            return new PatientInfo(ele, map);
+            let patientInfo = new PatientInfo(ele, map);
+            currentPatientManager.onChanged(async (event, patientId) => {
+                if (patientId === 0) {
+                    patientInfo.hide();
+                    patientInfo.clear();
+                } else {
+                    let patient = await rest.getPatient(patientId);
+                    patientInfo.setPatient(patient);
+                    patientInfo.show();
+                }
+            });
         })();
 
         class Record {
@@ -358,59 +385,6 @@
             }
         }
 
-        class Component {
-            constructor(ele, map, rest) {
-                this.ele = ele;
-                this.map = map;
-                this.rest = rest;
-            }
-
-            appendTo(element) {
-                element.append(this.ele);
-            }
-
-            remove() {
-                this.ele.remove();
-            }
-
-            putBefore(element) {
-                element.before(this.ele);
-            }
-
-            replace(element) {
-                element.after(this.ele);
-                element.detach();
-            }
-        }
-
-        class Title extends Component {
-            constructor(ele, map, rest) {
-                super(ele, map, rest);
-            }
-
-            async init(visit, currentVisitId, tempVisitId){
-                this.ele.text(this.rep(visit.visitedAt));
-                if( currentVisitId == visit.visitId ){
-                    this.ele.addClass("current-visit");
-                } else if( tempVisitId == visit.visitId ){
-                    this.ele.addClass("temp-visit");
-                }
-            }
-
-            rep(sqldatetime) {
-                let data = kanjidate.sqldatetimeToData(sqldatetime);
-                let nen = (data.nen + "").padStart(2, "0");
-                let month = (data.month + "").padStart(2, "0");
-                let day = (data.day + "").padStart(2, "0");
-                let hour = (data.hour + "").padStart(2, "0");
-                let minute = (data.minute + "").padStart(2, "0");
-                return `${data.gengou.name}${nen}年${month}月${day}日（${data.youbi}） ${hour}時${minute}分`;
-            }
-
-            appendTo(element) {
-                element.append(this.ele);
-            }
-        }
 
         class TitleFactory {
             constructor() {
@@ -695,32 +669,38 @@
 
         $("#practice-choose-patient-button").on("click", async event => {
             let result = await choosePatientDialog.open();
-            if( result.mode === "enter" ){
+            if (result.mode === "enter") {
                 let patient = result.patient;
                 currentVisitManager.setCurrentVisitId(0);
-            } else if( result.mode === "register-enter" ){
+                currentPatientManager.setCurrentPatientId(patient.patientId);
+            } else if (result.mode === "register-enter") {
                 let patient = result.patient;
+                currentPatientManager.setCurrentPatientId(patient.patientId);
                 let visitId = result.visitId;
                 let curr = currentVisitManager.getCurrentVisitId();
-                if( curr > 0 ){
+                if (curr > 0) {
                     await rest.suspendExam(curr);
                 }
                 await rest.startExam(visitId);
                 currentVisitManager.setCurrentVisitId(visitId);
             }
-            // if (result.mode === "enter" || result.mode === "registerEnter") {
-            //     let recordWrapperElement = $("#practice-record-wrapper").html("");
-            //     let patient = result.patient;
-            //     patientInfo.setPatient(patient);
-            //     patientInfo.show();
-            //     let page = await rest.listVisit(patient.patientId, 0);
-            //     let recordFactory = new RecordFactory();
-            //     for (let visitFull of page.visits) {
-            //         let record = await recordFactory.create(visitFull);
-            //         record.appendTo(recordWrapperElement);
-            //     }
-            // }
         });
+
+        (function () {
+            currentPatientManager.onChanged(async (event, patientId) => {
+                let recordWrapperElement = $("#practice-record-wrapper").html("");
+                if (patientId > 0) {
+                    let page = await rest.listVisit(patientId, 0);
+                    let recordFactory = new RecordFactory();
+                    for (let visitFull of page.visits) {
+                        let record = await recordFactory.create(visitFull);
+                        record.appendTo(recordWrapperElement);
+                    }
+                } else {
+
+                }
+            });
+        })();
 
     })();
 

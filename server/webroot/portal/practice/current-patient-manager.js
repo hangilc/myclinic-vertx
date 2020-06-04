@@ -8,14 +8,13 @@ export class CurrentPatientManager {
         this.eventElement.on("change", cb);
     }
 
-    triggerChange(){
-        this.eventElement.trigger("change", {
-            currentPatientId: this.currentPatientId
-        });
+    triggerChanged(){
+        this.eventElement.trigger("change", this.currentPatientId);
     }
 
     setCurrentPatientId(patientId){
         this.currentPatientId = patientId;
+        this.triggerChanged();
     }
 
     getCurrentPatientId(){

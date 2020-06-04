@@ -119,6 +119,10 @@ class Rest extends Client {
         return await ajaxGet(this.url("/get-text"), {"text-id": textId});
     }
 
+    async listText(visitId) {
+        return await this.get("/list-text", { "visit-id": visitId });
+    }
+
     async deleteText(textId) {
         return await this.post("/delete-text", {}, {
             params: {

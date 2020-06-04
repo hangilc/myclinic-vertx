@@ -261,7 +261,12 @@
 
             setBody(...elements) {
                 let body = this.findBody().html("");
-                elements.forEach(e => body.append(e));
+                elements.forEach(e => {
+                    if( typeof e === "string" ){
+                        e = $("<pre>").text(e);
+                    }
+                    body.append(e)
+                });
                 if (elements.length > 0) {
                     this.show();
                 } else {
@@ -345,6 +350,27 @@
             .setDoCreate(async () => await createClinicLabelPdfFileEx())
             .setDisplayLinkFun((from, upto) => shohousenUrl("clinic-label-pdf", {from, upto}));
 
+        function isNoPharmaError(err){
+            let regex = /Exception: presc without pharma.*<Visit\(.*visit_id='(\d+)'/
+            let m = err.match(regex);
+            if( m ){
+                return {visitId: parseInt(m[1])};
+            } else {
+                return null;
+            }
+        }
+
+        async function createNoPharmaCorrectForm(visitId){
+            let wrap = $("<div>");
+            let visit = await rest.getVisit(visitId);
+            let patient = await rest.getPatient(visit.patientId);
+            let msg = "処方箋情報がありません。<br/>" +
+                `患者：${patient.lastName}${patient.firstName} (${patient.patientId})<br/>` +
+                `受診日：${visit.visitedAt}`;
+            wrap.text(msg);
+            return wrap;
+        }
+
         async function createDataFileEx() { // returns true if success
             let [from, upto] = getDateInputsEx();
             if (!(from && upto)) {
@@ -354,7 +380,13 @@
             let result = await createData(from, upto);
             progressReport.report(null);
             if (!result.success) {
-                errorReport.setBody(result.errorMessage);
+                let m = isNoPharmaError(result.errorMessage);
+                if( m ){
+                    let form = await createNoPharmaCorrectForm(m.visitId);
+                    errorReport.setBody(form);
+                } else {
+                    errorReport.setBody(result.errorMessage);
+                }
                 dataStatusReport.updateByObject(await getGroup(from, upto));
                 return false;
             } else {
@@ -444,7 +476,8 @@
             let result = await createPharmaLabelPdf(from, upto, row, col);
             progressReport.report(null);
             if (!result.success) {
-                errorReport.setBody(result.errorMessage);
+                let msg = result.errorMessage || result.stdErr;
+                errorReport.setBody(msg);
                 pharmaLabelPdfStatusReport.updateByObject(await getGroup(from, upto));
                 return false;
             } else {

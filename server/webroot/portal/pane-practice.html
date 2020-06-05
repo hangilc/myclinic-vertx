@@ -142,6 +142,32 @@
     </div>
 </template>
 
+<template id="practice-select-visit-at-dialog-template">
+    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">以前の診察</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-inline">
+                        <span>診察日</span>
+                        <input type="date" class="x-date ml-1"/>
+                    </div>
+                    <select class="form-control mt-2 form-control x-select" size="5"></select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary x-enter">選択</button>
+                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
 <div id="practice-patient-info" class="d-none mx-2">
     [<span class="x-patient-id"></span>]
     <span class="x-last-name"></span><span class="x-first-name"></span>
@@ -330,6 +356,7 @@
         let {SelectWqueueDialog} = await import("./practice/select-wqueue-dialog.js");
         let {SelectRecentVisitDialog} = await import("./practice/select-recent-visit-dialog.js");
         let {SelectTodaysVisitDialog} = await import("./practice/select-todays-visit-dialog.js");
+        let {SelectPreviousVisitDialog} = await import("./practice/select-prev-visit-dialog.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
@@ -366,7 +393,16 @@
             let html = getTemplateHtml("practice-select-todays-visit-dialog-template");
             let ele = $(html);
             let map = parseElement(ele);
-            let dialog = new SelectRecentVisitDialog(ele, map, rest);
+            let dialog = new SelectTodaysVisitDialog(ele, map, rest);
+            dialog.init();
+            return dialog;
+        })();
+
+        let selectPreviousVisitDialog = (function(){
+            let html = getTemplateHtml("practice-select-visit-at-dialog-template");
+            let ele = $(html);
+            let map = parseElement(ele);
+            let dialog = new SelectPreviousVisitDialog(ele, map, rest);
             dialog.init();
             return dialog;
         })();
@@ -864,14 +900,21 @@
                     let patient = result.data.patient;
                     await startPatient(patient.patientId);
                 }
-            })
+            });
             map.today.on("click", async event => {
                 let result = await selectTodaysVisitDialog.open();
                 if( result.mode === "selected" ){
                     let patient = result.data.patient;
                     await startPatient(patient.patientId);
                 }
-            })
+            });
+            map.prev.on("click", async event => {
+                let result = await selectPreviousVisitDialog.open();
+                if( result.mode === "selected" ){
+                    let patient = result.data.patient;
+                    await startPatient(patient.patientId);
+                }
+            });
         })();
 
         currentPatientManager.onChanged(async (event, patientId) => {

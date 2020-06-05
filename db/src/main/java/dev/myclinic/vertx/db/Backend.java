@@ -3159,6 +3159,20 @@ public class Backend {
         return getQuery().query(xlate(sql, ts.visitTable), ts.visitTable, at, limit, offset);
     }
 
+    private List<VisitPatientDTO> listVisitPatientAt(LocalDate at){
+        String sql = "select v.*, p.* from Visit v, Patient p " +
+                " where date(v.visitedAt) = ? and v.patientId = p.patientId " +
+                " order by v.visitId";
+        return getQuery().query(xlate(sql, ts.visitTable, "v",
+                ts.patientTable, "p"),
+                biProjector(ts.visitTable, ts.patientTable, (visit, patient) -> {
+                    VisitPatientDTO result = new VisitPatientDTO();
+                    result.visit = visit;
+                    result.patient = patient;
+                    return result;
+                }), at);
+    }
+
     public VisitFull2PatientPageDTO pageVisitFullWithPatientAt(LocalDate at, int page) throws Exception {
         int count = countVisitAt(at);
         int itemsPerPage = 10;

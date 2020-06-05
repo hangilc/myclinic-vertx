@@ -1908,6 +1908,27 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end(result);
     }
 
+    private void listRecentVisitWithPatient(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        int page = 0;
+        int itemsPerPage = 30;
+        String paraPage = params.get("page");
+        if( paraPage != null ){
+            page = Integer.parseInt(paraPage);
+        }
+        String paraItemsPerPage = params.get("items-per-page");
+        if( paraItemsPerPage != null ){
+            itemsPerPage = Integer.parseInt(paraItemsPerPage);
+        }
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        List<VisitPatientDTO> _value = backend.listRecentVisitWithPatient(page, itemsPerPage);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
     {
         funcMap.put("search-byoumei-master", this::searchByoumeiMaster);
         funcMap.put("list-visit-by-patient-having-hoken", this::listVisitByPatientHavingHoken);
@@ -2065,6 +2086,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("enter-text", this::enterText);
         funcMap.put("delete-visit", this::deleteVisit);
         funcMap.put("get-disease-full", this::getDiseaseFull);
+        funcMap.put("list-recent-visit-with-patient", this::listRecentVisitWithPatient);
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////

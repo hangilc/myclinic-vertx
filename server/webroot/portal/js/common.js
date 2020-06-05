@@ -213,6 +213,13 @@ class Rest extends Client {
     async startExam(visitId){
         return await this.get("/start-exam", { "visit-id": visitId });
     }
+
+    async listRecentVisitWithPatient(page){
+        if( page == null ){
+            page = 0;
+        }
+        return await this.get("/list-recent-visit-with-patient", {page: page});
+    }
 }
 
 class Integration extends Client {

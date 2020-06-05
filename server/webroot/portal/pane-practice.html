@@ -98,6 +98,28 @@
     </div>
 </template>
 
+<template id="practice-select-recent-visit-dialog-template">
+    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">最近の診察</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <select class="form-control mt-2 form-control x-select" size="5"></select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary x-enter">選択</button>
+                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
 <div id="practice-patient-info" class="d-none mx-2">
     [<span class="x-patient-id"></span>]
     <span class="x-last-name"></span><span class="x-first-name"></span>
@@ -284,6 +306,7 @@
         let {Title} = await import("./practice/title.js");
         let {RecordManager} = await import("./practice/record-manager.js");
         let {SelectWqueueDialog} = await import("./practice/select-wqueue-dialog.js");
+        let {SelectRecentVisitDialog} = await import("./practice/select-recent-visit-dialog.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
@@ -304,6 +327,15 @@
             let map = parseElement(ele);
             let dialog = new SelectWqueueDialog(ele, map, rest);
             dialog.init(state => wqueueStateCodeToRep(state));
+            return dialog;
+        })();
+
+        let selectRecentVisitDialog = (function(){
+            let html = getTemplateHtml("practice-select-recent-visit-dialog-template");
+            let ele = $(html);
+            let map = parseElement(ele);
+            let dialog = new SelectRecentVisitDialog(ele, map, rest);
+            dialog.init();
             return dialog;
         })();
 
@@ -794,6 +826,13 @@
                     currentPatientManager.setCurrentPatientId(patient.patientId);
                 }
             });
+            map.recent.on("click", async event => {
+                let result = await selectRecentVisitDialog.open();
+                if( result.mode === "selected" ){
+                    let patient = result.data.patient;
+                    await startPatient(patient.patientId);
+                }
+            })
         })();
 
         currentPatientManager.onChanged(async (event, patientId) => {

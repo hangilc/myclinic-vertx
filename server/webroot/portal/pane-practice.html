@@ -2,7 +2,20 @@
 <div class="row">
     <h3 class="col-sm-2">診察</h3>
     <div class="col-sm-10">
-        <button class="btn btn-secondary" id="practice-choose-patient-button">患者選択</button>
+        <div class="dropdown ml-auto" id="practice-select-patient-menu">
+            <button class="btn btn-secondary dropdown-toggle" type="button"
+                    data-toggle="dropdown" aria-haspopup="true"
+                    aria-expanded="false">
+                患者選択
+            </button>
+            <div class="dropdown-menu x-menu" aria-labelledby="dropdownMenuButton">
+                <button class="btn btn-link x-wqueue">受付患者選択</button>
+                <button class="btn btn-link x-search">患者検索</button>
+                <button class="btn btn-link x-recent">最近の診察</button>
+                <button class="btn btn-link x-today">本日の診察</button>
+                <button class="btn btn-link x-prev">以前の診察</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -62,6 +75,28 @@
         </div>
     </div>
 </div>
+
+<template id="practice-select-wqueue-dialog-template">
+    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">受付患者選択</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <select class="form-control mt-2 form-control x-select" size="5"></select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary x-enter">選択</button>
+                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
 
 <div id="practice-patient-info" class="d-none mx-2">
     [<span class="x-patient-id"></span>]
@@ -145,6 +180,7 @@
             <button type="button" class="btn btn-link x-shohousen">処方箋発行</button>
             <button type="button" class="btn btn-link x-shohousen-fax">処方箋FAX</button>
             <button type="button" class="btn btn-link x-copy">コピー</button>
+        </div>
         </div>
     </div>
 </template>
@@ -247,6 +283,7 @@
         let {Component} = await import("./practice/component.js");
         let {Title} = await import("./practice/title.js");
         let {RecordManager} = await import("./practice/record-manager.js");
+        let {SelectWqueueDialog} = await import("./practice/select-wqueue-dialog.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
@@ -259,6 +296,15 @@
             let ele = $("#practice-choose-patient-dialog");
             let map = parseElement(ele);
             return new modChoosePatientDialog.ChoosePatientDialog(map, rest);
+        })();
+
+        let selectWqueueDialog = (function(){
+            let html = getTemplateHtml("practice-select-wqueue-dialog-template");
+            let ele = $(html);
+            let map = parseElement(ele);
+            let dialog = new SelectWqueueDialog(ele, map, rest);
+            dialog.init(state => wqueueStateCodeToRep(state));
+            return dialog;
         })();
 
         class PatientInfo {
@@ -347,8 +393,16 @@
                     self.ele.remove();
                 });
                 title.onTempVisit((event, visitId) => {
-                    console.log("onTempVisit", visitId);
-                    currentVisitManager.setTempVisitId(visitId);
+                    let result = currentVisitManager.setTempVisitId(visitId);
+                    if( !result.success ){
+                        alert(result.message);
+                    }
+                });
+                title.onClearTempVisit(event => {
+                    let result = currentVisitManager.setTempVisitId(0);
+                    if( !result.success ){
+                        alert(result.message);
+                    }
                 });
                 for (let text of visitFull.texts) {
                     let comp = this.textFactory.create(text);
@@ -694,23 +748,53 @@
             rest
         );
 
-        $("#practice-choose-patient-button").on("click", async event => {
-            let result = await choosePatientDialog.open();
-            if (result.mode === "enter") {
-                let patient = result.patient;
-                currentVisitManager.setCurrentVisitId(0);
-                currentPatientManager.setCurrentPatientId(patient.patientId);
-            } else if (result.mode === "register-enter") {
-                let visitId = result.visitId;
-                let curr = currentVisitManager.getCurrentVisitId();
-                if (curr > 0) {
-                    await rest.suspendExam(curr);
-                }
-                currentVisitManager.setCurrentVisitId(result.visitId);
-                let patient = result.patient;
-                currentPatientManager.setCurrentPatientId(patient.patientId);
+        async function suspendCurrentVisit(){
+            let curr = currentVisitManager.getCurrentVisitId();
+            if (curr > 0) {
+                await rest.suspendExam(curr);
             }
-        });
+        }
+
+        async function startPatient(patientId){
+            await suspendCurrentVisit();
+            currentVisitManager.setCurrentVisitId(0);
+            currentPatientManager.setCurrentPatientId(patientId);
+        }
+
+        async function startVisit(visitId){
+            await suspendCurrentVisit();
+            currentVisitManager.setCurrentVisitId(visitId);
+            let visit = await rest.getVisit(visitId);
+            currentPatientManager.setCurrentPatientId(visit.patientId);
+        }
+
+        (function(){
+            let map = parseElement($("#practice-select-patient-menu"));
+            map.wqueue.on("click", async event => {
+                let result = await selectWqueueDialog.open();
+                if( result.mode === "selected" ){
+                    let wqueueFull = result.data;
+                    await startVisit(wqueueFull.visit.visitId);
+                }
+            });
+            map.search.on("click", async event => {
+                let result = await choosePatientDialog.open();
+                if (result.mode === "enter") {
+                    let patient = result.patient;
+                    currentVisitManager.setCurrentVisitId(0);
+                    currentPatientManager.setCurrentPatientId(patient.patientId);
+                } else if (result.mode === "register-enter") {
+                    let visitId = result.visitId;
+                    let curr = currentVisitManager.getCurrentVisitId();
+                    if (curr > 0) {
+                        await rest.suspendExam(curr);
+                    }
+                    currentVisitManager.setCurrentVisitId(result.visitId);
+                    let patient = result.patient;
+                    currentPatientManager.setCurrentPatientId(patient.patientId);
+                }
+            });
+        })();
 
         currentPatientManager.onChanged(async (event, patientId) => {
             let recordWrapperElement = $("#practice-record-wrapper").html("");
@@ -731,15 +815,9 @@
             let {currentVisitId, tempVisitId} = info;
             recordManager.forEachRecord(record => {
                 if( record.getVisitId() === currentVisitId ){
-                    let result = record.title.markAsCurrent();
-                    if( !result.success ){
-                        alert(result.message);
-                    }
+                    record.title.markAsCurrent();
                 } else if( record.getVisitId() === tempVisitId ){
-                    let result = record.title.markAsTemp();
-                    if( !result.success ){
-                        alert(result.message);
-                    }
+                    record.title.markAsTemp();
                 } else {
                     record.title.clearMark();
                 }

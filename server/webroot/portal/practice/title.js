@@ -15,6 +15,7 @@ export class Title extends Component {
         this.classTempVisit = classTempVisit;
         this.menuElement.append(this.menuLink("この診察を削除", event => this.doDelete()));
         this.menuElement.append(this.menuLink("暫定診察に設定", event => this.doTempVisit()));
+        this.menuElement.append(this.menuLink("暫定診察の解除", event => this.doClearTempVisit()));
     }
 
     getVisitId(){
@@ -29,7 +30,6 @@ export class Title extends Component {
     markAsCurrent(){
         this.clearMark();
         this.ele.addClass(this.classCurrentVisit);
-        console.log("markAsCurrent", this.classCurrentVisit);
     }
 
     markAsTemp(){
@@ -63,6 +63,14 @@ export class Title extends Component {
 
     doTempVisit(){
         this.triggerTempVisit(this.visit.visitId);
+    }
+
+    onClearTempVisit(cb){
+        this.ele.on("clear-temp-visit", event => cb(event));
+    }
+
+    doClearTempVisit(){
+        this.ele.trigger("clear-temp-visit");
     }
 
     menuLink(name, cb){

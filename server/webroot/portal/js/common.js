@@ -220,6 +220,10 @@ class Rest extends Client {
         }
         return await this.get("/list-recent-visit-with-patient", {page: page});
     }
+
+    async listTodaysVisits(){
+        return await this.get("/list-todays-visits", {});
+    }
 }
 
 class Integration extends Client {

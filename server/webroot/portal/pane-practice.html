@@ -107,7 +107,7 @@
         <div class="x-text"></div>
         <div class="dropdown ml-auto">
             <button class="btn btn-link dropdown-toggle" type="button"
-                data-toggle="dropdown" aria-haspopup="true"
+                    data-toggle="dropdown" aria-haspopup="true"
                     aria-expanded="false">
                 操作
             </button>
@@ -246,9 +246,11 @@
         let {CurrentPatientManager} = await import("./practice/current-patient-manager.js");
         let {Component} = await import("./practice/component.js");
         let {Title} = await import("./practice/title.js");
+        let {RecordManager} = await import("./practice/record-manager.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
+        let recordManager = new RecordManager();
 
         currentVisitManager.onChanged((event, info) => console.log("currentVisitChanged", info));
         currentPatientManager.onChanged((event, info) => console.log("currentPatientChanged", info));
@@ -318,7 +320,7 @@
         })();
 
         class Record {
-            constructor(ele, map, titleFactory, textFactory, hokenFactory) {
+            constructor(ele, map, textFactory, hokenFactory) {
                 this.ele = ele;
                 this.titleElement = map.title;
                 this.enterTextElement = map.left.enterText;
@@ -329,23 +331,39 @@
                 this.shinryouWrapperElement = map.right.shinryouWrapper;
                 this.shochiMenuElement = map.right.shochiMenu;
                 this.shochiWrapperElement = map.right.shochiWrapper;
-                this.titleFactory = titleFactory;
                 this.textFactory = textFactory;
                 this.hokenFactory = hokenFactory;
                 this.shinryouMenuElement.on("click", event => console.log("Shinryou Menu"));
                 this.shochiMenuElement.on("click", event => console.log("Shochi Menu"));
             }
 
-            async init(visitFull) {
+            async init(visitFull, titleFactory) {
+                let self = this;
                 this.visitFull = visitFull;
                 let visit = visitFull.visit;
-                this.titleFactory.create(visit).appendTo(this.titleElement);
+                let title = titleFactory.create(visit).appendTo(this.titleElement);
+                this.title = title;
+                title.onDeleted(event => {
+                    self.ele.remove();
+                });
+                title.onTempVisit((event, visitId) => {
+                    console.log("onTempVisit", visitId);
+                    currentVisitManager.setTempVisitId(visitId);
+                });
                 for (let text of visitFull.texts) {
                     let comp = this.textFactory.create(text);
                     comp.appendTo(this.textWrapperElement);
                 }
                 let hoken = await this.hokenFactory.create(visitFull.hoken);
                 hoken.appendTo(this.hokenWrapperElement);
+            }
+
+            getVisit(){
+                return this.visitFull.visit;
+            }
+
+            getVisitId(){
+                return this.getVisit().visitId;
             }
 
             bindToEnterTextElement(enterTextFactory) {
@@ -369,21 +387,26 @@
         }
 
         class RecordFactory {
-            constructor() {
-                this.html = getTemplateHtml("practice-record-template");
+            constructor(html, rest) {
+                this.html = html;
                 this.rest = rest;
             }
 
             async create(visitFull) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
-                let record = new Record(ele, map, new TitleFactory(), new TextFactory(),
+                let record = new Record(ele, map, new TextFactory(),
                     new HokenFactory());
-                await record.init(visitFull);
+                await record.init(visitFull, new TitleFactory());
                 record.bindToEnterTextElement(new EnterTextFactory());
                 return record;
             }
         }
+
+        let recordFactory = new RecordFactory(
+            getTemplateHtml("practice-record-template"),
+            rest
+        );
 
 
         class TitleFactory {
@@ -397,8 +420,12 @@
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new Title(ele, map, rest);
-                comp.init(visit, currentVisitManager.getCurrentVisitId(),
-                    currentVisitManager.getTempVisitId());
+                comp.init(visit, "current-visit", "temp-visit");
+                if( visit.visitId === currentVisitManager.getCurrentVisitId() ) {
+                    comp.markAsCurrent();
+                } else if( visit.visitId === currentVisitManager.getTempVisitId() ){
+                    comp.markAsTemp();
+                }
                 return comp;
             }
         }
@@ -674,33 +701,51 @@
                 currentVisitManager.setCurrentVisitId(0);
                 currentPatientManager.setCurrentPatientId(patient.patientId);
             } else if (result.mode === "register-enter") {
-                let patient = result.patient;
-                currentPatientManager.setCurrentPatientId(patient.patientId);
                 let visitId = result.visitId;
                 let curr = currentVisitManager.getCurrentVisitId();
                 if (curr > 0) {
                     await rest.suspendExam(curr);
                 }
-                await rest.startExam(visitId);
-                currentVisitManager.setCurrentVisitId(visitId);
+                currentVisitManager.setCurrentVisitId(result.visitId);
+                let patient = result.patient;
+                currentPatientManager.setCurrentPatientId(patient.patientId);
             }
         });
 
-        (function () {
-            currentPatientManager.onChanged(async (event, patientId) => {
-                let recordWrapperElement = $("#practice-record-wrapper").html("");
-                if (patientId > 0) {
-                    let page = await rest.listVisit(patientId, 0);
-                    let recordFactory = new RecordFactory();
-                    for (let visitFull of page.visits) {
-                        let record = await recordFactory.create(visitFull);
-                        record.appendTo(recordWrapperElement);
+        currentPatientManager.onChanged(async (event, patientId) => {
+            let recordWrapperElement = $("#practice-record-wrapper").html("");
+            recordManager.clear();
+            if (patientId > 0) {
+                let page = await rest.listVisit(patientId, 0);
+                for (let visitFull of page.visits) {
+                    let record = await recordFactory.create(visitFull);
+                    record.appendTo(recordWrapperElement);
+                    recordManager.add(record);
+                }
+            } else {
+
+            }
+        });
+
+        currentVisitManager.onChanged((event, info) => {
+            let {currentVisitId, tempVisitId} = info;
+            recordManager.forEachRecord(record => {
+                if( record.getVisitId() === currentVisitId ){
+                    let result = record.title.markAsCurrent();
+                    if( !result.success ){
+                        alert(result.message);
+                    }
+                } else if( record.getVisitId() === tempVisitId ){
+                    let result = record.title.markAsTemp();
+                    if( !result.success ){
+                        alert(result.message);
                     }
                 } else {
-
+                    record.title.clearMark();
                 }
             });
-        })();
+        });
+
 
     })();
 

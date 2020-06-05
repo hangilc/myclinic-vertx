@@ -5,25 +5,64 @@ export class Title extends Component {
         super(ele, map, rest);
         this.textElement = map.text;
         this.menuElement = map.menu;
+        ele.attr("data-component", 3);
     }
 
-    async init(visit, currentVisitId, tempVisitId) {
+    async init(visit, classCurrentVisit, classTempVisit) {
+        this.visit = visit;
         this.textElement.text(this.rep(visit.visitedAt));
-        if (currentVisitId === visit.visitId) {
-            this.ele.addClass("current-visit");
-        } else if (tempVisitId === visit.visitId) {
-            this.ele.addClass("temp-visit");
-        }
+        this.classCurrentVisit = classCurrentVisit;
+        this.classTempVisit = classTempVisit;
         this.menuElement.append(this.menuLink("この診察を削除", event => this.doDelete()));
         this.menuElement.append(this.menuLink("暫定診察に設定", event => this.doTempVisit()));
     }
 
-    doDelete(){
-        console.log("delete visit");
+    getVisitId(){
+        return this.visit.visitId;
+    }
+
+    clearMark(){
+        this.ele.removeClass(this.classTempVisit);
+        this.ele.removeClass(this.classCurrentVisit);
+    }
+
+    markAsCurrent(){
+        this.clearMark();
+        this.ele.addClass(this.classCurrentVisit);
+        console.log("markAsCurrent", this.classCurrentVisit);
+    }
+
+    markAsTemp(){
+        this.clearMark();
+        this.ele.addClass(this.classTempVisit);
+    }
+
+    onDeleted(cb){
+        this.ele.on("deleted", cb);
+    }
+
+    triggerDeleted(){
+        this.ele.trigger("deleted");
+    }
+
+    async doDelete(){
+        if( !confirm("この診療記録を削除しますか？") ){
+            return;
+        }
+        await this.rest.deleteVisit(this.visit.visitId);
+        this.triggerDeleted();
+    }
+
+    onTempVisit(cb){
+        this.ele.on("temp-visit", (event, visitId) => cb(event, visitId));
+    }
+
+    triggerTempVisit(visitId){
+        this.ele.trigger("temp-visit", visitId);
     }
 
     doTempVisit(){
-        console.log("temp visit");
+        this.triggerTempVisit(this.visit.visitId);
     }
 
     menuLink(name, cb){
@@ -37,21 +76,6 @@ export class Title extends Component {
         return a;
     }
 
-    createPopup(){
-        let wrap = $("<div>");
-        {
-            let name = "popup";
-            let link = $("<button>", {
-                type: "button",
-                class: "btn btn-link"
-            });
-            link.text(name);
-
-            wrap.append(link);
-        }
-        return wrap;
-    }
-
     rep(sqldatetime) {
         let data = kanjidate.sqldatetimeToData(sqldatetime);
         let nen = (data.nen + "").padStart(2, "0");
@@ -62,8 +86,5 @@ export class Title extends Component {
         return `${data.gengou.name}${nen}年${month}月${day}日（${data.youbi}） ${hour}時${minute}分`;
     }
 
-    appendTo(element) {
-        element.append(this.ele);
-    }
 }
 

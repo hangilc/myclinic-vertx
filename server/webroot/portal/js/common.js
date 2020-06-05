@@ -22,7 +22,10 @@ function ajaxPost(url, data, encodeJson = true) {
             cache: false,
             dataType: "json",
             success: resolve,
-            error: (xhr, status, err) => fail(err)
+            error: (xhr, status, err) => {
+                alert(err + "\n" + xhr.responseText);
+                fail(err);
+            }
         });
     });
 }
@@ -141,6 +144,12 @@ class Rest extends Client {
 
     async getVisit(visitId){
         return await this.get("/get-visit", {"visit-id": visitId});
+    }
+
+    async deleteVisit(visitId){
+        return await this.post("/delete-visit", {}, {
+            params: {"visit-id": visitId}
+        });
     }
 
     async getPatient(patientId){

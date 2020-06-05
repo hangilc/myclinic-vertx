@@ -5,7 +5,7 @@ export class CurrentPatientManager {
     }
 
     onChanged(cb){
-        this.eventElement.on("change", cb);
+        this.eventElement.on("change", (event, patientId) => cb(event, patientId));
     }
 
     triggerChanged(){

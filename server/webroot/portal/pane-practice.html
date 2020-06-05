@@ -76,6 +76,52 @@
     </div>
 </div>
 
+<div id="practice-patient-info" class="d-none mx-2">
+    [<span class="x-patient-id"></span>]
+    <span class="x-last-name"></span><span class="x-first-name"></span>
+    (<span class="x-last-name-yomi"></span><span class="x-first-name-yomi"></span>)
+    <span class="x-birthday"></span>生
+    (<span class="x-age"></span>才)
+    <span class="x-sex"></span>性
+    <button type="button" class="x-detail-link btn btn-link">詳細</button>
+    <div class="x-detail d-none row">
+        <div class="col-sm-3">住所</div>
+        <div class="x-address col-sm-9"></div>
+        <div class="col-sm-3">電話番号</div>
+        <div class="x-phone col-sm-9"></div>
+    </div>
+</div>
+
+<div id="practice-patient-manip" class="d-none mx-2 form-inline">
+    <button type="button" class="x-cashier btn btn-secondary">会計</button>
+    <button type="button" class="x-end btn btn-secondary ml-2">患者終了</button>
+    <button type="button" class="x-search-text btn btn-link ml-2">文章検索</button>
+    <button type="button" class="x-refer btn btn-link">紹介状作成</button>
+</div>
+
+<div id="practice-record-wrapper"></div>
+
+<template id="practice-record-template">
+    <div>
+        <div class="x-title"></div>
+        <div class="row">
+            <div class="x-left_ col-sm-6 rp-1">
+                <div class="x-text-wrapper"></div>
+                <div class="x-command-wrapper">
+                    <button type="button" class="btn btn-link x-enter-text">[文章入力]</button>
+                </div>
+            </div>
+            <div class="x-right_ col-sm-6 lp-1">
+                <div class="x-hoken-wrapper"></div>
+                <button type="button" class="btn btn-link x-shinryou-menu">[診療行為]</button>
+                <div class="x-shinryou-wrapper"></div>
+                <button type="button" class="btn btn-link x-shochi-menu">[処置]</button>
+                <div class="x-shochi-wrapper"></div>
+            </div>
+        </div>
+    </div>
+</template>
+
 <template id="practice-select-wqueue-dialog-template">
     <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
         <div class="modal-dialog" role="document">
@@ -163,45 +209,6 @@
                     <button type="button" class="btn btn-primary x-enter">選択</button>
                     <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
                 </div>
-            </div>
-        </div>
-    </div>
-</template>
-
-<div id="practice-patient-info" class="d-none mx-2">
-    [<span class="x-patient-id"></span>]
-    <span class="x-last-name"></span><span class="x-first-name"></span>
-    (<span class="x-last-name-yomi"></span><span class="x-first-name-yomi"></span>)
-    <span class="x-birthday"></span>生
-    (<span class="x-age"></span>才)
-    <span class="x-sex"></span>性
-    <button type="button" class="x-detail-link btn btn-link">詳細</button>
-    <div class="x-detail d-none row">
-        <div class="col-sm-3">住所</div>
-        <div class="x-address col-sm-9"></div>
-        <div class="col-sm-3">電話番号</div>
-        <div class="x-phone col-sm-9"></div>
-    </div>
-</div>
-
-<div id="practice-record-wrapper"></div>
-
-<template id="practice-record-template">
-    <div>
-        <div class="x-title"></div>
-        <div class="row">
-            <div class="x-left_ col-sm-6 rp-1">
-                <div class="x-text-wrapper"></div>
-                <div class="x-command-wrapper">
-                    <button type="button" class="btn btn-link x-enter-text">[文章入力]</button>
-                </div>
-            </div>
-            <div class="x-right_ col-sm-6 lp-1">
-                <div class="x-hoken-wrapper"></div>
-                <button type="button" class="btn btn-link x-shinryou-menu">[診療行為]</button>
-                <div class="x-shinryou-wrapper"></div>
-                <button type="button" class="btn btn-link x-shochi-menu">[処置]</button>
-                <div class="x-shochi-wrapper"></div>
             </div>
         </div>
     </div>
@@ -461,6 +468,37 @@
                     let patient = await rest.getPatient(patientId);
                     patientInfo.setPatient(patient);
                     patientInfo.show();
+                }
+            });
+        })();
+
+        (function(){
+            let ele = $("#practice-patient-manip");
+            let map = parseElement(ele);
+
+            map.cashier.on("click", event => {
+                console.log("cashier");
+            });
+
+            map.end.on("click", async event => {
+                currentPatientManager.setCurrentPatientId(0);
+                await suspendCurrentVisit();
+                currentVisitManager.setCurrentVisitId(0);
+            });
+
+            map.searchText.on("click", event => {
+                console.log("search text");
+            });
+
+            map.refer.on("click", event => {
+                console.log("refer");
+            });
+
+            currentPatientManager.onChanged((event, patientId) => {
+                if( patientId === 0 ){
+                    ele.addClass("d-none");
+                } else {
+                    ele.removeClass("d-none");
                 }
             });
         })();
@@ -874,7 +912,9 @@
                 let result = await selectWqueueDialog.open();
                 if( result.mode === "selected" ){
                     let wqueueFull = result.data;
-                    await startVisit(wqueueFull.visit.visitId);
+                    let visitId = wqueueFull.visit.visitId
+                    await rest.startExam(visitId);
+                    await startVisit(visitId);
                 }
             });
             map.search.on("click", async event => {
@@ -889,6 +929,7 @@
                     if (curr > 0) {
                         await rest.suspendExam(curr);
                     }
+                    await rest.startExam(visitId);
                     currentVisitManager.setCurrentVisitId(result.visitId);
                     let patient = result.patient;
                     currentPatientManager.setCurrentPatientId(patient.patientId);

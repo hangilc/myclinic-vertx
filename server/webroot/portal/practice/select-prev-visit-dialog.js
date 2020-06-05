@@ -11,12 +11,13 @@ export class SelectPreviousVisitDialog extends Component {
     }
 
     init(){
-        this.dateElement.on("change", event => {
+        this.dateElement.on("change", async event => {
             let date = this.dateElement.val();
             if( date ){
-                let list = await this.rest.listTodaysVisits();
-                list.forEach(wqueueFull => {
-                    let opt = this.createOption(wqueueFull);
+                this.selectElement.html("");
+                let list = await this.rest.listVisitPatientAt(date);
+                list.forEach(data => {
+                    let opt = this.createOption(data);
                     this.selectElement.append(opt);
                 });
             }

@@ -1929,6 +1929,19 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end(result);
     }
 
+    private void listVisitPatientAt(RoutingContext ctx, Connection conn) throws Exception{
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        LocalDate at = LocalDate.parse(params.get("at"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        List<VisitPatientDTO> _value = backend.listVisitPatientAt(at);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
+
     {
         funcMap.put("search-byoumei-master", this::searchByoumeiMaster);
         funcMap.put("list-visit-by-patient-having-hoken", this::listVisitByPatientHavingHoken);
@@ -2087,6 +2100,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("delete-visit", this::deleteVisit);
         funcMap.put("get-disease-full", this::getDiseaseFull);
         funcMap.put("list-recent-visit-with-patient", this::listRecentVisitWithPatient);
+        funcMap.put("list-visit-patient-at", this::listVisitPatientAt);
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////

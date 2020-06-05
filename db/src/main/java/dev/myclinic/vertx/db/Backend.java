@@ -3159,7 +3159,7 @@ public class Backend {
         return getQuery().query(xlate(sql, ts.visitTable), ts.visitTable, at, limit, offset);
     }
 
-    private List<VisitPatientDTO> listVisitPatientAt(LocalDate at){
+    public List<VisitPatientDTO> listVisitPatientAt(LocalDate at){
         String sql = "select v.*, p.* from Visit v, Patient p " +
                 " where date(v.visitedAt) = ? and v.patientId = p.patientId " +
                 " order by v.visitId";

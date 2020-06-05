@@ -224,6 +224,10 @@ class Rest extends Client {
     async listTodaysVisits(){
         return await this.get("/list-todays-visits", {});
     }
+
+    async listVisitPatientAt(at){
+        return await this.get("/list-visit-patient-at", {at: at});
+    }
 }
 
 class Integration extends Client {

@@ -32,8 +32,8 @@ export class SelectTodaysVisitDialog extends Component {
     async open(){
         this.selectElement.html("");
         let list = await this.rest.listTodaysVisits();
-        list.forEach(wqueueFull => {
-            let opt = this.createOption(wqueueFull);
+        list.forEach(data => {
+            let opt = this.createOption(data);
             this.selectElement.append(opt);
         });
         return new Promise(resolve => {

@@ -214,6 +214,250 @@
     </div>
 </template>
 
+<template id="practice-shinryou-regular-dialog-template">
+    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">診療行為入力</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row x-checks">
+                        <div class="col-sm-6">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" value="初診"
+                                       id="practice-shinryou-regular-初診"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-初診">
+                                    初診
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" value="再診"
+                                       id="practice-shinryou-regular-再診"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-再診">
+                                    再診
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" value="外来管理加算"
+                                       id="practice-shinryou-regular-外来管理加算"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-外来管理加算">
+                                    外来管理加算
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" value="特定疾患管理"
+                                       id="practice-shinryou-regular-特定疾患管理"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-特定疾患管理">
+                                    特定疾患管理
+                                </label>
+                            </div>
+                            <div class="form-check mt-3">
+                                <input type="checkbox" class="form-check-input" value="尿便検査判断料"
+                                       id="practice-shinryou-regular-尿便検査判断料"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-尿便検査判断料">
+                                    尿便検査判断料
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" value="血液検査判断料"
+                                       id="practice-shinryou-regular-血液検査判断料"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-血液検査判断料">
+                                    血液検査判断料
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" value="生化Ⅰ判断料"
+                                       id="practice-shinryou-regular-生化Ⅰ判断料"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-生化Ⅰ判断料">
+                                    生化Ⅰ判断料
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" value="生化Ⅱ判断料"
+                                       id="practice-shinryou-regular-生化Ⅱ判断料"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-生化Ⅱ判断料">
+                                    生化Ⅱ判断料
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" value="免疫検査判断料"
+                                       id="practice-shinryou-regular-免疫検査判断料"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-免疫検査判断料">
+                                    免疫検査判断料
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" value="微生物検査判断料"
+                                       id="practice-shinryou-regular-微生物検査判断料"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-微生物検査判断料">
+                                    微生物検査判断料
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" value="静脈採血"
+                                       id="practice-shinryou-regular-静脈採血"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-静脈採血">
+                                    静脈採血
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       value="尿一般"
+                                       id="practice-shinryou-regular-尿一般"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-尿一般">
+                                       尿一般
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       value="便潜血"
+                                       id="practice-shinryou-regular-便潜血"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-便潜血">
+                                       便潜血
+                                </label>
+                            </div>
+                            <div class="form-check mt-3">
+                                <input type="checkbox" class="form-check-input"
+                                       value="処方箋料"
+                                       id="practice-shinryou-regular-処方箋料"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-処方箋料">
+                                       処方箋料
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       value="特定疾患処方管理加算２（処方箋料）"
+                                       id="practice-shinryou-regular-特定疾患処方管理加算２（処方箋料）"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-特定疾患処方管理加算２（処方箋料）">
+                                       特定疾患処方管理加算２（処方箋料）
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       value="一般名処方加算２（処方箋料）"
+                                       id="practice-shinryou-regular-一般名処方加算２（処方箋料）"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-一般名処方加算２（処方箋料）">
+                                       一般名処方加算２（処方箋料）
+                                </label>
+                            </div>
+                            <div class="form-check mt-3">
+                                <input type="checkbox" class="form-check-input"
+                                       value="処方料"
+                                       id="practice-shinryou-regular-処方料"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-処方料">
+                                       処方料
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       value="処方料７"
+                                       id="practice-shinryou-regular-処方料７"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-処方料７">
+                                       処方料７
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       value="手帳記載加算"
+                                       id="practice-shinryou-regular-手帳記載加算"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-手帳記載加算">
+                                       手帳記載加算
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       value="特定疾患処方"
+                                       id="practice-shinryou-regular-特定疾患処方"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-特定疾患処方">
+                                       特定疾患処方
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       value="長期処方"
+                                       id="practice-shinryou-regular-長期処方"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-長期処方">
+                                       長期処方
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       value="内服調剤"
+                                       id="practice-shinryou-regular-内服調剤"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-内服調剤">
+                                       内服調剤
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       value="外用調剤"
+                                       id="practice-shinryou-regular-外用調剤"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-外用調剤">
+                                       外用調剤
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       value="調基"
+                                       id="practice-shinryou-regular-調基"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-調基">
+                                       調基
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       value="薬剤情報提供"
+                                       id="practice-shinryou-regular-薬剤情報提供"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-薬剤情報提供">
+                                       薬剤情報提供
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        Foot Row
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary x-enter">入力</button>
+                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
 <template id="practice-title-template">
     <div class="mt-2 practice-title form-inline">
         <div class="x-text"></div>
@@ -258,7 +502,7 @@
             <button type="button" class="btn btn-link x-shohousen-fax">処方箋FAX</button>
             <button type="button" class="btn btn-link x-copy">コピー</button>
         </div>
-        </div>
+    </div>
     </div>
 </template>
 
@@ -285,73 +529,8 @@
 </template>
 
 <script>
-    function hyphenToCamel(s) {
-        let ps = s.split(/-+/);
-        for (let i = 1; i < ps.length; i++) {
-            let p = ps[i];
-            ps[i] = p[0].toUpperCase() + p.substring(1);
-        }
-        return ps.join("");
-    }
-
-    function probeXClass(e) {
-        let attrClass = e.attr("class");
-        if (attrClass) {
-            for (let cls of attrClass.split(/\s+/)) {
-                if (cls.startsWith("x-")) {
-                    e.removeClass(cls);
-                    return hyphenToCamel(cls.substring(2));
-                }
-            }
-        }
-        return null;
-    }
-
-    function parseElementIter(ele, map) {
-        ele = $(ele);
-        if (ele.length === 1) {
-            let name = probeXClass(ele);
-            if (name) {
-                map[name] = ele;
-                if (name.endsWith("_")) {
-                    name = name.substring(0, name.length - 1);
-                    let submap = {};
-                    parseElementIter(ele.children(), submap);
-                    map[name] = submap;
-                } else {
-                    parseElementIter(ele.children(), map);
-                }
-            } else {
-                parseElementIter(ele.children(), map);
-            }
-        } else {
-            for (let e of ele.toArray()) {
-                parseElementIter(e, map);
-            }
-        }
-    }
-
-    function parseElement(ele) {
-        let map = {};
-        parseElementIter(ele, map);
-        return map;
-    }
-
-    function getTemplateHtml(templateId) {
-        let html = $("template#" + templateId).html();
-        if (!html) {
-            console.error(`cannot find "${templateId}"`);
-        }
-        return html;
-    }
-
-    function assert(value) {
-        if (!value) {
-            throw new Error("assetion failed.");
-        }
-    }
-
     (async function () {
+        let {parseElement} = await import("./practice/parse-element.js");
         let modChoosePatientDialog = await import("./practice/choose-patient-dialog.js");
         let modPatientDisplay = await import("./practice/patient-display.js");
         let modDrawerSvg = await import("./js/drawer-svg.js");
@@ -364,10 +543,25 @@
         let {SelectRecentVisitDialog} = await import("./practice/select-recent-visit-dialog.js");
         let {SelectTodaysVisitDialog} = await import("./practice/select-todays-visit-dialog.js");
         let {SelectPreviousVisitDialog} = await import("./practice/select-prev-visit-dialog.js");
+        let {ShinryouRegularDialog} = await import("./practice/shinryou-regular-dialog.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
         let recordManager = new RecordManager();
+
+        function getTemplateHtml(templateId) {
+            let html = $("template#" + templateId).html();
+            if (!html) {
+                console.error(`cannot find "${templateId}"`);
+            }
+            return html;
+        }
+
+        function assert(value) {
+            if (!value) {
+                throw new Error("assetion failed.");
+            }
+        }
 
         currentVisitManager.onChanged((event, info) => console.log("currentVisitChanged", info));
         currentPatientManager.onChanged((event, info) => console.log("currentPatientChanged", info));
@@ -378,7 +572,7 @@
             return new modChoosePatientDialog.ChoosePatientDialog(map, rest);
         })();
 
-        let selectWqueueDialog = (function(){
+        let selectWqueueDialog = (function () {
             let html = getTemplateHtml("practice-select-wqueue-dialog-template");
             let ele = $(html);
             let map = parseElement(ele);
@@ -387,7 +581,7 @@
             return dialog;
         })();
 
-        let selectRecentVisitDialog = (function(){
+        let selectRecentVisitDialog = (function () {
             let html = getTemplateHtml("practice-select-recent-visit-dialog-template");
             let ele = $(html);
             let map = parseElement(ele);
@@ -396,7 +590,7 @@
             return dialog;
         })();
 
-        let selectTodaysVisitDialog = (function(){
+        let selectTodaysVisitDialog = (function () {
             let html = getTemplateHtml("practice-select-todays-visit-dialog-template");
             let ele = $(html);
             let map = parseElement(ele);
@@ -405,11 +599,20 @@
             return dialog;
         })();
 
-        let selectPreviousVisitDialog = (function(){
+        let selectPreviousVisitDialog = (function () {
             let html = getTemplateHtml("practice-select-visit-at-dialog-template");
             let ele = $(html);
             let map = parseElement(ele);
             let dialog = new SelectPreviousVisitDialog(ele, map, rest);
+            dialog.init();
+            return dialog;
+        })();
+
+        let shinryouRegularDialog = (function () {
+            let html = getTemplateHtml("practice-shinryou-regular-dialog-template");
+            let ele = $(html);
+            let map = parseElement(ele);
+            let dialog = new ShinryouRegularDialog(ele, map, rest);
             dialog.init();
             return dialog;
         })();
@@ -472,7 +675,7 @@
             });
         })();
 
-        (function(){
+        (function () {
             let ele = $("#practice-patient-manip");
             let map = parseElement(ele);
 
@@ -495,7 +698,7 @@
             });
 
             currentPatientManager.onChanged((event, patientId) => {
-                if( patientId === 0 ){
+                if (patientId === 0) {
                     ele.addClass("d-none");
                 } else {
                     ele.removeClass("d-none");
@@ -517,8 +720,6 @@
                 this.shochiWrapperElement = map.right.shochiWrapper;
                 this.textFactory = textFactory;
                 this.hokenFactory = hokenFactory;
-                this.shinryouMenuElement.on("click", event => console.log("Shinryou Menu"));
-                this.shochiMenuElement.on("click", event => console.log("Shochi Menu"));
             }
 
             async init(visitFull, titleFactory) {
@@ -532,13 +733,13 @@
                 });
                 title.onTempVisit((event, visitId) => {
                     let result = currentVisitManager.setTempVisitId(visitId);
-                    if( !result.success ){
+                    if (!result.success) {
                         alert(result.message);
                     }
                 });
                 title.onClearTempVisit(event => {
                     let result = currentVisitManager.setTempVisitId(0);
-                    if( !result.success ){
+                    if (!result.success) {
                         alert(result.message);
                     }
                 });
@@ -548,13 +749,17 @@
                 }
                 let hoken = await this.hokenFactory.create(visitFull.hoken);
                 hoken.appendTo(this.hokenWrapperElement);
+                this.shinryouMenuElement.on("click", async event => {
+                    let result = await shinryouRegularDialog.open(visit.visitId);
+                    console.log("shinryou regular result:", result);
+                });
             }
 
-            getVisit(){
+            getVisit() {
                 return this.visitFull.visit;
             }
 
-            getVisitId(){
+            getVisitId() {
                 return this.getVisit().visitId;
             }
 
@@ -613,9 +818,9 @@
                 let map = parseElement(ele);
                 let comp = new Title(ele, map, rest);
                 comp.init(visit, "current-visit", "temp-visit");
-                if( visit.visitId === currentVisitManager.getCurrentVisitId() ) {
+                if (visit.visitId === currentVisitManager.getCurrentVisitId()) {
                     comp.markAsCurrent();
-                } else if( visit.visitId === currentVisitManager.getTempVisitId() ){
+                } else if (visit.visitId === currentVisitManager.getTempVisitId()) {
                     comp.markAsTemp();
                 }
                 return comp;
@@ -886,31 +1091,31 @@
             rest
         );
 
-        async function suspendCurrentVisit(){
+        async function suspendCurrentVisit() {
             let curr = currentVisitManager.getCurrentVisitId();
             if (curr > 0) {
                 await rest.suspendExam(curr);
             }
         }
 
-        async function startPatient(patientId){
+        async function startPatient(patientId) {
             await suspendCurrentVisit();
             currentVisitManager.setCurrentVisitId(0);
             currentPatientManager.setCurrentPatientId(patientId);
         }
 
-        async function startVisit(visitId){
+        async function startVisit(visitId) {
             await suspendCurrentVisit();
             currentVisitManager.setCurrentVisitId(visitId);
             let visit = await rest.getVisit(visitId);
             currentPatientManager.setCurrentPatientId(visit.patientId);
         }
 
-        (function(){
+        (function () {
             let map = parseElement($("#practice-select-patient-menu"));
             map.wqueue.on("click", async event => {
                 let result = await selectWqueueDialog.open();
-                if( result.mode === "selected" ){
+                if (result.mode === "selected") {
                     let wqueueFull = result.data;
                     let visitId = wqueueFull.visit.visitId
                     await rest.startExam(visitId);
@@ -937,21 +1142,21 @@
             });
             map.recent.on("click", async event => {
                 let result = await selectRecentVisitDialog.open();
-                if( result.mode === "selected" ){
+                if (result.mode === "selected") {
                     let patient = result.data.patient;
                     await startPatient(patient.patientId);
                 }
             });
             map.today.on("click", async event => {
                 let result = await selectTodaysVisitDialog.open();
-                if( result.mode === "selected" ){
+                if (result.mode === "selected") {
                     let patient = result.data.patient;
                     await startPatient(patient.patientId);
                 }
             });
             map.prev.on("click", async event => {
                 let result = await selectPreviousVisitDialog.open();
-                if( result.mode === "selected" ){
+                if (result.mode === "selected") {
                     let patient = result.data.patient;
                     await startPatient(patient.patientId);
                 }
@@ -976,9 +1181,9 @@
         currentVisitManager.onChanged((event, info) => {
             let {currentVisitId, tempVisitId} = info;
             recordManager.forEachRecord(record => {
-                if( record.getVisitId() === currentVisitId ){
+                if (record.getVisitId() === currentVisitId) {
                     record.title.markAsCurrent();
-                } else if( record.getVisitId() === tempVisitId ){
+                } else if (record.getVisitId() === tempVisitId) {
                     record.title.markAsTemp();
                 } else {
                     record.title.clearMark();

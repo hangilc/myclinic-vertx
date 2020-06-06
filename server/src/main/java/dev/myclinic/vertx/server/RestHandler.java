@@ -2162,6 +2162,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         ShinryouWithAttrDTO result = new ShinryouWithAttrDTO();
         ShinryouDTO shinryou = new ShinryouDTO();
         shinryou.shinryoucode = masterMap.resolve(MasterKind.Shinryou, name, at);
+        shinryou.visitId = visitId;
         result.shinryou = shinryou;
         return result;
     }
@@ -2178,7 +2179,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void batchEnterShinryouByName(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<String> names = params.getAll("name");
+        List<String> names = params.getAll("name[]");
         int visitId = Integer.parseInt(params.get("visit-id"));
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);

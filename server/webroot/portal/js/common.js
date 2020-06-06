@@ -228,6 +228,13 @@ class Rest extends Client {
     async listVisitPatientAt(at){
         return await this.get("/list-visit-patient-at", {at: at});
     }
+
+    async batchEnterShinryouByNames(names, visitId){
+        return await this.get("/batch-enter-shinryou-by-name", {
+            name: names,
+            "visit-id": visitId
+        });
+    }
 }
 
 class Integration extends Client {

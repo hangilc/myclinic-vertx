@@ -471,6 +471,8 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             if( req.issueDate != null ){
                 LocalDate date = LocalDate.parse(req.issueDate);
                 data.setKoufuDate(date);
+            } else {
+                data.setKoufuDate(LocalDate.now());
             }
             if( req.validUpto != null ){
                 LocalDate date = LocalDate.parse(req.validUpto);

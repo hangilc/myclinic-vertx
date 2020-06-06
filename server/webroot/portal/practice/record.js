@@ -14,11 +14,21 @@ export class Record extends Component {
         this.shochiWrapperElement = map.right.shochiWrapper;
     }
 
-    init(visitFull, hokenRep, titleFactory, textFactory, hokenFactory, shinryouFactory){
+    init(visitFull, hokenRep, titleFactory, textFactory, hokenFactory, shinryouFactory,
+         textEnterFactory){
         this.visitFull = visitFull;
         this.titleComponent = titleFactory.create(visitFull.visit).appendTo(this.titleElement);
         visitFull.texts.forEach(text => {
             let compText = textFactory.create(text).appendTo(this.textWrapperElement);
+        });
+        this.enterTextElement.on("click", event => {
+            let comp = textEnterFactory.create(this.visitFull.visit.visitId);
+            comp.onEntered((event, entered) => {
+                comp.remove();
+                textFactory.create(entered).appendTo(this.textWrapperElement);
+            });
+            comp.onCancel(event => comp.remove());
+            comp.putBefore(this.enterTextElement);
         });
         let compHoken = hokenFactory.create(hokenRep).appendTo(this.hokenWrapperElement);
         visitFull.shinryouList.forEach(shinryouFull => {

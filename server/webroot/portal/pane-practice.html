@@ -557,6 +557,7 @@
         let {Text} = await import("./practice/text.js");
         let {Record} = await import("./practice/record.js");
         let {Hoken} = await import("./practice/hoken.js");
+        let {TextEnter} = await import("./practice/text-enter.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
@@ -832,6 +833,20 @@
             }
         }
 
+        class TextEnterFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-enter-text-template");
+            }
+
+            create(visitId) {
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new TextEnter(ele, map, rest);
+                comp.init(visitId);
+                return comp;
+            }
+        }
+
         class TextFactory {
             constructor() {
                 this.html = $("template#practice-text-template").html();
@@ -882,6 +897,7 @@
                 this.wrapper = $("#practice-record-wrapper");
                 this.titleFactory = new TitleFactory();
                 this.textFactory = new TextFactory();
+                this.textEnterFactory = new TextEnterFactory();
                 this.hokenFactory = new HokenFactory();
                 this.shinryouFactory = new ShinryouFactory();
             }
@@ -891,7 +907,7 @@
                 let map = parseElement(ele);
                 let record = new Record(ele, map, rest);
                 record.init(visitFull, hokenRep, this.titleFactory, this.textFactory,
-                    this.hokenFactory, this.shinryouFactory);
+                    this.hokenFactory, this.shinryouFactory, this.textEnterFactory);
                 record.onDeleted(event => record.remove());
                 record.onTempVisit(event =>
                     currentVisitManager.setTempVisitId(visitFull.visit.visitId));
@@ -900,82 +916,6 @@
             }
         }
 
-
-        // class Text extends Component {
-        //     constructor(ele, map, rest) {
-        //         super(ele, map, rest);
-        //     }
-        //
-        //     init(text) {
-        //         this.ele.html(text.content.replace(/\r\n|\n|\r/g, "<br/>\n"));
-        //         let self = this;
-        //         this.ele.on("click", event => {
-        //             let editTextFactory = new EditTextFactory();
-        //             let compEdit = editTextFactory.create(text);
-        //             compEdit.onCancel(event => self.replace(compEdit.ele));
-        //             compEdit.onUpdated((event, updatedText) => {
-        //                 let textFactory = new TextFactory();
-        //                 let compUpdatedText = textFactory.create(updatedText);
-        //                 compUpdatedText.replace(compEdit.ele);
-        //             });
-        //             compEdit.onDeleted(event => compEdit.remove());
-        //             compEdit.replace(this.ele);
-        //         });
-        //     }
-        // }
-
-        class EnterText extends Component {
-            constructor(ele, map, rest) {
-                super(ele, map, rest);
-                this.textAreaElement = map.textarea;
-                this.enterElement = map.enter;
-                this.cancelElement = map.cancel;
-                assert(this.textAreaElement && this.enterElement && this.cancelElement);
-            }
-
-            setVisitId(visitId) {
-                this.visitId = visitId;
-                this.enterElement.on("click", event => this.doEnter());
-                this.cancelElement.on("click", event => {
-                    this.ele.trigger("cancel");
-                });
-            }
-
-            async doEnter() {
-                assert(this.visitId > 0);
-                let content = this.textAreaElement.val();
-                let text = {
-                    content: content,
-                    visitId: this.visitId
-                };
-                let textId = await rest.enterText(text);
-                let entered = await rest.getText(textId);
-                this.ele.trigger("onEntered", entered);
-            }
-
-            onEntered(cb) {
-                this.ele.on("onEntered", cb);
-            }
-
-            onCancel(cb) {
-                this.ele.on("cancel", cb);
-            }
-        }
-
-        class EnterTextFactory {
-            constructor() {
-                this.html = getTemplateHtml("practice-enter-text-template");
-                this.rest = rest;
-            }
-
-            create(visitId) {
-                let ele = $(this.html);
-                let map = parseElement(ele);
-                let comp = new EnterText(ele, map, this.rest);
-                comp.setVisitId(visitId);
-                return comp;
-            }
-        }
 
         class EditText extends Component {
             constructor(ele, map, rest) {

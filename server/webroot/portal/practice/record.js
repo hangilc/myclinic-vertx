@@ -15,7 +15,8 @@ export class Record extends Component {
     }
 
     init(visitFull, hokenRep, titleFactory, textFactory, hokenFactory, shinryouFactory){
-        let compTitle = titleFactory.create(visitFull.visit).appendTo(this.titleElement);
+        this.visitFull = visitFull;
+        this.titleComponent = titleFactory.create(visitFull.visit).appendTo(this.titleElement);
         visitFull.texts.forEach(text => {
             let compText = textFactory.create(text).appendTo(this.textWrapperElement);
         });
@@ -24,5 +25,33 @@ export class Record extends Component {
             let compShinryou = shinryouFactory.create(shinryouFull)
                 .appendTo(this.shinryouWrapperElement);
         })
+    }
+
+    getVisitId(){
+        return this.visitFull.visit.visitId;
+    }
+
+    markAsCurrent(){
+        this.titleComponent.markAsCurrent();
+    }
+
+    markAsTemp(){
+        this.titleComponent.markAsTemp();
+    }
+
+    clearMark(){
+        this.titleComponent.clearMark();
+    }
+
+    onDeleted(cb){
+        this.titleComponent.onDeleted(cb);
+    }
+
+    onTempVisit(cb){
+        this.titleComponent.onTempVisit(cb);
+    }
+
+    onClearTempVisit(cb){
+        this.titleComponent.onClearTempVisit(cb);
     }
 }

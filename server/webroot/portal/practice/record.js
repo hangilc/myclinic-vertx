@@ -15,7 +15,7 @@ export class Record extends Component {
     }
 
     init(visitFull, hokenRep, titleFactory, textFactory, hokenFactory, shinryouFactory,
-         textEnterFactory){
+         textEnterFactory, shinryouRegularDialogFactory){
         this.ele.attr("data-visit-id", visitFull.visit.visitId);
         this.ele.data("component", this);
         this.visitFull = visitFull;
@@ -34,6 +34,13 @@ export class Record extends Component {
             comp.putBefore(this.enterTextElement);
         });
         let compHoken = hokenFactory.create(hokenRep).appendTo(this.hokenWrapperElement);
+        this.shinryouMenuElement.on("click", event => {
+            let result = shinryouRegularDialogFactory.create(visitFull.visit.visitId).open();
+            if( result.mode === "entered" ){
+                let shinryouIds = result.shinryouIds;
+                console.log(shinryouIds);
+            }
+        });
         visitFull.shinryouList.forEach(shinryouFull => {
             let compShinryou = shinryouFactory.create(shinryouFull)
                 .appendTo(this.shinryouWrapperElement);

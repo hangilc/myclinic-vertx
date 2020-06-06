@@ -13,7 +13,7 @@ export class ShinryouRegularDialog extends Component {
         this.resolver = result => { console.log("dummy resolver", result)};
     }
 
-    init() {
+    init(visitId) {
         this.enterElement.on("click", async event => {
             let values = [];
             this.checksElement.find("input[type=checkbox]:checked")
@@ -21,7 +21,7 @@ export class ShinryouRegularDialog extends Component {
                 .forEach(e => {
                     values.push($(e).val());
                 });
-            let shinryouIds = await this.rest.batchEnterShinryouByNames(values, this.visitId);
+            let shinryouIds = await this.rest.batchEnterShinryouByNames(values, visitId);
             this.result.mode = "entered";
             this.result.shinryouIds = shinryouIds;
             this.ele.modal("hide");
@@ -32,8 +32,7 @@ export class ShinryouRegularDialog extends Component {
         });
     }
 
-    async open(visitId) {
-        this.visitId = visitId;
+    async open() {
         this.checksElement.find("input[type=checkbox]:checked").prop("checked", false);
         return new Promise(resolve => {
             this.resolver = resolve;

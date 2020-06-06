@@ -365,6 +365,15 @@
                                        一般名処方加算２（処方箋料）
                                 </label>
                             </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       value="一般名処方加算１（処方箋料）"
+                                       id="practice-shinryou-regular-一般名処方加算１（処方箋料）"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-一般名処方加算１（処方箋料）">
+                                       一般名処方加算１（処方箋料）
+                                </label>
+                            </div>
                             <div class="form-check mt-3">
                                 <input type="checkbox" class="form-check-input"
                                        value="処方料"
@@ -623,14 +632,20 @@
             return dialog;
         })();
 
-        let shinryouRegularDialog = (function () {
-            let html = getTemplateHtml("practice-shinryou-regular-dialog-template");
-            let ele = $(html);
-            let map = parseElement(ele);
-            let dialog = new ShinryouRegularDialog(ele, map, rest);
-            dialog.init();
-            return dialog;
-        })();
+        class ShinryouRegularDialogFactory {
+            constructor(){
+                this.html = getTemplateHtml("practice-shinryou-regular-dialog-template");
+            }
+
+            create(visitId){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                console.log("ele", ele.html());
+                let dialog = new ShinryouRegularDialog(ele, map, rest);
+                dialog.init(visitId);
+                return dialog;
+            }
+        }
 
         class PatientInfo {
             constructor(ele, map) {
@@ -870,6 +885,7 @@
                 this.textEnterFactory = new TextEnterFactory();
                 this.hokenFactory = new HokenFactory();
                 this.shinryouFactory = new ShinryouFactory();
+                this.shinryouRegularDialogFactory = new ShinryouRegularDialogFactory();
             }
 
             create(visitFull, hokenRep){
@@ -877,7 +893,8 @@
                 let map = parseElement(ele);
                 let record = new Record(ele, map, rest);
                 record.init(visitFull, hokenRep, this.titleFactory, this.textFactory,
-                    this.hokenFactory, this.shinryouFactory, this.textEnterFactory);
+                    this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
+                    this.shinryouRegularDialogFactory);
                 record.onDeleted(event => record.remove());
                 record.onTempVisit(event =>
                     currentVisitManager.setTempVisitId(visitFull.visit.visitId));

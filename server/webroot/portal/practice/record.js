@@ -16,10 +16,13 @@ export class Record extends Component {
 
     init(visitFull, hokenRep, titleFactory, textFactory, hokenFactory, shinryouFactory,
          textEnterFactory){
+        this.ele.attr("data-visit-id", visitFull.visit.visitId);
+        this.ele.data("component", this);
         this.visitFull = visitFull;
+        this.textFactory = textFactory;
         this.titleComponent = titleFactory.create(visitFull.visit).appendTo(this.titleElement);
         visitFull.texts.forEach(text => {
-            let compText = textFactory.create(text).appendTo(this.textWrapperElement);
+            this.addText(text);
         });
         this.enterTextElement.on("click", event => {
             let comp = textEnterFactory.create(this.visitFull.visit.visitId);
@@ -35,6 +38,10 @@ export class Record extends Component {
             let compShinryou = shinryouFactory.create(shinryouFull)
                 .appendTo(this.shinryouWrapperElement);
         })
+    }
+
+    addText(text){
+        this.textFactory.create(text).appendTo(this.textWrapperElement);
     }
 
     getVisitId(){

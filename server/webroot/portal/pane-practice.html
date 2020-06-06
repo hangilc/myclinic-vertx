@@ -102,7 +102,7 @@
 <div id="practice-record-wrapper"></div>
 
 <template id="practice-record-template">
-    <div>
+    <div class="practice-record">
         <div class="x-title"></div>
         <div class="row">
             <div class="x-left_ col-sm-6 rp-1">
@@ -548,7 +548,6 @@
         let {CurrentPatientManager} = await import("./practice/current-patient-manager.js");
         let {Component} = await import("./practice/component.js");
         let {Title} = await import("./practice/title.js");
-        let {RecordManager} = await import("./practice/record-manager.js");
         let {SelectWqueueDialog} = await import("./practice/select-wqueue-dialog.js");
         let {SelectRecentVisitDialog} = await import("./practice/select-recent-visit-dialog.js");
         let {SelectTodaysVisitDialog} = await import("./practice/select-todays-visit-dialog.js");
@@ -564,7 +563,6 @@
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
-        let recordManager = new RecordManager();
 
         function getTemplateHtml(templateId) {
             let html = $("template#" + templateId).html();
@@ -790,6 +788,13 @@
                     });
                     editor.onCancel(event => comp.replace(editor.ele));
                     editor.onDeleted(event => editor.remove());
+                    editor.onCopied((event, copiedText) => {
+                        comp.replace(editor.ele);
+                        let target = findRecord(copiedText.visitId);
+                        if( target ){
+                            target.addText(copiedText);
+                        }
+                    });
                     editor.replace(comp.ele);
                 });
                 return comp;
@@ -953,6 +958,8 @@
             });
         })();
 
+        let recordFactory = new RecordFactory();
+
         async function getHokenRep(hoken){
             let hokenRep = await rest.hokenRep(hoken);
             if( hokenRep == "" ){
@@ -961,25 +968,44 @@
             return hokenRep;
         }
 
-        let recordFactory = new RecordFactory();
-
         currentPatientManager.onChanged(async (event, patientId) => {
             let recordWrapperElement = $("#practice-record-wrapper").html("");
-            recordManager.clear();
             if (patientId > 0) {
                 let page = await rest.listVisit(patientId, 0);
                 for (let visitFull of page.visits) {
                     let hokenRep = await getHokenRep(visitFull.hoken);
                     let record = recordFactory.create(visitFull, hokenRep);
                     record.appendTo(recordWrapperElement);
-                    recordManager.add(record);
                 }
             }
         });
 
+        function forEachRecord(f){
+            let xs = $(".practice-record");
+            let len = xs.length;
+            for(let i=0;i<len;i++){
+                let x = xs.slice(i, i+1);
+                let c = x.data("component");
+                f(c);
+            }
+        }
+
+        function findRecord(visitId){
+            let xs = $(".practice-record");
+            let len = xs.length;
+            for(let i=0;i<len;i++){
+                let x = xs.slice(i, i+1);
+                let c = x.data("component");
+                if( c.getVisitId() === visitId ){
+                    return c;
+                }
+            }
+            return null;
+        }
+
         currentVisitManager.onChanged((event, info) => {
             let {currentVisitId, tempVisitId} = info;
-            recordManager.forEachRecord(record => {
+            forEachRecord(record => {
                 if (record.getVisitId() === currentVisitId) {
                     record.markAsCurrent();
                 } else if (record.getVisitId() === tempVisitId) {

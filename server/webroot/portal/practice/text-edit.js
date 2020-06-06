@@ -61,9 +61,28 @@ export class TextEdit extends Component {
         }
     }
 
-    doCopy() {
-        console.log("doCopy");
+    onCopied(cb){
+        this.ele.on("text-copied", (event, text) => cb(event, text));
     }
+
+    async doCopy() {
+        let targetVisitId = this.copyTargetResolver.resolve();
+        if (targetVisitId === 0) {
+            alert("コピー先が設定されていません。");
+            return;
+        }
+        if (targetVisitId === this.text.visitId) {
+            alert("同じ診療記録にはコピーできません。");
+            return;
+        }
+        let t = Object.assign({}, this.text);
+        t.textId = 0;
+        t.visitId = targetVisitId;
+        let textId = await this.rest.enterText(t);
+        let copied = await this.rest.getText(textId);
+        this.ele.trigger("text-copied", copied);
+    }
+
 
     async doEnter() {
         let content = this.textareaElement.val();

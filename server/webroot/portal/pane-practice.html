@@ -108,14 +108,14 @@
             <div class="x-left_ col-sm-6 rp-1">
                 <div class="x-text-wrapper"></div>
                 <div class="x-command-wrapper">
-                    <button type="button" class="btn btn-link x-enter-text">[文章入力]</button>
+                    <button type="button" class="btn btn-link x-enter-text">［文章入力］</button>
                 </div>
             </div>
             <div class="x-right_ col-sm-6 lp-1">
                 <div class="x-hoken-wrapper"></div>
-                <button type="button" class="btn btn-link x-shinryou-menu">[診療行為]</button>
+                <button type="button" class="btn btn-link x-shinryou-menu">［診療行為］</button>
                 <div class="x-shinryou-wrapper"></div>
-                <button type="button" class="btn btn-link x-shochi-menu">[処置]</button>
+                <button type="button" class="btn btn-link x-shochi-menu">［処置］</button>
                 <div class="x-shochi-wrapper"></div>
             </div>
         </div>
@@ -528,6 +528,12 @@
     </div>
 </template>
 
+<template id="practice-shinryou-template">
+    <div>
+        <div class="x-text"></div>
+    </div>
+</template>
+
 <script>
     (async function () {
         let {parseElement} = await import("./practice/parse-element.js");
@@ -544,6 +550,10 @@
         let {SelectTodaysVisitDialog} = await import("./practice/select-todays-visit-dialog.js");
         let {SelectPreviousVisitDialog} = await import("./practice/select-prev-visit-dialog.js");
         let {ShinryouRegularDialog} = await import("./practice/shinryou-regular-dialog.js");
+        let {Shinryou} = await import("./practice/shinryou.js");
+        let {Text} = await import("./practice/text.js");
+        let {Record} = await import("./practice/record.js");
+        let {Hoken} = await import("./practice/hoken.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
@@ -706,105 +716,97 @@
             });
         })();
 
-        class Record {
-            constructor(ele, map, textFactory, hokenFactory) {
-                this.ele = ele;
-                this.titleElement = map.title;
-                this.enterTextElement = map.left.enterText;
-                this.textWrapperElement = map.left.textWrapper;
-                this.rightElement = map.right_;
-                this.hokenWrapperElement = map.right.hokenWrapper;
-                this.shinryouMenuElement = map.right.shinryouMenu;
-                this.shinryouWrapperElement = map.right.shinryouWrapper;
-                this.shochiMenuElement = map.right.shochiMenu;
-                this.shochiWrapperElement = map.right.shochiWrapper;
-                this.textFactory = textFactory;
-                this.hokenFactory = hokenFactory;
-            }
-
-            async init(visitFull, titleFactory) {
-                let self = this;
-                this.visitFull = visitFull;
-                let visit = visitFull.visit;
-                let title = titleFactory.create(visit).appendTo(this.titleElement);
-                this.title = title;
-                title.onDeleted(event => {
-                    self.ele.remove();
-                });
-                title.onTempVisit((event, visitId) => {
-                    let result = currentVisitManager.setTempVisitId(visitId);
-                    if (!result.success) {
-                        alert(result.message);
-                    }
-                });
-                title.onClearTempVisit(event => {
-                    let result = currentVisitManager.setTempVisitId(0);
-                    if (!result.success) {
-                        alert(result.message);
-                    }
-                });
-                for (let text of visitFull.texts) {
-                    let comp = this.textFactory.create(text);
-                    comp.appendTo(this.textWrapperElement);
+        let copyTargetResolver = {
+            resolve(){
+                let currentVisitId = currentVisitManager.getCurrentVisitId();
+                if( currentVisitId > 0 ){
+                    return currentVisitId;
+                } else {
+                    return currentVisitManager.getTempVisitId();
                 }
-                let hoken = await this.hokenFactory.create(visitFull.hoken);
-                hoken.appendTo(this.hokenWrapperElement);
-                this.shinryouMenuElement.on("click", async event => {
-                    let result = await shinryouRegularDialog.open(visit.visitId);
-                    console.log("shinryou regular result:", result);
-                });
             }
+        };
 
-            getVisit() {
-                return this.visitFull.visit;
-            }
-
-            getVisitId() {
-                return this.getVisit().visitId;
-            }
-
-            bindToEnterTextElement(enterTextFactory) {
-                let visit = this.visitFull.visit;
-                this.enterTextElement.on("click", event => {
-                    let comp = enterTextFactory.create(visit.visitId);
-                    comp.onCancel(event => comp.remove());
-                    comp.onEntered((event, text) => {
-                        let factory = new TextFactory();
-                        let newComp = factory.create(text);
-                        newComp.appendTo(this.textWrapperElement);
-                        comp.remove();
-                    });
-                    this.enterTextElement.before(comp.ele);
-                });
-            }
-
-            appendTo(element) {
-                element.append(this.ele);
-            }
-        }
-
-        class RecordFactory {
-            constructor(html, rest) {
-                this.html = html;
-                this.rest = rest;
-            }
-
-            async create(visitFull) {
-                let ele = $(this.html);
-                let map = parseElement(ele);
-                let record = new Record(ele, map, new TextFactory(),
-                    new HokenFactory());
-                await record.init(visitFull, new TitleFactory());
-                record.bindToEnterTextElement(new EnterTextFactory());
-                return record;
-            }
-        }
-
-        let recordFactory = new RecordFactory(
-            getTemplateHtml("practice-record-template"),
-            rest
-        );
-
+        // class Record {
+        //     constructor(ele, map, textFactory, hokenFactory) {
+        //         this.ele = ele;
+        //         this.titleElement = map.title;
+        //         this.enterTextElement = map.left.enterText;
+        //         this.textWrapperElement = map.left.textWrapper;
+        //         this.rightElement = map.right_;
+        //         this.hokenWrapperElement = map.right.hokenWrapper;
+        //         this.shinryouMenuElement = map.right.shinryouMenu;
+        //         this.shinryouWrapperElement = map.right.shinryouWrapper;
+        //         this.shochiMenuElement = map.right.shochiMenu;
+        //         this.shochiWrapperElement = map.right.shochiWrapper;
+        //         this.textFactory = textFactory;
+        //         this.hokenFactory = hokenFactory;
+        //     }
+        //
+        //     async init(visitFull, titleFactory, shinryouFactory) {
+        //         let self = this;
+        //         this.visitFull = visitFull;
+        //         let visit = visitFull.visit;
+        //         let title = titleFactory.create(visit).appendTo(this.titleElement);
+        //         this.title = title;
+        //         title.onDeleted(event => {
+        //             self.ele.remove();
+        //         });
+        //         title.onTempVisit((event, visitId) => {
+        //             let result = currentVisitManager.setTempVisitId(visitId);
+        //             if (!result.success) {
+        //                 alert(result.message);
+        //             }
+        //         });
+        //         title.onClearTempVisit(event => {
+        //             let result = currentVisitManager.setTempVisitId(0);
+        //             if (!result.success) {
+        //                 alert(result.message);
+        //             }
+        //         });
+        //         for (let text of visitFull.texts) {
+        //             let comp = this.textFactory.create(text);
+        //             comp.appendTo(this.textWrapperElement);
+        //         }
+        //         let hoken = await this.hokenFactory.create(visitFull.hoken);
+        //         hoken.appendTo(this.hokenWrapperElement);
+        //         this.shinryouMenuElement.on("click", async event => {
+        //             let result = await shinryouRegularDialog.open(visit.visitId);
+        //             console.log("shinryou regular result:", result);
+        //         });
+        //         visitFull.shinryouList.forEach(shinryouFull => {
+        //             let comp = shinryouFactory.create(shinryouFull);
+        //             comp.appendTo(this.shinryouWrapperElement);
+        //         });
+        //     }
+        //
+        //     getVisit() {
+        //         return this.visitFull.visit;
+        //     }
+        //
+        //     getVisitId() {
+        //         return this.getVisit().visitId;
+        //     }
+        //
+        //     bindToEnterTextElement(enterTextFactory) {
+        //         let visit = this.visitFull.visit;
+        //         this.enterTextElement.on("click", event => {
+        //             let comp = enterTextFactory.create(visit.visitId);
+        //             comp.onCancel(event => comp.remove());
+        //             comp.onEntered((event, text) => {
+        //                 let factory = new TextFactory();
+        //                 let newComp = factory.create(text);
+        //                 newComp.appendTo(this.textWrapperElement);
+        //                 comp.remove();
+        //             });
+        //             this.enterTextElement.before(comp.ele);
+        //         });
+        //     }
+        //
+        //     appendTo(element) {
+        //         element.append(this.ele);
+        //     }
+        // }
 
         class TitleFactory {
             constructor() {
@@ -827,73 +829,93 @@
             }
         }
 
-
-        class Text extends Component {
-            constructor(ele, map, rest) {
-                super(ele, map, rest);
-            }
-
-            init(text) {
-                this.ele.html(text.content.replace(/\r\n|\n|\r/g, "<br/>\n"));
-                let self = this;
-                this.ele.on("click", event => {
-                    let editTextFactory = new EditTextFactory();
-                    let compEdit = editTextFactory.create(text);
-                    compEdit.onCancel(event => self.replace(compEdit.ele));
-                    compEdit.onUpdated((event, updatedText) => {
-                        let textFactory = new TextFactory();
-                        let compUpdatedText = textFactory.create(updatedText);
-                        compUpdatedText.replace(compEdit.ele);
-                    });
-                    compEdit.onDeleted(event => compEdit.remove());
-                    compEdit.replace(this.ele);
-                });
-            }
-        }
-
         class TextFactory {
             constructor() {
                 this.html = $("template#practice-text-template").html();
                 this.rest = rest;
+                this.copyTargetResolver = copyTargetResolver;
             }
 
             create(text) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new Text(ele, map, this.rest);
-                comp.init(text);
+                comp.init(text, this.copyTargetResolver);
                 return comp;
-            }
-        }
-
-        class Hoken {
-            constructor(ele, map, hoken, hokenRep) {
-                this.ele = ele;
-                this.hoken = hoken;
-                this.ele.text(hokenRep);
-            }
-
-            appendTo(element) {
-                element.append(this.ele);
             }
         }
 
         class HokenFactory {
             constructor() {
                 this.html = getTemplateHtml("practice-hoken-template");
-                this.rest = rest;
             }
 
-            async create(hoken) {
+            create(hokenRep) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
-                let hokenRep = await this.rest.hokenRep(hoken);
-                if (hokenRep === "") {
-                    hokenRep = "[保険なし]";
-                }
-                return new Hoken(ele, map, hoken, hokenRep);
+                let compHoken = new Hoken(ele, map, rest);
+                compHoken.init(hokenRep);
+                return compHoken;
             }
         }
+
+        class ShinryouFactory {
+            constructor(){
+                this.html = getTemplateHtml("practice-shinryou-template");
+            }
+
+            create(shinryouFull){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new Shinryou(ele, map, rest);
+                comp.init(shinryouFull);
+                return comp;
+            }
+        }
+
+        class RecordFactory {
+            constructor(){
+                this.html = getTemplateHtml("practice-record-template");
+                this.wrapper = $("#practice-record-wrapper");
+                this.titleFactory = new TitleFactory();
+                this.textFactory = new TextFactory();
+                this.hokenFactory = new HokenFactory();
+                this.shinryouFactory = new ShinryouFactory();
+            }
+
+            create(visitFull, hokenRep){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let record = new Record(ele, map, rest);
+                record.init(visitFull, hokenRep, this.titleFactory, this.textFactory,
+                    this.hokenFactory, this.shinryouFactory);
+                return record;
+            }
+        }
+
+
+        // class Text extends Component {
+        //     constructor(ele, map, rest) {
+        //         super(ele, map, rest);
+        //     }
+        //
+        //     init(text) {
+        //         this.ele.html(text.content.replace(/\r\n|\n|\r/g, "<br/>\n"));
+        //         let self = this;
+        //         this.ele.on("click", event => {
+        //             let editTextFactory = new EditTextFactory();
+        //             let compEdit = editTextFactory.create(text);
+        //             compEdit.onCancel(event => self.replace(compEdit.ele));
+        //             compEdit.onUpdated((event, updatedText) => {
+        //                 let textFactory = new TextFactory();
+        //                 let compUpdatedText = textFactory.create(updatedText);
+        //                 compUpdatedText.replace(compEdit.ele);
+        //             });
+        //             compEdit.onDeleted(event => compEdit.remove());
+        //             compEdit.replace(this.ele);
+        //         });
+        //     }
+        // }
 
         class EnterText extends Component {
             constructor(ele, map, rest) {
@@ -1163,18 +1185,27 @@
             });
         })();
 
+        async function getHokenRep(hoken){
+            let hokenRep = await rest.hokenRep(hoken);
+            if( hokenRep == "" ){
+                hokenRep = "［保険なし］"
+            }
+            return hokenRep;
+        }
+
+        let recordFactory = new RecordFactory();
+
         currentPatientManager.onChanged(async (event, patientId) => {
             let recordWrapperElement = $("#practice-record-wrapper").html("");
             recordManager.clear();
             if (patientId > 0) {
                 let page = await rest.listVisit(patientId, 0);
                 for (let visitFull of page.visits) {
-                    let record = await recordFactory.create(visitFull);
+                    let hokenRep = await getHokenRep(visitFull.hoken);
+                    let record = recordFactory.create(visitFull, hokenRep);
                     record.appendTo(recordWrapperElement);
                     recordManager.add(record);
                 }
-            } else {
-
             }
         });
 

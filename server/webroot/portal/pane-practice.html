@@ -579,6 +579,16 @@
     <div></div>
 </template>
 
+<template id="practice-shinryou-edit-template">
+    <div class="border border-secondary rounded p-2 my-2">
+        <div>名称：<span class="x-label"></span></div>
+        <div class="mt-2">
+            <button class="btn btn-secondary x-delete">削除</button>
+            <button class="btn btn-secondary x-cancel">キャンセル</button>
+        </div>
+    </div>
+</template>
+
 <template id="practice-conduct-disp-template">
     <div>
         <div class="x-kind"></div>
@@ -637,6 +647,7 @@
         let {ShinryouRegularDialog} = await import("./practice/shinryou-regular-dialog.js");
         let {ShinryouDisp} = await import("./practice/shinryou-disp.js");
         let {Shinryou} = await import("./practice/shinryou.js");
+        let {ShinryouEdit} = await import("./practice/shinryou-edit.js");
         let {Text} = await import("./practice/text.js");
         let {Record} = await import("./practice/record.js");
         let {Hoken} = await import("./practice/hoken.js");
@@ -961,17 +972,32 @@
             }
         }
 
+        class ShinryouEditFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-shinryou-edit-template");
+            }
+
+            create(shinryouFull){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new ShinryouEdit(ele, map, rest);
+                comp.init(shinryouFull);
+                return comp;
+            }
+        }
+
         class ShinryouFactory {
             constructor() {
                 this.html = getTemplateHtml("practice-shinryou-template");
                 this.shinryouDispFactory = new ShinryouDispFactory();
+                this.shinryouEditFactory = new ShinryouEditFactory();
             }
 
             create(shinryouFull) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new Shinryou(ele, map, rest);
-                comp.init(shinryouFull, this.shinryouDispFactory);
+                comp.init(shinryouFull, this.shinryouDispFactory, this.shinryouEditFactory);
                 return comp;
             }
         }

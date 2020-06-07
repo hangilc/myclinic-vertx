@@ -84,6 +84,7 @@ export class Record extends Component {
 
     addShinryou(shinryouFull, searchLocation = true) {
         let compShinryou = this.shinryouFactory.create(shinryouFull);
+        compShinryou.onDeleted(event => compShinryou.remove());
         if (searchLocation) {
             let shinryoucode = shinryouFull.shinryou.shinryoucode;
             let xs = this.shinryouWrapperElement.find(".practice-shinryou");

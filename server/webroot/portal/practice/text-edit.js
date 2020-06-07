@@ -12,9 +12,9 @@ export class TextEdit extends Component {
         this.copyElement = map.copy;
     }
 
-    init(text, copyTargetResolver, shohousenPreviewDialogFactory) {
+    init(text, currentVisitManager, shohousenPreviewDialogFactory) {
         this.text = text;
-        this.copyTargetResolver = copyTargetResolver;
+        this.currentVisitManager = currentVisitManager;
         this.shohousenPreviewFactory = shohousenPreviewDialogFactory;
         this.textareaElement.val(text.content);
         this.enterElement.on("click", event => this.doEnter());
@@ -66,7 +66,7 @@ export class TextEdit extends Component {
     }
 
     async doCopy() {
-        let targetVisitId = this.copyTargetResolver.resolve();
+        let targetVisitId = this.currentVisitManager.resolveCopyTarget();
         if (targetVisitId === 0) {
             alert("コピー先が設定されていません。");
             return;

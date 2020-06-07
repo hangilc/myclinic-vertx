@@ -235,6 +235,10 @@ class Rest extends Client {
             "visit-id": visitId
         });
     }
+
+    async listShinryouFullByIds(shinryouIds){
+        return await this.get("/list-shinryou-full-by-ids", {"shinryou-id": shinryouIds});
+    }
 }
 
 class Integration extends Client {

@@ -20,6 +20,11 @@ export class Component {
         return this;
     }
 
+    putAfter(element) {
+        element.after(this.ele);
+        return this;
+    }
+
     replace(element) {
         element.after(this.ele);
         element.detach();

@@ -3,6 +3,7 @@ import {Component} from "./component.js";
 export class Record extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
+        this.ele.data("component", this);
         this.titleElement = map.title;
         this.enterTextElement = map.left.enterText;
         this.textWrapperElement = map.left.textWrapper;
@@ -16,10 +17,10 @@ export class Record extends Component {
 
     init(visitFull, hokenRep, titleFactory, textFactory, hokenFactory, shinryouFactory,
          textEnterFactory, shinryouRegularDialogFactory){
-        this.ele.attr("data-visit-id", visitFull.visit.visitId);
-        this.ele.data("component", this);
+        //this.ele.attr("data-visit-id", visitFull.visit.visitId);
         this.visitFull = visitFull;
         this.textFactory = textFactory;
+        this.shinryouFactory = shinryouFactory;
         this.titleComponent = titleFactory.create(visitFull.visit).appendTo(this.titleElement);
         visitFull.texts.forEach(text => {
             this.addText(text);
@@ -34,17 +35,41 @@ export class Record extends Component {
             comp.putBefore(this.enterTextElement);
         });
         let compHoken = hokenFactory.create(hokenRep).appendTo(this.hokenWrapperElement);
-        this.shinryouMenuElement.on("click", event => {
-            let result = shinryouRegularDialogFactory.create(visitFull.visit.visitId).open();
+        this.shinryouMenuElement.on("click", async event => {
+            let result = await shinryouRegularDialogFactory.create(visitFull.visit.visitId).open();
             if( result.mode === "entered" ){
                 let shinryouIds = result.shinryouIds;
-                console.log(shinryouIds);
+                let shinryouFullList = await this.rest.listShinryouFullByIds(shinryouIds);
+                shinryouFullList.forEach(sf => this.addShinryou(sf, true));
             }
         });
         visitFull.shinryouList.forEach(shinryouFull => {
-            let compShinryou = shinryouFactory.create(shinryouFull)
-                .appendTo(this.shinryouWrapperElement);
+            this.addShinryou(shinryouFull, false);
         })
+    }
+
+    addShinryou(shinryouFull, searchLocation=true){
+        let compShinryou = this.shinryouFactory.create(shinryouFull);
+        if( searchLocation ){
+            let shinryoucode = shinryouFull.shinryou.shinryoucode;
+            let xs = this.shinryouWrapperElement.find(".practice-shinryou");
+            let found = false;
+            for(let i=0;i<xs.length;i++){
+                let x = xs.slice(i, i+1);
+                let c = x.data("component");
+                let code = c.getShinryoucode();
+                if( shinryoucode < code ){
+                    compShinryou.putBefore(x);
+                    found = true;
+                    break;
+                }
+            }
+            if( !found ){
+                compShinryou.appendTo(this.shinryouWrapperElement);
+            }
+        } else {
+            compShinryou.appendTo(this.shinryouWrapperElement);
+        }
     }
 
     addText(text){

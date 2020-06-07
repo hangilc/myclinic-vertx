@@ -21,9 +21,9 @@ export class ShinryouRegularDialog extends Component {
                 .forEach(e => {
                     values.push($(e).val());
                 });
-            let shinryouIds = await this.rest.batchEnterShinryouByNames(values, visitId);
+            let batchEnterResult = await this.rest.batchEnterShinryouByNames(values, visitId);
             this.result.mode = "entered";
-            this.result.shinryouIds = shinryouIds;
+            this.result.shinryouIds = batchEnterResult.shinryouIds;
             this.ele.modal("hide");
         });
         this.cancelElement.on("click", event => this.ele.modal("hide"));

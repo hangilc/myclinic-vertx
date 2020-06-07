@@ -41,4 +41,12 @@ export class CurrentVisitManager {
         }
     }
 
+    resolveCopyTarget(){
+        if( this.currentVisitId > 0 ){
+            return this.currentVisitId;
+        } else {
+            return this.tempVisitId;
+        }
+    }
+
 }

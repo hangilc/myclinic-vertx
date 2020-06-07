@@ -9,11 +9,11 @@
                 患者選択
             </button>
             <div class="dropdown-menu x-menu" aria-labelledby="dropdownMenuButton">
-                <button class="btn btn-link x-wqueue">受付患者選択</button>
-                <button class="btn btn-link x-search">患者検索</button>
-                <button class="btn btn-link x-recent">最近の診察</button>
-                <button class="btn btn-link x-today">本日の診察</button>
-                <button class="btn btn-link x-prev">以前の診察</button>
+                <a href="javascript:void(0)" class="x-wqueue mx-2">受付患者選択</a>
+                <a href="javascript:void(0)" class="x-search mx-2">患者検索</a>
+                <a href="javascript:void(0)" class="x-recent mx-2">最近の診察</a>
+                <a href="javascript:void(0)" class="x-today mx-2">本日の診察</a>
+                <a href="javascript:void(0)" class="x-prev mx-2">以前の診察</a>
             </div>
         </div>
     </div>
@@ -76,14 +76,14 @@
     </div>
 </div>
 
-<div id="practice-patient-info" class="d-none mx-2">
+<div id="practice-patient-info" class="d-none mx-2 my-2">
     [<span class="x-patient-id"></span>]
     <span class="x-last-name"></span><span class="x-first-name"></span>
     (<span class="x-last-name-yomi"></span><span class="x-first-name-yomi"></span>)
     <span class="x-birthday"></span>生
     (<span class="x-age"></span>才)
     <span class="x-sex"></span>性
-    <button type="button" class="x-detail-link btn btn-link">詳細</button>
+    <a href="javascript:void(0)" class="x-detail-link">詳細</a>
     <div class="x-detail d-none row">
         <div class="col-sm-3">住所</div>
         <div class="x-address col-sm-9"></div>
@@ -93,10 +93,10 @@
 </div>
 
 <div id="practice-patient-manip" class="d-none mx-2 form-inline">
-    <button type="button" class="x-cashier btn btn-secondary">会計</button>
-    <button type="button" class="x-end btn btn-secondary ml-2">患者終了</button>
-    <button type="button" class="x-search-text btn btn-link ml-2">文章検索</button>
-    <button type="button" class="x-refer btn btn-link">紹介状作成</button>
+    <button class="x-cashier btn btn-secondary">会計</button>
+    <button class="x-end  ml-2 btn btn-secondary">患者終了</button>
+    <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>
+    <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>
 </div>
 
 <div id="practice-record-wrapper"></div>
@@ -326,7 +326,7 @@
                                        id="practice-shinryou-regular-尿一般"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-尿一般">
-                                       尿一般
+                                    尿一般
                                 </label>
                             </div>
                             <div class="form-check">
@@ -335,7 +335,7 @@
                                        id="practice-shinryou-regular-便潜血"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-便潜血">
-                                       便潜血
+                                    便潜血
                                 </label>
                             </div>
                             <div class="form-check mt-3">
@@ -344,7 +344,7 @@
                                        id="practice-shinryou-regular-処方箋料"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-処方箋料">
-                                       処方箋料
+                                    処方箋料
                                 </label>
                             </div>
                             <div class="form-check">
@@ -353,7 +353,7 @@
                                        id="practice-shinryou-regular-特定疾患処方管理加算２（処方箋料）"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-特定疾患処方管理加算２（処方箋料）">
-                                       特定疾患処方管理加算２（処方箋料）
+                                    特定疾患処方管理加算２（処方箋料）
                                 </label>
                             </div>
                             <div class="form-check">
@@ -362,7 +362,7 @@
                                        id="practice-shinryou-regular-一般名処方加算２（処方箋料）"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-一般名処方加算２（処方箋料）">
-                                       一般名処方加算２（処方箋料）
+                                    一般名処方加算２（処方箋料）
                                 </label>
                             </div>
                             <div class="form-check">
@@ -371,7 +371,7 @@
                                        id="practice-shinryou-regular-一般名処方加算１（処方箋料）"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-一般名処方加算１（処方箋料）">
-                                       一般名処方加算１（処方箋料）
+                                    一般名処方加算１（処方箋料）
                                 </label>
                             </div>
                             <div class="form-check mt-3">
@@ -380,7 +380,7 @@
                                        id="practice-shinryou-regular-処方料"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-処方料">
-                                       処方料
+                                    処方料
                                 </label>
                             </div>
                             <div class="form-check">
@@ -389,7 +389,7 @@
                                        id="practice-shinryou-regular-処方料７"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-処方料７">
-                                       処方料７
+                                    処方料７
                                 </label>
                             </div>
                             <div class="form-check">
@@ -398,7 +398,7 @@
                                        id="practice-shinryou-regular-手帳記載加算"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-手帳記載加算">
-                                       手帳記載加算
+                                    手帳記載加算
                                 </label>
                             </div>
                             <div class="form-check">
@@ -407,7 +407,7 @@
                                        id="practice-shinryou-regular-特定疾患処方"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-特定疾患処方">
-                                       特定疾患処方
+                                    特定疾患処方
                                 </label>
                             </div>
                             <div class="form-check">
@@ -416,7 +416,7 @@
                                        id="practice-shinryou-regular-長期処方"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-長期処方">
-                                       長期処方
+                                    長期処方
                                 </label>
                             </div>
                             <div class="form-check">
@@ -425,7 +425,7 @@
                                        id="practice-shinryou-regular-内服調剤"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-内服調剤">
-                                       内服調剤
+                                    内服調剤
                                 </label>
                             </div>
                             <div class="form-check">
@@ -434,7 +434,7 @@
                                        id="practice-shinryou-regular-外用調剤"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-外用調剤">
-                                       外用調剤
+                                    外用調剤
                                 </label>
                             </div>
                             <div class="form-check">
@@ -443,7 +443,7 @@
                                        id="practice-shinryou-regular-調基"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-調基">
-                                       調基
+                                    調基
                                 </label>
                             </div>
                             <div class="form-check">
@@ -452,7 +452,36 @@
                                        id="practice-shinryou-regular-薬剤情報提供"/>
                                 <label class="form-check-label"
                                        for="practice-shinryou-regular-薬剤情報提供">
-                                       薬剤情報提供
+                                    薬剤情報提供
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 form-inline">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       value="向精神薬"
+                                       id="practice-shinryou-regular-向精神薬"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-向精神薬">
+                                    向精神薬
+                                </label>
+                            </div>
+                            <div class="form-check ml-2">
+                                <input type="checkbox" class="form-check-input"
+                                       value="心電図"
+                                       id="practice-shinryou-regular-心電図"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-心電図">
+                                    心電図
+                                </label>
+                            </div>
+                            <div class="form-check ml-2">
+                                <input type="checkbox" class="form-check-input"
+                                       value="骨塩定量"
+                                       id="practice-shinryou-regular-骨塩定量"/>
+                                <label class="form-check-label"
+                                       for="practice-shinryou-regular-骨塩定量">
+                                    骨塩定量
                                 </label>
                             </div>
                         </div>
@@ -497,8 +526,8 @@
     <div class="mt-2">
         <textarea class="form-control x-textarea" rows="6"></textarea>
         <div class="form-inline">
-            <button type="button" class="btn btn-link x-enter">入力</button>
-            <button type="button" class="btn btn-link x-cancel">キャンセル</button>
+            <a href="javascript:void(0)" class="x-enter">入力</a>
+            <a href="javascript:void(0)" class="x-cancel ml-2">キャンセル</a>
         </div>
     </div>
 </template>
@@ -507,12 +536,12 @@
     <div class="mt-2">
         <textarea class="form-control x-textarea" rows="6"></textarea>
         <div class="form-inline">
-            <button type="button" class="btn btn-link x-enter">入力</button>
-            <button type="button" class="btn btn-link x-cancel">キャンセル</button>
-            <button type="button" class="btn btn-link x-delete">削除</button>
-            <button type="button" class="btn btn-link x-shohousen">処方箋発行</button>
-            <button type="button" class="btn btn-link x-shohousen-fax">処方箋FAX</button>
-            <button type="button" class="btn btn-link x-copy">コピー</button>
+            <a href="javascript:void(0)" class="x-enter">入力</a>
+            <a href="javascript:void(0)" class="x-cancel ml-2">キャンセル</a>
+            <a href="javascript:void(0)" class="x-delete ml-2">削除</a>
+            <a href="javascript:void(0)" class="x-shohousen ml-2">処方箋発行</a>
+            <a href="javascript:void(0)" class="x-shohousen-fax ml-2">処方箋FAX</a>
+            <a href="javascript:void(0)" class="x-copy ml-2">コピー</a>
         </div>
     </div>
     </div>
@@ -541,9 +570,11 @@
 </template>
 
 <template id="practice-shinryou-template">
-    <div>
-        <div class="x-text"></div>
-    </div>
+    <div class="practice-shinryou"></div>
+</template>
+
+<template id="practice-shinryou-disp-template">
+    <div></div>
 </template>
 
 <script>
@@ -562,6 +593,7 @@
         let {SelectTodaysVisitDialog} = await import("./practice/select-todays-visit-dialog.js");
         let {SelectPreviousVisitDialog} = await import("./practice/select-prev-visit-dialog.js");
         let {ShinryouRegularDialog} = await import("./practice/shinryou-regular-dialog.js");
+        let {ShinryouDisp} = await import("./practice/shinryou-disp.js");
         let {Shinryou} = await import("./practice/shinryou.js");
         let {Text} = await import("./practice/text.js");
         let {Record} = await import("./practice/record.js");
@@ -633,14 +665,13 @@
         })();
 
         class ShinryouRegularDialogFactory {
-            constructor(){
+            constructor() {
                 this.html = getTemplateHtml("practice-shinryou-regular-dialog-template");
             }
 
-            create(visitId){
+            create(visitId) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
-                console.log("ele", ele.html());
                 let dialog = new ShinryouRegularDialog(ele, map, rest);
                 dialog.init(visitId);
                 return dialog;
@@ -737,9 +768,9 @@
         })();
 
         let copyTargetResolver = {
-            resolve(){
+            resolve() {
                 let currentVisitId = currentVisitManager.getCurrentVisitId();
-                if( currentVisitId > 0 ){
+                if (currentVisitId > 0) {
                     return currentVisitId;
                 } else {
                     return currentVisitManager.getTempVisitId();
@@ -786,7 +817,7 @@
             constructor() {
                 this.html = $("template#practice-text-template").html();
                 this.rest = rest;
-                this.copyTargetResolver = copyTargetResolver;
+                //this.copyTargetResolver = copyTargetResolver;
                 this.textEditFactory = new TextEditFactory();
             }
 
@@ -806,7 +837,7 @@
                     editor.onCopied((event, copiedText) => {
                         comp.replace(editor.ele);
                         let target = findRecord(copiedText.visitId);
-                        if( target ){
+                        if (target) {
                             target.addText(copiedText);
                         }
                     });
@@ -830,27 +861,42 @@
             }
         }
 
-        class ShinryouFactory {
-            constructor(){
-                this.html = getTemplateHtml("practice-shinryou-template");
+        class ShinryouDispFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-shinryou-disp-template");
             }
 
             create(shinryouFull){
                 let ele = $(this.html);
                 let map = parseElement(ele);
-                let comp = new Shinryou(ele, map, rest);
+                let comp = new ShinryouDisp(ele, map, rest);
                 comp.init(shinryouFull);
                 return comp;
             }
         }
 
+        class ShinryouFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-shinryou-template");
+                this.shinryouDispFactory = new ShinryouDispFactory();
+            }
+
+            create(shinryouFull) {
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new Shinryou(ele, map, rest);
+                comp.init(shinryouFull, this.shinryouDispFactory);
+                return comp;
+            }
+        }
+
         class ShohousenPreviewDialogFactory {
-            constructor(){
+            constructor() {
                 this.html = getTemplateHtml("practice-shohousen-preview-dialog-template");
                 this.drawerSvgModule = modDrawerSvg;
             }
 
-            create(ops){
+            create(ops) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let dialog = new ShohousenPreviewDialog(ele, map, rest);
@@ -863,7 +909,7 @@
             constructor() {
                 this.html = getTemplateHtml("practice-edit-text-template");
                 this.rest = rest;
-                this.copyTargetResolver = copyTargetResolver;
+                this.currentVisitManager = currentVisitManager;
                 this.shohousenPreviewDialogFactory = new ShohousenPreviewDialogFactory();
             }
 
@@ -871,13 +917,13 @@
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new TextEdit(ele, map, this.rest);
-                comp.init(text, this.copyTargetResolver, this.shohousenPreviewDialogFactory);
+                comp.init(text, this.currentVisitManager, this.shohousenPreviewDialogFactory);
                 return comp;
             }
         }
 
         class RecordFactory {
-            constructor(){
+            constructor() {
                 this.html = getTemplateHtml("practice-record-template");
                 this.wrapper = $("#practice-record-wrapper");
                 this.titleFactory = new TitleFactory();
@@ -888,7 +934,7 @@
                 this.shinryouRegularDialogFactory = new ShinryouRegularDialogFactory();
             }
 
-            create(visitFull, hokenRep){
+            create(visitFull, hokenRep) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let record = new Record(ele, map, rest);
@@ -977,9 +1023,9 @@
 
         let recordFactory = new RecordFactory();
 
-        async function getHokenRep(hoken){
+        async function getHokenRep(hoken) {
             let hokenRep = await rest.hokenRep(hoken);
-            if( hokenRep == "" ){
+            if (hokenRep == "") {
                 hokenRep = "［保険なし］"
             }
             return hokenRep;
@@ -997,23 +1043,23 @@
             }
         });
 
-        function forEachRecord(f){
+        function forEachRecord(f) {
             let xs = $(".practice-record");
             let len = xs.length;
-            for(let i=0;i<len;i++){
-                let x = xs.slice(i, i+1);
+            for (let i = 0; i < len; i++) {
+                let x = xs.slice(i, i + 1);
                 let c = x.data("component");
                 f(c);
             }
         }
 
-        function findRecord(visitId){
+        function findRecord(visitId) {
             let xs = $(".practice-record");
             let len = xs.length;
-            for(let i=0;i<len;i++){
-                let x = xs.slice(i, i+1);
+            for (let i = 0; i < len; i++) {
+                let x = xs.slice(i, i + 1);
                 let c = x.data("component");
-                if( c.getVisitId() === visitId ){
+                if (c.getVisitId() === visitId) {
                     return c;
                 }
             }

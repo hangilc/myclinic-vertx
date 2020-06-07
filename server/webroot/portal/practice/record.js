@@ -11,17 +11,18 @@ export class Record extends Component {
         this.hokenWrapperElement = map.right.hokenWrapper;
         this.shinryouMenuElement = map.right.shinryouMenu;
         this.shinryouWrapperElement = map.right.shinryouWrapper;
-        this.shochiMenuElement = map.right.shochiMenu;
-        this.shochiWrapperElement = map.right.shochiWrapper;
+        this.conductMenuElement = map.right.conductMenu;
+        this.conductWrapperElement = map.right.conductWrapper;
     }
 
     init(visitFull, hokenRep, titleFactory, textFactory, hokenFactory, shinryouFactory,
-         textEnterFactory, shinryouRegularDialogFactory){
+         textEnterFactory, shinryouRegularDialogFactory, conductDispFactory){
         //this.ele.attr("data-visit-id", visitFull.visit.visitId);
         this.visitFull = visitFull;
         this.textFactory = textFactory;
         this.shinryouFactory = shinryouFactory;
         this.titleComponent = titleFactory.create(visitFull.visit).appendTo(this.titleElement);
+        this.conductDispFactory = conductDispFactory;
         visitFull.texts.forEach(text => {
             this.addText(text);
         });
@@ -34,18 +35,35 @@ export class Record extends Component {
             comp.onCancel(event => comp.remove());
             comp.putBefore(this.enterTextElement);
         });
-        let compHoken = hokenFactory.create(hokenRep).appendTo(this.hokenWrapperElement);
+        hokenFactory.create(hokenRep).appendTo(this.hokenWrapperElement);
         this.shinryouMenuElement.on("click", async event => {
             let result = await shinryouRegularDialogFactory.create(visitFull.visit.visitId).open();
             if( result.mode === "entered" ){
-                let shinryouIds = result.shinryouIds;
-                let shinryouFullList = await this.rest.listShinryouFullByIds(shinryouIds);
-                shinryouFullList.forEach(sf => this.addShinryou(sf, true));
+                if( result.shinryouIds.length > 0 ) {
+                    let shinryouFullList = await this.rest.listShinryouFullByIds(result.shinryouIds);
+                    shinryouFullList.forEach(sf => this.addShinryou(sf, true));
+                }
+                if( result.drugIds.length > 0 ) {
+                    let drugFullList = await this.rest.listDrugFullByIds(result.drugIds);
+                    drugFullList.forEach(drugFull => this.addDrug(drugFull));
+                }
+                if( result.conductIds.length > 0 ) {
+                    let conductFullList = await this.rest.listConductFullByIds(result.conductIds);
+                    conductFullList.forEach(conductFull => this.addConduct(conductFull));
+                }
             }
         });
-        visitFull.shinryouList.forEach(shinryouFull => {
-            this.addShinryou(shinryouFull, false);
-        })
+        visitFull.shinryouList.forEach(shinryouFull => this.addShinryou(shinryouFull, false));
+        visitFull.conducts.forEach(cfull => this.addConduct(cfull));
+    }
+
+    addDrug(drugFull){
+        throw new Error("Not implemented");
+    }
+
+    addConduct(conductFull){
+        let compConduct = this.conductDispFactory.create(conductFull);
+        compConduct.appendTo(this.conductWrapperElement);
     }
 
     addShinryou(shinryouFull, searchLocation=true){

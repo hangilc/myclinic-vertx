@@ -2210,6 +2210,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private ConductEnterRequestDTO createKotsuenTeiryouReq(int visitId, LocalDate at) {
         ConductEnterRequestDTO creq = new ConductEnterRequestDTO();
         creq.visitId = visitId;
+        creq.kind = ConductKind.Gazou.getCode();
         creq.gazouLabel = "骨塩定量に使用";
         creq.shinryouList = List.of(createConductShinryouReq("骨塩定量ＭＤ法", at));
         creq.kizaiList = List.of(createConductKizaiReq("四ツ切", 1, at));

@@ -118,8 +118,8 @@
                     <a href="javascript:void(0)" class="x-shinryou-aux-menu">［＋］</a>
                 </div>
                 <div class="x-shinryou-wrapper"></div>
-                <a href="javascript:void(0)" class="x-shochi-menu">［処置］</a>
-                <div class="x-shochi-wrapper"></div>
+                <a href="javascript:void(0)" class="x-conduct-menu">［処置］</a>
+                <div class="x-conduct-wrapper"></div>
             </div>
         </div>
     </div>
@@ -611,6 +611,7 @@
         let {TextEnter} = await import("./practice/text-enter.js");
         let {TextEdit} = await import("./practice/text-edit.js");
         let {ShohousenPreviewDialog} = await import("./practice/shohousen-preview-dialog.js");
+        let {ConductDisp} = await import("./practice/conduct-disp.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
@@ -932,6 +933,20 @@
             }
         }
 
+        class ConductDispFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-conduct-disp-template");
+            }
+
+            create(conductFull){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new ConductDisp(ele, map, rest);
+                comp.init(conductFull);
+                return comp;
+            }
+        }
+
         class RecordFactory {
             constructor() {
                 this.html = getTemplateHtml("practice-record-template");
@@ -942,6 +957,7 @@
                 this.hokenFactory = new HokenFactory();
                 this.shinryouFactory = new ShinryouFactory();
                 this.shinryouRegularDialogFactory = new ShinryouRegularDialogFactory();
+                this.conductDispFactory = new ConductDispFactory();
             }
 
             create(visitFull, hokenRep) {
@@ -950,7 +966,7 @@
                 let record = new Record(ele, map, rest);
                 record.init(visitFull, hokenRep, this.titleFactory, this.textFactory,
                     this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
-                    this.shinryouRegularDialogFactory);
+                    this.shinryouRegularDialogFactory, this.conductDispFactory);
                 record.onDeleted(event => record.remove());
                 record.onTempVisit(event =>
                     currentVisitManager.setTempVisitId(visitFull.visit.visitId));

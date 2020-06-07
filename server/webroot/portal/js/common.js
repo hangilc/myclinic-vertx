@@ -239,6 +239,14 @@ class Rest extends Client {
     async listShinryouFullByIds(shinryouIds){
         return await this.get("/list-shinryou-full-by-ids", {"shinryou-id": shinryouIds});
     }
+
+    async listDrugFullByIds(drugIds){
+        return await this.get("/list-drug-full-by-drug-ids", {"drug-id": drugIds});
+    }
+
+    async listConductFullByIds(conductIds){
+        return await this.get("/list-conduct-full-by-ids", {"conduct-id": conductIds});
+    }
 }
 
 class Integration extends Client {
@@ -298,9 +306,4 @@ function sexToRep(sex) {
     }
 }
 
-
-function replaceElement(prevElement, newElement) {
-    prevElement.after(newElement);
-    prevElement.detach();
-}
 

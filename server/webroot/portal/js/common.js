@@ -79,6 +79,10 @@ class Rest extends Client {
         return await ajaxGet(this.url("/get-visit-meisai"), {"visit-id": visitId});
     }
 
+    async endExam(visitId, charge){
+        return await ajaxGet(this.url("/end-exam"), {"visit-id": visitId, "charge": charge});
+    }
+
     async finishCharge(visitId, amount, payTime) {
         if (moment.isMoment(payTime)) {
             payTime = payTime.format("YYYY-MM-DD HH:mm:ss");

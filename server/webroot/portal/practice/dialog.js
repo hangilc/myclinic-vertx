@@ -10,6 +10,10 @@ export class Dialog extends Component {
         });
     }
 
+    setResult(result){
+        this.result = result;
+    }
+
     hide(){
         this.ele.modal("hide");
     }

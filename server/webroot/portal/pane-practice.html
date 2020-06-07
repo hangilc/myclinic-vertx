@@ -593,6 +593,32 @@
     <div><span class="x-index"></span>）<span class="x-rep"></span></div>
 </template>
 
+<template id="practice-meisai-dialog-template">
+    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">会計</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="x-detail_">
+                        <pre class="x-items"></pre>
+                        <div class="x-summary"></div>
+                        <div class="x-value"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary x-enter">入力</button>
+                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
 <script>
 
     (async function () {
@@ -619,6 +645,7 @@
         let {ShohousenPreviewDialog} = await import("./practice/shohousen-preview-dialog.js");
         let {ConductDisp} = await import("./practice/conduct-disp.js");
         let {DrugDisp} = await import("./practice/drug-disp.js");
+        let {MeisaiDialog} = await import("./practice/meisai-dialog.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
@@ -754,12 +781,39 @@
             });
         })();
 
+        class MeisaiDialogFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-meisai-dialog-template");
+            }
+
+            create(meisai){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let dialog = new MeisaiDialog(ele, map, rest);
+                dialog.init(meisai);
+                return dialog;
+            }
+        }
+
         (function () {
             let ele = $("#practice-patient-manip");
             let map = parseElement(ele);
+            let meisaiDialogFactory = new MeisaiDialogFactory();
 
-            map.cashier.on("click", event => {
-                console.log("cashier");
+            map.cashier.on("click", async event => {
+                let visitId = currentVisitManager.getCurrentVisitId();
+                if (visitId <= 0) {
+                    alert("現在診察注ではないので、会計はできません。");
+                    return;
+                }
+                let meisai = await rest.getMeisai(visitId);
+                let dialog = meisaiDialogFactory.create(meisai);
+                let result = await dialog.open();
+                if( result ){
+                    await rest.endExam(visitId, meisai.charge);
+                    currentVisitManager.setCurrentVisitId(0);
+                    currentPatientManager.setCurrentPatientId(0);
+                }
             });
 
             map.end.on("click", async event => {
@@ -880,11 +934,11 @@
         }
 
         class DrugDispFactory {
-            constructor(){
+            constructor() {
                 this.html = getTemplateHtml("practice-drug-disp-template");
             }
 
-            create(drugFull){
+            create(drugFull) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new DrugDisp(ele, map, rest);
@@ -898,7 +952,7 @@
                 this.html = getTemplateHtml("practice-shinryou-disp-template");
             }
 
-            create(shinryouFull){
+            create(shinryouFull) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new ShinryouDisp(ele, map, rest);
@@ -959,7 +1013,7 @@
                 this.html = getTemplateHtml("practice-conduct-disp-template");
             }
 
-            create(conductFull){
+            create(conductFull) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new ConductDisp(ele, map, rest);

@@ -113,6 +113,8 @@
             </div>
             <div class="x-right_ col-sm-6 lp-1">
                 <div class="x-hoken-wrapper"></div>
+                <div class="x-drug-mark d-none">Rp）</div>
+                <div class="x-drug-wrapper"></div>
                 <div>
                     <a href="javascript:void(0)" class="x-shinryou-menu">［診療行為］</a>
                     <a href="javascript:void(0)" class="x-shinryou-aux-menu">［＋］</a>
@@ -587,6 +589,10 @@
     </div>
 </template>
 
+<template id="practice-drug-disp-template">
+    <div><span class="x-index"></span>）<span class="x-rep"></span></div>
+</template>
+
 <script>
 
     (async function () {
@@ -612,6 +618,7 @@
         let {TextEdit} = await import("./practice/text-edit.js");
         let {ShohousenPreviewDialog} = await import("./practice/shohousen-preview-dialog.js");
         let {ConductDisp} = await import("./practice/conduct-disp.js");
+        let {DrugDisp} = await import("./practice/drug-disp.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
@@ -872,6 +879,20 @@
             }
         }
 
+        class DrugDispFactory {
+            constructor(){
+                this.html = getTemplateHtml("practice-drug-disp-template");
+            }
+
+            create(drugFull){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new DrugDisp(ele, map, rest);
+                comp.init(drugFull);
+                return comp;
+            }
+        }
+
         class ShinryouDispFactory {
             constructor() {
                 this.html = getTemplateHtml("practice-shinryou-disp-template");
@@ -958,6 +979,7 @@
                 this.shinryouFactory = new ShinryouFactory();
                 this.shinryouRegularDialogFactory = new ShinryouRegularDialogFactory();
                 this.conductDispFactory = new ConductDispFactory();
+                this.drugDispFactory = new DrugDispFactory();
             }
 
             create(visitFull, hokenRep) {
@@ -966,7 +988,7 @@
                 let record = new Record(ele, map, rest);
                 record.init(visitFull, hokenRep, this.titleFactory, this.textFactory,
                     this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
-                    this.shinryouRegularDialogFactory, this.conductDispFactory);
+                    this.shinryouRegularDialogFactory, this.conductDispFactory, this.drugDispFactory);
                 record.onDeleted(event => record.remove());
                 record.onTempVisit(event =>
                     currentVisitManager.setTempVisitId(visitFull.visit.visitId));

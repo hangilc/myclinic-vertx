@@ -12,3 +12,9 @@ export function conductKindToKanji(kindCode){
         default: return "" + kindCode;
     }
 }
+
+export const DrugCategoryNaifuku = 0;
+export const DrugCategoryTonpuku = 1;
+export const DrugCategoryGaiyou  = 2;
+export const DrugCategoryInjection  = 3;
+

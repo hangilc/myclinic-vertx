@@ -9,6 +9,8 @@ export class Record extends Component {
         this.textWrapperElement = map.left.textWrapper;
         this.rightElement = map.right_;
         this.hokenWrapperElement = map.right.hokenWrapper;
+        this.drugMarkElement = map.right.drugMark;
+        this.drugWrapperElement = map.right.drugWrapper;
         this.shinryouMenuElement = map.right.shinryouMenu;
         this.shinryouWrapperElement = map.right.shinryouWrapper;
         this.conductMenuElement = map.right.conductMenu;
@@ -16,13 +18,15 @@ export class Record extends Component {
     }
 
     init(visitFull, hokenRep, titleFactory, textFactory, hokenFactory, shinryouFactory,
-         textEnterFactory, shinryouRegularDialogFactory, conductDispFactory){
-        //this.ele.attr("data-visit-id", visitFull.visit.visitId);
+         textEnterFactory, shinryouRegularDialogFactory, conductDispFactory,
+         drugDispFactory) {
         this.visitFull = visitFull;
         this.textFactory = textFactory;
         this.shinryouFactory = shinryouFactory;
         this.titleComponent = titleFactory.create(visitFull.visit).appendTo(this.titleElement);
         this.conductDispFactory = conductDispFactory;
+        this.drugDispFactory = drugDispFactory;
+        this.drugCount = 0;
         visitFull.texts.forEach(text => {
             this.addText(text);
         });
@@ -38,51 +42,63 @@ export class Record extends Component {
         hokenFactory.create(hokenRep).appendTo(this.hokenWrapperElement);
         this.shinryouMenuElement.on("click", async event => {
             let result = await shinryouRegularDialogFactory.create(visitFull.visit.visitId).open();
-            if( result.mode === "entered" ){
-                if( result.shinryouIds.length > 0 ) {
+            if (result.mode === "entered") {
+                if (result.shinryouIds.length > 0) {
                     let shinryouFullList = await this.rest.listShinryouFullByIds(result.shinryouIds);
                     shinryouFullList.forEach(sf => this.addShinryou(sf, true));
                 }
-                if( result.drugIds.length > 0 ) {
+                if (result.drugIds.length > 0) {
                     let drugFullList = await this.rest.listDrugFullByIds(result.drugIds);
                     drugFullList.forEach(drugFull => this.addDrug(drugFull));
                 }
-                if( result.conductIds.length > 0 ) {
+                if (result.conductIds.length > 0) {
                     let conductFullList = await this.rest.listConductFullByIds(result.conductIds);
                     conductFullList.forEach(conductFull => this.addConduct(conductFull));
                 }
             }
         });
+        visitFull.drugs.forEach(drugFull => this.addDrug(drugFull));
         visitFull.shinryouList.forEach(shinryouFull => this.addShinryou(shinryouFull, false));
         visitFull.conducts.forEach(cfull => this.addConduct(cfull));
     }
 
-    addDrug(drugFull){
-        throw new Error("Not implemented");
+    showDrugMark() {
+        this.drugMarkElement.removeClass("d-none");
     }
 
-    addConduct(conductFull){
+    hideDrugMark() {
+        this.drugMarkElement.addClass("d-none");
+    }
+
+    addDrug(drugFull) {
+        let compDrug = this.drugDispFactory.create(drugFull);
+        compDrug.setIndex(++this.drugCount);
+        compDrug.appendTo(this.drugWrapperElement);
+        this.showDrugMark();
+    }
+
+    addConduct(conductFull) {
         let compConduct = this.conductDispFactory.create(conductFull);
         compConduct.appendTo(this.conductWrapperElement);
     }
 
-    addShinryou(shinryouFull, searchLocation=true){
+    addShinryou(shinryouFull, searchLocation = true) {
         let compShinryou = this.shinryouFactory.create(shinryouFull);
-        if( searchLocation ){
+        if (searchLocation) {
             let shinryoucode = shinryouFull.shinryou.shinryoucode;
             let xs = this.shinryouWrapperElement.find(".practice-shinryou");
             let found = false;
-            for(let i=0;i<xs.length;i++){
-                let x = xs.slice(i, i+1);
+            for (let i = 0; i < xs.length; i++) {
+                let x = xs.slice(i, i + 1);
                 let c = x.data("component");
                 let code = c.getShinryoucode();
-                if( shinryoucode < code ){
+                if (shinryoucode < code) {
                     compShinryou.putBefore(x);
                     found = true;
                     break;
                 }
             }
-            if( !found ){
+            if (!found) {
                 compShinryou.appendTo(this.shinryouWrapperElement);
             }
         } else {
@@ -90,35 +106,35 @@ export class Record extends Component {
         }
     }
 
-    addText(text){
+    addText(text) {
         this.textFactory.create(text).appendTo(this.textWrapperElement);
     }
 
-    getVisitId(){
+    getVisitId() {
         return this.visitFull.visit.visitId;
     }
 
-    markAsCurrent(){
+    markAsCurrent() {
         this.titleComponent.markAsCurrent();
     }
 
-    markAsTemp(){
+    markAsTemp() {
         this.titleComponent.markAsTemp();
     }
 
-    clearMark(){
+    clearMark() {
         this.titleComponent.clearMark();
     }
 
-    onDeleted(cb){
+    onDeleted(cb) {
         this.titleComponent.onDeleted(cb);
     }
 
-    onTempVisit(cb){
+    onTempVisit(cb) {
         this.titleComponent.onTempVisit(cb);
     }
 
-    onClearTempVisit(cb){
+    onClearTempVisit(cb) {
         this.titleComponent.onClearTempVisit(cb);
     }
 }

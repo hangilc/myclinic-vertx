@@ -19,6 +19,34 @@
     </div>
 </div>
 
+<div id="practice-patient-info" class="d-none mx-2 my-2">
+    [<span class="x-patient-id"></span>]
+    <span class="x-last-name"></span><span class="x-first-name"></span>
+    (<span class="x-last-name-yomi"></span><span class="x-first-name-yomi"></span>)
+    <span class="x-birthday"></span>生
+    (<span class="x-age"></span>才)
+    <span class="x-sex"></span>性
+    <a href="javascript:void(0)" class="x-detail-link">詳細</a>
+    <div class="x-detail d-none row">
+        <div class="col-sm-3">住所</div>
+        <div class="x-address col-sm-9"></div>
+        <div class="col-sm-3">電話番号</div>
+        <div class="x-phone col-sm-9"></div>
+    </div>
+</div>
+
+<div id="practice-patient-manip" class="d-none mx-2 form-inline">
+    <button class="x-cashier btn btn-secondary">会計</button>
+    <button class="x-end  ml-2 btn btn-secondary">患者終了</button>
+    <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>
+    <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>
+</div>
+
+<div class="row">
+    <div id="practice-record-wrapper" class="col-sm-9"></div>
+    <div id="practice-right-bar" class="col-sm-3">RIGHT BAR</div>
+</div>
+
 <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true"
      id="practice-choose-patient-dialog">
     <div class="modal-dialog" role="document">
@@ -75,31 +103,6 @@
         </div>
     </div>
 </div>
-
-<div id="practice-patient-info" class="d-none mx-2 my-2">
-    [<span class="x-patient-id"></span>]
-    <span class="x-last-name"></span><span class="x-first-name"></span>
-    (<span class="x-last-name-yomi"></span><span class="x-first-name-yomi"></span>)
-    <span class="x-birthday"></span>生
-    (<span class="x-age"></span>才)
-    <span class="x-sex"></span>性
-    <a href="javascript:void(0)" class="x-detail-link">詳細</a>
-    <div class="x-detail d-none row">
-        <div class="col-sm-3">住所</div>
-        <div class="x-address col-sm-9"></div>
-        <div class="col-sm-3">電話番号</div>
-        <div class="x-phone col-sm-9"></div>
-    </div>
-</div>
-
-<div id="practice-patient-manip" class="d-none mx-2 form-inline">
-    <button class="x-cashier btn btn-secondary">会計</button>
-    <button class="x-end  ml-2 btn btn-secondary">患者終了</button>
-    <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>
-    <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>
-</div>
-
-<div id="practice-record-wrapper"></div>
 
 <template id="practice-record-template">
     <div class="practice-record">
@@ -629,6 +632,16 @@
     </div>
 </template>
 
+<template id="practice-fax-tracker-template">
+    <div class="border rounded p-2">
+        <div>FAX送信状況</div>
+        <div class="x-message"></div>
+        <div>
+            <button type="button" class="btn btn-secondary x-close">閉じる</button>
+        </div>
+    </div>
+</template>
+
 <script>
 
     (async function () {
@@ -657,6 +670,7 @@
         let {ConductDisp} = await import("./practice/conduct-disp.js");
         let {DrugDisp} = await import("./practice/drug-disp.js");
         let {MeisaiDialog} = await import("./practice/meisai-dialog.js");
+        let {FaxTracker} = await import("./practice/fax-tracker.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
@@ -1207,6 +1221,28 @@
             });
         });
 
+        class FaxTrackerFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-fax-tracker-template");
+            }
+
+            create(url){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new FaxTracker(ele, map, rest);
+                comp.init(url);
+                return comp;
+            }
+        }
+
+        (function(){
+            let faxTrackerFactory = new FaxTrackerFactory();
+            let loc = new URL("../stream/fax", document.location);
+            loc.protocol = "ws";
+            let tracker = faxTrackerFactory.create(loc.href);
+            tracker.onClosed(event => tracker.remove());
+            tracker.appendTo($("#practice-right-bar"));
+        })();
 
     })();
 

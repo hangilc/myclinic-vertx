@@ -15,6 +15,7 @@ import dev.myclinic.vertx.db.MysqlDataSourceFactory;
 import dev.myclinic.vertx.db.TableSet;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
@@ -23,6 +24,7 @@ import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 
 import javax.sql.DataSource;
+import java.time.LocalDateTime;
 
 public class Main {
 
@@ -50,6 +52,8 @@ public class Main {
         AppConfig config = createConfig(vertx);
         MasterMap masterMap = config.getMasterMap();
         HoukatsuKensa houkatsuKensa = config.getHoukatsuKensa();
+        FaxStreamingVerticle faxStreamingVerticle = new FaxStreamingVerticle();
+        vertx.deployVerticle(faxStreamingVerticle);
         HttpServer server = vertx.createHttpServer();
         Router router = Router.router(vertx);
         Route restRoute = router.route("/json/:action");
@@ -71,7 +75,8 @@ public class Main {
                 .end());
         server.requestHandler(router);
         server.webSocketHandler(ws -> {
-            System.out.println("opened");
+            System.out.println("opened: " + ws.path());
+            faxStreamingVerticle.addClient(ws);
             ws.closeHandler(e -> System.out.println("closed"));
         });
         int port = 28080;

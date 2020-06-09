@@ -26,6 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDate;
@@ -268,6 +270,31 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("convert-to-romaji", this::convertToRomaji);
         noDatabaseFuncMap.put("shohousen-gray-stamp-info", this::shohousenGrayStampInfo);
         noDatabaseFuncMap.put("send-fax", this::sendFax);
+        noDatabaseFuncMap.put("probe-shohousen-fax-image", this::probeShohousenFaxImage);
+    }
+
+    private void probeShohousenFaxImage(RoutingContext ctx) {
+        String textIdPara = ctx.request().getParam("text-id");
+        String date = ctx.request().getParam("date");
+        String dir = System.getenv("MYCLINIC_SHOHOUSEN_DIR");
+        if (dir == null) {
+            throw new RuntimeException("Cannot find env var: MYCLINIC_SHOHOUSEN_DIR");
+        }
+        String month = date.substring(0, 7);
+        Path shohousenDir = Path.of(dir, month);
+        Pattern pat = Pattern.compile(String.format("^[a-zA-Z]+-%s-.+\\.pdf$", textIdPara));
+        try(DirectoryStream<Path> stream = Files.newDirectoryStream(shohousenDir)){
+            for(Path path: stream){
+                String name = path.getFileName().toString();
+                if( pat.matcher(name).matches() ){
+                    ctx.response().end(jsonEncode(path.toFile().getAbsolutePath()));
+                    return;
+                }
+            }
+        } catch (IOException e) {
+            ctx.fail(e);
+        }
+        ctx.response().end("null");
     }
 
     private void sendFax(RoutingContext ctx) {

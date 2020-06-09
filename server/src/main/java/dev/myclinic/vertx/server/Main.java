@@ -99,7 +99,8 @@ public class Main {
         if (statusCode < 0) {
             statusCode = 500;
         }
-        ctx.response().setStatusCode(statusCode).end(th.getMessage());
+        String msg = th.getMessage();
+        ctx.response().setStatusCode(statusCode).end(msg);
     };
 
 }

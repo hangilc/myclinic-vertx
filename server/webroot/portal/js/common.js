@@ -7,7 +7,11 @@ function ajaxGet(url, data) {
             cache: false,
             dataType: "json",
             success: resolve,
-            error: (xhr, status, err) => fail(err)
+            error: (xhr, status, err) => {
+                let msg = xhr.responseText || err.toString() || status;
+                alert(msg);
+                fail(msg);
+            }
         });
     });
 }
@@ -23,8 +27,9 @@ function ajaxPost(url, data, encodeJson = true) {
             dataType: "json",
             success: resolve,
             error: (xhr, status, err) => {
-                alert(err + "\n" + xhr.responseText);
-                fail(err);
+                let msg = xhr.responseText || err.toString() || status;
+                alert(msg);
+                fail(msg);
             }
         });
     });
@@ -35,8 +40,18 @@ class Client {
         this.baseUrl = baseUrl;
     }
 
-    url(path) {
-        return this.baseUrl + path;
+    url(path, params) {
+        let url = this.baseUrl + path;
+        if (params) {
+            let parts = [];
+            for (let key of Object.keys(params)) {
+                key = encodeURIComponent(key);
+                let val = encodeURIComponent(params[key]);
+                parts.push(`${key}=${val}`);
+            }
+            url += "?" + parts.join("&");
+        }
+        return url;
     }
 
     async get(path, data) {
@@ -254,6 +269,18 @@ class Rest extends Client {
 
     async listConductFullByIds(conductIds){
         return await this.get("/list-conduct-full-by-ids", {"conduct-id": conductIds});
+    }
+
+    async probeShohousenFaxImage(textId, date){
+        return await this.get("/probe-shohousen-fax-image", {"text-id": textId, "date": date});
+    }
+
+    async sendFax(faxNumber, pdfFile){
+        return await this.get("/send-fax", {"fax-number": faxNumber, "pdf-file": pdfFile});
+    }
+
+    async pollFax(faxSid){
+        return await this.get("/poll-fax", {"fax-sid": faxSid});
     }
 }
 

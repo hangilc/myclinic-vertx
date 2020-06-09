@@ -33,6 +33,7 @@
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-cashier-link">会計</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-faxed-link">ファックス済処方箋</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-houmon-kango-link">訪問看護</a></li>
+                <li><a href="javascript:void(0)" class="scroll-link" id="index-send-fax-link">ファックス送信</a></li>
             </ul>
         </div>
 
@@ -47,6 +48,9 @@
     let integration = new Integration("../integration");
 
     (function(){
+        let currentPaneId = "";
+        let paneMap = {};
+
         function setActive(e){
             $(".sidebar a.active").removeClass("active");
             e.addClass("active");
@@ -55,7 +59,21 @@
         function bindLink(id, url){
             let e = $("#" + id);
             e.on("click", event => {
-                $("#index-pane-wrapper").load(url);
+                if( id === currentPaneId ){
+                    return;
+                }
+                if( currentPaneId !== "" ){
+                    let curr = $("#index-pane-wrapper").contents();
+                    curr.detach();
+                    paneMap[currentPaneId] = curr;
+                }
+                if( id in paneMap ){
+                    $("#index-pane-wrapper").append(paneMap[id]);
+                    delete paneMap[id];
+                } else {
+                    $("#index-pane-wrapper").load(url);
+                }
+                currentPaneId = id;
                 setActive(e)
             });
         }
@@ -64,7 +82,8 @@
         bindLink("index-cashier-link", "pane-cashier.html");
         bindLink("index-faxed-link", "pane-faxed-shohousen.html");
         bindLink("index-houmon-kango-link", "pane-houmon-kango.html");
-        $("#index-practice-link").click();
+        bindLink("index-send-fax-link", "pane-send-fax.html");
+        $("#index-send-fax-link").click();
     })();
 
 </script>

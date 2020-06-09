@@ -89,8 +89,12 @@ class SendFax {
     }
 
     private static void uploadToS3(String srcFile, String dstBucket, String dstKey) {
+        File file = new File(srcFile);
+        if( !file.exists() ){
+            throw new RuntimeException("No such file: " + srcFile);
+        }
         AmazonS3 s3 = AmazonS3ClientBuilder.standard().build();
-        s3.putObject(dstBucket, dstKey, new File(srcFile));
+        s3.putObject(dstBucket, dstKey, file);
     }
 
 }

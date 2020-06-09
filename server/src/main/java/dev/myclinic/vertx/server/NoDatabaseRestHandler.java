@@ -270,7 +270,21 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("convert-to-romaji", this::convertToRomaji);
         noDatabaseFuncMap.put("shohousen-gray-stamp-info", this::shohousenGrayStampInfo);
         noDatabaseFuncMap.put("send-fax", this::sendFax);
+        noDatabaseFuncMap.put("poll-fax", this::pollFax);
         noDatabaseFuncMap.put("probe-shohousen-fax-image", this::probeShohousenFaxImage);
+        noDatabaseFuncMap.put("show-pdf", this::showPdf);
+    }
+
+    private void showPdf(RoutingContext ctx) {
+        String pdfFile = ctx.request().getParam("file");
+        if( pdfFile == null ){
+            throw new RuntimeException("Missing parameter: file");
+        }
+        if( !new File(pdfFile).exists() ){
+            throw new RuntimeException("No such file: " + pdfFile);
+        }
+        ctx.response().putHeader("content-type", "application/pdf");
+        ctx.response().sendFile(pdfFile);
     }
 
     private void probeShohousenFaxImage(RoutingContext ctx) {
@@ -321,6 +335,15 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 ctx.fail(arr.cause());
             }
         });
+    }
+
+    private void pollFax(RoutingContext ctx) {
+        String faxSid = ctx.request().getParam("fax-sid");
+        if( faxSid == null ){
+            throw new RuntimeException("Missing parameter: fax-sid");
+        }
+        String status = SendFax.pollStatus(faxSid);
+        ctx.response().end(jsonEncode(status));
     }
 
     private void shohousenGrayStampInfo(RoutingContext ctx) {

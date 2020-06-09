@@ -104,6 +104,17 @@
                 <version>7.1.10</version>
             </dependency>
             <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-bom</artifactId>
+                <version>1.11.327</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.twilio.sdk</groupId>
+                <artifactId>twilio</artifactId>
+                <version>7.51.0</version>
+            </dependency>      <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
                 <version>${junit.version}</version>

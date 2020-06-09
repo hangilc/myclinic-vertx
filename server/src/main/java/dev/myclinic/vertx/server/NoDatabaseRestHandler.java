@@ -19,6 +19,7 @@ import dev.myclinic.vertx.util.HokenUtil;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
@@ -99,7 +100,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                                 try {
                                     List<String> hokenList = implListHokensho(scanDir, patientId);
                                     promise.complete(hokenList);
-                                } catch(Exception e){
+                                } catch (Exception e) {
                                     throw new RuntimeException(e);
                                 }
                             },
@@ -139,7 +140,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private String cacheGetMasterMapConfigFilePath;
 
     private void getMasterMapConfigFilePath(RoutingContext ctx) throws Exception {
-        if( cacheGetMasterMapConfigFilePath != null ){
+        if (cacheGetMasterMapConfigFilePath != null) {
             ctx.response().end(cacheGetMasterMapConfigFilePath);
         } else {
             appConfig.getMasterMapConfigFilePath()
@@ -180,9 +181,9 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private static Pattern fileExtPattern = Pattern.compile("\\.([^.]+)$");
 
-    private String getFileExtension(String file){
+    private String getFileExtension(String file) {
         Matcher m = fileExtPattern.matcher(file);
-        if( m.find() ){
+        if (m.find()) {
             return m.group(1);
         } else {
             return null;
@@ -195,11 +196,11 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         int patientId = Integer.parseInt(params.get("patient-id"));
         String file = params.get("file");
         String ext = getFileExtension(file);
-        if( ext == null ){
+        if (ext == null) {
             throw new RuntimeException("Cannot find file extension.");
         }
         String mime = mimeMap.get(ext);
-        if( mime == null ){
+        if (mime == null) {
             throw new RuntimeException("Invalid file extension.");
         }
         appConfig.getPaperScanDirectory()
@@ -266,6 +267,33 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("get-shohousen-save-pdf-path", this::getShohousenSavePdfPath);
         noDatabaseFuncMap.put("convert-to-romaji", this::convertToRomaji);
         noDatabaseFuncMap.put("shohousen-gray-stamp-info", this::shohousenGrayStampInfo);
+        noDatabaseFuncMap.put("send-fax", this::sendFax);
+    }
+
+    private void sendFax(RoutingContext ctx) {
+        String faxNumber = ctx.request().getParam("fax-number"); // "+8133335..."
+        String pdfFile = ctx.request().getParam("pdf-file");
+        if (faxNumber == null) {
+            throw new RuntimeException("fax-number parameter is missing");
+        }
+        if (pdfFile == null) {
+            throw new RuntimeException("pdf-file parameter is missing");
+        }
+        vertx.<String>executeBlocking(promise -> {
+            EventBus bus = vertx.eventBus();
+            SendFax.send(faxNumber, pdfFile, msg -> {
+                        bus.send("fax-streaming", msg);
+                        logger.info("Fax {} {} {}", msg, faxNumber, pdfFile);
+                    },
+                    faxSid -> promise.complete(jsonEncode(faxSid)),
+                    vertx);
+        }, arr -> {
+            if (arr.succeeded()) {
+                ctx.response().end(arr.result());
+            } else {
+                ctx.fail(arr.cause());
+            }
+        });
     }
 
     private void shohousenGrayStampInfo(RoutingContext ctx) {
@@ -273,14 +301,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             var info = appConfig.getShohousenGrayStampInfo();
             String rep = mapper.writeValueAsString(info);
             ctx.response().end(rep);
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
 
     private void convertToRomaji(RoutingContext ctx) {
         String text = ctx.request().getParam("text");
-        if(text == null){
+        if (text == null) {
             throw new RuntimeException("Missing parameter (text).");
         }
         String romaji = Romaji.toRomaji(text);
@@ -289,7 +317,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         try {
             String json = mapper.writeValueAsString(result);
             ctx.response().end(json);
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
@@ -299,17 +327,17 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         String patientId = ctx.request().getParam("patient-id");
         String name = ctx.request().getParam("name");
         String date = ctx.request().getParam("date");
-        if( !(textId != null && patientId != null && name != null && date != null) ){
+        if (!(textId != null && patientId != null && name != null && date != null)) {
             throw new RuntimeException("Missing parameter");
         }
         String mkdir = ctx.request().getParam("mkdir");
         String dir = System.getenv("MYCLINIC_SHOHOUSEN_DIR");
-        if( dir == null ){
+        if (dir == null) {
             throw new RuntimeException("Cannot find env var: MYCLINIC_SHOHOUSEN_DIR");
         }
         String month = date.substring(0, 7);
         Path shohousenDir = Path.of(dir, month);
-        if( "true".equals(mkdir) && !Files.exists(shohousenDir) ){
+        if ("true".equals(mkdir) && !Files.exists(shohousenDir)) {
             try {
                 Files.createDirectories(shohousenDir);
             } catch (IOException e) {
@@ -328,12 +356,12 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private PaperSize resolvePaperSize(String arg){
-        if( PaperSize.standard.containsKey(arg) ){
+    private PaperSize resolvePaperSize(String arg) {
+        if (PaperSize.standard.containsKey(arg)) {
             return PaperSize.standard.get(arg);
         } else {
             String[] parts = arg.split(",");
-            if( parts.length == 2 ){
+            if (parts.length == 2) {
                 double width = Double.parseDouble(parts[0].trim());
                 double height = Double.parseDouble(parts[1].trim());
                 return new PaperSize(width, height);
@@ -366,13 +394,13 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 ByteArrayOutputStream outStream = new ByteArrayOutputStream();
                 PdfPrinter printer = new PdfPrinter(paperSize);
                 PdfPrinter.Callback callback = null;
-                if( req.stamp != null ){
+                if (req.stamp != null) {
                     StampRequest stamp = req.stamp;
                     callback = (cb, page, graphicMode, textMode) -> {
                         graphicMode.run();
                         Image image = Image.getInstance(stamp.path);
-                        image.scalePercent((float)(stamp.scale * 100));
-                        image.setAbsolutePosition((float)stamp.offsetX, (float)stamp.offsetY);
+                        image.scalePercent((float) (stamp.scale * 100));
+                        image.setAbsolutePosition((float) stamp.offsetX, (float) stamp.offsetY);
                         cb.addImage(image);
                     };
                 }
@@ -380,11 +408,11 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 byte[] pdfBytes = outStream.toByteArray();
                 Files.write(Path.of(req.savePath), pdfBytes);
                 promise.complete("true");
-            } catch(Exception e){
+            } catch (Exception e) {
                 ctx.fail(e);
             }
         }, ar -> {
-            if( ar.succeeded() ){
+            if (ar.succeeded()) {
                 ctx.response().end(ar.result());
             } else {
                 ctx.fail(ar.cause());
@@ -396,15 +424,16 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         vertx.<String>executeBlocking(promise -> {
             try {
                 byte[] bytes = ctx.getBody().getBytes();
-                List<List<Op>> pages = mapper.readValue(bytes, new TypeReference<>(){});
+                List<List<Op>> pages = mapper.readValue(bytes, new TypeReference<>() {
+                });
                 DrawerPrinter printer = new DrawerPrinter();
                 printer.printPages(pages);
                 promise.complete("true");
-            } catch(Exception e){
+            } catch (Exception e) {
                 promise.fail(e);
             }
         }, ar -> {
-            if( ar.succeeded() ){
+            if (ar.succeeded()) {
                 ctx.response().end(ar.result());
             } else {
                 ctx.fail(ar.cause());
@@ -421,7 +450,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             int age = HokenUtil.calcRcptAge(birthday.getYear(), birthday.getMonthValue(),
                     birthday.getDayOfMonth(), at.getYear(), at.getMonthValue());
             ctx.response().end(String.format("%d", age));
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
@@ -432,7 +461,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             CalcFutanWariRequestDTO req = mapper.readValue(bytes, CalcFutanWariRequestDTO.class);
             int futanWari = HokenUtil.calcFutanWari(req.hoken, req.rcptAge);
             ctx.response().end(String.format("%d", futanWari));
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
@@ -453,33 +482,33 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             byte[] bytes = ctx.getBody().getBytes();
             ShohousenRequest req = mapper.readValue(bytes, ShohousenRequest.class);
             ShohousenData data = new ShohousenData();
-            if( req.clinicInfo != null ){
+            if (req.clinicInfo != null) {
                 data.setClinicInfo(req.clinicInfo);
             }
-            if( req.hoken != null ){
+            if (req.hoken != null) {
                 data.setHoken(req.hoken);
             }
-            if( req.futanWari != null ){
+            if (req.futanWari != null) {
                 data.setFutanWari(req.futanWari);
             }
-            if( req.patient != null ){
+            if (req.patient != null) {
                 data.setPatient(req.patient);
             }
-            if( req.drugs !=  null ){
+            if (req.drugs != null) {
                 data.setDrugs(req.drugs);
             }
-            if( req.issueDate != null ){
+            if (req.issueDate != null) {
                 LocalDate date = LocalDate.parse(req.issueDate);
                 data.setKoufuDate(date);
             } else {
                 data.setKoufuDate(LocalDate.now());
             }
-            if( req.validUpto != null ){
+            if (req.validUpto != null) {
                 LocalDate date = LocalDate.parse(req.validUpto);
                 data.setValidUptoDate(date);
             }
             ShohousenDrawer drawer = new ShohousenDrawer();
-            if( req.color != null ){
+            if (req.color != null) {
                 DrawerColor defaultColor = DrawerColor.resolve(req.color);
                 drawer.setDefaultColor(defaultColor);
             }
@@ -487,7 +516,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             data.applyTo(drawer);
             List<Op> ops = drawer.getOps();
             ctx.response().end(mapper.writeValueAsString(ops));
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
@@ -497,7 +526,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             HokenDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), HokenDTO.class);
             String rep = mapper.writeValueAsString(HokenUtil.hokenRep(hoken));
             ctx.response().end(rep);
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }

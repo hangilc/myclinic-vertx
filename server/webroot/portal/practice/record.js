@@ -6,6 +6,7 @@ export class Record extends Component {
         this.ele.data("component", this);
         this.titleElement = map.title;
         this.enterTextElement = map.left.enterText;
+        this.sendShohousenFaxElement = map.left.sendShohousenFax;
         this.textWrapperElement = map.left.textWrapper;
         this.rightElement = map.right_;
         this.hokenWrapperElement = map.right.hokenWrapper;
@@ -39,6 +40,7 @@ export class Record extends Component {
             comp.onCancel(event => comp.remove());
             comp.putBefore(this.enterTextElement);
         });
+        this.sendShohousenFaxElement.on("click", event => this.doSendShohousenFax());
         hokenFactory.create(hokenRep).appendTo(this.hokenWrapperElement);
         this.shinryouMenuElement.on("click", async event => {
             let result = await shinryouRegularDialogFactory.create(visitFull.visit.visitId).open();
@@ -60,6 +62,10 @@ export class Record extends Component {
         visitFull.drugs.forEach(drugFull => this.addDrug(drugFull));
         visitFull.shinryouList.forEach(shinryouFull => this.addShinryou(shinryouFull, false));
         visitFull.conducts.forEach(cfull => this.addConduct(cfull));
+    }
+
+    doSendShohousenFax(){
+        alert("shohousen fax");
     }
 
     showDrugMark() {
@@ -107,8 +113,24 @@ export class Record extends Component {
         }
     }
 
+    createTextComponent(text){
+        let compText = this.textFactory.create(text);
+        compText.onUpdated((event, updatedText) => {
+            let compUpdated = this.createTextComponent(updatedText);
+            compUpdated.replace(compText.ele);
+        });
+        compText.onDeleted(event => compText.remove());
+        compText.onCopied((event, copiedText) => this.trigger("text-copied", copiedText));
+        return compText;
+    }
+
     addText(text) {
-        this.textFactory.create(text).appendTo(this.textWrapperElement);
+        let compText = this.createTextComponent(text);
+        compText.appendTo(this.textWrapperElement);
+    }
+
+    onTextCopied(cb){
+        this.on("text-copied", (event, copiedText) => cb(event, copiedText));
     }
 
     getVisitId() {

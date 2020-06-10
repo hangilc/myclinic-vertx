@@ -112,6 +112,7 @@
                 <div class="x-text-wrapper"></div>
                 <div class="x-command-wrapper">
                     <a href="javascript:void(0)" class="x-enter-text">［文章入力］</a>
+                    <a href="javascript:void(0)" class="x-send-shohousen-fax">処方箋FAX</a>
                 </div>
             </div>
             <div class="x-right_ col-sm-6 lp-1">
@@ -527,6 +528,10 @@
     <div class="my-1"></div>
 </template>
 
+<template id="practice-text-disp-template">
+    <div class="my-1"></div>
+</template>
+
 <template id="practice-enter-text-template">
     <div class="mt-2">
         <textarea class="form-control x-textarea" rows="6"></textarea>
@@ -662,10 +667,11 @@
         let {Shinryou} = await import("./practice/shinryou.js");
         let {ShinryouEdit} = await import("./practice/shinryou-edit.js");
         let {Text} = await import("./practice/text.js");
-        let {Record} = await import("./practice/record.js");
-        let {Hoken} = await import("./practice/hoken.js");
+        let {TextDisp} = await import("./practice/text-disp.js");
         let {TextEnter} = await import("./practice/text-enter.js");
         let {TextEdit} = await import("./practice/text-edit.js");
+        let {Record} = await import("./practice/record.js");
+        let {Hoken} = await import("./practice/hoken.js");
         let {ShohousenPreviewDialog} = await import("./practice/shohousen-preview-dialog.js");
         let {ConductDisp} = await import("./practice/conduct-disp.js");
         let {DrugDisp} = await import("./practice/drug-disp.js");
@@ -896,6 +902,20 @@
             }
         }
 
+        class TextDispFactory {
+            constructor(){
+                this.html = getTemplateHtml("practice-text-disp-template");
+            }
+
+            create(text){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new TextDisp(ele, map, rest);
+                comp.init(text);
+                return comp;
+            }
+        }
+
         class TextEnterFactory {
             constructor() {
                 this.html = getTemplateHtml("practice-enter-text-template");
@@ -914,7 +934,7 @@
             constructor() {
                 this.html = $("template#practice-text-template").html();
                 this.rest = rest;
-                //this.copyTargetResolver = copyTargetResolver;
+                this.textDispFactory = new TextDispFactory();
                 this.textEditFactory = new TextEditFactory();
             }
 
@@ -922,24 +942,24 @@
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new Text(ele, map, this.rest);
-                comp.init(text);
-                ele.on("click", event => {
-                    let editor = this.textEditFactory.create(text);
-                    editor.onUpdated((event, updated) => {
-                        let compUpdated = this.create(updated);
-                        compUpdated.replace(editor.ele);
-                    });
-                    editor.onCancel(event => comp.replace(editor.ele));
-                    editor.onDeleted(event => editor.remove());
-                    editor.onCopied((event, copiedText) => {
-                        comp.replace(editor.ele);
-                        let target = findRecord(copiedText.visitId);
-                        if (target) {
-                            target.addText(copiedText);
-                        }
-                    });
-                    editor.replace(comp.ele);
-                });
+                comp.init(text, this.textDispFactory, this.textEditFactory);
+                // ele.on("click", event => {
+                //     let editor = this.textEditFactory.create(text);
+                //     editor.onUpdated((event, updated) => {
+                //         let compUpdated = this.create(updated);
+                //         compUpdated.replace(editor.ele);
+                //     });
+                //     editor.onCancel(event => comp.replace(editor.ele));
+                //     editor.onDeleted(event => editor.remove());
+                //     editor.onCopied((event, copiedText) => {
+                //         comp.replace(editor.ele);
+                //         let target = findRecord(copiedText.visitId);
+                //         if (target) {
+                //             target.addText(copiedText);
+                //         }
+                //     });
+                //     editor.replace(comp.ele);
+                // });
                 return comp;
             }
         }
@@ -1180,6 +1200,12 @@
                 for (let visitFull of page.visits) {
                     let hokenRep = await getHokenRep(visitFull.hoken);
                     let record = recordFactory.create(visitFull, hokenRep);
+                    record.onTextCopied((event, copiedText) => {
+                        let targetRec = findRecord(copiedText.visitId);
+                        if( targetRec ){
+                            targetRec.addText(copiedText);
+                        }
+                    });
                     record.appendTo(recordWrapperElement);
                 }
             }
@@ -1221,28 +1247,28 @@
             });
         });
 
-        class FaxTrackerFactory {
-            constructor() {
-                this.html = getTemplateHtml("practice-fax-tracker-template");
-            }
+        // class FaxTrackerFactory {
+        //     constructor() {
+        //         this.html = getTemplateHtml("practice-fax-tracker-template");
+        //     }
+        //
+        //     create(url){
+        //         let ele = $(this.html);
+        //         let map = parseElement(ele);
+        //         let comp = new FaxTracker(ele, map, rest);
+        //         comp.init(url);
+        //         return comp;
+        //     }
+        // }
 
-            create(url){
-                let ele = $(this.html);
-                let map = parseElement(ele);
-                let comp = new FaxTracker(ele, map, rest);
-                comp.init(url);
-                return comp;
-            }
-        }
-
-        (function(){
-            let faxTrackerFactory = new FaxTrackerFactory();
-            let loc = new URL("../stream/fax", document.location);
-            loc.protocol = "ws";
-            let tracker = faxTrackerFactory.create(loc.href);
-            tracker.onClosed(event => tracker.remove());
-            tracker.appendTo($("#practice-right-bar"));
-        })();
+        // (function(){
+        //     let faxTrackerFactory = new FaxTrackerFactory();
+        //     let loc = new URL("../stream/fax", document.location);
+        //     loc.protocol = "ws";
+        //     let tracker = faxTrackerFactory.create(loc.href);
+        //     tracker.onClosed(event => tracker.remove());
+        //     tracker.appendTo($("#practice-right-bar"));
+        // })();
 
     })();
 

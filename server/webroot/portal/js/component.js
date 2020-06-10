@@ -3,6 +3,15 @@ export class Component {
         this.ele = ele;
         this.map = map;
         this.rest = rest;
+        this.eventDispatcher = $("<div>");
+    }
+
+    on(eventType, callback){
+        this.eventDispatcher.on(eventType, callback);
+    }
+
+    trigger(eventType, arg){
+        this.eventDispatcher.trigger(eventType, arg);
     }
 
     appendTo(element) {

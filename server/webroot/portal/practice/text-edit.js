@@ -25,6 +25,10 @@ export class TextEdit extends Component {
         this.copyElement.on("click", event => this.doCopy());
     }
 
+    initFocus(){
+        this.textareaElement.focus();
+    }
+
     async createShohousenOps(reqOpts) {
         let visit = await this.rest.getVisit(this.text.visitId);
         let visitDate = visit.visitedAt.substring(0, 10);
@@ -62,7 +66,7 @@ export class TextEdit extends Component {
     }
 
     onCopied(cb){
-        this.ele.on("text-copied", (event, text) => cb(event, text));
+        this.on("copied", (event, text) => cb(event, text));
     }
 
     async doCopy() {
@@ -80,7 +84,7 @@ export class TextEdit extends Component {
         t.visitId = targetVisitId;
         let textId = await this.rest.enterText(t);
         let copied = await this.rest.getText(textId);
-        this.ele.trigger("text-copied", copied);
+        this.trigger("copied", copied);
     }
 
 

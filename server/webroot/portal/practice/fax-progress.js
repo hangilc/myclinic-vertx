@@ -1,5 +1,17 @@
 import {Component} from "./component.js";
 
+function getFilePart(path){
+    let i = path.lastIndexOf("\\");
+    if( i >= 0 ){
+        return path.substring(i+1);
+    }
+    i = path.lastIndexOf("/");
+    if( i >= 0 ){
+        return path.substring(i+1);
+    }
+    return path;
+}
+
 export class FaxProgress extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
@@ -57,7 +69,7 @@ export class FaxProgress extends Component {
     }
 
     setPdfFileDisp(pdfFile){
-        this.pdfFileElement.text(pdfFile);
+        this.pdfFileElement.text(getFilePart(pdfFile));
     }
 
     async resend(){

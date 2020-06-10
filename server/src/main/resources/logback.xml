@@ -5,6 +5,21 @@
         </encoder>
     </appender>
 
+    <timestamp key="byDay" datePattern="yyyy-MM-dd"/>
+
+    <appender name="FAX-FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${user.home}/myclinic-fax-logs/log-${byDay}.log</file>
+        <append>true</append>
+        <immediateFlush>true</immediateFlush>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="dev.myclinic.vertx.server.SendFax" level="INFO">
+        <appender-ref ref="FAX-FILE"/>
+    </logger>
+
     <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>

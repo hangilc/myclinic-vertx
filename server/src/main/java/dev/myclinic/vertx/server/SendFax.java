@@ -6,12 +6,15 @@ import com.twilio.Twilio;
 import com.twilio.rest.fax.v1.Fax;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URI;
 import java.util.function.Consumer;
 
 class SendFax {
+    private static final Logger logger = LoggerFactory.getLogger(SendFax.class);
 
     private static final String bucketName;
     private static final String twilioPhone;
@@ -38,6 +41,7 @@ class SendFax {
             uploadToS3(pdfFile, bucketName, key);
             Fax fax = sendFax(faxNumber, key, twilioPhone);
             String faxSid = fax.getSid();
+            logger.info("started sending to {}, {}, FaxSID({})", faxNumber, pdfFile, faxSid);
             startedCallback.accept(faxSid);
             int pollInterval = 10000; // 10 seconds
             vertx.setTimer(pollInterval, createTimerCallback(faxSid, progressCallback,
@@ -75,6 +79,7 @@ class SendFax {
                                               int pollInterval, Vertx vertx, int allowedRetries) {
         return id -> {
             Fax.Status status = getFaxStatus(faxSid);
+            logger.info("{} {}", status.toString(), faxSid);
             progressCallback.accept(status.toString());
             if (status == Fax.Status.SENDING || status == Fax.Status.PROCESSING ||
                     status == Fax.Status.QUEUED) {
@@ -82,6 +87,7 @@ class SendFax {
                     vertx.setTimer(pollInterval, createTimerCallback(faxSid, progressCallback,
                             pollInterval, vertx, allowedRetries - 1));
                 } else {
+                    logger.info("timeout {}", faxSid);
                     progressCallback.accept("timeout");
                 }
             }

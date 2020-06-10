@@ -215,14 +215,18 @@ class Rest extends Client {
     }
 
     async getShohousenSavePdfPath(name, textId, patientId, date){
-        let result = await this.get("/get-shohousen-save-pdf-path", {
+        return await this.get("/get-shohousen-save-pdf-path", {
             "name": name,
             "text-id": textId,
             "patient-id": patientId,
             "date": date,
             "mkdir": true
         });
-        return result.value;
+    }
+
+    async saveShohousenPdf(shohousenRequest, textId){
+        return await this.post("/save-shohousen-pdf", shohousenRequest,
+            { params: {"text-id": textId} });
     }
 
     async suspendExam(visitId){

@@ -68,7 +68,22 @@ export class Record extends Component {
         return /(.+)にファックス（(\+\d+)）で送付/;
     }
 
-    doSendShohousenFax(){
+    async saveShohousenFaxImage(text, reqOpts){
+        let visit = await this.rest.getVisit(text.visitId);
+        let visitDate = visit.visitedAt.substring(0, 10);
+        let req = {};
+        req.clinicInfo = await this.rest.getClinicInfo();
+        req.hoken = await this.rest.getHoken(text.visitId);
+        req.patient = await this.rest.getPatient(visit.patientId);
+        let rcptAge = await this.rest.calcRcptAge(req.patient.birthday, visitDate);
+        req.futanWari = await this.rest.calcFutanWari(req.hoken, rcptAge);
+        req.issueDate = visitDate;
+        req.drugs = text.content;
+        Object.assign(req, reqOpts);
+        return await this.rest.saveShohousenPdf(req, text.textId);
+    }
+
+    async doSendShohousenFax(){
         let shohousenText;
         let pharmaName;
         let faxNumber;
@@ -86,6 +101,21 @@ export class Record extends Component {
                 faxNumber = matches[2];
             }
         }
+        if( !shohousenText ){
+            alert("処方箋の入力を見つけられません。");
+            return;
+        }
+        let textId = shohousenText.getText().textId;
+        let date = this.visitFull.visit.visitedAt.substring(0, 10);
+        let pdfFilePath = await this.rest.probeShohousenFaxImage(textId, date);
+        if( !pdfFilePath ){
+            if( !confirm("送信用の処方箋イメージを作成しますか？") ){
+                return;
+            }
+            pdfFilePath = await this.saveShohousenFaxImage(shohousenText.getText(),
+                {color: "black"});
+        }
+        alert(pdfFilePath);
         console.log(shohousenText);
         console.log(pharmaName);
         console.log(faxNumber);

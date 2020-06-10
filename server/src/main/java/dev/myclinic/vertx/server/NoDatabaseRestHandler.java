@@ -1,10 +1,10 @@
 package dev.myclinic.vertx.server;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itextpdf.text.Image;
 import dev.myclinic.vertx.appconfig.AppConfig;
+import dev.myclinic.vertx.appconfig.types.ShohousenGrayStampInfo;
 import dev.myclinic.vertx.drawer.DrawerColor;
 import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.drawer.PaperSize;
@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDate;
@@ -266,6 +265,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("calc-futan-wari", this::calcFutanWari);
         noDatabaseFuncMap.put("print-drawer", this::printDrawer);
         noDatabaseFuncMap.put("save-drawer-as-pdf", this::saveDrawerAsPdf);
+        noDatabaseFuncMap.put("save-shohousen-pdf", this::saveShohousenPdf);
         noDatabaseFuncMap.put("get-shohousen-save-pdf-path", this::getShohousenSavePdfPath);
         noDatabaseFuncMap.put("convert-to-romaji", this::convertToRomaji);
         noDatabaseFuncMap.put("shohousen-gray-stamp-info", this::shohousenGrayStampInfo);
@@ -277,10 +277,10 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private void showPdf(RoutingContext ctx) {
         String pdfFile = ctx.request().getParam("file");
-        if( pdfFile == null ){
+        if (pdfFile == null) {
             throw new RuntimeException("Missing parameter: file");
         }
-        if( !new File(pdfFile).exists() ){
+        if (!new File(pdfFile).exists()) {
             throw new RuntimeException("No such file: " + pdfFile);
         }
         ctx.response().putHeader("content-type", "application/pdf");
@@ -297,10 +297,10 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         String month = date.substring(0, 7);
         Path shohousenDir = Path.of(dir, month);
         Pattern pat = Pattern.compile(String.format("^[a-zA-Z]+-%s-.+\\.pdf$", textIdPara));
-        try(DirectoryStream<Path> stream = Files.newDirectoryStream(shohousenDir)){
-            for(Path path: stream){
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(shohousenDir)) {
+            for (Path path : stream) {
                 String name = path.getFileName().toString();
-                if( pat.matcher(name).matches() ){
+                if (pat.matcher(name).matches()) {
                     ctx.response().end(jsonEncode(path.toFile().getAbsolutePath()));
                     return;
                 }
@@ -339,7 +339,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private void pollFax(RoutingContext ctx) {
         String faxSid = ctx.request().getParam("fax-sid");
-        if( faxSid == null ){
+        if (faxSid == null) {
             throw new RuntimeException("Missing parameter: fax-sid");
         }
         String status = SendFax.pollStatus(faxSid);
@@ -372,6 +372,32 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
+    private String composeShohousenSavePdfPath(String name, int textId, int patientId,
+                                               LocalDate date) {
+        String nameRomaji = name;
+        if (isNotRomaji(nameRomaji)) {
+            nameRomaji = Romaji.toRomaji(nameRomaji);
+        }
+        String dir = System.getenv("MYCLINIC_SHOHOUSEN_DIR");
+        if (dir == null) {
+            throw new RuntimeException("Cannot find env var: MYCLINIC_SHOHOUSEN_DIR");
+        }
+        String month = date.toString().substring(0, 7);
+        String file = String.format("%s-%d-%d-%s-stamped.pdf", nameRomaji,
+                textId, patientId, date.toString().replace("-", ""));
+        return Path.of(dir, month, file).toString();
+    }
+
+    private boolean isNotRomaji(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void getShohousenSavePdfPath(RoutingContext ctx) {
         String textId = ctx.request().getParam("text-id");
         String patientId = ctx.request().getParam("patient-id");
@@ -380,30 +406,18 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         if (!(textId != null && patientId != null && name != null && date != null)) {
             throw new RuntimeException("Missing parameter");
         }
+        if (isNotRomaji(name)) {
+            name = Romaji.toRomaji(name);
+        }
+        String pdfPath = composeShohousenSavePdfPath(name, Integer.parseInt(textId),
+                Integer.parseInt(patientId), LocalDate.parse(date));
         String mkdir = ctx.request().getParam("mkdir");
-        String dir = System.getenv("MYCLINIC_SHOHOUSEN_DIR");
-        if (dir == null) {
-            throw new RuntimeException("Cannot find env var: MYCLINIC_SHOHOUSEN_DIR");
+        Path path = Path.of(pdfPath);
+        if ("true".equals(mkdir)) {
+            //noinspection ResultOfMethodCallIgnored
+            path.toFile().mkdirs();
         }
-        String month = date.substring(0, 7);
-        Path shohousenDir = Path.of(dir, month);
-        if ("true".equals(mkdir) && !Files.exists(shohousenDir)) {
-            try {
-                Files.createDirectories(shohousenDir);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        String datePart = date.substring(0, 10).replace("-", "");
-        String file = String.format("%s-%s-%s-%s-stamped.pdf", name, textId, patientId, datePart);
-        StringResultDTO result = new StringResultDTO();
-        result.value = shohousenDir.resolve(file).toFile().getAbsolutePath();
-        try {
-            String json = mapper.writeValueAsString(result);
-            ctx.response().end(json);
-        } catch (JsonProcessingException e) {
-            ctx.fail(e);
-        }
+        ctx.response().end(jsonEncode(path.toString()));
     }
 
     private PaperSize resolvePaperSize(String arg) {
@@ -435,28 +449,36 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         public StampRequest stamp;
     }
 
+    private void doSaveDrawerAsPdf(SaveDrawerAsPdfRequest req) {
+        PaperSize paperSize = resolvePaperSize(req.paperSize);
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        PdfPrinter printer = new PdfPrinter(paperSize);
+        PdfPrinter.Callback callback = null;
+        if (req.stamp != null) {
+            StampRequest stamp = req.stamp;
+            callback = (cb, page, graphicMode, textMode) -> {
+                graphicMode.run();
+                Image image = Image.getInstance(stamp.path);
+                image.scalePercent((float) (stamp.scale * 100));
+                image.setAbsolutePosition((float) stamp.offsetX, (float) stamp.offsetY);
+                cb.addImage(image);
+            };
+        }
+        try {
+            printer.print(req.pages, outStream, callback);
+            byte[] pdfBytes = outStream.toByteArray();
+            Files.write(Path.of(req.savePath), pdfBytes);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void saveDrawerAsPdf(RoutingContext ctx) {
         vertx.<String>executeBlocking(promise -> {
             try {
                 byte[] bytes = ctx.getBody().getBytes();
                 SaveDrawerAsPdfRequest req = mapper.readValue(bytes, SaveDrawerAsPdfRequest.class);
-                PaperSize paperSize = resolvePaperSize(req.paperSize);
-                ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-                PdfPrinter printer = new PdfPrinter(paperSize);
-                PdfPrinter.Callback callback = null;
-                if (req.stamp != null) {
-                    StampRequest stamp = req.stamp;
-                    callback = (cb, page, graphicMode, textMode) -> {
-                        graphicMode.run();
-                        Image image = Image.getInstance(stamp.path);
-                        image.scalePercent((float) (stamp.scale * 100));
-                        image.setAbsolutePosition((float) stamp.offsetX, (float) stamp.offsetY);
-                        cb.addImage(image);
-                    };
-                }
-                printer.print(req.pages, outStream, callback);
-                byte[] pdfBytes = outStream.toByteArray();
-                Files.write(Path.of(req.savePath), pdfBytes);
+                doSaveDrawerAsPdf(req);
                 promise.complete("true");
             } catch (Exception e) {
                 ctx.fail(e);
@@ -527,36 +549,41 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         public String color;
     }
 
+    private ShohousenData convertToShohousenData(ShohousenRequest req) {
+        ShohousenData data = new ShohousenData();
+        if (req.clinicInfo != null) {
+            data.setClinicInfo(req.clinicInfo);
+        }
+        if (req.hoken != null) {
+            data.setHoken(req.hoken);
+        }
+        if (req.futanWari != null) {
+            data.setFutanWari(req.futanWari);
+        }
+        if (req.patient != null) {
+            data.setPatient(req.patient);
+        }
+        if (req.drugs != null) {
+            data.setDrugs(req.drugs);
+        }
+        if (req.issueDate != null) {
+            LocalDate date = LocalDate.parse(req.issueDate);
+            data.setKoufuDate(date);
+        } else {
+            data.setKoufuDate(LocalDate.now());
+        }
+        if (req.validUpto != null) {
+            LocalDate date = LocalDate.parse(req.validUpto);
+            data.setValidUptoDate(date);
+        }
+        return data;
+    }
+
     private void shohousenDrawer(RoutingContext ctx) {
         try {
             byte[] bytes = ctx.getBody().getBytes();
             ShohousenRequest req = mapper.readValue(bytes, ShohousenRequest.class);
-            ShohousenData data = new ShohousenData();
-            if (req.clinicInfo != null) {
-                data.setClinicInfo(req.clinicInfo);
-            }
-            if (req.hoken != null) {
-                data.setHoken(req.hoken);
-            }
-            if (req.futanWari != null) {
-                data.setFutanWari(req.futanWari);
-            }
-            if (req.patient != null) {
-                data.setPatient(req.patient);
-            }
-            if (req.drugs != null) {
-                data.setDrugs(req.drugs);
-            }
-            if (req.issueDate != null) {
-                LocalDate date = LocalDate.parse(req.issueDate);
-                data.setKoufuDate(date);
-            } else {
-                data.setKoufuDate(LocalDate.now());
-            }
-            if (req.validUpto != null) {
-                LocalDate date = LocalDate.parse(req.validUpto);
-                data.setValidUptoDate(date);
-            }
+            ShohousenData data = convertToShohousenData(req);
             ShohousenDrawer drawer = new ShohousenDrawer();
             if (req.color != null) {
                 DrawerColor defaultColor = DrawerColor.resolve(req.color);
@@ -565,10 +592,66 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             drawer.init();
             data.applyTo(drawer);
             List<Op> ops = drawer.getOps();
-            ctx.response().end(mapper.writeValueAsString(ops));
+            ctx.response().end(jsonEncode(ops));
         } catch (Exception e) {
             ctx.fail(e);
         }
+    }
+
+    private void saveShohousenPdf(RoutingContext ctx) {
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                String textIdArg = ctx.request().getParam("text-id");
+                if (textIdArg == null) {
+                    throw new RuntimeException("text-id is missing");
+                }
+                int textId = Integer.parseInt(textIdArg);
+                byte[] bytes = ctx.getBody().getBytes();
+                ShohousenRequest req = mapper.readValue(bytes, ShohousenRequest.class);
+                if (req.patient == null) {
+                    throw new RuntimeException("patient info is missing");
+                }
+                if (req.issueDate == null) {
+                    throw new RuntimeException("issue date is missing");
+                }
+                ShohousenData data = convertToShohousenData(req);
+                ShohousenDrawer drawer = new ShohousenDrawer();
+                if (req.color != null) {
+                    DrawerColor defaultColor = DrawerColor.resolve(req.color);
+                    drawer.setDefaultColor(defaultColor);
+                }
+                drawer.init();
+                data.applyTo(drawer);
+                List<Op> ops = drawer.getOps();
+                String savePath = composeShohousenSavePdfPath(
+                        req.patient.lastName + req.patient.firstNameYomi,
+                        textId,
+                        req.patient.patientId,
+                        LocalDate.parse(req.issueDate)
+                );
+                SaveDrawerAsPdfRequest saveReq = new SaveDrawerAsPdfRequest();
+                saveReq.pages = List.of(ops);
+                saveReq.paperSize = "A5";
+                saveReq.savePath = savePath;
+                ShohousenGrayStampInfo stampInfo = appConfig.getShohousenGrayStampInfo();
+                StampRequest stampReq = new StampRequest();
+                stampReq.path = stampInfo.path;
+                stampReq.scale = stampInfo.scale;
+                stampReq.offsetX = stampInfo.offsetX;
+                stampReq.offsetY = stampInfo.offsetY;
+                saveReq.stamp = stampReq;
+                doSaveDrawerAsPdf(saveReq);
+                promise.complete(savePath);
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
     }
 
     private void hokenRep(RoutingContext ctx) {

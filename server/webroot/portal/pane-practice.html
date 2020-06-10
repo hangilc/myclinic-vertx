@@ -934,6 +934,7 @@
             constructor() {
                 this.html = $("template#practice-text-template").html();
                 this.rest = rest;
+                this.classToken = "practice-text";
                 this.textDispFactory = new TextDispFactory();
                 this.textEditFactory = new TextEditFactory();
             }
@@ -942,25 +943,18 @@
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new Text(ele, map, this.rest);
-                comp.init(text, this.textDispFactory, this.textEditFactory);
-                // ele.on("click", event => {
-                //     let editor = this.textEditFactory.create(text);
-                //     editor.onUpdated((event, updated) => {
-                //         let compUpdated = this.create(updated);
-                //         compUpdated.replace(editor.ele);
-                //     });
-                //     editor.onCancel(event => comp.replace(editor.ele));
-                //     editor.onDeleted(event => editor.remove());
-                //     editor.onCopied((event, copiedText) => {
-                //         comp.replace(editor.ele);
-                //         let target = findRecord(copiedText.visitId);
-                //         if (target) {
-                //             target.addText(copiedText);
-                //         }
-                //     });
-                //     editor.replace(comp.ele);
-                // });
+                comp.init(text, this.textDispFactory, this.textEditFactory,
+                    this.classToken);
                 return comp;
+            }
+
+            listTextComponents(wrapperElement){
+                let xs = wrapperElement.find("." + this.classToken);
+                let components = [];
+                for(let i=0;i<xs.length;i++){
+                    components.push(xs.slice(i, i+1).data("component"));
+                }
+                return components;
             }
         }
 

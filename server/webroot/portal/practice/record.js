@@ -64,8 +64,31 @@ export class Record extends Component {
         visitFull.conducts.forEach(cfull => this.addConduct(cfull));
     }
 
+    getPharmaTextRegex(){
+        return /(.+)にファックス（(\+\d+)）で送付/;
+    }
+
     doSendShohousenFax(){
-        alert("shohousen fax");
+        let shohousenText;
+        let pharmaName;
+        let faxNumber;
+        let textComponents = this.textFactory.listTextComponents(this.textWrapperElement);
+        let pharmaRegex = this.getPharmaTextRegex();
+        for(let textComp of textComponents){
+            let content = textComp.getText().content;
+            if( content.startsWith("院外処方") ){
+                shohousenText = textComp;
+                continue;
+            }
+            let matches = pharmaRegex.exec(content);
+            if( matches ){
+                pharmaName = matches[1];
+                faxNumber = matches[2];
+            }
+        }
+        console.log(shohousenText);
+        console.log(pharmaName);
+        console.log(faxNumber);
     }
 
     showDrugMark() {

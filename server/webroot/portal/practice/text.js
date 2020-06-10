@@ -5,11 +5,13 @@ export class Text extends Component {
         super(ele, map, rest);
     }
 
-    init(text, textDispFactory, textEditFactory){
+    init(text, textDispFactory, textEditFactory, classToken){
         this.text = text;
         this.textDispFactory = textDispFactory;
         this.textEditFactory = textEditFactory;
         let compText = textDispFactory.create(text);
+        compText.ele.addClass(classToken);
+        compText.ele.data("component", this);
         compText.ele.on("click", event => {
             let editor = this.textEditFactory.create(text);
             editor.onUpdated((event, updated) => {
@@ -29,6 +31,10 @@ export class Text extends Component {
             editor.initFocus();
         });
         compText.appendTo(this.ele);
+    }
+
+    getText(){
+        return this.text;
     }
 
     onUpdated(cb){

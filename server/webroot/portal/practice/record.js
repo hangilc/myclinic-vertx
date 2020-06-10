@@ -20,13 +20,14 @@ export class Record extends Component {
 
     init(visitFull, hokenRep, titleFactory, textFactory, hokenFactory, shinryouFactory,
          textEnterFactory, shinryouRegularDialogFactory, conductDispFactory,
-         drugDispFactory) {
+         drugDispFactory, sendFaxFactory) {
         this.visitFull = visitFull;
         this.textFactory = textFactory;
         this.shinryouFactory = shinryouFactory;
         this.titleComponent = titleFactory.create(visitFull.visit).appendTo(this.titleElement);
         this.conductDispFactory = conductDispFactory;
         this.drugDispFactory = drugDispFactory;
+        this.sendFaxFactory = sendFaxFactory;
         this.drugCount = 0;
         visitFull.texts.forEach(text => {
             this.addText(text);
@@ -115,6 +116,7 @@ export class Record extends Component {
             pdfFilePath = await this.saveShohousenFaxImage(shohousenText.getText(),
                 {color: "black"});
         }
+        let faxSid = await this.rest.sendFax(faxNumber, pdfFilePath);
         alert(pdfFilePath);
         console.log(shohousenText);
         console.log(pharmaName);

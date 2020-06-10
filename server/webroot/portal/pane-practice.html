@@ -640,14 +640,28 @@
     </div>
 </template>
 
+<template id="practice-send-fax-template">
+    <div class="border founded mb-3 p-2">
+        <div class="mt-2">
+            <span class="x-pdf-file"></span>
+            <a href="javascript:void(0)" class="x-view">プレビュー</a>
+        </div>
+        <div class="x-fax-number"></div>
+        <div class="mt-4">
+            <button class="btn btn-secondary x-send">送信</button>
+            <a href="javascript:void(0)" class="x-cancel ml-2">キャンセル</a>
+        </div>
+    </div>
+</template>
+
 <template id="practice-fax-progress-template">
     <div class="border founded mb-3 p-2">
-        <div class="x-patientName"></div>
-        <div class="x-fax-number"></div>
+        <div class="x-title"></div>
         <div class="mt-2">
             <span class="x-pdf-file"></span>
             <a href="javascript:void(0)" class="x-view">表示</a>
         </div>
+        <div class="x-fax-number"></div>
         <div class="x-message mt-4"></div>
         <div class="mt-4">
             <button class="btn btn-secondary x-re-send">再送信</button>
@@ -685,6 +699,7 @@
         let {ConductDisp} = await import("./practice/conduct-disp.js");
         let {DrugDisp} = await import("./practice/drug-disp.js");
         let {MeisaiDialog} = await import("./practice/meisai-dialog.js");
+        let {SendFax} = await import("./practice/send-fax.js");
         let {FaxProgress} = await import("./practice/fax-progress.js");
 
         let currentVisitManager = new CurrentVisitManager();
@@ -911,9 +926,23 @@
             }
         }
 
+        class SendFaxFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-send-fax-template");
+            }
+
+            create(pdfFile, faxNumber){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new SendFax(ele, map, rest);
+                comp.init(pdfFile, faxNumber);
+                return comp;
+            }
+        }
+
         class FaxProgressFactory {
             constructor() {
-                this.html = getTemplateHtml("practice-fax-progress-template").html();
+                this.html = getTemplateHtml("practice-fax-progress-template");
             }
 
             create(patient, faxNumber, pdfFile, faxSid){
@@ -1104,6 +1133,7 @@
             constructor() {
                 this.html = getTemplateHtml("practice-record-template");
                 this.wrapper = $("#practice-record-wrapper");
+                this.generalWorkarea = $("#practice-general-workarea");
                 this.titleFactory = new TitleFactory();
                 this.textFactory = new TextFactory();
                 this.textEnterFactory = new TextEnterFactory();
@@ -1113,6 +1143,7 @@
                 this.conductDispFactory = new ConductDispFactory();
                 this.drugDispFactory = new DrugDispFactory();
                 this.sendFaxFactory = new SendFaxFactory();
+                this.faxProgressFactory = new FaxProgressFactory();
             }
 
             create(visitFull, hokenRep) {
@@ -1127,6 +1158,13 @@
                 record.onTempVisit(event =>
                     currentVisitManager.setTempVisitId(visitFull.visit.visitId));
                 record.onClearTempVisit(event => currentVisitManager.setTempVisitId(0));
+                record.onFaxSent(async (event, data) => {
+                    let patient = await rest.getPatient(visitFull.visit.patientId);
+                    let compProgress = this.faxProgressFactory.create(patient, data.faxNumber,
+                        data.pdfFile, data.faxSid);
+                    compProgress.appendTo(this.generalWorkarea);
+                    compProgress.start();
+                });
                 return record;
             }
         }

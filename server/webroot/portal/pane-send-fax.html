@@ -98,7 +98,6 @@
         $("#send-fax-preview-lilnk").on("click", event => {
             let file = $("#send-fax-pdf-file-input").val();
             let url = rest.url("/show-pdf", {file});
-            console.log(url);
             window.open(url, "_blank");
         });
 

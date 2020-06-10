@@ -34,6 +34,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -50,6 +52,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private final AppConfig appConfig;
     private final Vertx vertx;
+    private final ExecutorService executorService = Executors.newFixedThreadPool(6);
 
     NoDatabaseRestHandler(AppConfig appConfig, ObjectMapper mapper, Vertx vertx, MasterMap masterMap) {
         super(mapper, masterMap);
@@ -415,7 +418,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         Path path = Path.of(pdfPath);
         if ("true".equals(mkdir)) {
             //noinspection ResultOfMethodCallIgnored
-            path.toFile().mkdirs();
+            path.toFile().getParentFile().mkdirs();
         }
         ctx.response().end(jsonEncode(path.toString()));
     }
@@ -493,24 +496,18 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private void printDrawer(RoutingContext ctx) {
-        vertx.<String>executeBlocking(promise -> {
+        executorService.execute(() -> {
             try {
                 byte[] bytes = ctx.getBody().getBytes();
                 List<List<Op>> pages = mapper.readValue(bytes, new TypeReference<>() {
                 });
                 DrawerPrinter printer = new DrawerPrinter();
                 printer.printPages(pages);
-                promise.complete("true");
             } catch (Exception e) {
-                promise.fail(e);
-            }
-        }, ar -> {
-            if (ar.succeeded()) {
-                ctx.response().end(ar.result());
-            } else {
-                ctx.fail(ar.cause());
+                logger.error("print-drawer failed", e);
             }
         });
+        ctx.response().end("true");
     }
 
     private void calcRcptAge(RoutingContext ctx) {
@@ -624,7 +621,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 data.applyTo(drawer);
                 List<Op> ops = drawer.getOps();
                 String savePath = composeShohousenSavePdfPath(
-                        req.patient.lastName + req.patient.firstNameYomi,
+                        req.patient.lastNameYomi + req.patient.firstNameYomi,
                         textId,
                         req.patient.patientId,
                         LocalDate.parse(req.issueDate)
@@ -641,7 +638,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 stampReq.offsetY = stampInfo.offsetY;
                 saveReq.stamp = stampReq;
                 doSaveDrawerAsPdf(saveReq);
-                promise.complete(savePath);
+                promise.complete(jsonEncode(savePath));
             } catch (Exception e) {
                 promise.fail(e);
             }

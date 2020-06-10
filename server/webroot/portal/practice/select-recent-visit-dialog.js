@@ -31,7 +31,7 @@ export class SelectRecentVisitDialog extends Component {
 
     async open(){
         this.selectElement.html("");
-        let list = await this.rest.listWqueueFull();
+        let list = await this.rest.listRecentVisitWithPatient();
         list.forEach(wqueueFull => {
             let opt = this.createOption(wqueueFull);
             this.selectElement.append(opt);

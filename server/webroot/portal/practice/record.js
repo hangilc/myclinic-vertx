@@ -5,6 +5,7 @@ export class Record extends Component {
         super(ele, map, rest);
         this.ele.data("component", this);
         this.titleElement = map.title;
+        this.leftCommandWrapperElement = map.left.commandWrapper;
         this.enterTextElement = map.left.enterText;
         this.sendShohousenFaxElement = map.left.sendShohousenFax;
         this.textWrapperElement = map.left.textWrapper;
@@ -116,11 +117,20 @@ export class Record extends Component {
             pdfFilePath = await this.saveShohousenFaxImage(shohousenText.getText(),
                 {color: "black"});
         }
-        let faxSid = await this.rest.sendFax(faxNumber, pdfFilePath);
-        alert(pdfFilePath);
-        console.log(shohousenText);
-        console.log(pharmaName);
-        console.log(faxNumber);
+        let compSendFax = this.sendFaxFactory.create(pdfFilePath, faxNumber);
+        compSendFax.onSent((event, faxSid) => {
+            this.trigger("fax-sent", {
+                textId: textId,
+                faxNumber: faxNumber,
+                pdfFile: pdfFilePath,
+                faxSid: faxSid
+            });
+        });
+        compSendFax.putBefore(this.leftCommandWrapperElement);
+    }
+
+    onFaxSent(cb){
+        this.on("fax-sent", (event, data) => cb(event, data));
     }
 
     showDrugMark() {

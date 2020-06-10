@@ -3,7 +3,7 @@ import {Component} from "./component.js";
 export class FaxProgress extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
-        this.patientNameElement = map.patientName;
+        this.titleElement = map.title;
         this.faxNumberElement = map.faxNumber;
         this.pdfFileElement = map.pdfFile;
         this.viewElement = map.view;
@@ -17,6 +17,10 @@ export class FaxProgress extends Component {
         this.messageElement.append(e);
     }
 
+    clearMessage(){
+        this.messageElement.html("");
+    }
+
     async poll() {
         let status = await this.rest.pollFax(this.faxSid);
         this.addMessage(status);
@@ -25,25 +29,46 @@ export class FaxProgress extends Component {
         }
     }
 
+    startPoll(){
+        setTimeout(async () => {
+            await this.poll();
+        }, 10000);
+    }
+
     view(){
         let url = rest.url("/show-pdf", {file: this.pdfFile});
         window.open(url, "_blank");
     }
 
-    init(patientName, faxNumber, pdfFile, faxSid) {
+    init(title, faxNumber, pdfFile, faxSid) {
         this.pdfFile = pdfFile;
-        this.patientNameElement.text(patientName);
-        this.faxNumberElement.text(faxNumber);
-        this.pdfFileElement.text(pdfFile);
+        this.faxNumber = faxNumber;
+        this.titleElement.text(title);
+        this.setFaxNumberDisp(faxNumber);
+        this.setPdfFileDisp(pdfFile);
         this.faxSid = faxSid;
         this.closeElement.on("click", event => this.remove());
         this.viewElement.on("click", event => this.view());
+        this.reSendElement.on("click", event => this.resend());
+    }
+
+    setFaxNumberDisp(faxNumber){
+        this.faxNumberElement.text(faxNumber);
+    }
+
+    setPdfFileDisp(pdfFile){
+        this.pdfFileElement.text(pdfFile);
+    }
+
+    async resend(){
+        this.faxSid = await this.rest.sendFax(this.faxNumber, this.pdfFile);
+        this.clearMessage();
+        this.addMessage("restarted");
+        this.startPoll();
     }
 
     start() {
         this.addMessage("started");
-        setTimeout(async () => {
-            await this.poll();
-        }, 10000);
+        this.startPoll();
     }
 }

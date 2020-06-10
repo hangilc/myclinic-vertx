@@ -27,7 +27,7 @@ function ajaxPost(url, data, encodeJson = true) {
             dataType: "json",
             success: resolve,
             error: (xhr, status, err) => {
-                let msg = xhr.responseText || err.toString() || status;
+                let msg = xhr.responseText + " : " + err.toString() + " : " + status;
                 alert(msg);
                 fail(msg);
             }

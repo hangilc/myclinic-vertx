@@ -1,5 +1,5 @@
 
-<div class="row">
+<div class="row pane" id="cashier-top">
     <h3 class="col-sm-2">会計</h3>
     <div class="col-sm-10">
         <button class="btn btn-secondary" id="cashier-refresh-button">更新</button>
@@ -48,8 +48,6 @@
 </div>
 
 <script>
-    let cashierUpdate = () => {};
-
     (function(){
 
         class ChargeDialog {
@@ -185,6 +183,6 @@
 
         $("#cashier-refresh-button").on("click", event => update());
 
-        cashierUpdate = () => update();
+        $("#cashier-top").on("pane_shown", event => update());
     })();
 </script>

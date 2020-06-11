@@ -56,32 +56,31 @@
             e.addClass("active");
         }
 
+        async function loadPane(id, url, wrapperElement){
+            return new Promise((resolve, fail) => {
+                if( id in paneMap ){
+                    wrapperElement.append(paneMap[id]);
+                    delete paneMap[id];
+                    resolve(true);
+                } else {
+                    wrapperElement.load(url, () => resolve(true));
+                }
+            });
+        }
+
         function bindLink(id, url){
-            let e = $("#" + id);
-            e.on("click", event => {
+            let wrapper = $("#index-pane-wrapper");
+            $(`#${id}`).on("click", async event => {
                 if( id === currentPaneId ){
                     return;
                 }
                 if( currentPaneId !== "" ){
-                    let curr = $("#index-pane-wrapper").contents();
-                    curr.detach();
-                    paneMap[currentPaneId] = curr;
+                    paneMap[currentPaneId] = wrapper.contents().detach();
                 }
-                if( id in paneMap ){
-                    $("#index-pane-wrapper").append(paneMap[id]);
-                    delete paneMap[id];
-                    if( id === "index-cashier-link" ){
-                        cashierUpdate();
-                    }
-                } else {
-                    $("#index-pane-wrapper").load(url, () => {
-                        if( id === "index-cashier-link" ){
-                            cashierUpdate();
-                        }
-                    });
-                }
+                await loadPane(id, url, wrapper);
                 currentPaneId = id;
-                setActive(e)
+                wrapper.find(".pane").trigger("pane_shown");
+                setActive($(this));
             });
         }
 

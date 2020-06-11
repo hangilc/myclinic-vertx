@@ -178,7 +178,7 @@ public class Backend {
             int patientId = Integer.parseInt(text);
             return List.of(getPatient(patientId));
         }
-        String[] parts = text.split("\\s+", 2);
+        String[] parts = text.split("[　\\s]+", 2);
         if (parts.length == 1) {
             String s = "%" + text + "%";
             return searchPatientByKeyword(s);

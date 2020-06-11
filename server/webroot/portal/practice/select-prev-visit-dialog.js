@@ -30,8 +30,10 @@ export class SelectPreviousVisitDialog extends Component {
             this.ele.modal("hide");
         });
         this.enterElement.on("click", event => {
-            this.result.mode = "selected";
-            this.ele.modal("hide");
+            if( this.result.data != null ) {
+                this.result.mode = "selected";
+                this.ele.modal("hide");
+            }
         })
     }
 

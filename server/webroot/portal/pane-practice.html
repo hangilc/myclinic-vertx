@@ -129,6 +129,7 @@
                 <div class="x-shinryou-wrapper"></div>
                 <a href="javascript:void(0)" class="x-conduct-menu">［処置］</a>
                 <div class="x-conduct-wrapper"></div>
+                <div class="x-charge-wrapper"></div>
             </div>
         </div>
     </div>
@@ -670,6 +671,14 @@
     </div>
 </template>
 
+<template id="practice-charge-template">
+    <div class="mt-2"></div>
+</template>
+
+<template id="practice-charge-disp-template">
+    <div></div>
+</template>
+
 <script>
 
     (async function () {
@@ -701,6 +710,8 @@
         let {MeisaiDialog} = await import("./practice/meisai-dialog.js");
         let {SendFax} = await import("./practice/send-fax.js");
         let {FaxProgress} = await import("./practice/fax-progress.js");
+        let {Charge} = await import("./practice/charge.js");
+        let {ChargeDisp} = await import("./practice/charge-disp.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
@@ -1129,6 +1140,35 @@
             }
         }
 
+        class ChargeDispFactory {
+            constructor(){
+                this.html = getTemplateHtml("practice-charge-disp-template");
+            }
+
+            create(charge){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new ChargeDisp(ele, map, rest);
+                comp.init(charge);
+                return comp;
+            }
+        }
+
+        class ChargeFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-charge-template");
+                this.chargeDispFactory = new ChargeDispFactory();
+            }
+
+            create(charge){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new Charge(ele, map, rest);
+                comp.init(charge, this.chargeDispFactory);
+                return comp;
+            }
+        }
+
         class RecordFactory {
             constructor() {
                 this.html = getTemplateHtml("practice-record-template");
@@ -1144,6 +1184,7 @@
                 this.drugDispFactory = new DrugDispFactory();
                 this.sendFaxFactory = new SendFaxFactory();
                 this.faxProgressFactory = new FaxProgressFactory();
+                this.chargeFactory = new ChargeFactory();
             }
 
             create(visitFull, hokenRep) {
@@ -1153,7 +1194,7 @@
                 record.init(visitFull, hokenRep, this.titleFactory, this.textFactory,
                     this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
                     this.shinryouRegularDialogFactory, this.conductDispFactory,
-                    this.drugDispFactory, this.sendFaxFactory);
+                    this.drugDispFactory, this.sendFaxFactory, this.chargeFactory);
                 record.onDeleted(event => record.remove());
                 record.onTempVisit(event =>
                     currentVisitManager.setTempVisitId(visitFull.visit.visitId));

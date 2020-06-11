@@ -17,11 +17,12 @@ export class Record extends Component {
         this.shinryouWrapperElement = map.right.shinryouWrapper;
         this.conductMenuElement = map.right.conductMenu;
         this.conductWrapperElement = map.right.conductWrapper;
+        this.chargeWrapperElement = map.right.chargeWrapper;
     }
 
     init(visitFull, hokenRep, titleFactory, textFactory, hokenFactory, shinryouFactory,
          textEnterFactory, shinryouRegularDialogFactory, conductDispFactory,
-         drugDispFactory, sendFaxFactory) {
+         drugDispFactory, sendFaxFactory, chargeFactory) {
         this.visitFull = visitFull;
         this.textFactory = textFactory;
         this.shinryouFactory = shinryouFactory;
@@ -64,6 +65,8 @@ export class Record extends Component {
         visitFull.drugs.forEach(drugFull => this.addDrug(drugFull));
         visitFull.shinryouList.forEach(shinryouFull => this.addShinryou(shinryouFull, false));
         visitFull.conducts.forEach(cfull => this.addConduct(cfull));
+        let compCharge = chargeFactory.create(visitFull.charge);
+        compCharge.appendTo(this.chargeWrapperElement);
     }
 
     getPharmaTextRegex(){

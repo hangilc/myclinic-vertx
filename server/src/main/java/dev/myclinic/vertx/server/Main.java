@@ -25,6 +25,8 @@ import io.vertx.ext.web.handler.StaticHandler;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
 
@@ -44,7 +46,47 @@ public class Main {
         yamlMapper = new ObjectMapper(new YAMLFactory());
     }
 
+    private static class CmdArgs {
+        int port = 28080;
+        List<String> args = new ArrayList<>();
+
+        public static CmdArgs parse(String[] args){
+            CmdArgs cmdArgs = new CmdArgs();
+            int i=0;
+            first: for(i=0;i<args.length;i++){
+                String arg = args[i];
+                switch(arg){
+                    case "--port": {
+                        cmdArgs.port = Integer.parseInt(args[++i]);
+                        break;
+                    }
+                    default: {
+                        if( arg.startsWith("-") ){
+                            System.err.println(String.format("Invalid option: %s", arg));
+                            System.err.println();
+                            usage();
+                            System.exit(1);
+                        } else {
+                            break first;
+                        }
+                    }
+                }
+            }
+            for(;i<args.length;i++){
+                cmdArgs.args.add(args[i]);
+            }
+            return cmdArgs;
+        }
+
+        public static void usage(){
+            System.err.println("Usage: server [options]");
+            System.err.println("  options:");
+            System.err.println("    --port PORT       server listening port");
+        }
+    }
+
     public static void main(String[] args) {
+        CmdArgs cmdArgs = CmdArgs.parse(args);
         MysqlDataSourceConfig mysqlConfig = new MysqlDataSourceConfig();
         DataSource ds = MysqlDataSourceFactory.create(mysqlConfig);
         TableSet ts = TableSet.create();
@@ -79,7 +121,7 @@ public class Main {
             faxStreamingVerticle.addClient(ws);
             ws.closeHandler(e -> System.out.println("closed"));
         });
-        int port = 28080;
+        int port = cmdArgs.port;
         server.listen(port);
         System.out.println(String.format("server started at port %d", port));
     }

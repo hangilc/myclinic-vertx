@@ -70,8 +70,15 @@
                 if( id in paneMap ){
                     $("#index-pane-wrapper").append(paneMap[id]);
                     delete paneMap[id];
+                    if( id === "index-cashier-link" ){
+                        cashierUpdate();
+                    }
                 } else {
-                    $("#index-pane-wrapper").load(url);
+                    $("#index-pane-wrapper").load(url, () => {
+                        if( id === "index-cashier-link" ){
+                            cashierUpdate();
+                        }
+                    });
                 }
                 currentPaneId = id;
                 setActive(e)

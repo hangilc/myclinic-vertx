@@ -1,5 +1,5 @@
 <!--suppress ALL -->
-<div class="row">
+<div class="row" id="practice-top">
     <h3 class="col-sm-2">診察</h3>
     <div class="col-sm-10">
         <div class="dropdown ml-auto" id="practice-select-patient-menu">
@@ -42,6 +42,8 @@
     <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>
 </div>
 
+<div id="practice-nav-upper"></div>
+
 <div class="row">
     <div id="practice-record-wrapper" class="col-sm-9"></div>
     <div id="practice-right-bar" class="col-sm-3">
@@ -49,6 +51,8 @@
         <div id="practice-general-workarea"></div>
     </div>
 </div>
+
+<div id="practice-nav-lower"></div>
 
 <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true"
      id="practice-choose-patient-dialog">
@@ -679,6 +683,16 @@
     <div></div>
 </template>
 
+<template id="practice-nav-template">
+    <div class="d-none mt-2">
+        <a href="javascript:void(0)" class="x-first">最初</a>
+        <a href="javascript:void(0)" class="x-prev ml-1">前へ</a>
+        <a href="javascript:void(0)" class="x-next ml-1">次へ</a>
+        <a href="javascript:void(0)" class="x-last ml-1 mr-1">最後</a>
+        [<span class="x-page"></span>/<span class="x-total"></span>]
+    </div>
+</template>
+
 <script>
 
     (async function () {
@@ -712,6 +726,7 @@
         let {FaxProgress} = await import("./practice/fax-progress.js");
         let {Charge} = await import("./practice/charge.js");
         let {ChargeDisp} = await import("./practice/charge-disp.js");
+        let {Nav} = await import("./practice/nav.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
@@ -852,7 +867,7 @@
                 this.html = getTemplateHtml("practice-meisai-dialog-template");
             }
 
-            create(meisai){
+            create(meisai) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let dialog = new MeisaiDialog(ele, map, rest);
@@ -875,7 +890,7 @@
                 let meisai = await rest.getMeisai(visitId);
                 let dialog = meisaiDialogFactory.create(meisai);
                 let result = await dialog.open();
-                if( result ){
+                if (result) {
                     await rest.endExam(visitId, meisai.charge);
                     currentVisitManager.setCurrentVisitId(0);
                     currentPatientManager.setCurrentPatientId(0);
@@ -942,7 +957,7 @@
                 this.html = getTemplateHtml("practice-send-fax-template");
             }
 
-            create(pdfFile, faxNumber){
+            create(pdfFile, faxNumber) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new SendFax(ele, map, rest);
@@ -956,7 +971,7 @@
                 this.html = getTemplateHtml("practice-fax-progress-template");
             }
 
-            create(patient, faxNumber, pdfFile, faxSid){
+            create(patient, faxNumber, pdfFile, faxSid) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new FaxProgress(ele, map, rest);
@@ -967,11 +982,11 @@
         }
 
         class TextDispFactory {
-            constructor(){
+            constructor() {
                 this.html = getTemplateHtml("practice-text-disp-template");
             }
 
-            create(text){
+            create(text) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new TextDisp(ele, map, rest);
@@ -1012,11 +1027,11 @@
                 return comp;
             }
 
-            listTextComponents(wrapperElement){
+            listTextComponents(wrapperElement) {
                 let xs = wrapperElement.find("." + this.classToken);
                 let components = [];
-                for(let i=0;i<xs.length;i++){
-                    components.push(xs.slice(i, i+1).data("component"));
+                for (let i = 0; i < xs.length; i++) {
+                    components.push(xs.slice(i, i + 1).data("component"));
                 }
                 return components;
             }
@@ -1069,7 +1084,7 @@
                 this.html = getTemplateHtml("practice-shinryou-edit-template");
             }
 
-            create(shinryouFull){
+            create(shinryouFull) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new ShinryouEdit(ele, map, rest);
@@ -1141,11 +1156,11 @@
         }
 
         class ChargeDispFactory {
-            constructor(){
+            constructor() {
                 this.html = getTemplateHtml("practice-charge-disp-template");
             }
 
-            create(charge){
+            create(charge) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new ChargeDisp(ele, map, rest);
@@ -1160,7 +1175,7 @@
                 this.chargeDispFactory = new ChargeDispFactory();
             }
 
-            create(charge){
+            create(charge) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new Charge(ele, map, rest);
@@ -1282,6 +1297,35 @@
             });
         })();
 
+        class NavFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-nav-template");
+            }
+
+            create() {
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new Nav(ele, map, rest);
+                comp.init();
+                return comp;
+            }
+
+        }
+
+        let navs = (function () {
+            let navFactory = new NavFactory();
+            let result = [
+                navFactory.create().appendTo($("#practice-nav-upper")),
+                navFactory.create().appendTo($("#practice-nav-lower"))
+            ];
+            result.forEach(nav => {
+                nav.onChange((event, page) => {
+                    $("#practice-top").trigger("practice_page_changed", page);
+                });
+            });
+            return result;
+        })();
+
         let recordFactory = new RecordFactory();
 
         async function getHokenRep(hoken) {
@@ -1292,22 +1336,36 @@
             return hokenRep;
         }
 
-        currentPatientManager.onChanged(async (event, patientId) => {
-            let recordWrapperElement = $("#practice-record-wrapper").html("");
-            if (patientId > 0) {
-                let page = await rest.listVisit(patientId, 0);
-                for (let visitFull of page.visits) {
-                    let hokenRep = await getHokenRep(visitFull.hoken);
-                    let record = recordFactory.create(visitFull, hokenRep);
-                    record.onTextCopied((event, copiedText) => {
-                        let targetRec = findRecord(copiedText.visitId);
-                        if( targetRec ){
-                            targetRec.addText(copiedText);
-                        }
-                    });
-                    record.appendTo(recordWrapperElement);
-                }
+        $("#practice-top").on("practice_page_changed", async (event, page) => {
+            let patientId = currentPatientManager.getCurrentPatientId();
+            if( patientId === 0 ){
+                $(this).trigger("practice_visits_changed", [[]]);
+                navs.forEach(nav => nav.set(0, 0));
+            } else {
+                let visitPage = await rest.listVisit(patientId, page - 1);
+                $("#practice-top").trigger("practice_visits_changed", [visitPage.visits]);
+                navs.forEach(nav => nav.set(visitPage.page + 1, visitPage.totalPages));
             }
+        });
+
+        $("#practice-top").on("practice_visits_changed", async (event, visitFulls) => {
+            let recordWrapperElement = $("#practice-record-wrapper");
+            recordWrapperElement.html("");
+            for (let visitFull of visitFulls) {
+                let hokenRep = await getHokenRep(visitFull.hoken);
+                let record = recordFactory.create(visitFull, hokenRep);
+                record.onTextCopied((event, copiedText) => {
+                    let targetRec = findRecord(copiedText.visitId);
+                    if (targetRec) {
+                        targetRec.addText(copiedText);
+                    }
+                });
+                record.appendTo(recordWrapperElement);
+            }
+        });
+
+        currentPatientManager.onChanged(async (event, patientId) => {
+            $("#practice-top").trigger("practice_page_changed", 1);
         });
 
         function forEachRecord(f) {
@@ -1345,29 +1403,6 @@
                 }
             });
         });
-
-        // class FaxTrackerFactory {
-        //     constructor() {
-        //         this.html = getTemplateHtml("practice-fax-tracker-template");
-        //     }
-        //
-        //     create(url){
-        //         let ele = $(this.html);
-        //         let map = parseElement(ele);
-        //         let comp = new FaxTracker(ele, map, rest);
-        //         comp.init(url);
-        //         return comp;
-        //     }
-        // }
-
-        // (function(){
-        //     let faxTrackerFactory = new FaxTrackerFactory();
-        //     let loc = new URL("../stream/fax", document.location);
-        //     loc.protocol = "ws";
-        //     let tracker = faxTrackerFactory.create(loc.href);
-        //     tracker.onClosed(event => tracker.remove());
-        //     tracker.appendTo($("#practice-right-bar"));
-        // })();
 
     })();
 

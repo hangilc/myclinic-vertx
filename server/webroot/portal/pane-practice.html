@@ -736,6 +736,35 @@
     </div>
 </template>
 
+<template id="practice-disease-end-template">
+    <div>
+        <div class="x-list"></div>
+        <div>
+            <input type="date" class="x-date-input form-control"/>
+            <div class="x-date-commands_">
+                <a href="javascript:void(0)" class="x-advance-week">週</a>
+                <a href="javascript:void(0)" class="x-today">今日</a>
+                <a href="javascript:void(0)" class="x-end-of-month">月末</a>
+                <a href="javascript:void(0)" class="x-end-of-last-month">先月末</a>
+            </div>
+        </div>
+        <div>
+            <form class="form-inline x-end-reason-form" onsubmit="return false">
+                転機：
+                <input type="radio" name="end-reason" value="cured" checked>
+                <span class="ml-1">治癒</span>
+                <input type="radio" name="end-reason" value="stopped" class="ml-2">
+                <span class="ml-1">中止</span>
+                <input type="radio" name="end-reason" value="dead"class="ml-2">
+                <span class="ml-1">死亡</span>
+            </form>
+        </div>
+        <div>
+            <button type="button" class="x-enter btn btn-secondary">入力</button>
+        </div>
+    </div>
+</template>
+
 <script>
 
     (async function () {
@@ -773,6 +802,7 @@
         let {DiseaseArea} = await import("./practice/disease-area.js");
         let {DiseaseCurrent} = await import("./practice/disease-current.js");
         let {DiseaseAdd, initDiseaseExamples} = await import("./practice/disease-add.js");
+        let {DiseaseEnd} = await import("./practice/disease-end.js");
         let {DiseaseDisp} = await import("./practice/disease-disp.js");
 
         let currentVisitManager = new CurrentVisitManager();
@@ -1419,6 +1449,21 @@
             }
         }
 
+        class DiseaseEndFactory {
+            constructor(){
+                this.html = getTemplateHtml("practice-disease-end-template");
+            }
+
+            create(diseaseFulls){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new DiseaseEnd(ele, map, rest);
+                comp.init();
+                comp.set(diseaseFulls);
+                return comp;
+            }
+        }
+
         (async function(){
             let configExamples = await rest.listDiseaseExample();
             initDiseaseExamples(configExamples);
@@ -1429,13 +1474,14 @@
                 this.html = getTemplateHtml("practice-disease-area-template");
                 this.diseaseCurrentFactory = new DiseaseCurrentFactory();
                 this.diseaseAddFactory = new DiseaseAddFactory();
+                this.diseaseEndFactory = new DiseaseEndFactory();
             }
 
             create(){
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new DiseaseArea(ele, map, rest);
-                comp.init(this.diseaseCurrentFactory, this.diseaseAddFactory);
+                comp.init(this.diseaseCurrentFactory, this.diseaseAddFactory, this.diseaseEndFactory);
                 return comp;
             }
         }

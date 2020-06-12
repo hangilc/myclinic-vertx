@@ -28,3 +28,13 @@ export function formatDate(sqldate){
     return `${data.gengou.alpha[0]}${data.nen}.${data.month}.${data.day}`;
 }
 
+export function datePart(disease){
+    let start = formatDate(disease.startDate);
+    if( disease.endReason !== "N" ){
+        let end = formatDate(disease.endDate);
+        return `(${start}-${end})`;
+    } else {
+        return `(${start})`;
+    }
+}
+

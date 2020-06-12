@@ -11,11 +11,13 @@ export class DiseaseArea extends Component {
         this.editElement = map.edit;
     }
 
-    init(diseaseCurrentFactory, diseaseAddFactory) {
+    init(diseaseCurrentFactory, diseaseAddFactory, diseaseEndFactory) {
         this.diseaseCurrentFactory = diseaseCurrentFactory;
         this.diseaseAddFactory = diseaseAddFactory;
+        this.diseaseEndFactory = diseaseEndFactory;
         this.currentElement.on("click", event => this.current());
         this.addElement.on("click", event => this.add());
+        this.endElement.on("click", event => this.end());
     }
 
     set(patientId, diseaseFulls){
@@ -40,6 +42,12 @@ export class DiseaseArea extends Component {
         this.workareaElement.html("");
         comp.onEntered((event, entered) => this.diseaseFulls.push(entered));
         comp.doExample();
+        comp.appendTo(this.workareaElement);
+    }
+
+    end(){
+        let comp = this.diseaseEndFactory.create(this.diseaseFulls);
+        this.workareaElement.html("");
         comp.appendTo(this.workareaElement);
     }
 

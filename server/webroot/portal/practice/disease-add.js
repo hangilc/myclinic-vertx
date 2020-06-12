@@ -86,6 +86,8 @@ export class DiseaseAdd extends Component {
         this.searchFormElement = map.searchForm;
         this.dateInputElement = map.dateInput;
         this.enterElement = map.enter;
+        this.suspElement = map.susp;
+        this.delAdjElement = map.delAdj;
         this.exampleElement = map.example;
         this.searchTextElement = map.searchText;
         this.diseaseRadio = map.diseaseRadio;
@@ -100,6 +102,14 @@ export class DiseaseAdd extends Component {
         this.selectElement.on("change", event => this.doSelected());
         this.dateInputElement.on("change", event => this.data.setStartDate(this.dateInputElement.val()));
         this.exampleElement.on("click", event => this.doExample());
+        this.suspElement.on("click", event => {
+            this.data.addShuushokugoMaster(consts.suspMaster);
+            this.setName(this.data.getRep());
+        });
+        this.delAdjElement.on("click", event => {
+            this.data.clearShuushokugoMasters();
+            this.setName(this.data.getRep());
+        })
     }
 
     doExample(){

@@ -4,8 +4,6 @@ export function isPrefix(shuushokugocode){
     return shuushokugocode < 8000;
 }
 
-export const shuushokugocodeSusp = 8002;
-
 export function diseaseRep(diseaseFull){
     return diseaseRepByMasters(diseaseFull.master, diseaseFull.adjList.map(adj => adj.master));
 }

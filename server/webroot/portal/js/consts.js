@@ -33,3 +33,10 @@ export function diseaseEndReasonToKanji(code){
         default: return "" + code;
     }
 }
+
+export const suspMaster = {
+    shuushokugocode: 8002,
+    name: "の疑い"
+}
+
+

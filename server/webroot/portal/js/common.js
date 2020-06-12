@@ -318,6 +318,10 @@ class Rest extends Client {
     async findShuushokugoMasterByName(name){
         return await this.get("/find-shuushokugo-master-by-name", {name});
     }
+
+    async batchUpdateDiseaseEndReason(reqs){
+        return await this.post("/batch-update-disease-end-reason", reqs);
+    }
 }
 
 class Integration extends Client {

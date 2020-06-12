@@ -1,15 +1,19 @@
 import {Component} from "../js/component.js";
 import * as DiseaseUtil from "../js/disease-util.js";
+import * as consts from "../js/consts.js";
 
 export class DiseaseEnd extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
         this.listElement = map.list;
         this.dateInputElement = map.dateInput;
+        this.endReasonFormElement = map.endReasonForm;
+        this.enterElement = map.enter;
     }
 
     init(){
         this.listElement.on("change", "input[type=checkbox]", event => this.doCheckChanged());
+        this.enterElement.on("click", event => this.doEnter());
     }
 
     set(diseaseFulls){
@@ -17,6 +21,44 @@ export class DiseaseEnd extends Component {
             let e = this.createCheckUnit(df);
             this.listElement.append(e);
         }
+    }
+
+    containsSusp(diseaseFull){
+        let suspcode = consts.suspMaster.shuushokugocode;
+        if( diseaseFull.adjList ){
+            for(let adjFull of diseaseFull.adjList){
+                if( adjFull.diseaseAdj.shuushokugocode === suspcode ){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    convertToReq(diseaseFull, endReason, endDate){
+        if( endReason === consts.DiseaseEndReasonCured && this.containsSusp(diseaseFull) ){
+            endReason = consts.DiseaseEndReasonStopped;
+        }
+        return {
+            diseaseId: diseaseFull.disease.diseaseId,
+            endDate,
+            endReason
+        }
+    }
+
+    getCheckedEndReason(){
+        return this.endReasonFormElement.find("input[type=radio]:checked").val();
+    }
+
+    async doEnter(){
+        let endDate = this.dateInputElement.val();
+        if( !endDate ){
+            alert("終了日が指定されていません。");
+            return;
+        }
+        let endReason = this.getCheckedEndReason();
+        let reqs = this.checkedDiseases().map(df => this.convertToReq(df, endReason, endDate));
+        await this.rest.batchUpdateDiseaseEndReason(reqs);
     }
 
     doCheckChanged(){

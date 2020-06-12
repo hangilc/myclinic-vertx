@@ -1359,7 +1359,8 @@
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new DiseaseDisp(ele, map, rest);
-                comp.init(diseaseFull);
+                comp.init();
+                comp.set(diseaseFull);
                 return comp;
             }
         }

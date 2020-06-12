@@ -693,6 +693,27 @@
     </div>
 </template>
 
+<template id="practice-disease-area-template">
+    <div class="d-none">
+        <h5>病名</h5>
+        <div class="x-list"></div>
+        <div class="x-commands">
+            <a href="javascript:void(0)" class="x-current">現行</a>
+            <a href="javascript:void(0)" class="x-add">追加</a>
+            <a href="javascript:void(0)" class="x-end">転機</a>
+            <a href="javascript:void(0)" class="x-edit">編集</a>
+        </div>
+    </div>
+</template>
+
+<template id="practice-disease-template">
+    <div></div>
+</template>
+
+<template id="practice-disease-disp-template">
+    <div></div>
+</template>
+
 <script>
 
     (async function () {
@@ -727,6 +748,9 @@
         let {Charge} = await import("./practice/charge.js");
         let {ChargeDisp} = await import("./practice/charge-disp.js");
         let {Nav} = await import("./practice/nav.js");
+        let {Disease} = await import("./practice/disease.js");
+        let {DiseaseDisp} = await import("./practice/disease-disp.js");
+        let {DiseaseArea} = await import("./practice/disease-area.js");
 
         let currentVisitManager = new CurrentVisitManager();
         let currentPatientManager = new CurrentPatientManager();
@@ -1326,6 +1350,67 @@
             return result;
         })();
 
+        class DiseaseDispFactory {
+            constructor(){
+                this.html = getTemplateHtml("practice-disease-disp-template");
+            }
+
+            create(diseaseFull){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new DiseaseDisp(ele, map, rest);
+                comp.init(diseaseFull);
+                return comp;
+            }
+        }
+
+        class DiseaseFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-disease-template");
+                this.diseaseDispFactory = new DiseaseDispFactory();
+            }
+
+            create(diseaseFull){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new Disease(ele, map, rest);
+                comp.init(diseaseFull, this.diseaseDispFactory);
+                return comp;
+            }
+        }
+
+        class DiseaseAreaFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-disease-area-template");
+                this.diseaseFactory = new DiseaseFactory();
+                this.diseaseDispFactory = new DiseaseDispFactory();
+            }
+
+            create(){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new DiseaseArea(ele, map, rest);
+                comp.init(this.diseaseFactory);
+                return comp;
+            }
+        }
+
+        let diseaseArea = (function(){
+            let diseaseAreaFactory = new DiseaseAreaFactory();
+            let comp = diseaseAreaFactory.create();
+            comp.appendTo($("#practice-disease-wrapper"));
+            return comp;
+        })();
+
+        currentPatientManager.onChanged(async (event, patientId) => {
+            if( patientId > 0 ){
+                let ds = await rest.listCurrentDisease(patientId);
+                diseaseArea.set(ds);
+            } else {
+                diseaseArea.set(null);
+            }
+        });
+
         let recordFactory = new RecordFactory();
 
         async function getHokenRep(hoken) {
@@ -1339,7 +1424,7 @@
         $("#practice-top").on("practice_page_changed", async (event, page) => {
             let patientId = currentPatientManager.getCurrentPatientId();
             if( patientId === 0 ){
-                $(this).trigger("practice_visits_changed", [[]]);
+                $("#practice-top").trigger("practice_visits_changed", [[]]);
                 navs.forEach(nav => nav.set(0, 0));
             } else {
                 let visitPage = await rest.listVisit(patientId, page - 1);

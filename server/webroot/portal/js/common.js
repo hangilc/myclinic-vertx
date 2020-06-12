@@ -286,6 +286,10 @@ class Rest extends Client {
     async pollFax(faxSid){
         return await this.get("/poll-fax", {"fax-sid": faxSid});
     }
+
+    async listCurrentDisease(patientId){
+        return await this.get("/list-current-disease-full", {"patient-id": patientId});
+    }
 }
 
 class Integration extends Client {

@@ -16,6 +16,7 @@ class Data {
     clear(){
         this.byoumeiMaster = null;
         this.adjMasters = [];
+        this.startDate = null;
     }
 
     setByoumeiMaster(master){
@@ -49,9 +50,11 @@ class Data {
             shoubyoumeicode: this.byoumeiMaster.shoubyoumeicode,
             startDate: this.startDate,
             endReason: consts.DiseaseEndReasonNotEnded,
-            endDate: null
+            endDate: "0000-00-00"
         };
-        let adjList = this.adjMasters.map(m => m.shuushokugocode);
+        let adjList = this.adjMasters.map(m => {
+            return {shuushokugocode: m.shuushokugocode};
+        });
         return {disease, adjList};
     }
 }
@@ -60,10 +63,10 @@ export class DiseaseAdd extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
         this.nameElement = map.name;
+        this.searchFormElement = map.searchForm;
         this.dateInputElement = map.dateInput;
         this.enterElement = map.enter;
         this.searchTextElement = map.searchText;
-        this.searchButtonElement = map.searchButton;
         this.diseaseRadio = map.diseaseRadio;
         this.adjRadio = map.adjRadio;
         this.selectElement = map.select;
@@ -72,7 +75,7 @@ export class DiseaseAdd extends Component {
 
     init(){
         this.enterElement.on("click", event => this.doEnter());
-        this.searchButtonElement.on("click", event => this.doSearch());
+        this.searchFormElement.on("submit", event => { this.doSearch(); return false; });
         this.selectElement.on("change", event => this.doSelected());
         this.dateInputElement.on("change", event => this.data.setStartDate(this.dateInputElement.val()));
     }
@@ -80,6 +83,8 @@ export class DiseaseAdd extends Component {
     set(patientId, date){
         this.patientId = patientId;
         this.date = date;
+        this.dateInputElement.val(this.date);
+        this.dateInputElement.trigger("change");
     }
 
     setName(s){
@@ -92,7 +97,14 @@ export class DiseaseAdd extends Component {
             alert(req);
             return;
         }
-        console.log(req);
+        let diseaseId = await this.rest.enterDisease(req);
+        let entered = await this.rest.getDisease(diseaseId);
+        this.trigger("entered", entered);
+        this.reset();
+    }
+
+    onEntered(cb){
+        this.on("entered", (event, diseaseFull) => cb(event, diseaseFull));
     }
 
     doSelected(){
@@ -106,6 +118,14 @@ export class DiseaseAdd extends Component {
             this.data.addShuushokugoMaster(master);
         }
         this.setName(this.data.getRep());
+    }
+
+    reset(){
+        this.data.clear();
+        this.setName("");
+        this.diseaseRadio.prop("checked", true);
+        this.searchTextElement.val("");
+        this.selectElement.html("");
     }
 
     async doSearch(){
@@ -123,6 +143,7 @@ export class DiseaseAdd extends Component {
             }
         } else {
             let result = await this.rest.searchShuushokugoMaster(text, date);
+            this.selectElement.html("");
             for(let m of result){
                 let opt = $("<option>");
                 opt.text(m.name);

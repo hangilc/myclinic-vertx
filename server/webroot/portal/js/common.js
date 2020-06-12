@@ -298,6 +298,14 @@ class Rest extends Client {
     async searchShuushokugoMaster(text, at){
         return await this.get("/search-shuushokugo-master", {text, at});
     }
+
+    async enterDisease(req){
+        return await this.post("/enter-disease", req);
+    }
+
+    async getDisease(diseaseId){
+        return await this.get("/get-disease-full", {"disease-id": diseaseId});
+    }
 }
 
 class Integration extends Client {

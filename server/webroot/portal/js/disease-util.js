@@ -18,7 +18,7 @@ export function diseaseRepByMasters(byoumeiMaster, shuushokugoMasters){
         if( isPrefix(code) ){
             pre += adj.name;
         } else {
-            post += adjname;
+            post += adj.name;
         }
     }
     let name = byoumeiMaster ? byoumeiMaster.name : "";

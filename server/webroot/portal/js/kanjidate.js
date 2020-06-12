@@ -34,8 +34,13 @@ const gengouList = [
 function toSqldate(year, month, day){
     let y = ("" + year).padStart(4, "0");
     let m = ("" + month).padStart(2, "0");
-    let d = ("" + day).padStart(4, "0");
-    return y + m + d;
+    let d = ("" + day).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
+
+export function todayAsSqldate(){
+    let today = new Date();
+    return toSqldate(today.getFullYear(), today.getMonth() + 1, today.getDate());
 }
 
 export function parseSqldate(sqldate){

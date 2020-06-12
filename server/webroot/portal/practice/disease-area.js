@@ -1,4 +1,5 @@
 import {Component} from "./component.js";
+import * as kanjidate from "../js/kanjidate.js";
 
 export class DiseaseArea extends Component {
     constructor(ele, map, rest) {
@@ -10,11 +11,15 @@ export class DiseaseArea extends Component {
         this.editElement = map.edit;
     }
 
-    init(diseaseCurrentFactory) {
+    init(diseaseCurrentFactory, diseaseAddFactory) {
         this.diseaseCurrentFactory = diseaseCurrentFactory;
+        this.diseaseAddFactory = diseaseAddFactory;
+        this.currentElement.on("click", event => this.current());
+        this.addElement.on("click", event => this.add());
     }
 
-    set(diseaseFulls){
+    set(patientId, diseaseFulls){
+        this.patientId = patientId;
         this.diseaseFulls = diseaseFulls;
         this.workareaElement.html("");
         if( diseaseFulls ){
@@ -26,6 +31,12 @@ export class DiseaseArea extends Component {
 
     current(){
         let comp = this.diseaseCurrentFactory.create(this.diseaseFulls);
+        this.workareaElement.html("");
+        comp.appendTo(this.workareaElement);
+    }
+
+    add(){
+        let comp = this.diseaseAddFactory.create(this.patientId, kanjidate.todayAsSqldate());
         this.workareaElement.html("");
         comp.appendTo(this.workareaElement);
     }

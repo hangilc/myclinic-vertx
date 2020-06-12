@@ -7,17 +7,22 @@ export function isPrefix(shuushokugocode){
 export const shuushokugocodeSusp = 8002;
 
 export function diseaseRep(diseaseFull){
+    return diseaseRepByMasters(diseaseFull.master, diseaseFull.adjList.map(adj => adj.master));
+}
+
+export function diseaseRepByMasters(byoumeiMaster, shuushokugoMasters){
     let pre = "";
     let post = "";
-    for(let adj of diseaseFull.adjList){
-        let code = adj.master.shuushokugocode;
+    for(let adj of shuushokugoMasters){
+        let code = adj.shuushokugocode;
         if( isPrefix(code) ){
-            pre += adj.master.name;
+            pre += adj.name;
         } else {
-            post += adj.master.name;
+            post += adjname;
         }
     }
-    return pre + diseaseFull.master.name + post;
+    let name = byoumeiMaster ? byoumeiMaster.name : "";
+    return pre + name + post;
 }
 
 export function formatDate(sqldate){

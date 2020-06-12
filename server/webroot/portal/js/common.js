@@ -290,6 +290,14 @@ class Rest extends Client {
     async listCurrentDisease(patientId){
         return await this.get("/list-current-disease-full", {"patient-id": patientId});
     }
+
+    async searchByoumeiMaster(text, at){
+        return await this.get("/search-byoumei-master", {text, at});
+    }
+
+    async searchShuushokugoMaster(text, at){
+        return await this.get("/search-shuushokugo-master", {text, at});
+    }
 }
 
 class Integration extends Client {

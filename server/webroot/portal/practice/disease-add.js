@@ -59,6 +59,26 @@ class Data {
     }
 }
 
+class Example {
+    constructor(example) {
+        this.label = example.label;
+        this.byoumei = example.byoumei;
+        this.adjList = example.adjList;
+    }
+
+    getRep(){
+        return this.label || this.byoumei;
+    }
+}
+
+let examples = [];
+
+export function initDiseaseExamples(configExamples){
+    for(let ex of configExamples){
+        examples.push(new Example(ex));
+    }
+}
+
 export class DiseaseAdd extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
@@ -66,6 +86,7 @@ export class DiseaseAdd extends Component {
         this.searchFormElement = map.searchForm;
         this.dateInputElement = map.dateInput;
         this.enterElement = map.enter;
+        this.exampleElement = map.example;
         this.searchTextElement = map.searchText;
         this.diseaseRadio = map.diseaseRadio;
         this.adjRadio = map.adjRadio;
@@ -78,6 +99,18 @@ export class DiseaseAdd extends Component {
         this.searchFormElement.on("submit", event => { this.doSearch(); return false; });
         this.selectElement.on("change", event => this.doSelected());
         this.dateInputElement.on("change", event => this.data.setStartDate(this.dateInputElement.val()));
+        this.exampleElement.on("click", event => this.doExample());
+    }
+
+    doExample(){
+        this.selectElement.html("");
+        for(let ex of examples){
+            let opt = $("<option>");
+            opt.text(ex.getRep());
+            opt.data("kind", "example");
+            opt.data("data", ex);
+            this.selectElement.append(opt);
+        }
     }
 
     set(patientId, date){
@@ -107,7 +140,30 @@ export class DiseaseAdd extends Component {
         this.on("entered", (event, diseaseFull) => cb(event, diseaseFull));
     }
 
-    doSelected(){
+    async doExampleSelected(ex){
+        let byoumei = ex.byoumei;
+        if( byoumei ){
+            let master = await this.rest.findByoumeiMasterByName(byoumei, this.date);
+            if( !master ){
+                alert(`傷病名（${byoumei}）を見つけられませんでした。`);
+                return;
+            }
+            this.data.setByoumeiMaster(master);
+        }
+        if( ex.adjList ) {
+            for (let adj of ex.adjList) {
+                let master = await this.rest.findShuushokugoMasterByName(adj);
+                if (!master) {
+                    alert(`修飾語（${adj}）を見つけられませんでした。`);
+                    return;
+                }
+                this.data.addShuushokugoMaster(master);
+            }
+        }
+        this.setName(this.data.getRep());
+    }
+
+    async doSelected(){
         let opt = this.selectElement.find("option:selected");
         let kind = opt.data("kind");
         if( kind === "byoumei" ){
@@ -116,6 +172,9 @@ export class DiseaseAdd extends Component {
         } else if( kind === "adj" ){
             let master = opt.data("master");
             this.data.addShuushokugoMaster(master);
+        } else if( kind === "example" ){
+            let ex = opt.data("data");
+            await this.doExampleSelected(ex);
         }
         this.setName(this.data.getRep());
     }
@@ -126,6 +185,7 @@ export class DiseaseAdd extends Component {
         this.diseaseRadio.prop("checked", true);
         this.searchTextElement.val("");
         this.selectElement.html("");
+        this.doExample();
     }
 
     async doSearch(){

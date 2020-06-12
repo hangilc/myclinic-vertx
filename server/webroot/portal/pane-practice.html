@@ -772,7 +772,7 @@
         let {Nav} = await import("./practice/nav.js");
         let {DiseaseArea} = await import("./practice/disease-area.js");
         let {DiseaseCurrent} = await import("./practice/disease-current.js");
-        let {DiseaseAdd} = await import("./practice/disease-add.js");
+        let {DiseaseAdd, initDiseaseExamples} = await import("./practice/disease-add.js");
         let {DiseaseDisp} = await import("./practice/disease-disp.js");
 
         let currentVisitManager = new CurrentVisitManager();
@@ -1418,6 +1418,11 @@
                 return comp;
             }
         }
+
+        (async function(){
+            let configExamples = await rest.listDiseaseExample();
+            initDiseaseExamples(configExamples);
+        })();
 
         class DiseaseAreaFactory {
             constructor() {

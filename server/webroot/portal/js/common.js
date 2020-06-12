@@ -306,6 +306,18 @@ class Rest extends Client {
     async getDisease(diseaseId){
         return await this.get("/get-disease-full", {"disease-id": diseaseId});
     }
+
+    async listDiseaseExample(){
+        return await this.get("/list-disease-example", {});
+    }
+
+    async findByoumeiMasterByName(name, at){
+        return await this.get("/find-byoumei-master-by-name", {name, at});
+    }
+
+    async findShuushokugoMasterByName(name){
+        return await this.get("/find-shuushokugo-master-by-name", {name});
+    }
 }
 
 class Integration extends Client {

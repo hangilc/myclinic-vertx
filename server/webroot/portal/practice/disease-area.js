@@ -39,6 +39,7 @@ export class DiseaseArea extends Component {
         let comp = this.diseaseAddFactory.create(this.patientId, kanjidate.todayAsSqldate());
         this.workareaElement.html("");
         comp.onEntered((event, entered) => this.diseaseFulls.push(entered));
+        comp.doExample();
         comp.appendTo(this.workareaElement);
     }
 

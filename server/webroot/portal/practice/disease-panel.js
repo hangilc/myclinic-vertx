@@ -6,7 +6,6 @@ import * as consts from "../js/consts.js";
 export class DiseasePanel extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
-        console.log("panel", map);
         this.nameElement = map.name;
         this.startDateElement = map.startDate;
         this.endReasonElement = map.endReason;

@@ -1,4 +1,5 @@
 import {Component} from "./component.js";
+import {DiseaseSearch} from "./disease-search.js";
 import * as DiseaseUtil from "../js/disease-util.js";
 
 class Data {
@@ -43,11 +44,21 @@ export class DiseaseModify extends Component {
         this.startDateElement = map.startDate;
         this.endReasonSelectElement = map.endReasonSelect;
         this.endDateElement = map.endDate;
+        this.search = new DiseaseSearch(map.search_, map.search, rest);
         this.data = null;
     }
 
     init(){
-
+        this.search.init();
+        this.search.onByoumeiMasterSelected((event, master) => {
+            this.data.byoumeiMaster = master;
+            this.setName(this.data.getName());
+        });
+        this.search.onShuushokugoMasterSelected((event, master) => {
+            this.data.adjMasters.push(master);
+            this.setName(this.data.getName());
+        });
+        this.startDateElement.on("change", event => this.doStartDateChanged());
     }
 
     set(diseaseFull){
@@ -56,6 +67,13 @@ export class DiseaseModify extends Component {
         this.setStartDate(this.data.startDate);
         this.setEndReason(this.data.endReason);
         this.setEndDate(this.data.endDate);
+        this.search.set(this.data.startDate);
+    }
+
+    doStartDateChanged(){
+        let startDate = this.startDateElement.val();
+        this.setStartDate(startDate);
+        this.search.set(startDate);
     }
 
     setName(name){

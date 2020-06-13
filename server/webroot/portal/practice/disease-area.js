@@ -38,6 +38,7 @@ export class DiseaseArea extends Component {
 
     current(){
         let comp = this.diseaseCurrentFactory.create(this.diseaseFulls);
+        comp.onClicked((event, df) => this.modify(df));
         this.workareaElement.html("");
         comp.appendTo(this.workareaElement);
     }
@@ -68,15 +69,17 @@ export class DiseaseArea extends Component {
         if( patientId > 0 ){
             let dfs = await this.rest.listDisease(patientId);
             let comp = this.diseaseEditFactory.create(dfs);
-            comp.onEdit((event, df) => {
-                let compModify = this.diseaseModifyFactory.create(df, this.diseaseExamples);
-                compModify.onModified(event => this.doDiseaseModified());
-                this.workareaElement.html("");
-                compModify.appendTo(this.workareaElement);
-            });
+            comp.onEdit((event, df) => this.modify(df));
             this.workareaElement.html("");
             comp.appendTo(this.workareaElement);
         }
+    }
+
+    modify(diseaseFull){
+        let compModify = this.diseaseModifyFactory.create(diseaseFull, this.diseaseExamples);
+        compModify.onModified(event => this.doDiseaseModified());
+        this.workareaElement.html("");
+        compModify.appendTo(this.workareaElement);
     }
 
 }

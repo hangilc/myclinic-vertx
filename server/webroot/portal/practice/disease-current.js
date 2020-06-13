@@ -20,9 +20,14 @@ export class DiseaseCurrent extends Component {
         }
     }
 
+    onClicked(cb){
+        this.on("clicked", (event, diseaseFull) => cb(event, diseaseFull));
+    }
+
     createLabel(diseaseFull){
         let e = $("<div>");
         e.text(DiseaseUtil.diseaseFullRep(diseaseFull));
+        e.on("click", event => this.trigger("clicked", diseaseFull));
         return e;
     }
 

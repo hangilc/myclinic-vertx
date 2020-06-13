@@ -126,3 +126,29 @@ export function calcAge(birthday){
     birthday = moment(birthday);
     return moment().diff(birthday, "years");
 }
+
+function momentToSqldate(m){
+    return m.format("YYYY-MM-DD");
+}
+
+export function advanceDays(sqldate, days){
+    let m = moment(sqldate);
+    return momentToSqldate(m.add(days, "days"));
+}
+
+export function advanceMonths(sqldate, months){
+    let m = moment(sqldate);
+    return momentToSqldate(m.add(months, "months"));
+}
+
+export function toEndOfMonth(sqldate) {
+    let m = moment(sqldate).date(1);
+    m.add(1, "months");
+    m.add(-1, "days");
+    return momentToSqldate(m);
+}
+
+export function endOfLastMonth(){
+    let m = moment().date(1).add(-1, "days");
+    return momentToSqldate(m);
+}

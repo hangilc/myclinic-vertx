@@ -12,12 +12,13 @@ export class DiseaseArea extends Component {
     }
 
     init(diseaseCurrentFactory, diseaseAddFactory, diseaseEndFactory, diseaseEditFactory,
-         diseaseModifyFactory) {
+         diseaseModifyFactory, diseaseExamples) {
         this.diseaseCurrentFactory = diseaseCurrentFactory;
         this.diseaseAddFactory = diseaseAddFactory;
         this.diseaseEndFactory = diseaseEndFactory;
         this.diseaseEditFactory = diseaseEditFactory;
         this.diseaseModifyFactory = diseaseModifyFactory;
+        this.diseaseExamples = diseaseExamples;
         this.currentElement.on("click", event => this.current());
         this.addElement.on("click", event => this.add());
         this.endElement.on("click", event => this.end());
@@ -55,13 +56,21 @@ export class DiseaseArea extends Component {
         comp.appendTo(this.workareaElement);
     }
 
+    async doDiseaseModified(){
+        if( this.patientId > 0 ){
+            this.diseaseFulls = await this.rest.listCurrentDisease(this.patientId);
+            this.current();
+        }
+    }
+
     async edit(){
         let patientId = this.patientId;
         if( patientId > 0 ){
             let dfs = await this.rest.listDisease(patientId);
             let comp = this.diseaseEditFactory.create(dfs);
             comp.onEdit((event, df) => {
-                let compModify = this.diseaseModifyFactory.create(df);
+                let compModify = this.diseaseModifyFactory.create(df, this.diseaseExamples);
+                compModify.onModified(event => this.doDiseaseModified());
                 this.workareaElement.html("");
                 compModify.appendTo(this.workareaElement);
             });

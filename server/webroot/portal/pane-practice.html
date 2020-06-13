@@ -804,6 +804,8 @@
             <button type="button" class="x-enter btn btn-secondary">入力</button>
             <a href="javascript:void(0)" class="x-susp">の疑い</a>
             <a href="javascript:void(0)" class="x-del-adj">修飾語削除</a>
+            <a href="javascript:void(0)" class="x-clear-end-date">終了日クリア</a>
+            <a href="javascript:void(0)" class="x-delete">削除</a>
         </div>
         <div class="x-search_">
             <form class="x-form mt-1">
@@ -1548,20 +1550,18 @@
                 this.html = getTemplateHtml("practice-disease-modify-template");
             }
 
-            create(diseaseFull) {
+            create(diseaseFull, diseaseExamples) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new DiseaseModify(ele, map, rest);
-                comp.init();
+                comp.init(diseaseExamples);
                 comp.set(diseaseFull);
                 return comp;
             }
         }
 
-        (async function () {
-            let configExamples = await rest.listDiseaseExample();
-            initDiseaseExamples(configExamples);
-        })();
+        let diseaseExamples = await rest.listDiseaseExample();
+        initDiseaseExamples(diseaseExamples);
 
         class DiseaseAreaFactory {
             constructor() {
@@ -1571,6 +1571,7 @@
                 this.diseaseEndFactory = new DiseaseEndFactory();
                 this.diseaseEditFactory = new DiseaseEditFactory();
                 this.diseaseModifyFactory = new DiseaseModifyFactory();
+                this.diseaseExamples = diseaseExamples;
             }
 
             create() {
@@ -1578,7 +1579,7 @@
                 let map = parseElement(ele);
                 let comp = new DiseaseArea(ele, map, rest);
                 comp.init(this.diseaseCurrentFactory, this.diseaseAddFactory, this.diseaseEndFactory,
-                    this.diseaseEditFactory, this.diseaseModifyFactory);
+                    this.diseaseEditFactory, this.diseaseModifyFactory, this.diseaseExamples);
                 return comp;
             }
         }

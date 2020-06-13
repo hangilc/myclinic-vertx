@@ -326,6 +326,14 @@ class Rest extends Client {
     async batchUpdateDiseaseEndReason(reqs){
         return await this.post("/batch-update-disease-end-reason", reqs);
     }
+
+    async modifyDisease(req){
+        return await this.post("/modify-disease", req);
+    }
+
+    async deleteDisease(diseaseId){
+        return await this.get("/delete-disease", {"disease-id": diseaseId});
+    }
 }
 
 class Integration extends Client {

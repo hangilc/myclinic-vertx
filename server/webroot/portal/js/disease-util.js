@@ -23,6 +23,10 @@ export function diseaseRepByMasters(byoumeiMaster, shuushokugoMasters){
     return pre + name + post;
 }
 
+export function diseaseFullRep(diseaseFull, sep=" "){
+    return diseaseRep(diseaseFull) + sep + datePart(diseaseFull.disease);
+}
+
 export function formatDate(sqldate){
     let data = kanjidate.sqldateToData(sqldate);
     return `${data.gengou.alpha[0]}${data.nen}.${data.month}.${data.day}`;

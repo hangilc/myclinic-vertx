@@ -291,6 +291,10 @@ class Rest extends Client {
         return await this.get("/list-current-disease-full", {"patient-id": patientId});
     }
 
+    async listDisease(patientId){
+        return await this.get("/list-disease-full", {"patient-id": patientId});
+    }
+
     async searchByoumeiMaster(text, at){
         return await this.get("/search-byoumei-master", {text, at});
     }

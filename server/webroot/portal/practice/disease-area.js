@@ -11,13 +11,17 @@ export class DiseaseArea extends Component {
         this.editElement = map.edit;
     }
 
-    init(diseaseCurrentFactory, diseaseAddFactory, diseaseEndFactory) {
+    init(diseaseCurrentFactory, diseaseAddFactory, diseaseEndFactory, diseaseEditFactory,
+         diseaseModifyFactory) {
         this.diseaseCurrentFactory = diseaseCurrentFactory;
         this.diseaseAddFactory = diseaseAddFactory;
         this.diseaseEndFactory = diseaseEndFactory;
+        this.diseaseEditFactory = diseaseEditFactory;
+        this.diseaseModifyFactory = diseaseModifyFactory;
         this.currentElement.on("click", event => this.current());
         this.addElement.on("click", event => this.add());
         this.endElement.on("click", event => this.end());
+        this.editElement.on("click", event => this.edit());
     }
 
     set(patientId, diseaseFulls){
@@ -49,6 +53,21 @@ export class DiseaseArea extends Component {
         let comp = this.diseaseEndFactory.create(this.diseaseFulls);
         this.workareaElement.html("");
         comp.appendTo(this.workareaElement);
+    }
+
+    async edit(){
+        let patientId = this.patientId;
+        if( patientId > 0 ){
+            let dfs = await this.rest.listDisease(patientId);
+            let comp = this.diseaseEditFactory.create(dfs);
+            comp.onEdit((event, df) => {
+                let compModify = this.diseaseModifyFactory.create(df);
+                this.workareaElement.html("");
+                compModify.appendTo(this.workareaElement);
+            });
+            this.workareaElement.html("");
+            comp.appendTo(this.workareaElement);
+        }
     }
 
 }

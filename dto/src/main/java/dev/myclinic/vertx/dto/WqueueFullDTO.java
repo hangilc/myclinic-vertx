@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public class WqueueFullDTO {
 	public WqueueDTO wqueue;
-	public dev.myclinic.vertx.dto.VisitDTO visit;
+	public VisitDTO visit;
 	public PatientDTO patient;
 
 	@Override

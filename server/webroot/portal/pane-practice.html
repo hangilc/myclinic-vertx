@@ -868,7 +868,6 @@
         let {DiseaseEnd} = await import("./practice/disease-end.js");
         let {DiseaseEdit} = await import("./practice/disease-edit.js");
         let {DiseaseModify} = await import("./practice/disease-modify.js");
-        let {DiseaseDisp} = await import("./practice/disease-disp.js");
         let {DiseasePanel} = await import("./practice/disease-panel.js");
 
         let currentVisitManager = new CurrentVisitManager();
@@ -1469,32 +1468,16 @@
             return result;
         })();
 
-        class DiseaseDispFactory {
-            constructor() {
-                this.html = "<div></div>";
-            }
-
-            create(diseaseFull) {
-                let ele = $(this.html);
-                let map = parseElement(ele);
-                let comp = new DiseaseDisp(ele, map, rest);
-                comp.init();
-                comp.set(diseaseFull);
-                return comp;
-            }
-        }
-
         class DiseaseCurrentFactory {
             constructor() {
                 this.html = "<div></div>";
-                this.diseaseDispFactory = new DiseaseDispFactory();
             }
 
             create(diseaseFulls) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new DiseaseCurrent(ele, map, rest);
-                comp.init(this.diseaseDispFactory);
+                comp.init();
                 comp.set(diseaseFulls);
                 return comp;
             }

@@ -1313,7 +1313,7 @@ public class Backend {
     }
 
     public TextVisitPageDTO searchText(int patientId, String text, int page) {
-        int itemsPerPage = 20;
+        int itemsPerPage = 10;
         String searchText = "%" + text + "%";
         String countSql = xlate("select count(*) from Text t, Visit v " +
                         " where t.visitId = v.visitId and v.patientId = ? " +
@@ -1322,7 +1322,7 @@ public class Backend {
         int totalItems = getQuery().getInt(countSql, patientId, searchText);
         String sql = xlate("select t.*, v.* from Text t, Visit v " +
                         " where t.visitId = v.visitId and v.patientId = ? " +
-                        " and t.content like ? order by t.textId limit ? offset ?",
+                        " and t.content like ? order by t.textId desc limit ? offset ?",
                 ts.textTable, "t", ts.visitTable, "v");
         List<TextVisitDTO> textVisits = getQuery().query(sql,
                 biProjector(ts.textTable, ts.visitTable, TextVisitDTO::new),
@@ -1335,13 +1335,13 @@ public class Backend {
     }
 
     public TextVisitPatientPageDTO searchTextGlobally(String text, int page) {
-        int itemsPerPage = 20;
+        int itemsPerPage = 10;
         String searchText = "%" + text + "%";
         String countSql = xlate("select count(*) from Text where content like ?", ts.textTable);
         int totalItems = getQuery().getInt(countSql, searchText);
         String sql = xlate("select t.*, v.*, p.* from Text t, Visit v, Patient p " +
                         " where t.visitId = v.visitId and v.patientId = p.patientId " +
-                        " and t.content like ? order by t.textId limit ? offset ?",
+                        " and t.content like ? order by t.textId desc limit ? offset ?",
                 ts.textTable, "t", ts.visitTable, "v", ts.patientTable, "p");
         List<TextVisitPatientDTO> textVisits = getQuery().query(sql,
                 (rs, ctx) -> {

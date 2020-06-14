@@ -1,21 +1,22 @@
 <!--suppress ALL -->
 <div class="row" id="practice-top">
     <h3 class="col-sm-2">診察</h3>
-    <div class="col-sm-10">
-        <div class="dropdown ml-auto" id="practice-select-patient-menu">
+    <div class="col-sm-10 form-inline">
+        <div class="dropdown" id="practice-select-patient-menu">
             <button class="btn btn-secondary dropdown-toggle" type="button"
                     data-toggle="dropdown" aria-haspopup="true"
                     aria-expanded="false">
                 患者選択
             </button>
             <div class="dropdown-menu x-menu" aria-labelledby="dropdownMenuButton">
-                <a href="javascript:void(0)" class="x-wqueue mx-2">受付患者選択</a>
-                <a href="javascript:void(0)" class="x-search mx-2">患者検索</a>
-                <a href="javascript:void(0)" class="x-recent mx-2">最近の診察</a>
-                <a href="javascript:void(0)" class="x-today mx-2">本日の診察</a>
-                <a href="javascript:void(0)" class="x-prev mx-2">以前の診察</a>
+                <a href="javascript:void(0)" class="x-wqueue dropdown-item mx-2">受付患者選択</a>
+                <a href="javascript:void(0)" class="x-search dropdown-item mx-2">患者検索</a>
+                <a href="javascript:void(0)" class="x-recent dropdown-item mx-2">最近の診察</a>
+                <a href="javascript:void(0)" class="x-today dropdown-item mx-2">本日の診察</a>
+                <a href="javascript:void(0)" class="x-prev dropdown-item mx-2">以前の診察</a>
             </div>
         </div>
+        <a href="javascript:void(0)" class="ml-2" id="practice-search-text-globally">全文検索</a>
     </div>
 </div>
 
@@ -833,7 +834,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">文章検索</h5>
+                    <h5 class="modal-title x-title"></h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -858,6 +859,16 @@
             <div class="my-2 border border-secondary rounded p-2">
                 <div class="x-title_ bg-light font-weight-bold p-1">
                     <div class="x-text"></div>
+                </div>
+                <div class="x-text_ mt-2">
+                    <div></div>
+                </div>
+            </div>
+        </template>
+        <template class="x-global-item-template">
+            <div class="my-2 border border-secondary rounded p-2">
+                <div class="x-title_ bg-light font-weight-bold p-1">
+                    <span class="x-patient text-primary"></span> <span class="x-text ml-2"></span>
                 </div>
                 <div class="x-text_ mt-2">
                     <div></div>
@@ -907,7 +918,8 @@
         let {DiseaseEdit} = await import("./practice/disease-edit.js");
         let {DiseaseModify} = await import("./practice/disease-modify.js");
         let {DiseasePanel} = await import("./practice/disease-panel.js");
-        let {SearchTextDialog} = await import("./practice/search-text-dialog.js");
+        let {SearchTextForPatientDialog} = await import("./practice/search-text-for-patient-dialog.js");
+        let {SearchTextGloballyDialog} = await import("./practice/search-text-globally-dialog.js");
 
         let currentVisitManager = new CurrentVisitManager();
 
@@ -1017,6 +1029,29 @@
             return dialog;
         })();
 
+        class SearchTextGloballyDialogFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-search-text-dialog-template");
+            }
+
+            create(patientId){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let dialog = new SearchTextGloballyDialog(ele, map, rest);
+                dialog.init("全文検索");
+                dialog.set();
+                return dialog;
+            }
+        }
+
+        (function(){
+            let searchTextGloballyDialogFactory = new SearchTextGloballyDialogFactory();
+            $("#practice-search-text-globally").on("click", async event => {
+                let dialog = searchTextGloballyDialogFactory.create();
+                await dialog.open();
+            });
+        })();
+
         class ShinryouRegularDialogFactory {
             constructor() {
                 this.html = getTemplateHtml("practice-shinryou-regular-dialog-template");
@@ -1103,7 +1138,7 @@
             }
         }
 
-        class SearchTextDialogFactory {
+        class SearchTextForPatientDialogFactory {
             constructor() {
                 this.html = getTemplateHtml("practice-search-text-dialog-template");
             }
@@ -1111,8 +1146,8 @@
             create(patientId){
                 let ele = $(this.html);
                 let map = parseElement(ele);
-                let dialog = new SearchTextDialog(ele, map, rest);
-                dialog.init();
+                let dialog = new SearchTextForPatientDialog(ele, map, rest);
+                dialog.init("文章検索");
                 dialog.set(patientId);
                 return dialog;
             }
@@ -1122,7 +1157,7 @@
             let ele = $("#practice-patient-manip");
             let map = parseElement(ele);
             let meisaiDialogFactory = new MeisaiDialogFactory();
-            let searchTextDialogFactory = new SearchTextDialogFactory();
+            let searchTextForPatientDialogFactory = new SearchTextForPatientDialogFactory();
 
             map.cashier.on("click", async event => {
                 let visitId = currentVisitManager.getCurrentVisitId();
@@ -1145,7 +1180,7 @@
             });
 
             map.searchText.on("click", async event => {
-                let dialog = searchTextDialogFactory.create(getCurrentPatientId());
+                let dialog = searchTextForPatientDialogFactory.create(getCurrentPatientId());
                 await dialog.open();
             });
 

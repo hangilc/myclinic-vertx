@@ -342,6 +342,11 @@ class Rest extends Client {
             page
         });
     }
+
+    async searchTextGlobally(text, page){
+        return await this.get("/search-text-globally", {text, page});
+    }
+
 }
 
 class Integration extends Client {

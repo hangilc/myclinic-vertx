@@ -5,7 +5,11 @@ export class TextDisp extends Component {
         super(ele, map, rest);
     }
 
-    init(text){
+    init(){
+
+    }
+
+    set(text){
         this.ele.html(text.content.replace(/\r\n|\n|\r/g, "<br/>\n"));
     }
 }

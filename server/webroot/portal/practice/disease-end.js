@@ -28,18 +28,19 @@ export class DiseaseEnd extends Component {
             this.dateInputElement.val(kanjidate.endOfLastMonth()));
     }
 
+    set(diseaseFulls) {
+        this.listElement.html("");
+        for (let df of diseaseFulls) {
+            let e = this.createCheckUnit(df);
+            this.listElement.append(e);
+        }
+    }
+
     modifyDate(f) {
         let date = this.dateInputElement.val();
         if (date) {
             let d = f(date);
             this.dateInputElement.val(d);
-        }
-    }
-
-    set(diseaseFulls) {
-        for (let df of diseaseFulls) {
-            let e = this.createCheckUnit(df);
-            this.listElement.append(e);
         }
     }
 
@@ -70,6 +71,10 @@ export class DiseaseEnd extends Component {
         return this.endReasonFormElement.find("input[type=radio]:checked").val();
     }
 
+    onEnded(cb){
+        this.on("ended", event => cb());
+    }
+
     async doEnter() {
         let endDate = this.dateInputElement.val();
         if (!endDate) {
@@ -79,6 +84,7 @@ export class DiseaseEnd extends Component {
         let endReason = this.getCheckedEndReason();
         let reqs = this.checkedDiseases().map(df => this.convertToReq(df, endReason, endDate));
         await this.rest.batchUpdateDiseaseEndReason(reqs);
+        this.trigger("ended");
     }
 
     doCheckChanged() {

@@ -3,14 +3,20 @@ export class Component {
         this.ele = ele;
         this.map = map;
         this.rest = rest;
-        this.eventDispatcher = $("<div>");
+        //his.eventDispatcher = $("<div>");
     }
 
     on(eventType, callback){
+        if( !this.eventDispatcher ){
+            this.eventDispatcher = $("<div>");
+        }
         this.eventDispatcher.on(eventType, callback);
     }
 
     trigger(eventType, arg){
+        if( !this.eventDispatcher ){
+            this.eventDispatcher = $("<div>");
+        }
         this.eventDispatcher.trigger(eventType, arg);
     }
 

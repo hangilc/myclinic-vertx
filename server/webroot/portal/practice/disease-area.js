@@ -53,6 +53,10 @@ export class DiseaseArea extends Component {
 
     end(){
         let comp = this.diseaseEndFactory.create(this.diseaseFulls);
+        comp.onEnded(async event => {
+            this.diseaseFulls = await this.rest.listCurrentDisease(this.patientId);
+            comp.set(this.diseaseFulls);
+        });
         this.workareaElement.html("");
         comp.appendTo(this.workareaElement);
     }

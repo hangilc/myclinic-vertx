@@ -25,14 +25,18 @@ function parseElementIter(ele, map) {
     if (ele.length === 1) {
         let name = probeXClass(ele);
         if (name) {
-            map[name] = ele;
-            if (name.endsWith("_")) {
-                name = name.substring(0, name.length - 1);
-                let submap = {};
-                parseElementIter(ele.children(), submap);
-                map[name] = submap;
+            if( ele.prop("tagName") === "TEMPLATE" ){
+                map[name] = ele;
             } else {
-                parseElementIter(ele.children(), map);
+                map[name] = ele;
+                if (name.endsWith("_")) {
+                    name = name.substring(0, name.length - 1);
+                    let submap = {};
+                    parseElementIter(ele.children(), submap);
+                    map[name] = submap;
+                } else {
+                    parseElementIter(ele.children(), map);
+                }
             }
         } else {
             parseElementIter(ele.children(), map);

@@ -334,6 +334,14 @@ class Rest extends Client {
     async deleteDisease(diseaseId){
         return await this.get("/delete-disease", {"disease-id": diseaseId});
     }
+
+    async searchText(patientId, text, page){
+        return await this.get("/search-text-by-page", {
+            "patient-id": patientId,
+            text,
+            page
+        });
+    }
 }
 
 class Integration extends Client {

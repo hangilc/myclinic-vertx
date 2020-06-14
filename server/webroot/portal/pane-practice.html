@@ -828,13 +828,44 @@
     </div>
 </template>
 
+<template id="practice-search-text-dialog-template">
+    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">文章検索</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form class="x-search-form form-inline">
+                        <input type="text" class="x-search-text form-control"/>
+                        <button type="submit" class="btn btn-primary ml-1">検索</button>
+                    </form>
+                    <div class="x-nav d-none"></div>
+                    <div class="x-result"></div>
+                </div>
+            </div>
+        </div>
+        <template class="x-item-template">
+            <div class="x-title_">
+                <div class="x-text"></div>
+            </div>
+            <div class="x-text_">
+                <div></div>
+            </div>
+        </template>
+    </div>
+</template>
+
 <script>
 
     (async function () {
         let {parseElement} = await import("./practice/parse-element.js");
-        let modChoosePatientDialog = await import("./practice/choose-patient-dialog.js");
-        let modPatientDisplay = await import("./practice/patient-display.js");
-        let modDrawerSvg = await import("./js/drawer-svg.js");
+        let {ChoosePatientDialog} = await import("./practice/choose-patient-dialog.js");
+        let {PatientDisplay} = await import("./practice/patient-display.js");
+        let DrawerSvg = await import("./js/drawer-svg.js");
         let {CurrentVisitManager} = await import("./practice/current-visit-manager.js");
         let {Component} = await import("./practice/component.js");
         let {Title} = await import("./practice/title.js");
@@ -868,6 +899,7 @@
         let {DiseaseEdit} = await import("./practice/disease-edit.js");
         let {DiseaseModify} = await import("./practice/disease-modify.js");
         let {DiseasePanel} = await import("./practice/disease-panel.js");
+        let {SearchTextDialog} = await import("./practice/search-text-dialog.js");
 
         let currentVisitManager = new CurrentVisitManager();
 
@@ -938,7 +970,7 @@
         let choosePatientDialog = (function () {
             let ele = $("#practice-choose-patient-dialog");
             let map = parseElement(ele);
-            return new modChoosePatientDialog.ChoosePatientDialog(map, rest);
+            return new ChoosePatientDialog(map, rest);
         })();
 
         let selectWqueueDialog = (function () {
@@ -997,7 +1029,7 @@
                 this.map = map;
                 this.detail = map.detail;
                 map.detailLink.on("click", event => this.toggleDetail());
-                this.display = new modPatientDisplay.PatientDisplay(map);
+                this.display = new PatientDisplay(map);
             }
 
             setPatient(patient) {
@@ -1063,10 +1095,26 @@
             }
         }
 
+        class SearchTextDialogFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-search-text-dialog-template");
+            }
+
+            create(patientId){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let dialog = new SearchTextDialog(ele, map, rest);
+                dialog.init();
+                dialog.set(patientId);
+                return dialog;
+            }
+        }
+
         (function () {
             let ele = $("#practice-patient-manip");
             let map = parseElement(ele);
             let meisaiDialogFactory = new MeisaiDialogFactory();
+            let searchTextDialogFactory = new SearchTextDialogFactory();
 
             map.cashier.on("click", async event => {
                 let visitId = currentVisitManager.getCurrentVisitId();
@@ -1088,8 +1136,9 @@
                 startPatient(0, 0);
             });
 
-            map.searchText.on("click", event => {
-                console.log("search text");
+            map.searchText.on("click", async event => {
+                let dialog = searchTextDialogFactory.create(getCurrentPatientId());
+                await dialog.open();
             });
 
             map.refer.on("click", event => {
@@ -1164,7 +1213,8 @@
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new TextDisp(ele, map, rest);
-                comp.init(text);
+                comp.init();
+                comp.set(text);
                 return comp;
             }
         }
@@ -1286,7 +1336,7 @@
         class ShohousenPreviewDialogFactory {
             constructor() {
                 this.html = getTemplateHtml("practice-shohousen-preview-dialog-template");
-                this.drawerSvgModule = modDrawerSvg;
+                this.drawerSvgModule = DrawerSvg;
             }
 
             create(ops) {

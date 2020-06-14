@@ -31,6 +31,7 @@
             <ul class="list-unstyled menu-elements mt-1">
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-practice-link">診察</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-cashier-link">会計</a></li>
+                <li><a href="javascript:void(0)" class="scroll-link" id="index-reception-link">受付</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-faxed-link">ファックス済処方箋</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-houmon-kango-link">訪問看護</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-send-fax-link">ファックス送信</a></li>
@@ -86,10 +87,11 @@
 
         bindLink("index-practice-link", "pane-practice.html");
         bindLink("index-cashier-link", "pane-cashier.html");
+        bindLink("index-reception-link", "pane-reception.html");
         bindLink("index-faxed-link", "pane-faxed-shohousen.html");
         bindLink("index-houmon-kango-link", "pane-houmon-kango.html");
         bindLink("index-send-fax-link", "pane-send-fax.html");
-        $("#index-practice-link").click();
+        $("#index-reception-link").click();
     })();
 
 </script>

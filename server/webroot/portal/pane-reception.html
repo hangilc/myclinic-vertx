@@ -1,0 +1,144 @@
+<h3>受付</h3>
+
+<div id="reception-main-commands">
+    <button type="button" class="btn btn-secondary x-new-patient">新規患者</button>
+    <button type="button" class="btn btn-secondary x-search-patient ml-2">患者検索</button>
+    <button type="button" class="btn btn-secondary x-search-payment ml-2">会計検索</button>
+    <button type="button" class="btn btn-secondary x-search-receipt-paper ml-2">領収書用紙</button>
+</div>
+
+<div id="reception-commands-second-row">
+    <div class="form-inline mt-2">
+        患者番号：<input type="text" class="form-control" />
+        <button class="btn btn-secondary ml-2">診療受付</button>
+        <button class="btn btn-secondary ml-2">患者情報</button>
+    </div>
+</div>
+
+<table class="table mt-3" id="reception-wqueue-table">
+    <thead>
+        <tr>
+            <th scope="col">状態</th>
+            <th scope="col">ID</th>
+            <th scope="col">氏名</th>
+            <th scope="col">よみ</th>
+            <th scope="col">性別</th>
+            <th scope="col">生年月日</th>
+            <th scope="col">年齢</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>診待</td>
+            <th scope="row">123</th>
+            <td>診療 太郎</td>
+            <td>しんりょう たろう</td>
+            <td>男</td>
+            <td>昭和12年1月2日</td>
+            <td>72才</td>
+        </tr>
+        <tr class="table-active">
+            <td>診待</td>
+            <th scope="row">123</th>
+            <td>診療 太郎</td>
+            <td>しんりょう たろう</td>
+            <td>男</td>
+            <td>昭和12年1月2日</td>
+            <td>72才</td>
+        </tr>
+        <tr>
+            <td>診待</td>
+            <th scope="row">123</th>
+            <td>診療 太郎</td>
+            <td>しんりょう たろう</td>
+            <td>男</td>
+            <td>昭和12年1月2日</td>
+            <td>72才</td>
+        </tr>
+        <tr>
+            <td>診待</td>
+            <th scope="row">123</th>
+            <td>診療 太郎</td>
+            <td>しんりょう たろう</td>
+            <td>男</td>
+            <td>昭和12年1月2日</td>
+            <td>72才</td>
+        </tr>
+    </tbody>
+</table>
+
+<div id="reception-bottom-commands" class="form-inline">
+    <button type="button" class="btn btn-secondary x-refresh">更新</button>
+    <button type="button" class="btn btn-secondary ml-2 x-cashier">会計</button>
+    <button type="button" class="btn btn-secondary ml-2 x-deselection">選択解除</button>
+    <button type="button" class="btn btn-secondary ml-2 x-delete">削除</button>
+</div>
+
+<template id="reception-dialog-template">
+    <div class="modal x-dialog_" tabindex="-1" role="dialog" data-backdrop="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer"></div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="reception-search-patient-dialog-template">
+    <div>
+        <div class="form-inline">
+            <input type="text" class="form-control x-search-text"/>
+            <button type="submit" class="btn btn-secondary">検索</button>
+            <button type="submit" class="btn btn-secondary">最近の登録</button>
+        </div>
+        <select size="10"></select>
+        <div class="row">
+            <div class="row col-sm-9">
+                <div class="col-sm-2">患者番号：</div><div class="col-sm-10"></div>
+                <div class="col-sm-2">氏名：</div><div class="col-sm-10"></div>
+                <div class="col-sm-2">よみ：</div><div class="col-sm-10"></div>
+                <div class="col-sm-2">生年月日：</div><div class="col-sm-10"></div>
+                <div class="col-sm-2">性別：</div><div class="col-sm-10"></div>
+                <div class="col-sm-2">住所：</div><div class="col-sm-10"></div>
+                <div class="col-sm-2">電話番号：</div><div class="col-sm-10"></div>
+            </div>
+            <div class="col-sm-3">
+                <button type="submit" class="btn btn-secondary">編集</button>
+                <button type="submit" class="btn btn-secondary">診療受付</button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+    (async function(){
+        let {parseElement} = await import("./js/parse-element.js");
+        let {SearchPatientDialog} = await import("./reception/search-patient-dialog.js");
+
+        (function(){
+            let ele = $("#reception-main-commands");
+            let map = parseElement(ele);
+
+            map.newPatient.on("click", event => {
+                alert("new patient: not supported");
+            });
+
+            map.searchPatient.on("click", async event => {
+                let html = $("template#reception-dialog-template").html();
+                let ele = $(html);
+                let map = parseElement(ele);
+                let dialog = new SearchPatientDialog(ele, map, rest);
+                dialog.init();
+                dialog.set();
+                let result = await dialog.open();
+            });
+        })();
+    })();
+</script>

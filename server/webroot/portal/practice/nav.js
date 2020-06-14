@@ -25,7 +25,7 @@ export class Nav extends Component {
         }
         this.setPage(page);
         this.setTotal(total);
-        if( total > 0 ){
+        if( total > 1 ){
             this.ele.removeClass("d-none");
         } else {
             this.ele.addClass("d-none");

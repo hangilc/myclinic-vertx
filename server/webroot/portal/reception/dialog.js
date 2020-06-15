@@ -43,8 +43,14 @@ export class Dialog extends Component {
 
     }
 
+    close(result){
+        this.ele.modal("hide");
+        this.resolve(result);
+    }
+
     async open(){
         return new Promise(resolve => {
+            this.resolve = resolve;
             this.ele.modal("show");
         });
     }

@@ -15,6 +15,8 @@
     </div>
 </div>
 
+<div id="reception-workarea" class="my-3"></div>
+
 <table class="table mt-3" id="reception-wqueue-table">
     <thead>
         <tr>
@@ -74,44 +76,52 @@
     <button type="button" class="btn btn-secondary ml-2 x-delete">削除</button>
 </div>
 
-<template id="reception-search-patient-dialog-content-template">
-    <div class="x-body_">
-        <form class="form-inline x-form">
-            <input type="text" class="form-control x-search-text"/>
-            <button type="submit" class="btn btn-secondary ml-2">検索</button>
-            <button type="submit" class="btn btn-secondary ml-2">最近の登録</button>
-        </form>
-        <select size="10" class="x-select form-control mt-3"></select>
+<template id="reception-widget-template">
+    <div class="mb-3 border border-secondary rounded p-3">
+        <div class="d-flex p-2" style="background-color: #ccc;">
+            <div class="x-title font-weight-bold flex-grow-1"></div>
+            <div><span class="font-weight-bold x-close" style="cursor: pointer;">&times;</span></div>
+        </div>
+        <div class="x-body mt-2"></div>
     </div>
-    <div class="x-footer_">
-        <div class="row">
-            <div class="col-sm-9">
-                <div class="row x-disp_">
-                    <div class="col-sm-4">患者番号：</div>
-                        <div class="col-sm-8 x-patient-id"></div>
-                    <div class="col-sm-4">氏名：</div>
-                        <div class="col-sm-8">
-                            <span class="x-last-name"></span>
-                            <span class="x-first-name"></span>
-                        </div>
-                    <div class="col-sm-4">よみ：</div>
-                        <div class="col-sm-8">
-                            <span class="x-last-name-yomi"></span>
-                            <span class="x-first-name-yomi"></span>
-                        </div>
-                    <div class="col-sm-4">生年月日：</div>
-                        <div class="col-sm-8 x-birthday"></div>
-                    <div class="col-sm-4">性別：</div>
-                        <div class="col-sm-8 x-sex"></div>
-                    <div class="col-sm-4">住所：</div>
-                        <div class="col-sm-8 x-address"></div>
-                    <div class="col-sm-4">電話番号：</div>
-                        <div class="col-sm-8 x-phone"></div>
+</template>
+
+<template id="reception-search-patient-widget-body-template">
+    <div class="row">
+        <div class="col-md-7 pr-2 x-search_">
+            <form class="form-inline x-form">
+                <input type="text" class="form-control x-search-text"/>
+                <button type="submit" class="btn btn-secondary ml-2">検索</button>
+                <button type="submit" class="btn btn-secondary ml-2 x-recent">最近の登録</button>
+            </form>
+            <select size="10" class="x-select form-control mt-2"></select>
+        </div>
+        <div class="col-md-5">
+            <div class="row x-disp_">
+                <div class="col-sm-4">患者番号：</div>
+                <div class="col-sm-8 x-patient-id"></div>
+                <div class="col-sm-4">氏名：</div>
+                <div class="col-sm-8">
+                    <span class="x-last-name"></span>
+                    <span class="x-first-name"></span>
                 </div>
+                <div class="col-sm-4">よみ：</div>
+                <div class="col-sm-8">
+                    <span class="x-last-name-yomi"></span>
+                    <span class="x-first-name-yomi"></span>
+                </div>
+                <div class="col-sm-4">生年月日：</div>
+                <div class="col-sm-8 x-birthday"></div>
+                <div class="col-sm-4">性別：</div>
+                <div class="col-sm-8 x-sex"></div>
+                <div class="col-sm-4">住所：</div>
+                <div class="col-sm-8 x-address"></div>
+                <div class="col-sm-4">電話番号：</div>
+                <div class="col-sm-8 x-phone"></div>
             </div>
-            <div class="col-sm-3 form">
-                <button type="submit" class="btn btn-secondary btn-block">編集</button>
-                <button type="submit" class="btn btn-secondary btn-block mt-2">診療受付</button>
+            <div class="form-inline mt-2">
+                <button type="button" class="btn btn-secondary x-edit">編集</button>
+                <button type="button" class="btn btn-secondary ml-2 x-register">診療受付</button>
             </div>
         </div>
     </div>
@@ -121,12 +131,16 @@
     (async function(){
         let {parseElement} = await import("./js/parse-element.js");
         let {createDialog} = await import("./reception/dialog.js");
-        let SearchPatientDialog = await import("./reception/search-patient-dialog.js");
+        let {Widget} = await import("./reception/widget.js");
+        let {SearchPatientWidgetBody} = await import("./reception/search-patient-widget-body.js");
 
-        class DialogFactory {
-            create(){
+        let widgetHtml = $("template#reception-widget-template").html();
+        let receptionWorkarea = $("#reception-workarea");
 
-            }
+        function createComponent(ctor, html){
+            let ele = $(html);
+            let map = parseElement(ele);
+            return new ctor(ele, map, rest);
         }
 
         (function(){
@@ -138,15 +152,15 @@
             });
 
             map.searchPatient.on("click", async event => {
-                let html = $("template#reception-search-patient-dialog-content-template").html();
-                let ele = $(html);
-                let map = parseElement(ele);
-                let body = new SearchPatientDialog.Body(map.body_, map.body, rest).init().set();
-                let footer = new SearchPatientDialog.Footer(map.footer_, map.footer, rest).init().set();
-                body.onSelected(patient => footer.set(patient));
-                let dialog = createDialog(rest, "患者検索", body, footer);
-                dialog.ele.on("shown.bs.modal", event => body.focus());
-                let result = await dialog.open();
+                let body = createComponent(SearchPatientWidgetBody,
+                    $("template#reception-search-patient-widget-body-template").html())
+                    .init().set();
+                let widget = createComponent(Widget, widgetHtml);
+                widget.init("患者検索", body);
+                widget.set();
+                widget.appendTo(receptionWorkarea);
+                body.onEdit(patient => console.log("edit", patient));
+                body.focus();
             });
         })();
     })();

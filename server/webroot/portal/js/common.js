@@ -161,6 +161,22 @@ class Rest extends Client {
         return await ajaxPost(this.url("/hoken-rep"), hoken);
     }
 
+    async shahokokuhoRep(shahokokuho) {
+        return await ajaxPost(this.url("/shahokokuho-rep"), shahokokuho);
+    }
+
+    async koukikoureiRep(koukikourei) {
+        return await ajaxPost(this.url("/koukikourei-rep"), koukikourei);
+    }
+
+    async roujinRep(roujin) {
+        return await ajaxPost(this.url("/roujin-rep"), roujin);
+    }
+
+    async kouhiRep(kouhi) {
+        return await ajaxPost(this.url("/kouhi-rep"), kouhi);
+    }
+
     async getVisit(visitId){
         return await this.get("/get-visit", {"visit-id": visitId});
     }
@@ -347,6 +363,24 @@ class Rest extends Client {
         return await this.get("/search-text-globally", {text, page});
     }
 
+    async listRecentlyRegisteredPatients(n = 20){
+        return await this.get("/list-recently-registered-patients", {n});
+    }
+
+    async listAvailableHoken(patientId, date){
+        return await this.get("/list-available-hoken", {"patient-id": patientId, at: date});
+    }
+
+    async listAllHoken(patientId){
+        let result = await this.get("/list-hoken", {"patient-id": patientId});
+        return {
+            shahokokuhoList: result.shahokokuhoListDTO,
+            koukikoureiList: result.koukikoureiListDTO,
+            roujinList: result.roujinListDTO,
+            kouhiList: result.kouhiListDTO,
+        };
+    }
+
 }
 
 class Integration extends Client {
@@ -405,5 +439,6 @@ function sexToRep(sex) {
             return sex;
     }
 }
+
 
 

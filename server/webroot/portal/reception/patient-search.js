@@ -37,6 +37,15 @@ export class PatientSearch extends Component {
         }
     }
 
+    setSearchResult(patients){
+        this.selectElement.html("");
+        for(let patient of patients){
+            let opt = $("<option>").text(this.createPatientLabel(patient));
+            opt.data("patient", patient);
+            this.selectElement.append(opt);
+        }
+    }
+
     async doSearch(){
         let text = this.searchTextElement.val();
         if( !text ){
@@ -44,12 +53,7 @@ export class PatientSearch extends Component {
         }
         let result = await this.rest.searchPatient(text);
         sortPatients(result);
-        this.selectElement.html("");
-        for(let patient of result){
-            let opt = $("<option>").text(this.createPatientLabel(patient));
-            opt.data("patient", patient);
-            this.selectElement.append(opt);
-        }
+        this.setSearchResult(result);
     }
 
     createPatientLabel(patient){

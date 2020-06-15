@@ -34,6 +34,12 @@ export class Component {
         return this;
     }
 
+    prependTo(element){
+        element = this.convertToElement(element);
+        element.prepend(this.ele);
+        return this;
+    }
+
     remove() {
         this.ele.remove();
         return this;

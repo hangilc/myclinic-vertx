@@ -15,7 +15,7 @@ import dev.myclinic.vertx.mastermap.MasterMap;
 import dev.myclinic.vertx.romaji.Romaji;
 import dev.myclinic.vertx.shohousendrawer.ShohousenData;
 import dev.myclinic.vertx.shohousendrawer.ShohousenDrawer;
-import dev.myclinic.vertx.util.HokenUtil;
+import dev.myclinic.vertx.util.*;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -263,6 +263,10 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("get-powder-drug-config-file-path", this::getPowderDrugConfigFilePath);
         noDatabaseFuncMap.put("get-practice-config", this::getPracticeConfig);
         noDatabaseFuncMap.put("hoken-rep", this::hokenRep);
+        noDatabaseFuncMap.put("shahokokuho-rep", this::shahokokuhoRep);
+        noDatabaseFuncMap.put("koukikourei-rep", this::koukikoureiRep);
+        noDatabaseFuncMap.put("roujin-rep", this::roujinRep);
+        noDatabaseFuncMap.put("kouhi-rep", this::kouhiRep);
         noDatabaseFuncMap.put("shohousen-drawer", this::shohousenDrawer);
         noDatabaseFuncMap.put("calc-rcpt-age", this::calcRcptAge);
         noDatabaseFuncMap.put("calc-futan-wari", this::calcFutanWari);
@@ -655,6 +659,46 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         try {
             HokenDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), HokenDTO.class);
             String rep = mapper.writeValueAsString(HokenUtil.hokenRep(hoken));
+            ctx.response().end(rep);
+        } catch (Exception e) {
+            ctx.fail(e);
+        }
+    }
+
+    private void shahokokuhoRep(RoutingContext ctx){
+        try {
+            ShahokokuhoDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), ShahokokuhoDTO.class);
+            String rep = mapper.writeValueAsString(ShahokokuhoUtil.rep(hoken));
+            ctx.response().end(rep);
+        } catch (Exception e) {
+            ctx.fail(e);
+        }
+    }
+
+    private void koukikoureiRep(RoutingContext ctx){
+        try {
+            KoukikoureiDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), KoukikoureiDTO.class);
+            String rep = mapper.writeValueAsString(KoukikoureiUtil.rep(hoken));
+            ctx.response().end(rep);
+        } catch (Exception e) {
+            ctx.fail(e);
+        }
+    }
+
+    private void roujinRep(RoutingContext ctx){
+        try {
+            RoujinDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), RoujinDTO.class);
+            String rep = mapper.writeValueAsString(RoujinUtil.rep(hoken));
+            ctx.response().end(rep);
+        } catch (Exception e) {
+            ctx.fail(e);
+        }
+    }
+
+    private void kouhiRep(RoutingContext ctx){
+        try {
+            KouhiDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), KouhiDTO.class);
+            String rep = mapper.writeValueAsString(KouhiUtil.rep(hoken));
             ctx.response().end(rep);
         } catch (Exception e) {
             ctx.fail(e);

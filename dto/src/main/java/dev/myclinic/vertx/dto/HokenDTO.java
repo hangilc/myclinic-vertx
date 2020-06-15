@@ -1,9 +1,9 @@
 package dev.myclinic.vertx.dto;
 
 public class HokenDTO {
-	public dev.myclinic.vertx.dto.ShahokokuhoDTO shahokokuho;
-	public dev.myclinic.vertx.dto.KoukikoureiDTO koukikourei;
-	public dev.myclinic.vertx.dto.RoujinDTO roujin;
+	public ShahokokuhoDTO shahokokuho;
+	public KoukikoureiDTO koukikourei;
+	public RoujinDTO roujin;
 	public KouhiDTO kouhi1;
 	public KouhiDTO kouhi2;
 	public KouhiDTO kouhi3;

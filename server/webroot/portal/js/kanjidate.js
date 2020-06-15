@@ -88,9 +88,17 @@ export function sqldateToKanji(sqldate, opts){
     if( !opts ){
         opts = {};
     }
-    let d = parseSqldate(sqldate);
-    let [g, n] = seirekiToGengou(d.year, d.month, d.day);
-    return `${g}${n}年${d.month}月${d.day}日`;
+    let data = sqldateToData(sqldate);
+    let gengou = data.gengou.name;
+    let nen = "" + data.nen;
+    let month = "" + data.month;
+    let day = "" + data.day;
+    if( opts.padZero ){
+        nen = nen.padStart(2, "0");
+        month = month.padStart(2, "0");
+        day = day.padStart(2, "0");
+    }
+    return `${gengou}${nen}年${month}月${day}日`;
 }
 
 let dayOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];

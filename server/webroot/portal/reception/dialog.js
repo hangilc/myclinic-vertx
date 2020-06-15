@@ -23,6 +23,7 @@ export class Dialog extends Component {
     }
 
     close(result){
+        this.setDialogResult(result);
         this.ele.modal("hide");
     }
 

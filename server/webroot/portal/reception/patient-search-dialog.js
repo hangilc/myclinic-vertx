@@ -7,6 +7,9 @@ export class PatientSearchDialog extends Dialog {
         super(ele, map, rest);
         this.search = new PatientSearch(map.search_, map.search, rest);
         this.disp = new PatientDisp(map.disp_, map.disp, rest);
+        this.recentElement = map.search.recent;
+        this.editElement = map.edit;
+        this.registerElement = map.register;
     }
 
     init(){
@@ -16,6 +19,9 @@ export class PatientSearchDialog extends Dialog {
         this.disp.init();
         this.setupDispConverters(this.disp);
         this.onOpened(() => this.focus());
+        this.recentElement.on("click", event => this.doRecent());
+        this.editElement.on("click", event => this.doEdit());
+        this.registerElement.on("click", event => this.doRegister());
         return this;
     }
 
@@ -35,11 +41,27 @@ export class PatientSearchDialog extends Dialog {
         this.disp.set(patient);
     }
 
+    async doRecent(){
+        let result = await this.rest.listRecentlyRegisteredPatients(20);
+        this.search.setSearchResult(result);
+    }
+
     setupDispConverters(disp){
         disp.setBirthdayConv(birthday => this.disp.birthdayAsKanji(birthday, {
             suffix: "生"
         }) + " " + this.disp.calcAge(birthday) + "才");
         disp.setSexConv(sex => this.disp.sexAsKanji(sex));
+    }
+
+    doEdit(){
+        this.close({
+            action: "edit",
+            patient: this.patient
+        });
+    }
+
+    doRegister(){
+        alert("not implemented");
     }
 
 }

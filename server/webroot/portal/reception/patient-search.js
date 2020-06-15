@@ -1,7 +1,7 @@
 import {Component} from "../js/component.js";
 import * as kanjidate from "../js/kanjidate.js";
 
-export class SearchPatient extends Component {
+export class PatientSearch extends Component {
     constructor(ele, map, rest){
         super(ele, map, rest);
         this.formElement = map.form;

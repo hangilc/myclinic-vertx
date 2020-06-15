@@ -1,11 +1,11 @@
 import {Component} from "../js/component.js";
-import {SearchPatient} from "./search-patient.js";
+import {PatientSearch} from "./patient-search.js";
 import {PatientDisp} from "./patient-disp.js";
 
-export class SearchPatientWidgetBody extends Component {
+export class SearchPatientWidget extends Component {
     constructor(ele, map, rest){
         super(ele, map, rest);
-        this.search = new SearchPatient(map.search_, map.search, rest);
+        this.search = new PatientSearch(map.search_, map.search, rest);
         this.disp = new PatientDisp(map.disp_, map.disp, rest);
         this.editElement = map.edit;
         this.registerElement = map.register;

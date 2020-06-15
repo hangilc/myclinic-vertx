@@ -3,18 +3,12 @@ import {Component} from "../js/component.js";
 export class Widget extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
-        this.titleElement = map.title;
-        this.bodyElement = map.body;
-        this.closeElement = map.close;
+        this.widgetCloseElement = map.widgetClose;
     }
 
-    init(title, bodyComponent){
-        this.titleElement.text(title);
-        if( bodyComponent ){
-            bodyComponent.appendTo(this.bodyElement);
-        }
-        if( this.closeElement ){
-            this.closeElement.on("click", event => this.close());
+    init(){
+        if( this.widgetCloseElement ){
+            this.widgetCloseElement.on("click", event => this.close());
         }
         return this;
     }

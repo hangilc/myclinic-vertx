@@ -138,7 +138,7 @@
     </div>
 </template>
 
-<template id="reception-patient-edit-widget-template">
+<template id="reception-patient-and-hoken-edit-widget-template">
     <div class="mb-3 border border-secondary rounded p-3">
         <div class="d-flex p-2" style="background-color: #ccc;">
             <div class="font-weight-bold flex-grow-1">患者情報編集</div>
@@ -202,33 +202,146 @@
             <button type="button" class="x-close btn btn-secondary">閉じる</button>
             <button type="button" class="x-register btn btn-secondary ml-2">診療受付</button>
         </div>
+        <div class="x-workarea ml-3"></div>
+    </div>
+</template>
+
+<template id="reception-patient-edit-widget-template">
+    <div class="x-form_">
+        <div class="row">
+            <div class="col-sm-2 d-flex justify-content-end">患者番号</div>
+            <div class="x-patient-id col-md-10"></div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-sm-2 d-flex justify-content-end">氏名</div>
+            <div class="col-sm-10 form-inline">
+                <input type="text" class="x-last-name form-control"/>
+                <input type="text" class="x-first-name form-control ml-2"/>
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-sm-2 d-flex justify-content-end mt-2">よみ</div>
+            <div class="col-sm-10 form-inline">
+                <input type="text" class="x-last-name-yomi form-control"/>
+                <input type="text" class="x-first-name-yomi form-control ml-2"/>
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-sm-2 d-flex justify-content-end mt-2">生年月日</div>
+            <div class="col-sm-10 form-inline x-birthday_">
+                <select class="x-gengou form-control">
+                    <option>令和</option>
+                    <option>平成</option>
+                    <option selected>昭和</option>
+                    <option>大正</option>
+                    <option>明治</option>
+                </select>
+                <input type="text" class="x-nen form-control ml-2" size="3"/> 年
+                <input type="text" class="x-month form-control ml-2" size="3"/> 月
+                <input type="text" class="x-day form-control ml-2" size="3"/> 日
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-sm-2 d-flex justify-content-end mt-2">性別</div>
+            <div class="col-sm-10">
+                <form class="form-inline x-sex" onsubmit="return false">
+                    <input type="radio" name="sex" value="M"> 男
+                    <input type="radio" name="sex" value="F" checked class="ml-2"> 女
+                </form>
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-sm-2 d-flex justify-content-end mt-2">住所</div>
+            <div class="col-sm-10 form-inline">
+                <input type="text" class="x-address form-control" size="50"/>
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-sm-2 d-flex justify-content-end mt-2">電話番号</div>
+            <div class="col-sm-10 form-inline">
+                <input type="text" class="x-phone form-control"/>
+            </div>
+
+        </div>
+    </div>
+</template>
+
+<template id="reception-date-input-template">
+    <div class="form-inline">
+        <select class="x-gengou form-control">
+            <option>令和</option>
+            <option>平成</option>
+            <option>昭和</option>
+            <option>大正</option>
+            <option>明治</option>
+        </select>
+        <input type="number" class="x-nen form-control ml-2" size="3"/> 年
+        <input type="number" class="x-month form-control ml-2" size="3"/> 月
+        <input type="number" class="x-day form-control ml-2" size="3"/> 日
     </div>
 </template>
 
 <script>
+
     (async function () {
         let {parseElement} = await import("./js/parse-element.js");
         let {PatientSearchDialog} = await import("./reception/patient-search-dialog.js");
+        let {PatientAndHokenEditWidget} = await import("./reception/patient-and-hoken-edit-widget.js");
         let {PatientEditWidget} = await import("./reception/patient-edit-widget.js");
         let {HokenHelper} = await import("./reception/hoken-helper.js");
+        let {DateInput} = await import("./reception/date-input.js");
 
         let receptionWorkarea = $("#reception-workarea");
 
-        async function createPatientEditWidget(patient) {
-            let html = $("template#reception-patient-edit-widget-template").html();
-            let ele = $(html);
-            let map = parseElement(ele);
-            let widget = new PatientEditWidget(ele, map, rest);
-            let hokenHelper = new HokenHelper(rest);
-            let hokenList = await hokenHelper.fetchAvailableHoken(patient.patientId, kanjidate.todayAsSqldate());
-            widget.init();
-            widget.set(patient, hokenList);
-            return widget;
+        class DateInputFactory {
+            create(date){
+                let html = $("template#reception-date-input-template").html();
+                let ele = $(html);
+                let map = parseElement(ele);
+                let comp = new DateInput(ele, map, rest);
+                comp.init();
+                comp.set(date);
+                return comp;
+            }
+        }
+
+        class PatientAndHokenWidgetFactory {
+            create(patient, currentHokenList, patientEditWidgetFactory) {
+                let html = $("template#reception-patient-and-hoken-edit-widget-template").html();
+                let ele = $(html);
+                let map = parseElement(ele);
+                let widget = new PatientAndHokenEditWidget(ele, map, rest);
+                widget.init(patientEditWidgetFactory);
+                widget.set(patient, currentHokenList);
+                return widget;
+            }
+        }
+
+        class PatientEditWidgetFactory {
+            create(patient) {
+                let html = $("template#reception-patient-edit-widget-template").html();
+                let ele = $(html);
+                let map = parseElement(ele);
+                let widget = new PatientEditWidget(ele, map, rest);
+                widget.init();
+                widget.set(patient);
+                return widget;
+            }
         }
 
         (function () {
             let ele = $("#reception-main-commands");
             let map = parseElement(ele);
+            let hokenHelper = new HokenHelper(rest);
+            let patientAndHokenWidgetFactory = new PatientAndHokenWidgetFactory();
+            let patientEditWidgetFactory = new PatientEditWidgetFactory();
+            let dateInputFactory = new DateInputFactory();
 
             map.newPatient.on("click", event => {
                 alert("new patient: not supported");
@@ -244,7 +357,10 @@
                 let result = await dialog.open();
                 if (result && result.action === "edit") {
                     let patient = result.patient;
-                    let editWidget = await createPatientEditWidget(patient);
+                    let hokenList = await hokenHelper.fetchAvailableHoken(patient.patientId,
+                        kanjidate.todayAsSqldate());
+                    let editWidget = patientAndHokenWidgetFactory.create(patient, hokenList,
+                        patientEditWidgetFactory);
                     editWidget.prependTo(receptionWorkarea);
                 }
             });

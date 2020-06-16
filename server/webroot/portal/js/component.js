@@ -45,6 +45,11 @@ export class Component {
         return this;
     }
 
+    detach(){
+        this.ele.detach();
+        return this;
+    }
+
     putBefore(element) {
         element = this.convertToElement(element);
         element.before(this.ele);

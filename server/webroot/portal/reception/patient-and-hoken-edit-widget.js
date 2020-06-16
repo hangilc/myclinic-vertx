@@ -57,6 +57,10 @@ export class PatientAndHokenEditWidget extends Widget {
 
     doNewShahokokuho(){
         let widget = this.shahokokuhoNewWidgetFactory.create(this.patient.patientId);
+        widget.onEntered(entered => {
+            console.log("new-shahokokuho", entered);
+            widget.remove();
+        })
         widget.prependTo(this.workareaElement);
     }
 

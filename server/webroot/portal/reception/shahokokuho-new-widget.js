@@ -51,6 +51,10 @@ export class ShahokokuhoNewWidget extends Widget {
         return this;
     }
 
+    onEntered(cb){
+        this.on("entered", (event, entered) => cb(entered));
+    }
+
     async doEnter(){
         let data = this.form.get();
         if( !data ){
@@ -58,6 +62,8 @@ export class ShahokokuhoNewWidget extends Widget {
             alert(err);
             return;
         }
-        console.log(JSON.stringify(data, null, 2));
+        let shahokokuhoId = await this.rest.enterShahokokuho(data);
+        let entered = await this.rest.getShahokokuho(shahokokuhoId);
+        this.trigger("entered", entered);
     }
 }

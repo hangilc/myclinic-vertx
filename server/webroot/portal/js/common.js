@@ -385,6 +385,38 @@ class Rest extends Client {
         };
     }
 
+    async enterShahokokuho(shahokokuho){
+        return await this.post("/enter-shahokokuho", shahokokuho);
+    }
+
+    async enterKoukikourei(koukikourei){
+        return await this.post("/enter-koukikourei", koukikourei);
+    }
+
+    async enterRoujin(roujin){
+        return await this.post("/enter-roujin", roujin);
+    }
+
+    async enterKouhi(kouhi){
+        return await this.post("/enter-kouhi", kouhi);
+    }
+
+    async getShahokokuho(shahokokuhoId){
+        return await this.get("/get-shahokokuho", {"shahokokuho-id": shahokokuhoId});
+    }
+
+    async getKoukikourei(koukikoureiId){
+        return await this.get("/get-koukikourei", {"koukikourei-id": koukikoureiId});
+    }
+
+    async getRoujin(roujinId){
+        return await this.get("/get-roujin", {"roujin-id": roujinId});
+    }
+
+    async getKouhi(kouhiId){
+        return await this.get("/get-kouhi", {"kouhi-id": kouhiId});
+    }
+
 }
 
 class Integration extends Client {

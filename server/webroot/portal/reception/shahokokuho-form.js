@@ -1,7 +1,7 @@
 export class ShahokokuhoForm {
     constructor(map){
         this.error = null;
-        this.hokenshabangouElement = map.hokenshabangou;
+        this.hokenshaBangouElement = map.hokenshaBangou;
         this.hihokenshaKigouElement = map.hihokenshaKigou;
         this.hihokenshaBangouElement = map.hihokenshaBangou;
         this.honninElement = map.honnin;
@@ -30,13 +30,18 @@ export class ShahokokuhoForm {
     }
 
     get(){
-        let hokenshabangouInput = this.hokenshabangouElement.val();
-        if( hokenshabangouInput === "" ){
+        let patientId = this.patientId;
+        if( !(patientId > 0) ){
+            this.error = "患者が設定されていません。";
+            return undefined;
+        }
+        let hokenshaBangouInput = this.hokenshaBangouElement.val();
+        if( hokenshaBangouInput === "" ){
             this.error = "保険者番号が入力されていません。";
             return undefined;
         }
-        let hokenshabangou = parseInt(hokenshabangouInput);
-        if( isNaN(hokenshabangou) ){
+        let hokenshaBangou = parseInt(hokenshaBangouInput);
+        if( isNaN(hokenshaBangou) ){
             this.error = "保険者番号の入力が不適切です。";
             return undefined;
         }
@@ -69,8 +74,8 @@ export class ShahokokuhoForm {
             return undefined;
         }
         return {
-            patientId: this.patientId,
-            hokenshabangou,
+            patientId,
+            hokenshaBangou,
             hihokenshaKigou,
             hihokenshaBangou,
             honnin,

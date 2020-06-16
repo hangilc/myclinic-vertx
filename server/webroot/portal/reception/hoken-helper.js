@@ -5,7 +5,7 @@ export class HokenHelper {
         this.rest = rest;
     }
 
-    async fetchAvailable(patientId, date){
+    async fetchAvailableHoken(patientId, date){
         let hoken = await this.rest.listAvailableHoken(patientId, date);
         let hokenList = HokenUtil.hokenToHokenList(hoken);
         await this.extendHokenList(hokenList);

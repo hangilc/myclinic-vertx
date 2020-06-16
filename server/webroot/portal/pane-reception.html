@@ -199,7 +199,8 @@
             </div>
         </div>
         <div class="mt-2 d-flex justify-content-end">
-            <button type="button" class="x-register btn btn-secondary">診療受付</button>
+            <button type="button" class="x-close btn btn-secondary">閉じる</button>
+            <button type="button" class="x-register btn btn-secondary ml-2">診療受付</button>
         </div>
     </div>
 </template>
@@ -219,7 +220,7 @@
             let map = parseElement(ele);
             let widget = new PatientEditWidget(ele, map, rest);
             let hokenHelper = new HokenHelper(rest);
-            let hokenList = await hokenHelper.fetchAvailable(patient.patientId, kanjidate.todayAsSqldate());
+            let hokenList = await hokenHelper.fetchAvailableHoken(patient.patientId, kanjidate.todayAsSqldate());
             widget.init();
             widget.set(patient, hokenList);
             return widget;

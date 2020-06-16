@@ -1,8 +1,9 @@
-import {Component} from "../js/component.js";
+import {Widget} from "./widget.js";
 import {PatientDisp} from "./patient-disp.js";
 import {parseElement} from "../js/parse-element.js";
 import {compareBy} from "../js/general-util.js";
 import * as kanjidate from "../js/kanjidate.js";
+import {HokenHelper} from "./hoken-helper.js";
 
 let tableRowHtml = `
 <tr>
@@ -17,24 +18,42 @@ let tableRowHtml = `
 </tr>
 `;
 
-export class PatientEditWidget extends Component {
+export class PatientEditWidget extends Widget {
     constructor(ele, map, rest){
         super(ele, map, rest);
         this.disp = new PatientDisp(map.disp_, map.disp, rest);
         this.hokenListElement = map.hokenList;
+        this.currentOnlyElement = map.currentOnly;
+        this.closeElement = map.close;
     }
 
     init(){
+        super.init();
         this.disp.init();
         this.setupDispConverters(this.disp);
+        this.currentOnlyElement.on("change", event =>
+            this.doCurrentOnlyChanged(this.currentOnlyElement.is(":checked")));
+        this.closeElement.on("click", event => this.close());
         return this;
     }
 
     set(patient, currentHokenList){
-        console.log("hoken", currentHokenList);
+        super.set();
+        this.patient = patient;
         this.disp.set(patient);
         this.setHokenList(currentHokenList);
         return this;
+    }
+
+    async doCurrentOnlyChanged(checked){
+        let helper = new HokenHelper(this.rest);
+        if( checked ){
+            let result = await helper.fetchAvailableHoken(this.patient.patientId, kanjidate.todayAsSqldate());
+            this.setHokenList(result);
+        } else {
+            let result = await helper.fetchAllHoken(this.patient.patientId);
+            this.setHokenList(result);
+        }
     }
 
     createTableRow(rep, validFrom, validUpto, honninKazoku, editFun, deleteFun){

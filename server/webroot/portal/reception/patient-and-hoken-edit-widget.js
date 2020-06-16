@@ -27,18 +27,23 @@ export class PatientAndHokenEditWidget extends Widget {
         this.closeElement = map.close;
         this.editBasicElement = map.editBasic;
         this.workareaElement = map.workarea;
+        this.newShahokokuhoElement = map.newShahokokuho;
+        this.newKoukikoureiElement = map.newKoukikourei;
+        this.newKouhiElement = map.newKouhi;
         this.patientEditWidget = null;
     }
 
-    init(patientEditWidgetFactory){
+    init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory){
         super.init();
         this.patientEditWidgetFactory = patientEditWidgetFactory;
+        this.shahokokuhoNewWidgetFactory = shahokokuhoNewWidgetFactory;
         this.disp.init();
         this.setupDispConverters(this.disp);
         this.currentOnlyElement.on("change", event =>
             this.doCurrentOnlyChanged(this.currentOnlyElement.is(":checked")));
         this.closeElement.on("click", event => this.close());
         this.editBasicElement.on("click", event => this.doEditBasic());
+        this.newShahokokuhoElement.on("click", event => this.doNewShahokokuho());
         return this;
     }
 
@@ -48,6 +53,11 @@ export class PatientAndHokenEditWidget extends Widget {
         this.disp.set(patient);
         this.setHokenList(currentHokenList);
         return this;
+    }
+
+    doNewShahokokuho(){
+        let widget = this.shahokokuhoNewWidgetFactory.create(this.patient.patientId);
+        widget.prependTo(this.workareaElement);
     }
 
     doEditBasic(){

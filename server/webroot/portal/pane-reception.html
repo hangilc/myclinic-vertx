@@ -192,9 +192,9 @@
                     <input type="checkbox" class="x-current-only" checked> 現在有効のみ
                 </div>
                 <div class="mt-2">
-                    <button class="btn btn-secondary">新規社保国保</button>
-                    <button class="ml-2 btn btn-secondary">新規後期高齢</button>
-                    <button class="ml-2 btn btn-secondary">新規公費負担</button>
+                    <button class="btn btn-secondary x-new-shahokokuho">新規社保国保</button>
+                    <button class="ml-2 btn btn-secondary x-new-koukikourei">新規後期高齢</button>
+                    <button class="ml-2 btn btn-secondary x-new-kouhi">新規公費負担</button>
                 </div>
             </div>
         </div>
@@ -284,18 +284,93 @@
 
 </template>
 
-<template id="reception-date-input-template">
-    <div class="form-inline">
-        <select class="x-gengou form-control">
-            <option>令和</option>
-            <option>平成</option>
-            <option>昭和</option>
-            <option>大正</option>
-            <option>明治</option>
-        </select>
-        <input type="number" class="x-nen form-control ml-2" size="3"/> 年
-        <input type="number" class="x-month form-control ml-2" size="3"/> 月
-        <input type="number" class="x-day form-control ml-2" size="3"/> 日
+<template id="reception-shahokokuho-new-widget-template">
+    <div class="mb-3 border border-secondary rounded p-3">
+        <div class="d-flex p-2" style="background-color: #ccc;">
+            <div class="font-weight-bold flex-grow-1">新規社保国保入力</div>
+            <div><span class="font-weight-bold x-widget-close"
+                       style="cursor: pointer;">&times;</span></div>
+        </div>
+        <div class="x-form_ mt-4">
+            <form>
+                <div class="form-group row">
+                    <div class="col-sm-2 col-form-label d-flex justify-content-end">保険者番号</div>
+                    <div class="col-sm-10 form-inline">
+                        <input type="text" class="form-control x-hokenshabangou"/>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2 col-form-label d-flex justify-content-end">被保険者</div>
+                    <div class="col-sm-10 form-inline">
+                        記号：<input type="text" class="form-control x-hihokensha-kigou mr-3"/>
+                        番号：<input type="text" class="form-control x-hihokensha-bangou"/>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2 col-form-label d-flex justify-content-end">本人・家族</div>
+                    <div class="col-sm-10 form-inline">
+                        <div class="form-check form-check-inline">
+                            <input type="radio" name="honnin" class="form-check-input" value="1" checked/>
+                            <div class="form-check-label">本人</div>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input type="radio" name="honnin" class="form-check-input" value="0"/>
+                            <div class="form-check-label">家族</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2 col-form-label d-flex justify-content-end">開始日</div>
+                    <div class="col-sm-10 form-inline x-valid-from_">
+                        <select class="x-gengou form-control">
+                            <option selected>令和</option>
+                            <option>平成</option>
+                        </select>
+                        <input type="text" class="x-nen form-control ml-2 mr-1" size="3"/>年
+                        <input type="text" class="x-month form-control ml-2 mr-1" size="3"/> 月
+                        <input type="text" class="x-day form-control ml-2 mr-1" size="3"/> 日
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2 col-form-label d-flex justify-content-end">終了日</div>
+                    <div class="col-sm-10 form-inline x-valid-upto_">
+                        <select class="x-gengou form-control">
+                            <option selected>令和</option>
+                            <option>平成</option>
+                        </select>
+                        <input type="text" class="x-nen form-control ml-2 mr-1" size="3"/>年
+                        <input type="text" class="x-month form-control ml-2 mr-1" size="3"/> 月
+                        <input type="text" class="x-day form-control ml-2 mr-1" size="3"/> 日
+                        <a href="javascript:void(0)" class="x-clear-valid-upto ml-2">クリア</a>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2 col-form-label d-flex justify-content-end">高齢</div>
+                    <div class="col-sm-10 form-inline">
+                        <div class="form-check form-check-inline">
+                            <input type="radio" class="form-check-input" checked name="kourei" value="0">
+                            <div class="form-check-label">高齢でない</div>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input type="radio" class="form-check-input" name="kourei" value="1"/>
+                            <div class="form-check-label">１割</div>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input type="radio" class="form-check-input" name="kourei" value="2"/>
+                            <div class="form-check-label">２割</div>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input type="radio" class="form-check-input" name="kourei" value="3"/>
+                            <div class="form-check-label">３割</div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="mt-2 d-flex justify-content-end">
+            <button type="button" class="x-enter btn btn-secondary">入力</button>
+            <button type="button" class="x-close btn btn-secondary ml-2">閉じる</button>
+        </div>
     </div>
 </template>
 
@@ -306,13 +381,13 @@
         let {PatientSearchDialog} = await import("./reception/patient-search-dialog.js");
         let {PatientAndHokenEditWidget} = await import("./reception/patient-and-hoken-edit-widget.js");
         let {PatientEditWidget} = await import("./reception/patient-edit-widget.js");
+        let {ShahokokuhoNewWidget} = await import("./reception/shahokokuho-new-widget.js");
         let {HokenHelper} = await import("./reception/hoken-helper.js");
-        let {DateInput} = await import("./reception/date-input.js");
 
         let receptionWorkarea = $("#reception-workarea");
 
         class DateInputFactory {
-            create(date){
+            create(date) {
                 let html = $("template#reception-date-input-template").html();
                 let ele = $(html);
                 let map = parseElement(ele);
@@ -324,12 +399,12 @@
         }
 
         class PatientAndHokenWidgetFactory {
-            create(patient, currentHokenList, patientEditWidgetFactory) {
+            create(patient, currentHokenList, patientEditWidgetFactory, shahokokuhoNewWidgetFactory) {
                 let html = $("template#reception-patient-and-hoken-edit-widget-template").html();
                 let ele = $(html);
                 let map = parseElement(ele);
                 let widget = new PatientAndHokenEditWidget(ele, map, rest);
-                widget.init(patientEditWidgetFactory);
+                widget.init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory);
                 widget.set(patient, currentHokenList);
                 return widget;
             }
@@ -347,13 +422,25 @@
             }
         }
 
+        class ShahokokuhoNewWidgetFactory {
+            create(patientId) {
+                let html = $("template#reception-shahokokuho-new-widget-template").html();
+                let ele = $(html);
+                let map = parseElement(ele);
+                let widget = new ShahokokuhoNewWidget(ele, map, rest);
+                widget.init();
+                widget.set(patientId);
+                return widget;
+            }
+        }
+
         (function () {
             let ele = $("#reception-main-commands");
             let map = parseElement(ele);
             let hokenHelper = new HokenHelper(rest);
             let patientAndHokenWidgetFactory = new PatientAndHokenWidgetFactory();
             let patientEditWidgetFactory = new PatientEditWidgetFactory();
-            let dateInputFactory = new DateInputFactory();
+            let shahokokuhoNewWidgetFactory = new ShahokokuhoNewWidgetFactory();
 
             map.newPatient.on("click", event => {
                 alert("new patient: not supported");
@@ -372,7 +459,7 @@
                     let hokenList = await hokenHelper.fetchAvailableHoken(patient.patientId,
                         kanjidate.todayAsSqldate());
                     let editWidget = patientAndHokenWidgetFactory.create(patient, hokenList,
-                        patientEditWidgetFactory);
+                        patientEditWidgetFactory, shahokokuhoNewWidgetFactory);
                     editWidget.prependTo(receptionWorkarea);
                 }
             });

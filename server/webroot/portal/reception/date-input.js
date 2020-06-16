@@ -32,6 +32,7 @@ export class DateInput {
     allowEmpty(emptyValue="0000-00-00"){
         this.allowEmpty = true;
         this.emptyValue = emptyValue;
+        return this;
     }
 
     get(){

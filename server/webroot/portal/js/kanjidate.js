@@ -31,7 +31,7 @@ const gengouList = [
     }
 ];
 
-function toSqldate(year, month, day){
+export function toSqldate(year, month, day){
     let y = ("" + year).padStart(4, "0");
     let m = ("" + month).padStart(2, "0");
     let d = ("" + day).padStart(2, "0");

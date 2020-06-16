@@ -11,11 +11,30 @@ export class PatientEditWidget extends Widget {
             sex: new SexInput(map.form.sex, "sex")
         });
         this.form = new PatientForm(formMap);
+        this.closeElement = map.close;
+        this.enterElement = map.enter;
     }
 
     init(){
         super.init();
+        this.closeElement.on("click", event => this.close());
+        this.enterElement.on("click", event => this.doEnter());
         return this;
+    }
+
+    onUpdated(cb){
+        this.on("updated", (event, updated) => cb(updated));
+    }
+
+    async doEnter(){
+        let data = this.form.get();
+        if( data === undefined ){
+            alert("エラー：" + this.form.getError());
+            return;
+        }
+        await this.rest.updatePatient(data);
+        let updated = await this.rest.getPatient(data.patientId);
+        this.trigger("updated", updated);
     }
 
     set(patient){

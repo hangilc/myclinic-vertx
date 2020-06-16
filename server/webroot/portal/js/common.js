@@ -121,6 +121,10 @@ class Rest extends Client {
         return await ajaxGet(this.url("/search-patient"), {text: text});
     }
 
+    async updatePatient(patient){
+        return await this.post("/update-patient", patient);
+    }
+
     async startVisit(patientId) {
         return await ajaxGet(this.url("/start-visit"), {"patient-id": patientId});
     }

@@ -56,6 +56,10 @@ export class PatientAndHokenEditWidget extends Widget {
         } else {
             let editWidget = this.patientEditWidgetFactory.create(this.patient);
             this.patientEditWidget = editWidget;
+            editWidget.onUpdated(updatedPatient => {
+                editWidget.remove();
+                this.disp.set(updatedPatient);
+            });
             editWidget.prependTo(this.workareaElement);
         }
     }

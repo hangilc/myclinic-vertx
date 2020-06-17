@@ -369,7 +369,7 @@
         </div>
         <div class="mt-2 d-flex justify-content-end">
             <button type="button" class="x-enter btn btn-secondary">入力</button>
-            <button type="button" class="x-close btn btn-secondary ml-2">閉じる</button>
+            <button type="button" class="x-close btn btn-secondary ml-2">キャンセル</button>
         </div>
     </div>
 </template>
@@ -441,7 +441,62 @@
         </div>
         <div class="mt-2 d-flex justify-content-end">
             <button type="button" class="x-enter btn btn-secondary">入力</button>
-            <button type="button" class="x-close btn btn-secondary ml-2">閉じる</button>
+            <button type="button" class="x-close btn btn-secondary ml-2">キャンセル</button>
+        </div>
+    </div>
+</template>
+
+<template id="reception-kouhi-new-widget-template">
+    <div class="mb-3 border border-secondary rounded p-3">
+        <div class="d-flex p-2" style="background-color: #ccc;">
+            <div class="font-weight-bold flex-grow-1">新規公費負担入力</div>
+            <div><span class="font-weight-bold x-widget-close"
+                       style="cursor: pointer;">&times;</span></div>
+        </div>
+        <div class="x-form_ mt-4">
+            <form>
+                <div class="form-group row">
+                    <div class="col-sm-2 col-form-label d-flex justify-content-end">負担者番号</div>
+                    <div class="col-sm-10 form-inline">
+                        <input type="text" class="form-control x-futansha"/>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2 col-form-label d-flex justify-content-end">受給者番号</div>
+                    <div class="col-sm-10 form-inline">
+                        <input type="text" class="form-control x-jukyuusha"/>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2 col-form-label d-flex justify-content-end">開始日</div>
+                    <div class="col-sm-10 form-inline x-valid-from_">
+                        <select class="x-gengou form-control">
+                            <option selected>令和</option>
+                            <option>平成</option>
+                        </select>
+                        <input type="text" class="x-nen form-control ml-2 mr-1" size="3"/>年
+                        <input type="text" class="x-month form-control ml-2 mr-1" size="3"/> 月
+                        <input type="text" class="x-day form-control ml-2 mr-1" size="3"/> 日
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2 col-form-label d-flex justify-content-end">終了日</div>
+                    <div class="col-sm-10 form-inline x-valid-upto_">
+                        <select class="x-gengou form-control">
+                            <option selected>令和</option>
+                            <option>平成</option>
+                        </select>
+                        <input type="text" class="x-nen form-control ml-2 mr-1" size="3"/>年
+                        <input type="text" class="x-month form-control ml-2 mr-1" size="3"/> 月
+                        <input type="text" class="x-day form-control ml-2 mr-1" size="3"/> 日
+                        <a href="javascript:void(0)" class="x-clear-valid-upto ml-2">クリア</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="mt-2 d-flex justify-content-end">
+            <button type="button" class="x-enter btn btn-secondary">入力</button>
+            <button type="button" class="x-close btn btn-secondary ml-2">キャンセル</button>
         </div>
     </div>
 </template>
@@ -465,18 +520,20 @@
         let {PatientEditWidget} = await import("./reception/patient-edit-widget.js");
         let {ShahokokuhoNewWidget} = await import("./reception/shahokokuho-new-widget.js");
         let {KoukikoureiNewWidget} = await import("./reception/koukikourei-new-widget.js");
+        let {KouhiNewWidget} = await import("./reception/kouhi-new-widget.js");
         let {HokenHelper} = await import("./reception/hoken-helper.js");
 
         let receptionWorkarea = $("#reception-workarea");
 
         class PatientAndHokenWidgetFactory {
             create(patient, currentHokenList, patientEditWidgetFactory, shahokokuhoNewWidgetFactory,
-                koukikoureiNewWidgetFactory) {
+                koukikoureiNewWidgetFactory, kouhiNewWidgetFactory) {
                 let html = $("template#reception-patient-and-hoken-edit-widget-template").html();
                 let ele = $(html);
                 let map = parseElement(ele);
                 let widget = new PatientAndHokenEditWidget(ele, map, rest);
-                widget.init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory);
+                widget.init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory,
+                    kouhiNewWidgetFactory);
                 widget.set(patient, currentHokenList);
                 return widget;
             }
@@ -518,6 +575,18 @@
             }
         }
 
+        class KouhiNewWidgetFactory {
+            create(patientId) {
+                let html = $("template#reception-kouhi-new-widget-template").html();
+                let ele = $(html);
+                let map = parseElement(ele);
+                let widget = new KouhiNewWidget(ele, map, rest);
+                widget.init(patientId);
+                widget.set();
+                return widget;
+            }
+        }
+
         (function () {
             let ele = $("#reception-main-commands");
             let map = parseElement(ele);
@@ -525,7 +594,8 @@
             let patientAndHokenWidgetFactory = new PatientAndHokenWidgetFactory();
             let patientEditWidgetFactory = new PatientEditWidgetFactory();
             let shahokokuhoNewWidgetFactory = new ShahokokuhoNewWidgetFactory();
-            let koukikoureihoNewWidgetFactory = new KoukikoureiNewWidgetFactory();
+            let koukikoureiNewWidgetFactory = new KoukikoureiNewWidgetFactory();
+            let kouhiNewWidgetFactory = new KouhiNewWidgetFactory();
 
             map.newPatient.on("click", event => {
                 alert("new patient: not supported");
@@ -545,7 +615,7 @@
                         kanjidate.todayAsSqldate());
                     let editWidget = patientAndHokenWidgetFactory.create(patient, hokenList,
                         patientEditWidgetFactory, shahokokuhoNewWidgetFactory,
-                        koukikoureihoNewWidgetFactory);
+                        koukikoureiNewWidgetFactory, kouhiNewWidgetFactory);
                     editWidget.prependTo(receptionWorkarea);
                 }
             });

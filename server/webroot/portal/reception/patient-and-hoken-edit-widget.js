@@ -33,11 +33,13 @@ export class PatientAndHokenEditWidget extends Widget {
         this.patientEditWidget = null;
     }
 
-    init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory){
+    init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory,
+         kouhiNewWidgetFactory){
         super.init();
         this.patientEditWidgetFactory = patientEditWidgetFactory;
         this.shahokokuhoNewWidgetFactory = shahokokuhoNewWidgetFactory;
         this.koukikoureiNewWidgetFactory = koukikoureiNewWidgetFactory;
+        this.kouhiNewWidgetFactory = kouhiNewWidgetFactory;
         this.disp.init();
         this.setupDispConverters(this.disp);
         this.currentOnlyElement.on("change", event =>
@@ -46,6 +48,7 @@ export class PatientAndHokenEditWidget extends Widget {
         this.editBasicElement.on("click", event => this.doEditBasic());
         this.newShahokokuhoElement.on("click", event => this.doNewShahokokuho());
         this.newKoukikoureiElement.on("click", event => this.doNewKoukikourei());
+        this.newKouhiElement.on("click", event => this.doNewKouhi());
         return this;
     }
 
@@ -83,6 +86,15 @@ export class PatientAndHokenEditWidget extends Widget {
 
     doNewKoukikourei(){
         let widget = this.koukikoureiNewWidgetFactory.create(this.patient.patientId);
+        widget.onEntered(entered => {
+            let promise = this.reloadHoken();
+            widget.remove();
+        })
+        widget.prependTo(this.workareaElement);
+    }
+
+    doNewKouhi(){
+        let widget = this.kouhiNewWidgetFactory.create(this.patient.patientId);
         widget.onEntered(entered => {
             let promise = this.reloadHoken();
             widget.remove();
@@ -154,7 +166,7 @@ export class PatientAndHokenEditWidget extends Widget {
         hokenList.kouhiList.sort(cmp);
         for(let kouhi of hokenList.kouhiList){
             let tr = this.createTableRow(kouhi.rep, formatDate(kouhi.validFrom),
-                formatDate(roujin.validUpto), "",
+                formatDate(kouhi.validUpto), "",
                 () => {}, () => {});
             tbody.append(tr);
         }

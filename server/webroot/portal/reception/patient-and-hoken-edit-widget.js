@@ -12,6 +12,7 @@ let tableRowHtml = `
     <td class="x-valid-upto"></td>
     <td class="x-honnin"></td>
     <td class="x-manip">
+        <a href="javascript:void(0)" class="x-detail">詳細</a>
         <a href="javascript:void(0)" class="x-edit">編集</a>
         <a href="javascript:void(0)" class="x-delete">削除</a>
     </td>
@@ -34,12 +35,13 @@ export class PatientAndHokenEditWidget extends Widget {
     }
 
     init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory,
-         kouhiNewWidgetFactory){
+         kouhiNewWidgetFactory, shahokokuhoDispWidgetFactory){
         super.init();
         this.patientEditWidgetFactory = patientEditWidgetFactory;
         this.shahokokuhoNewWidgetFactory = shahokokuhoNewWidgetFactory;
         this.koukikoureiNewWidgetFactory = koukikoureiNewWidgetFactory;
         this.kouhiNewWidgetFactory = kouhiNewWidgetFactory;
+        this.shahokokuhoDispWidgetFactory = shahokokuhoDispWidgetFactory;
         this.disp.init();
         this.setupDispConverters(this.disp);
         this.currentOnlyElement.on("change", event =>
@@ -49,6 +51,10 @@ export class PatientAndHokenEditWidget extends Widget {
         this.newShahokokuhoElement.on("click", event => this.doNewShahokokuho());
         this.newKoukikoureiElement.on("click", event => this.doNewKoukikourei());
         this.newKouhiElement.on("click", event => this.doNewKouhi());
+        this.shahokokuhoDispWidgetMap = {};
+        this.koukikoureiDispWidgetMap = {};
+        this.roujinDispWidgetMap = {};
+        this.kouhiDispWidgetMap = {};
         return this;
     }
 
@@ -127,16 +133,30 @@ export class PatientAndHokenEditWidget extends Widget {
         }
     }
 
-    createTableRow(rep, validFrom, validUpto, honninKazoku, editFun, deleteFun){
+    createTableRow(rep, validFrom, validUpto, honninKazoku, detailFun, editFun, deleteFun){
         let ele = $(tableRowHtml);
         let map = parseElement(ele);
         map.rep.text(rep);
         map.validFrom.text(validFrom);
         map.validUpto.text(validUpto);
         map.honnin.text(honninKazoku);
+        map.detail.on("click", event => detailFun());
         map.edit.on("click", event => editFun());
         map.delete.on("click", event => deleteFun());
         return ele;
+    }
+
+    doShahokokuhoDetail(shahokokuho){
+        let dispWidget = this.shahokokuhoDispWidgetMap[shahokokuho.shahokokuhoId];
+        if( !dispWidget ){
+            dispWidget = this.shahokokuhoDispWidgetFactory.create(shahokokuho);
+            dispWidget.prependTo(this.workareaElement);
+            dispWidget.onClose(() => { delete this.shahokokuhoDispWidgetMap[shahokokuho.shahokokuhoId]; });
+            this.shahokokuhoDispWidgetMap[shahokokuho.shahokokuhoId] = dispWidget;
+        } else {
+            dispWidget.detach();
+            dispWidget.prependTo(this.workareaElement);
+        }
     }
 
     setHokenList(hokenList){
@@ -146,28 +166,28 @@ export class PatientAndHokenEditWidget extends Widget {
         for(let shahokokuho of hokenList.shahokokuhoList){
             let tr = this.createTableRow(shahokokuho.rep, formatDate(shahokokuho.validFrom),
                 formatDate(shahokokuho.validUpto), honninToKanji(shahokokuho.honnin),
-                () => {}, () => {});
+                () => this.doShahokokuhoDetail(shahokokuho), () => {}, () => {});
             tbody.append(tr);
         }
         hokenList.koukikoureiList.sort(cmp);
         for(let koukikourei of hokenList.koukikoureiList){
             let tr = this.createTableRow(koukikourei.rep, formatDate(koukikourei.validFrom),
                 formatDate(koukikourei.validUpto), "",
-                () => {}, () => {});
+                () => {}, () => {}, () => {});
             tbody.append(tr);
         }
         hokenList.roujinList.sort(cmp);
         for(let roujin of hokenList.roujinList){
             let tr = this.createTableRow(roujin.rep, formatDate(roujin.validFrom),
                 formatDate(roujin.validUpto), "",
-                () => {}, () => {});
+                () => {}, () => {}, () => {});
             tbody.append(tr);
         }
         hokenList.kouhiList.sort(cmp);
         for(let kouhi of hokenList.kouhiList){
             let tr = this.createTableRow(kouhi.rep, formatDate(kouhi.validFrom),
                 formatDate(kouhi.validUpto), "",
-                () => {}, () => {});
+                () => {}, () => {}, () => {});
             tbody.append(tr);
         }
     }

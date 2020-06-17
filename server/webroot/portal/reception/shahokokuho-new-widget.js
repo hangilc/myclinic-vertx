@@ -20,7 +20,8 @@ export class ShahokokuhoNewWidget extends Widget {
 
     init(patientId){
         super.init();
-        this.form.init(patientId);
+        this.patientId = patientId;
+        this.form.init();
         this.closeElement.on("click", event => this.close());
         this.enterElement.on("click", event => this.doEnter());
         if( this.clearValidUptoElement ){
@@ -29,9 +30,8 @@ export class ShahokokuhoNewWidget extends Widget {
         return this;
     }
 
-    set(patientId){
+    set(){
         super.set();
-        this.patientId = patientId;
         return this;
     }
 
@@ -40,7 +40,11 @@ export class ShahokokuhoNewWidget extends Widget {
     }
 
     async doEnter(){
-        let data = this.form.get();
+        if( !(this.patientId > 0) ){
+            alert("患者が指定されていません。");
+            return;
+        }
+        let data = this.form.get(0, this.patientId);
         if( !data ){
             let err = this.form.getError();
             alert(err);

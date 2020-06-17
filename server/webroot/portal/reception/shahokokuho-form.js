@@ -10,8 +10,7 @@ export class ShahokokuhoForm {
         this.koureiElement = map.kourei;
     }
 
-    init(patientId){
-        this.patientId = patientId;
+    init(){
         return this;
     }
 
@@ -29,12 +28,7 @@ export class ShahokokuhoForm {
         this.validUptoElement.val(null);
     }
 
-    get(){
-        let patientId = this.patientId;
-        if( !(patientId > 0) ){
-            this.error = "患者が設定されていません。";
-            return undefined;
-        }
+    get(shahokokuhoId, patientId){
         let hokenshaBangouInput = this.hokenshaBangouElement.val();
         if( hokenshaBangouInput === "" ){
             this.error = "保険者番号が入力されていません。";
@@ -53,7 +47,7 @@ export class ShahokokuhoForm {
         }
         let honninInput = this.honninElement.val();
         let honnin = parseInt(honninInput);
-        if( !(honnin === 1 || honnin == 0) ){
+        if( !(honnin === 1 || honnin === 0) ){
             this.error = "本人・家族の入力が不適切です。";
             return undefined;
         }
@@ -74,6 +68,7 @@ export class ShahokokuhoForm {
             return undefined;
         }
         return {
+            shahokokuhoId,
             patientId,
             hokenshaBangou,
             hihokenshaKigou,

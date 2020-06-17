@@ -36,7 +36,8 @@ export class PatientAndHokenEditWidget extends Widget {
 
     init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory,
          kouhiNewWidgetFactory, shahokokuhoDispWidgetFactory,
-         koukikoureiDispWidgetFactory, roujinDispWidgetFactory,kouhiDispWidgetFactory){
+         koukikoureiDispWidgetFactory, roujinDispWidgetFactory,kouhiDispWidgetFactory,
+         shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory, kouhiEditWidgetFactory){
         super.init();
         this.patientEditWidgetFactory = patientEditWidgetFactory;
         this.shahokokuhoNewWidgetFactory = shahokokuhoNewWidgetFactory;
@@ -46,6 +47,9 @@ export class PatientAndHokenEditWidget extends Widget {
         this.koukikoureiDispWidgetFactory = koukikoureiDispWidgetFactory;
         this.roujinDispWidgetFactory = roujinDispWidgetFactory;
         this.kouhiDispWidgetFactory = kouhiDispWidgetFactory;
+        this.shahokokuhoEditWidgetFactory = shahokokuhoEditWidgetFactory;
+        this.koukikoureiEditWidgetFactory = koukikoureiEditWidgetFactory;
+        this.kouhiEditWidgetFactory = kouhiEditWidgetFactory;
         this.disp.init();
         setupDispConverters(this.disp);
         this.currentOnlyElement.on("change", event =>
@@ -106,6 +110,33 @@ export class PatientAndHokenEditWidget extends Widget {
     doNewKouhi(){
         let widget = this.kouhiNewWidgetFactory.create(this.patient.patientId);
         widget.onEntered(entered => {
+            let promise = this.reloadHoken();
+            widget.remove();
+        })
+        widget.prependTo(this.workareaElement);
+    }
+
+    doEditShahokokuho(shahokokuho){
+        let widget = this.shahokokuhoEditWidgetFactory.create(shahokokuho);
+        widget.onUpdated(updated => {
+            let promise = this.reloadHoken();
+            widget.remove();
+        })
+        widget.prependTo(this.workareaElement);
+    }
+
+    doEditKoukikourei(koukikourei){
+        let widget = this.koukikoureiEditWidgetFactory.create(koukikourei);
+        widget.onUpdated(updated => {
+            let promise = this.reloadHoken();
+            widget.remove();
+        })
+        widget.prependTo(this.workareaElement);
+    }
+
+    doEditKouhi(kouhi){
+        let widget = this.kouhiEditWidgetFactory.create(kouhi);
+        widget.onUpdated(updated => {
             let promise = this.reloadHoken();
             widget.remove();
         })
@@ -246,7 +277,7 @@ export class PatientAndHokenEditWidget extends Widget {
             let tr = this.createTableRow(shahokokuho.rep, formatDate(shahokokuho.validFrom),
                 formatDate(shahokokuho.validUpto), honninToKanji(shahokokuho.honnin),
                 () => this.doShahokokuhoDetail(shahokokuho),
-                () => {},
+                () => this.doEditShahokokuho(shahokokuho),
                 () => this.doShahokokuhoDelete(shahokokuho));
             tbody.append(tr);
         }
@@ -255,7 +286,7 @@ export class PatientAndHokenEditWidget extends Widget {
             let tr = this.createTableRow(koukikourei.rep, formatDate(koukikourei.validFrom),
                 formatDate(koukikourei.validUpto), "",
                 () => this.doKoukikoureiDetail(koukikourei),
-                () => {},
+                () => this.doEditKoukikourei(koukikourei),
                 () => this.doKoukikoureiDelete(koukikourei));
             tbody.append(tr);
         }
@@ -264,7 +295,7 @@ export class PatientAndHokenEditWidget extends Widget {
             let tr = this.createTableRow(roujin.rep, formatDate(roujin.validFrom),
                 formatDate(roujin.validUpto), "",
                 () => this.doRoujinDetail(roujin),
-                () => {},
+                () => { alert("Not implemented."); },
                 () => this.doRoujinDelete(roujin));
             tbody.append(tr);
         }
@@ -273,7 +304,7 @@ export class PatientAndHokenEditWidget extends Widget {
             let tr = this.createTableRow(kouhi.rep, formatDate(kouhi.validFrom),
                 formatDate(kouhi.validUpto), "",
                 () => this.doKouhiDetail(kouhi),
-                () => {},
+                () => this.doEditKouhi(kouhi),
                 () => this.doKouhiDelete(kouhi));
             tbody.append(tr);
         }

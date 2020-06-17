@@ -19,7 +19,8 @@ export class KoukikoureiNewWidget extends Widget {
 
     init(patientId){
         super.init();
-        this.form.init(patientId);
+        this.patientId = patientId;
+        this.form.init();
         this.closeElement.on("click", event => this.close());
         this.enterElement.on("click", event => this.doEnter());
         if( this.clearValidUptoElement ){
@@ -38,7 +39,12 @@ export class KoukikoureiNewWidget extends Widget {
     }
 
     async doEnter(){
-        let data = this.form.get();
+        let patientId = this.patientId;
+        if( !(patientId > 0) ){
+            alert("患者が設定されていません。");
+            return null;
+        }
+        let data = this.form.get(0, patientId);
         if( !data ){
             let err = this.form.getError();
             alert(err);

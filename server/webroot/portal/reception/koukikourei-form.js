@@ -8,12 +8,12 @@ export class KoukikoureiForm {
         this.futanWariElement = map.futanWari;
     }
 
-    init(patientId){
-        this.patientId = patientId;
+    init(){
+        return this;
     }
 
     set(){
-
+        return this;
     }
 
     getError(){
@@ -26,12 +26,7 @@ export class KoukikoureiForm {
         this.validUptoElement.val(null);
     }
 
-    get(){
-        let patientId = this.patientId;
-        if( !(patientId > 0) ){
-            this.error = "患者が設定されていません。";
-            return undefined;
-        }
+    get(koukikoureiId, patientId){
         let hokenshaBangouInput = this.hokenshaBangouElement.val();
         if( hokenshaBangouInput === "" ){
             this.error = "保険者番号が入力されていません。";
@@ -69,6 +64,7 @@ export class KoukikoureiForm {
             return undefined;
         }
         return {
+            koukikoureiId,
             patientId,
             hokenshaBangou,
             hihokenshaBangou,

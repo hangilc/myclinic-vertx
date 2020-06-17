@@ -14,7 +14,24 @@ export class ShahokokuhoForm {
         return this;
     }
 
-    set(){
+    set(shahokokuho){
+        if( shahokokuho ){
+            this.hokenshaBangouElement.val(shahokokuho.hokenshaBangou);
+            this.hihokenshaKigouElement.val(shahokokuho.hihokenshaKigou);
+            this.hihokenshaBangouElement.val(shahokokuho.hihokenshaBangou);
+            this.honninElement.val(shahokokuho.honnin);
+            this.validFromElement.val(shahokokuho.validFrom);
+            this.validUptoElement.val(shahokokuho.validUpto);
+            this.koureiElement.val(shahokokuho.kourei);
+        } else {
+            this.hokenshaBangouElement.val(null);
+            this.hihokenshaKigouElement.val(null);
+            this.hihokenshaBangouElement.val(null);
+            this.honninElement.val(null);
+            this.validFromElement.val(null);
+            this.validUptoElement.val(null);
+            this.koureiElement.val(null);
+        }
         return this;
     }
 

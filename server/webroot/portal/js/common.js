@@ -389,16 +389,32 @@ class Rest extends Client {
         return await this.post("/enter-shahokokuho", shahokokuho);
     }
 
+    async updateShahokokuho(shahokokuho){
+        return await this.post("/update-shahokokuho", shahokokuho);
+    }
+
     async enterKoukikourei(koukikourei){
         return await this.post("/enter-koukikourei", koukikourei);
+    }
+
+    async updateKoukikourei(koukikourei){
+        return await this.post("/update-koukikourei", koukikourei);
     }
 
     async enterRoujin(roujin){
         return await this.post("/enter-roujin", roujin);
     }
 
+    async updateRoujin(roujin){
+        return await this.post("/update-roujin", roujin);
+    }
+
     async enterKouhi(kouhi){
         return await this.post("/enter-kouhi", kouhi);
+    }
+
+    async updateKouhi(kouhi){
+        return await this.post("/update-kouhi", kouhi);
     }
 
     async getShahokokuho(shahokokuhoId){

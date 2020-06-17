@@ -33,10 +33,11 @@ export class PatientAndHokenEditWidget extends Widget {
         this.patientEditWidget = null;
     }
 
-    init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory){
+    init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory){
         super.init();
         this.patientEditWidgetFactory = patientEditWidgetFactory;
         this.shahokokuhoNewWidgetFactory = shahokokuhoNewWidgetFactory;
+        this.koukikoureiNewWidgetFactory = koukikoureiNewWidgetFactory;
         this.disp.init();
         this.setupDispConverters(this.disp);
         this.currentOnlyElement.on("change", event =>
@@ -44,6 +45,7 @@ export class PatientAndHokenEditWidget extends Widget {
         this.closeElement.on("click", event => this.close());
         this.editBasicElement.on("click", event => this.doEditBasic());
         this.newShahokokuhoElement.on("click", event => this.doNewShahokokuho());
+        this.newKoukikoureiElement.on("click", event => this.doNewKoukikourei());
         return this;
     }
 
@@ -73,7 +75,16 @@ export class PatientAndHokenEditWidget extends Widget {
     doNewShahokokuho(){
         let widget = this.shahokokuhoNewWidgetFactory.create(this.patient.patientId);
         widget.onEntered(entered => {
-            this.reloadHoken();
+            let promise = this.reloadHoken();
+            widget.remove();
+        })
+        widget.prependTo(this.workareaElement);
+    }
+
+    doNewKoukikourei(){
+        let widget = this.koukikoureiNewWidgetFactory.create(this.patient.patientId);
+        widget.onEntered(entered => {
+            let promise = this.reloadHoken();
             widget.remove();
         })
         widget.prependTo(this.workareaElement);

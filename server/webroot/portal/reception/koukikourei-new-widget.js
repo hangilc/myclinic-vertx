@@ -1,18 +1,17 @@
 import {Widget} from "./widget.js";
-import {DateInput} from "./date-input.js";
-import {ShahokokuhoForm} from "./shahokokuho-form.js";
 import {RadioInput} from "./radio-input.js";
+import {DateInput} from "./date-input.js";
+import {KoukikoureiForm} from "./koukikourei-form.js";
 
-export class ShahokokuhoNewWidget extends Widget {
+export class KoukikoureiNewWidget extends Widget {
     constructor(ele, map, rest){
         super(ele, map, rest);
         let formMap = Object.assign({}, map.form, {
-            honnin: new RadioInput(map.form_, "honnin"),
             validFrom: new DateInput(map.form.validFrom),
             validUpto: (new DateInput(map.form.validUpto)).allowEmpty(),
-            kourei: new RadioInput(map.form_, "kourei")
+            futanWari: new RadioInput(map.form_, "futan-wari")
         });
-        this.form = new ShahokokuhoForm(formMap);
+        this.form = new KoukikoureiForm(formMap);
         this.closeElement = map.close;
         this.enterElement = map.enter;
         this.clearValidUptoElement = map.form.validUpto.clearValidUpto;
@@ -29,9 +28,8 @@ export class ShahokokuhoNewWidget extends Widget {
         return this;
     }
 
-    set(patientId){
+    set(){
         super.set();
-        this.patientId = patientId;
         return this;
     }
 
@@ -46,8 +44,9 @@ export class ShahokokuhoNewWidget extends Widget {
             alert(err);
             return;
         }
-        let shahokokuhoId = await this.rest.enterShahokokuho(data);
-        let entered = await this.rest.getShahokokuho(shahokokuhoId);
+        let koukikoureiId = await this.rest.enterKoukikourei(data);
+        let entered = await this.rest.getKoukikourei(koukikoureiId);
         this.trigger("entered", entered);
     }
+
 }

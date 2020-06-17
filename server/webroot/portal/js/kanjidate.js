@@ -88,6 +88,9 @@ export function sqldateToKanji(sqldate, opts){
     if( !opts ){
         opts = {};
     }
+    if( "zeroValue" in opts && sqldate === "0000-00-00" ){
+        return opts.zeroValue;
+    }
     let data = sqldateToData(sqldate);
     let gengou = data.gengou.name;
     let nen = "" + data.nen;

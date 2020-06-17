@@ -14,7 +14,6 @@ export class ShahokokuhoDisp {
     }
 
     set(shahokokuho){
-        console.log("shahokokuho", shahokokuho);
         if( shahokokuho ){
             this.hokenshaBangouElement.text(shahokokuho.hokenshaBangou);
             this.hihokenshaKigouElement.text(shahokokuho.hihokenshaKigou);

@@ -20,7 +20,7 @@ export class ShahokokuhoDispWidget extends Widget {
         let data = Object.assign({}, shahokokuho, {
             honnin: honninRep(shahokokuho.honnin),
             validFrom: kanjidate.sqldateToKanji(shahokokuho.validFrom),
-            validUpto: kanjidate.sqldateToKanji(shahokokuho.validUpto),
+            validUpto: kanjidate.sqldateToKanji(shahokokuho.validUpto, {zeroValue: ""}),
             kourei: koureiRep(shahokokuho.kourei)
         });
         this.disp.set(data);
@@ -44,3 +44,5 @@ function koureiRep(kourei){
         return kourei + "割";
     }
 }
+
+

@@ -35,13 +35,17 @@ export class PatientAndHokenEditWidget extends Widget {
     }
 
     init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory,
-         kouhiNewWidgetFactory, shahokokuhoDispWidgetFactory){
+         kouhiNewWidgetFactory, shahokokuhoDispWidgetFactory,
+         koukikoureiDispWidgetFactory, roujinDispWidgetFactory,kouhiDispWidgetFactory){
         super.init();
         this.patientEditWidgetFactory = patientEditWidgetFactory;
         this.shahokokuhoNewWidgetFactory = shahokokuhoNewWidgetFactory;
         this.koukikoureiNewWidgetFactory = koukikoureiNewWidgetFactory;
         this.kouhiNewWidgetFactory = kouhiNewWidgetFactory;
         this.shahokokuhoDispWidgetFactory = shahokokuhoDispWidgetFactory;
+        this.koukikoureiDispWidgetFactory = koukikoureiDispWidgetFactory;
+        this.roujinDispWidgetFactory = roujinDispWidgetFactory;
+        this.kouhiDispWidgetFactory = kouhiDispWidgetFactory;
         this.disp.init();
         this.setupDispConverters(this.disp);
         this.currentOnlyElement.on("change", event =>
@@ -159,6 +163,45 @@ export class PatientAndHokenEditWidget extends Widget {
         }
     }
 
+    doKoukikoureiDetail(koukikourei){
+        let dispWidget = this.koukikoureiDispWidgetMap[koukikourei.koukikoureiId];
+        if( !dispWidget ){
+            dispWidget = this.koukikoureiDispWidgetFactory.create(koukikourei);
+            dispWidget.prependTo(this.workareaElement);
+            dispWidget.onClose(() => { delete this.koukikoureiDispWidgetMap[koukikourei.koukikoureiId]; });
+            this.koukikoureiDispWidgetMap[koukikourei.koukikoureiId] = dispWidget;
+        } else {
+            dispWidget.detach();
+            dispWidget.prependTo(this.workareaElement);
+        }
+    }
+
+    doRoujinDetail(roujin){
+        let dispWidget = this.roujinDispWidgetMap[roujin.roujinId];
+        if( !dispWidget ){
+            dispWidget = this.roujinDispWidgetFactory.create(roujin);
+            dispWidget.prependTo(this.workareaElement);
+            dispWidget.onClose(() => { delete this.roujinDispWidgetMap[roujin.roujinId]; });
+            this.roujinDispWidgetMap[roujin.roujinId] = dispWidget;
+        } else {
+            dispWidget.detach();
+            dispWidget.prependTo(this.workareaElement);
+        }
+    }
+
+    doKouhiDetail(kouhi){
+        let dispWidget = this.kouhiDispWidgetMap[kouhi.kouhiId];
+        if( !dispWidget ){
+            dispWidget = this.kouhiDispWidgetFactory.create(kouhi);
+            dispWidget.prependTo(this.workareaElement);
+            dispWidget.onClose(() => { delete this.kouhiDispWidgetMap[kouhi.kouhiId]; });
+            this.kouhiDispWidgetMap[kouhi.kouhiId] = dispWidget;
+        } else {
+            dispWidget.detach();
+            dispWidget.prependTo(this.workareaElement);
+        }
+    }
+
     setHokenList(hokenList){
         let tbody = this.hokenListElement.find("tbody").html("");
         let cmp = compareBy("-validFrom");
@@ -166,28 +209,36 @@ export class PatientAndHokenEditWidget extends Widget {
         for(let shahokokuho of hokenList.shahokokuhoList){
             let tr = this.createTableRow(shahokokuho.rep, formatDate(shahokokuho.validFrom),
                 formatDate(shahokokuho.validUpto), honninToKanji(shahokokuho.honnin),
-                () => this.doShahokokuhoDetail(shahokokuho), () => {}, () => {});
+                () => this.doShahokokuhoDetail(shahokokuho),
+                () => {},
+                () => {});
             tbody.append(tr);
         }
         hokenList.koukikoureiList.sort(cmp);
         for(let koukikourei of hokenList.koukikoureiList){
             let tr = this.createTableRow(koukikourei.rep, formatDate(koukikourei.validFrom),
                 formatDate(koukikourei.validUpto), "",
-                () => {}, () => {}, () => {});
+                () => this.doKoukikoureiDetail(koukikourei),
+                () => {},
+                () => {});
             tbody.append(tr);
         }
         hokenList.roujinList.sort(cmp);
         for(let roujin of hokenList.roujinList){
             let tr = this.createTableRow(roujin.rep, formatDate(roujin.validFrom),
                 formatDate(roujin.validUpto), "",
-                () => {}, () => {}, () => {});
+                () => this.doRoujinDetail(roujin),
+                () => {},
+                () => {});
             tbody.append(tr);
         }
         hokenList.kouhiList.sort(cmp);
         for(let kouhi of hokenList.kouhiList){
             let tr = this.createTableRow(kouhi.rep, formatDate(kouhi.validFrom),
                 formatDate(kouhi.validUpto), "",
-                () => {}, () => {}, () => {});
+                () => this.doKouhiDetail(kouhi),
+                () => {},
+                () => {});
             tbody.append(tr);
         }
     }

@@ -55,10 +55,25 @@ export class PatientAndHokenEditWidget extends Widget {
         return this;
     }
 
+    isCurrentOnly(){
+        return this.currentOnlyElement.is(":checked");
+    }
+
+    async reloadHoken(){
+        let helper = new HokenHelper(this.rest);
+        if( this.isCurrentOnly() ){
+            let hokenList = await helper.fetchAvailableHoken(this.patient.patientId, kanjidate.todayAsSqldate());
+            this.setHokenList(hokenList);
+        } else {
+            let hokenList = await helper.fetchAllHoken(this.patient.patientId);
+            this.setHokenList(hokenList);
+        }
+    }
+
     doNewShahokokuho(){
         let widget = this.shahokokuhoNewWidgetFactory.create(this.patient.patientId);
         widget.onEntered(entered => {
-            console.log("new-shahokokuho", entered);
+            this.reloadHoken();
             widget.remove();
         })
         widget.prependTo(this.workareaElement);

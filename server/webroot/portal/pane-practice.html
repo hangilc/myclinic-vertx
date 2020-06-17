@@ -960,6 +960,12 @@
             }
         }
 
+        let onCurrentVisitIdChanged = [];
+
+        function changeCurrentVisitId(currentVisitId){
+            onCurrentVisitIdChanged.forEach(cb => cb(currentVisitId));
+        }
+
         let onTempVisitIdChanged = [];
 
         function changeTempVisitId(tempVisitId){
@@ -980,6 +986,7 @@
             currentVisitManager.setCurrentVisitId(visitId);
         });
 
+        onCurrentVisitIdChanged.push(currentVisitId => currentVisitManager.setCurrentVisitId(currentVisitId));
         onTempVisitIdChanged.push(tempVisitId => currentVisitManager.setTempVisitId(tempVisitId));
 
         function getTemplateHtml(templateId) {
@@ -1480,7 +1487,13 @@
                     this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
                     this.shinryouRegularDialogFactory, this.conductDispFactory,
                     this.drugDispFactory, this.sendFaxFactory, this.chargeFactory);
-                record.onDeleted(event => record.remove());
+                record.onDeleted(event => {
+                    let visitId = visitFull.visit.visitId;
+                    if( visitId === currentVisitManager.getCurrentVisitId() ){
+                        changeCurrentVisitId(0);
+                    }
+                    record.remove();
+                });
                 record.onTempVisit(event =>
                     currentVisitManager.setTempVisitId(visitFull.visit.visitId));
                 record.onClearTempVisit(event => currentVisitManager.setTempVisitId(0));
@@ -1497,23 +1510,11 @@
 
         async function suspendCurrentVisit() {
             let curr = currentVisitManager.getCurrentVisitId();
+            console.log("suspendCurrentVisit", curr);
             if (curr > 0) {
                 await rest.suspendExam(curr);
             }
         }
-
-        // async function startPatient(patientId) {
-        //     await suspendCurrentVisit();
-        //     currentVisitManager.setCurrentVisitId(0);
-        //     currentPatientManager.setCurrentPatientId(patientId);
-        // }
-        //
-        // async function startVisit(visitId) {
-        //     await suspendCurrentVisit();
-        //     currentVisitManager.setCurrentVisitId(visitId);
-        //     let visit = await rest.getVisit(visitId);
-        //     currentPatientManager.setCurrentPatientId(visit.patientId);
-        // }
 
         (function () {
             let map = parseElement($("#practice-select-patient-menu"));

@@ -47,7 +47,7 @@ export class PatientAndHokenEditWidget extends Widget {
         this.roujinDispWidgetFactory = roujinDispWidgetFactory;
         this.kouhiDispWidgetFactory = kouhiDispWidgetFactory;
         this.disp.init();
-        this.setupDispConverters(this.disp);
+        setupDispConverters(this.disp);
         this.currentOnlyElement.on("change", event =>
             this.doCurrentOnlyChanged(this.currentOnlyElement.is(":checked")));
         this.closeElement.on("click", event => this.close());
@@ -202,6 +202,42 @@ export class PatientAndHokenEditWidget extends Widget {
         }
     }
 
+    async doShahokokuhoDelete(shahokokuho){
+        if( confirm("この社保国保を削除しますか？") ){
+            let data = Object.assign({}, shahokokuho);
+            delete data.rep;
+            await this.rest.deleteShahokokuho(data);
+            await this.reloadHoken();
+        }
+    }
+
+    async doKoukikoureiDelete(koukikourei){
+        if( confirm("この後期高齢保険を削除しますか？") ){
+            let data = Object.assign({}, koukikourei);
+            delete data.rep;
+            await this.rest.deleteKoukikourei(data);
+            await this.reloadHoken();
+        }
+    }
+
+    async doRoujinDelete(roujin){
+        if( confirm("この老人保険を削除しますか？") ){
+            let data = Object.assign({}, roujin);
+            delete data.rep;
+            await this.rest.deleteRoujin(data);
+            await this.reloadHoken();
+        }
+    }
+
+    async doKouhiDelete(kouhi){
+        if( confirm("この高位負担を削除しますか？") ){
+            let data = Object.assign({}, kouhi);
+            delete data.rep;
+            await this.rest.deleteKouhi(data);
+            await this.reloadHoken();
+        }
+    }
+
     setHokenList(hokenList){
         let tbody = this.hokenListElement.find("tbody").html("");
         let cmp = compareBy("-validFrom");
@@ -211,7 +247,7 @@ export class PatientAndHokenEditWidget extends Widget {
                 formatDate(shahokokuho.validUpto), honninToKanji(shahokokuho.honnin),
                 () => this.doShahokokuhoDetail(shahokokuho),
                 () => {},
-                () => {});
+                () => this.doShahokokuhoDelete(shahokokuho));
             tbody.append(tr);
         }
         hokenList.koukikoureiList.sort(cmp);
@@ -220,7 +256,7 @@ export class PatientAndHokenEditWidget extends Widget {
                 formatDate(koukikourei.validUpto), "",
                 () => this.doKoukikoureiDetail(koukikourei),
                 () => {},
-                () => {});
+                () => this.doKoukikoureiDelete(koukikourei));
             tbody.append(tr);
         }
         hokenList.roujinList.sort(cmp);
@@ -229,7 +265,7 @@ export class PatientAndHokenEditWidget extends Widget {
                 formatDate(roujin.validUpto), "",
                 () => this.doRoujinDetail(roujin),
                 () => {},
-                () => {});
+                () => this.doRoujinDelete(roujin));
             tbody.append(tr);
         }
         hokenList.kouhiList.sort(cmp);
@@ -238,17 +274,11 @@ export class PatientAndHokenEditWidget extends Widget {
                 formatDate(kouhi.validUpto), "",
                 () => this.doKouhiDetail(kouhi),
                 () => {},
-                () => {});
+                () => this.doKouhiDelete(kouhi));
             tbody.append(tr);
         }
     }
 
-    setupDispConverters(disp){
-        disp.setBirthdayConv(birthday => this.disp.birthdayAsKanji(birthday, {
-            suffix: "生"
-        }) + " " + this.disp.calcAge(birthday) + "才");
-        disp.setSexConv(sex => this.disp.sexAsKanji(sex));
-    }
 
 }
 
@@ -263,3 +293,11 @@ function formatDate(sqldate){
         return kanjidate.sqldateToKanji(sqldate, {padZero: true});
     }
 }
+
+function setupDispConverters(disp){
+    disp.setBirthdayConv(birthday => disp.birthdayAsKanji(birthday, {
+        suffix: "生"
+    }) + " " + disp.calcAge(birthday) + "才");
+    disp.setSexConv(sex => disp.sexAsKanji(sex));
+}
+

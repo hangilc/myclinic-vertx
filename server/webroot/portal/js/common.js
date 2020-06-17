@@ -417,6 +417,22 @@ class Rest extends Client {
         return await this.get("/get-kouhi", {"kouhi-id": kouhiId});
     }
 
+    async deleteShahokokuho(shahokokuho){
+        return await this.post("/delete-shahokokuho", shahokokuho);
+    }
+
+    async deleteKoukikourei(koukikourei){
+        return await this.post("/delete-koukikourei", koukikourei);
+    }
+
+    async deleteRoujin(roujin){
+        return await this.post("/delete-roujin", roujin);
+    }
+
+    async deleteKouhi(kouhi){
+        return await this.post("/delete-kouhi", kouhi);
+    }
+
 }
 
 class Integration extends Client {

@@ -7,12 +7,12 @@ export class KouhiForm {
         this.validUptoElement = map.validUpto;
     }
 
-    init(patientId){
-        this.patientId = patientId;
+    init(){
+        return this;
     }
 
     set(){
-
+        return this;
     }
 
     getError(){
@@ -25,12 +25,7 @@ export class KouhiForm {
         this.validUptoElement.val(null);
     }
 
-    get(){
-        let patientId = this.patientId;
-        if( !(patientId > 0) ){
-            this.error = "患者が設定されていません。";
-            return undefined;
-        }
+    get(kouhiId, patientId){
         let futanshaInput = this.futanshaElement.val();
         if( futanshaInput === "" ){
             this.error = "負担者番号が入力されていません。";

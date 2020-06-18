@@ -822,7 +822,7 @@
                     <input type="radio" name="search-kind"
                            value="byoumei" checked> 病名
                     <input type="radio" name="search-kind"
-                            value="adj"> 修飾語
+                           value="adj"> 修飾語
                 </div>
             </form>
             <div class="mt-1">
@@ -888,7 +888,6 @@
         let {ChoosePatientDialog} = await import("./practice/choose-patient-dialog.js");
         let {PatientDisplay} = await import("./practice/patient-display.js");
         let DrawerSvg = await import("./js/drawer-svg.js");
-        let {CurrentVisitManager} = await import("./practice/current-visit-manager.js");
         let {Component} = await import("./practice/component.js");
         let {Title} = await import("./practice/title.js");
         let {SelectWqueueDialog} = await import("./practice/select-wqueue-dialog.js");
@@ -923,71 +922,19 @@
         let {DiseasePanel} = await import("./practice/disease-panel.js");
         let {SearchTextForPatientDialog} = await import("./practice/search-text-for-patient-dialog.js");
         let {SearchTextGloballyDialog} = await import("./practice/search-text-globally-dialog.js");
+        let {PracticeState} = await import("./practice/practice-state.js");
+
+        let practiceState = new PracticeState(rest);
+
+        class CurrentVisitManager {
+            resolveCopyTarget(){
+                return practiceState.getVisitId() || practiceState.getTempVisitId();
+            }
+        }
 
         let currentVisitManager = new CurrentVisitManager();
 
-        let onPatientChanged = [];
-        let onPatientLoaded = [];
-        let onDiseasesLoaded = [];
-
-        async function startPatient(patientId, visitId){
-            onPatientChanged.forEach(cb => cb(patientId, visitId));
-            let patient = null;
-            if( patientId > 0 ){
-                patient = await rest.getPatient(patientId);
-            }
-            onPatientLoaded.forEach(cb => cb(null));
-            loadRecords(patientId, 1);
-            let diseaseFulls = null;
-            if( patientId > 0 ){
-                diseaseFulls = await rest.listCurrentDisease(patientId);
-            }
-            onDiseasesLoaded.forEach(cb => cb(diseaseFulls));
-        }
-
-        let onRecordsLoaded = [];
-
-        async function loadRecords(patientId, page){
-            let records = null;
-            if( patientId > 0 ){
-                let visitPage = await rest.listVisit(patientId, page - 1);
-                visitPage.visits.forEach(async visit => {
-                    visit.hokenRep = await getHokenRep(visit.hoken);
-                });
-                onRecordsLoaded.forEach(cb => cb(visitPage));
-            } else {
-                onRecordsLoaded.forEach(cb => cb(null));
-            }
-        }
-
-        let onCurrentVisitIdChanged = [];
-
-        function changeCurrentVisitId(currentVisitId){
-            onCurrentVisitIdChanged.forEach(cb => cb(currentVisitId));
-        }
-
-        let onTempVisitIdChanged = [];
-
-        function changeTempVisitId(tempVisitId){
-            onTempVisitIdChanged.forEach(cb => cb(tempVisitId));
-        }
-
-        let getCurrentPatientId = (function(){
-            let currentPatientId = 0;
-            onPatientChanged.push((patientId, visitId) => {
-                currentPatientId = patientId;
-            });
-            return function(){
-                return currentPatientId;
-            }
-        })();
-
-        onPatientChanged.push((patientId, visitId) => {
-            currentVisitManager.setCurrentVisitId(visitId);
-        });
-
-        onCurrentVisitIdChanged.push(currentVisitId => currentVisitManager.setCurrentVisitId(currentVisitId));
-        onTempVisitIdChanged.push(tempVisitId => currentVisitManager.setTempVisitId(tempVisitId));
+        let getCurrentPatientId = practiceState.getPatientId();
 
         function getTemplateHtml(templateId) {
             let html = $("template#" + templateId).html();
@@ -1044,7 +991,7 @@
                 this.html = getTemplateHtml("practice-search-text-dialog-template");
             }
 
-            create(patientId){
+            create(patientId) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let dialog = new SearchTextGloballyDialog(ele, map, rest);
@@ -1054,7 +1001,7 @@
             }
         }
 
-        (function(){
+        (function () {
             let searchTextGloballyDialogFactory = new SearchTextGloballyDialogFactory();
             $("#practice-search-text-globally").on("click", async event => {
                 let dialog = searchTextGloballyDialogFactory.create();
@@ -1118,21 +1065,20 @@
             }
         }
 
-        (function () {
+        let patientInfo = (function () {
             let ele = $("#practice-patient-info");
             let map = parseElement(ele);
-            let patientInfo = new PatientInfo(ele, map);
-            onPatientChanged.push(async (patientId, visitId) => {
-                if (patientId === 0) {
-                    patientInfo.hide();
-                    patientInfo.clear();
-                } else {
-                    let patient = await rest.getPatient(patientId);
-                    patientInfo.setPatient(patient);
-                    patientInfo.show();
-                }
-            });
+            return new PatientInfo(ele, map);
         })();
+
+        practiceState.onPatientIdChanged(async patientId => {
+            if (patientId === 0) {
+                patientInfo.setPatient(null);
+            } else {
+                let patient = await rest.getPatient(patientId);
+                patientInfo.setPatient(patient);
+            }
+        });
 
         class MeisaiDialogFactory {
             constructor() {
@@ -1153,7 +1099,7 @@
                 this.html = getTemplateHtml("practice-search-text-dialog-template");
             }
 
-            create(patientId){
+            create(patientId) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let dialog = new SearchTextForPatientDialog(ele, map, rest);
@@ -1169,8 +1115,16 @@
             let meisaiDialogFactory = new MeisaiDialogFactory();
             let searchTextForPatientDialogFactory = new SearchTextForPatientDialogFactory();
 
+            practiceState.onPatientIdChanged(patientId => {
+                if (patientId === 0) {
+                    ele.addClass("d-none");
+                } else {
+                    ele.removeClass("d-none");
+                }
+            });
+
             map.cashier.on("click", async event => {
-                let visitId = currentVisitManager.getCurrentVisitId();
+                let visitId = practiceState.getVisitId();
                 if (visitId <= 0) {
                     alert("現在診察注ではないので、会計はできません。");
                     return;
@@ -1179,14 +1133,17 @@
                 let dialog = meisaiDialogFactory.create(meisai);
                 let result = await dialog.open();
                 if (result) {
-                    await rest.endExam(visitId, meisai.charge);
-                    startPatient(0, 0);
+                    await practiceState.endExam(visitId, meisai.chage);
                 }
             });
 
             map.end.on("click", async event => {
-                await suspendCurrentVisit();
-                startPatient(0, 0);
+                let visitId = practiceState.getVisitId();
+                if (visitId > 0) {
+                    await practiceState.suspendExam(visitId);
+                } else if (practiceStae.getPatientId() > 0) {
+                    practiceState.endPatient();
+                }
             });
 
             map.searchText.on("click", async event => {
@@ -1198,20 +1155,12 @@
                 console.log("refer");
             });
 
-            onPatientChanged.push((patientId, visitId) => {
-                if (patientId === 0) {
-                    ele.addClass("d-none");
-                } else {
-                    ele.removeClass("d-none");
-                }
-            });
         })();
 
         class TitleFactory {
             constructor() {
                 this.html = $("template#practice-title-template").html();
                 this.rest = rest;
-                this.currentVisitManager = currentVisitManager;
             }
 
             create(visit) {
@@ -1219,9 +1168,9 @@
                 let map = parseElement(ele);
                 let comp = new Title(ele, map, rest);
                 comp.init(visit, "current-visit", "temp-visit");
-                if (visit.visitId === currentVisitManager.getCurrentVisitId()) {
+                if (visit.visitId === practiceState.getVisitId()) {
                     comp.markAsCurrent();
-                } else if (visit.visitId === currentVisitManager.getTempVisitId()) {
+                } else if (visit.visitId === practiceState.getTempVisitId()) {
                     comp.markAsTemp();
                 }
                 return comp;
@@ -1487,16 +1436,13 @@
                     this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
                     this.shinryouRegularDialogFactory, this.conductDispFactory,
                     this.drugDispFactory, this.sendFaxFactory, this.chargeFactory);
-                record.onDeleted(event => {
-                    let visitId = visitFull.visit.visitId;
-                    if( visitId === currentVisitManager.getCurrentVisitId() ){
-                        changeCurrentVisitId(0);
-                    }
+                record.onDelete(async visitId => {
+                    await practiceState.deleteVisit(visitId);
                     record.remove();
                 });
-                record.onTempVisit(event =>
-                    currentVisitManager.setTempVisitId(visitFull.visit.visitId));
-                record.onClearTempVisit(event => currentVisitManager.setTempVisitId(0));
+                record.onTempVisit(visitId =>
+                    practiceState.setTempVisitId(visitId));
+                record.onClearTempVisit(() => practiceState.setTempVisitId(0));
                 record.onFaxSent(async (event, data) => {
                     let patient = await rest.getPatient(visitFull.visit.patientId);
                     let compProgress = this.faxProgressFactory.create(patient, data.faxNumber,
@@ -1508,100 +1454,73 @@
             }
         }
 
-        async function suspendCurrentVisit() {
-            let curr = currentVisitManager.getCurrentVisitId();
-            console.log("suspendCurrentVisit", curr);
-            if (curr > 0) {
-                await rest.suspendExam(curr);
-            }
-        }
-
         (function () {
             let map = parseElement($("#practice-select-patient-menu"));
+
+            async function clearState() {
+                let patientId = practiceState.getPatientId();
+                let visitId = practiceState.getVisitId();
+                if (patientId > 0 && visitId === 0) {
+                    practiceState.endPatient();
+                } else if (patientId > 0 && visitId > 0) {
+                    await practiceState.suspendExam(visitId);
+                } else {
+                    practiceState.setTempVisitId(0);
+                }
+            }
+
             map.wqueue.on("click", async event => {
                 let result = await selectWqueueDialog.open();
                 if (result.mode === "selected") {
                     let wqueueFull = result.data;
-                    let visitId = wqueueFull.visit.visitId
-                    await rest.startExam(visitId);
-                    startPatient(wqueueFull.visit.patientId, visitId);
+                    let visitId = wqueueFull.visit.visitId;
+                    let patientId = wqueueFull.patient.patientId;
+                    await clearState();
+                    await practiceState.startExam(patientId, visitId);
                 }
             });
+
             map.search.on("click", async event => {
                 let result = await choosePatientDialog.open();
                 if (result.mode === "enter") {
-                    let patient = result.patient;
-                    startPatient(patient.patientId, 0);
+                    let patientId = result.patient.patientId;
+                    await clearState();
+                    practiceState.startPatient(patientId);
                 } else if (result.mode === "register-enter") {
                     let visitId = result.visitId;
-                    let curr = currentVisitManager.getCurrentVisitId();
-                    if (curr > 0) {
-                        await rest.suspendExam(curr);
-                    }
-                    await rest.startExam(visitId);
-                    let patient = result.patient;
-                    startPatient(patient.patientId, result.visitId);
+                    let patientId = result.patient.patientId;
+                    await clearState();
+                    await practiceState.startExam(patientId, visitId);
                 }
             });
+
             map.recent.on("click", async event => {
                 let result = await selectRecentVisitDialog.open();
                 if (result.mode === "selected") {
-                    let patient = result.data.patient;
-                    startPatient(patient.patientId, 0);
+                    let patientId = result.data.patient.patientId;
+                    await clearState();
+                    await practiceState.startPatient(patientId);
                 }
             });
+
             map.today.on("click", async event => {
                 let result = await selectTodaysVisitDialog.open();
                 if (result.mode === "selected") {
-                    let patient = result.data.patient;
-                    startPatient(patient.patientId, 0);
+                    let patientId = result.data.patient.patientId;
+                    await clearState();
+                    await practiceState.startPatient(patientId);
                 }
             });
+
             map.prev.on("click", async event => {
                 let result = await selectPreviousVisitDialog.open();
                 if (result.mode === "selected") {
-                    let patient = result.data.patient;
-                    startPatient(patient.patientId, 0);
+                    let patientId = result.data.patient.patientId;
+                    await clearState();
+                    await practiceState.startPatient(patientId);
                 }
             });
         })();
-
-        class NavFactory {
-            constructor() {
-                this.html = getTemplateHtml("practice-nav-template");
-            }
-
-            create() {
-                let ele = $(this.html);
-                let map = parseElement(ele);
-                let comp = new Nav(ele, map, rest);
-                comp.init();
-                return comp;
-            }
-
-        }
-
-        let navs = (function () {
-            let navFactory = new NavFactory();
-            let result = [
-                navFactory.create().appendTo($("#practice-nav-upper")),
-                navFactory.create().appendTo($("#practice-nav-lower"))
-            ];
-            result.forEach(nav => {
-                nav.onChange((event, page) => {
-                    loadRecords(getCurrentPatientId(), page);
-                });
-            });
-            return result;
-        })();
-
-        onRecordsLoaded.push(page => {
-            if( page ){
-                navs.forEach(nav => nav.set(page.page + 1, page.totalPages));
-            } else {
-                navs.forEach(nav => nav.set(0, 0));
-            }
-        });
 
         class DiseaseCurrentFactory {
             constructor() {
@@ -1709,17 +1628,55 @@
             return comp;
         })();
 
-        onDiseasesLoaded.push(diseaseFulls => {
-            if( diseaseFulls ){
-                diseaseArea.set(getCurrentPatientId(), diseaseFulls);
-                diseaseArea.current();
-            } else {
+        practiceState.onPatientIdChanged(async patientId => {
+            if( patientId === 0 ){
                 diseaseArea.set(0, null);
-
+            } else {
+                let cur = await rest.listCurrentDisease(patientId);
+                diseaseArea.set(patientId, cur);
+                diseaseArea.current();
             }
         });
 
         let recordFactory = new RecordFactory();
+
+        class NavFactory {
+            constructor() {
+                this.html = getTemplateHtml("practice-nav-template");
+            }
+
+            create() {
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new Nav(ele, map, rest);
+                comp.init();
+                return comp;
+            }
+
+        }
+
+        let navs = (function () {
+            let navFactory = new NavFactory();
+            let result = [
+                navFactory.create().appendTo($("#practice-nav-upper")),
+                navFactory.create().appendTo($("#practice-nav-lower"))
+            ];
+
+            function set(page, totalPages) {
+                result.forEach(nav => nav.set(page, totalPages));
+            }
+
+            result.forEach(nav => {
+                nav.onChange(async (event, page) => {
+                    if (page >= 1) {
+                        let visitPage = await fetchRecords(practiceState.getPatientId(), page);
+                        setRecords(visitPage.visits);
+                        set(visitPage.page, visitPage.totalPages);
+                    }
+                });
+            });
+            return result;
+        })();
 
         async function getHokenRep(hoken) {
             let hokenRep = await rest.hokenRep(hoken);
@@ -1729,50 +1686,41 @@
             return hokenRep;
         }
 
-        // $("#practice-top").on("practice_page_changed", async (event, page) => {
-        //     let patientId = getCurrentPatientId();
-        //     if (patientId === 0) {
-        //         $("#practice-top").trigger("practice_visits_changed", [[]]);
-        //         navs.forEach(nav => nav.set(0, 0));
-        //     } else {
-        //         let visitPage = await rest.listVisit(patientId, page - 1);
-        //         $("#practice-top").trigger("practice_visits_changed", [visitPage.visits]);
-        //         navs.forEach(nav => nav.set(visitPage.page + 1, visitPage.totalPages));
-        //     }
-        // });
-
-        onRecordsLoaded.push(page => {
+        function setRecords(visitFulls) {
             let recordWrapperElement = $("#practice-record-wrapper");
             recordWrapperElement.html("");
-            if( page ) {
-                for (let visitFull of page.visits) {
-                    let record = recordFactory.create(visitFull, visitFull.hokenRep);
-                    record.onTextCopied((event, copiedText) => {
-                        let targetRec = findRecord(copiedText.visitId);
-                        if (targetRec) {
-                            targetRec.addText(copiedText);
-                        }
-                    });
-                    record.appendTo(recordWrapperElement);
-                }
+            for (let visitFull of visitFulls) {
+                let record = recordFactory.create(visitFull, visitFull.hokenRep);
+                record.onTextCopied((event, copiedText) => {
+                    let targetRec = findRecord(copiedText.visitId);
+                    if (targetRec) {
+                        targetRec.addText(copiedText);
+                    }
+                });
+                record.appendTo(recordWrapperElement);
+            }
+        }
+
+        async function fetchRecords(patientId, page) {
+            if (patientId > 0 && page >= 1) {
+                let visitPage = await rest.listVisit(patientId, page - 1);
+                visitPage.visits.forEach(async visit => {
+                    visit.hokenRep = await getHokenRep(visit.hoken);
+                });
+                return visitPage;
+            } else {
+                throw new Error(`Invalid call to fetchRecords: ${patientId}, ${page}`);
+            }
+        }
+
+        practiceState.onPatientIdChanged(async patientId => {
+            if (patientId === 0) {
+                setRecords([]);
+            } else {
+                let visitPage = await fetchRecords(patientId, 1);
+                setRecords(visitPage.visits);
             }
         });
-
-        // $("#practice-top").on("practice_visits_changed", async (event, visitFulls) => {
-        //     let recordWrapperElement = $("#practice-record-wrapper");
-        //     recordWrapperElement.html("");
-        //     for (let visitFull of visitFulls) {
-        //         let hokenRep = await getHokenRep(visitFull.hoken);
-        //         let record = recordFactory.create(visitFull, hokenRep);
-        //         record.onTextCopied((event, copiedText) => {
-        //             let targetRec = findRecord(copiedText.visitId);
-        //             if (targetRec) {
-        //                 targetRec.addText(copiedText);
-        //             }
-        //         });
-        //         record.appendTo(recordWrapperElement);
-        //     }
-        // });
 
         function forEachRecord(f) {
             let xs = $(".practice-record");
@@ -1797,31 +1745,15 @@
             return null;
         }
 
-        onTempVisitIdChanged.push(tempVisitId => {
-            let currentVisitId = currentVisitManager.getCurrentVisitId();
+        practiceState.onTempVisitIdChanged(tempVisitId => {
             forEachRecord(record => {
-                if (record.getVisitId() === currentVisitId) {
-                    record.markAsCurrent();
-                } else if (record.getVisitId() === tempVisitId) {
+                if (record.getVisitId() === tempVisitId) {
                     record.markAsTemp();
                 } else {
                     record.clearMark();
                 }
             });
         });
-
-        // currentVisitManager.onChanged((event, info) => {
-        //     let {currentVisitId, tempVisitId} = info;
-        //     forEachRecord(record => {
-        //         if (record.getVisitId() === currentVisitId) {
-        //             record.markAsCurrent();
-        //         } else if (record.getVisitId() === tempVisitId) {
-        //             record.markAsTemp();
-        //         } else {
-        //             record.clearMark();
-        //         }
-        //     });
-        // });
 
     })();
 

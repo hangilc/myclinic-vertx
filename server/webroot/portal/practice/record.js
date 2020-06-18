@@ -217,8 +217,8 @@ export class Record extends Component {
         this.titleComponent.clearMark();
     }
 
-    onDeleted(cb) {
-        this.titleComponent.onDeleted(cb);
+    onDelete(cb) {
+        this.titleComponent.onDelete(cb);
     }
 
     onTempVisit(cb) {

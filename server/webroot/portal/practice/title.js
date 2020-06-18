@@ -37,40 +37,31 @@ export class Title extends Component {
         this.ele.addClass(this.classTempVisit);
     }
 
-    onDeleted(cb){
-        this.ele.on("deleted", cb);
+    onDelete(cb){
+        this.on("delete", (event, visitId) => cb(visitId));
     }
 
-    triggerDeleted(){
-        this.ele.trigger("deleted");
-    }
-
-    async doDelete(){
-        if( !confirm("この診療記録を削除しますか？") ){
+    async doDelete() {
+        if (!confirm("この診療記録を削除しますか？")) {
             return;
         }
-        await this.rest.deleteVisit(this.visit.visitId);
-        this.triggerDeleted();
+        this.trigger("delete", this.getVisitId());
     }
 
     onTempVisit(cb){
-        this.ele.on("temp-visit", (event, visitId) => cb(event, visitId));
-    }
-
-    triggerTempVisit(visitId){
-        this.ele.trigger("temp-visit", visitId);
+        this.ele.on("temp-visit", (event, visitId) => cb(visitId));
     }
 
     doTempVisit(){
-        this.triggerTempVisit(this.visit.visitId);
+        this.trigger("temp-visit", this.getVisitId());
     }
 
     onClearTempVisit(cb){
-        this.ele.on("clear-temp-visit", event => cb(event));
+        this.on("clear-temp-visit", event => cb());
     }
 
     doClearTempVisit(){
-        this.ele.trigger("clear-temp-visit");
+        this.trigger("clear-temp-visit");
     }
 
     menuLink(name, cb){

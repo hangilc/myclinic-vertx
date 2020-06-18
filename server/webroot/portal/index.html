@@ -48,6 +48,8 @@
     let rest = new Rest("../json");
     let integration = new Integration("../integration");
 
+    window.onerror = message => alert(message);
+
     (function(){
         let currentPaneId = "";
         let paneMap = {};
@@ -91,7 +93,7 @@
         bindLink("index-faxed-link", "pane-faxed-shohousen.html");
         bindLink("index-houmon-kango-link", "pane-houmon-kango.html");
         bindLink("index-send-fax-link", "pane-send-fax.html");
-        $("#index-reception-link").click();
+        $("#index-practice-link").click();
     })();
 
 </script>

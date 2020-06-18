@@ -491,6 +491,18 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end(result);
     }
 
+    private void listShinryou(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        int visitId = Integer.parseInt(params.get("visit-id"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        List<ShinryouDTO> _value = backend.listShinryou(visitId);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
     private void listShinryouFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
@@ -2141,6 +2153,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("get-disease-full", this::getDiseaseFull);
         funcMap.put("list-recent-visit-with-patient", this::listRecentVisitWithPatient);
         funcMap.put("list-visit-patient-at", this::listVisitPatientAt);
+        funcMap.put("list-shinryou", this::listShinryou);
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////

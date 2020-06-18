@@ -72,6 +72,10 @@ export class Record extends Component {
         this.shinryouAuxMenuMap.copyAll.on("click", event => this.doCopyAll());
     }
 
+    getVisitId(){
+        return this.visitFull.visit.visitId;
+    }
+
     getPharmaTextRegex(){
         return /(.+)にファックス（(\+\d+)）で送付/;
     }
@@ -91,13 +95,20 @@ export class Record extends Component {
         return await this.rest.saveShohousenPdf(req, text.textId);
     }
 
+    onShinryouCopied(cb){
+        this.on("shinryou-copied", (event, targetVisitId, shinryouList) => cb(targetVisitId, shinryouList));
+    }
+
     async doCopyAll(){
         let targetVisitId = this.currentVisitManager.resolveCopyTarget();
         if( targetVisitId === 0 ){
             alert("ｺﾋﾟｰ先を見つけられません。");
             return;
         }
-
+        let shinryouList = await this.rest.listShinryou(this.getVisitId());
+        let newShinryouIds = await this.rest.batchCopyShinryou(targetVisitId, shinryouList);
+        let shinryouFulls = await this.rest.listShinryouFullByIds(newShinryouIds);
+        this.trigger("shinryou-copied", [targetVisitId, shinryouFulls]);
     }
 
     async doSendShohousenFax(){

@@ -291,6 +291,10 @@ class Rest extends Client {
         });
     }
 
+    async listShinryou(visitId){
+        return await this.get("/list-shinryou", {"visit-id": visitId});
+    }
+
     async listShinryouFullByIds(shinryouIds){
         return await this.get("/list-shinryou-full-by-ids", {"shinryou-id": shinryouIds});
     }

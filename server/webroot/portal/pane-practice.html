@@ -1462,6 +1462,14 @@
                     compProgress.appendTo(this.generalWorkarea);
                     compProgress.start();
                 });
+                record.onShinryouCopied((targetVisitId, shinryouFulls) => {
+                    let targetRec = findRecord(targetVisitId);
+                    if( targetRec ){
+                        for(let shinryouFull of shinryouFulls){
+                            targetRec.addShinryou(shinryouFull);
+                        }
+                    }
+                });
                 return record;
             }
         }

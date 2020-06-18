@@ -283,6 +283,14 @@ class Rest extends Client {
         });
     }
 
+    async batchCopyShinryou(targetVisitId, shinryouList){
+        return await this.post("/batch-copy-shinryou", shinryouList, {
+            "params": {
+                "visit-id": targetVisitId
+            }
+        });
+    }
+
     async listShinryouFullByIds(shinryouIds){
         return await this.get("/list-shinryou-full-by-ids", {"shinryou-id": shinryouIds});
     }

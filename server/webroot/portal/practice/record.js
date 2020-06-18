@@ -14,6 +14,7 @@ export class Record extends Component {
         this.drugMarkElement = map.right.drugMark;
         this.drugWrapperElement = map.right.drugWrapper;
         this.shinryouMenuElement = map.right.shinryouMenu;
+        this.shinryouAuxMenuMap = map.right.shinryouAuxMenu;
         this.shinryouWrapperElement = map.right.shinryouWrapper;
         this.conductMenuElement = map.right.conductMenu;
         this.conductWrapperElement = map.right.conductWrapper;
@@ -22,7 +23,7 @@ export class Record extends Component {
 
     init(visitFull, hokenRep, titleFactory, textFactory, hokenFactory, shinryouFactory,
          textEnterFactory, shinryouRegularDialogFactory, conductDispFactory,
-         drugDispFactory, sendFaxFactory, chargeFactory) {
+         drugDispFactory, sendFaxFactory, chargeFactory, currentVisitManager) {
         this.visitFull = visitFull;
         this.textFactory = textFactory;
         this.shinryouFactory = shinryouFactory;
@@ -30,6 +31,7 @@ export class Record extends Component {
         this.conductDispFactory = conductDispFactory;
         this.drugDispFactory = drugDispFactory;
         this.sendFaxFactory = sendFaxFactory;
+        this.currentVisitManager = currentVisitManager;
         this.drugCount = 0;
         visitFull.texts.forEach(text => {
             this.addText(text);
@@ -67,6 +69,7 @@ export class Record extends Component {
         visitFull.conducts.forEach(cfull => this.addConduct(cfull));
         let compCharge = chargeFactory.create(visitFull.charge);
         compCharge.appendTo(this.chargeWrapperElement);
+        this.shinryouAuxMenuMap.copyAll.on("click", event => this.doCopyAll());
     }
 
     getPharmaTextRegex(){
@@ -86,6 +89,15 @@ export class Record extends Component {
         req.drugs = text.content;
         Object.assign(req, reqOpts);
         return await this.rest.saveShohousenPdf(req, text.textId);
+    }
+
+    async doCopyAll(){
+        let targetVisitId = this.currentVisitManager.resolveCopyTarget();
+        if( targetVisitId === 0 ){
+            alert("ｺﾋﾟｰ先を見つけられません。");
+            return;
+        }
+
     }
 
     async doSendShohousenFax(){

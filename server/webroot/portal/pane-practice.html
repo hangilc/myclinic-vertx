@@ -130,9 +130,15 @@
                 <div class="x-hoken-wrapper"></div>
                 <div class="x-drug-mark d-none">Rp）</div>
                 <div class="x-drug-wrapper"></div>
-                <div>
+                <div class="form-inline">
                     <a href="javascript:void(0)" class="x-shinryou-menu">［診療行為］</a>
-                    <a href="javascript:void(0)" class="x-shinryou-aux-menu">［＋］</a>
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-link dropdown-toggle"
+                            data-toggle="dropdown">その他</button>
+                        <div class="dropdown-menu x-shinryou-aux-menu_">
+                            <a href="javascript:void(0)" class="x-copy-all dropdown-item">全部コピー</a>
+                        </div>
+                    </div>
                 </div>
                 <div class="x-shinryou-wrapper"></div>
                 <a href="javascript:void(0)" class="x-conduct-menu">［処置］</a>
@@ -1430,6 +1436,7 @@
                 this.sendFaxFactory = new SendFaxFactory();
                 this.faxProgressFactory = new FaxProgressFactory();
                 this.chargeFactory = new ChargeFactory();
+                this.currentVisitManager = currentVisitManager;
             }
 
             create(visitFull, hokenRep) {
@@ -1439,7 +1446,8 @@
                 record.init(visitFull, hokenRep, this.titleFactory, this.textFactory,
                     this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
                     this.shinryouRegularDialogFactory, this.conductDispFactory,
-                    this.drugDispFactory, this.sendFaxFactory, this.chargeFactory);
+                    this.drugDispFactory, this.sendFaxFactory, this.chargeFactory,
+                    this.currentVisitManager);
                 record.onDelete(async visitId => {
                     await practiceState.deleteVisit(visitId);
                     record.remove();
@@ -1696,7 +1704,6 @@
             for (let visitFull of visitFulls) {
                 let record = recordFactory.create(visitFull, visitFull.hokenRep);
                 record.onTextCopied((event, copiedText) => {
-                    console.log("oncopied", copiedText);
                     let targetRec = findRecord(copiedText.visitId);
                     if (targetRec) {
                         targetRec.addText(copiedText);

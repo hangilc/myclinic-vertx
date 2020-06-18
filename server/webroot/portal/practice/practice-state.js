@@ -64,9 +64,9 @@ export class PracticeState {
             this.patientId = patientId;
             this.visitId = visitId;
             this.tempVisitId = 0;
-            this.patientIdChangedCallbacks.forEach(this.patientId);
-            this.visitIdChangedCallbacks.forEach(this.visitId);
-            this.tempVisitIdChangedCallbacks.forEach(this.tempVisitId);
+            this.patientIdChangedCallbacks.forEach(cb => cb(this.patientId));
+            this.visitIdChangedCallbacks.forEach(cb => cb(this.visitId));
+            this.tempVisitIdChangedCallbacks.forEach(cb => cb(this.tempVisitId));
         } else {
             let msg = "Cannot start exam. " +
                 `patientId(${this.patientId}), visitId(${this.visitId}), tempVisitId(${this.tempVisitId})`;
@@ -80,9 +80,9 @@ export class PracticeState {
             this.patientId = 0;
             this.visitId = 0;
             this.tempVisitId = 0;
-            this.patientIdChangedCallbacks.forEach(this.patientId);
-            this.visitIdChangedCallbacks.forEach(this.visitId);
-            this.tempVisitIdChangedCallbacks.forEach(this.tempVisitId);
+            this.patientIdChangedCallbacks.forEach(cb => cb(this.patientId));
+            this.visitIdChangedCallbacks.forEach(cb => cb(this.visitId));
+            this.tempVisitIdChangedCallbacks.forEach(cb => cb(this.tempVisitId));
         } else {
             let msg = "Cannot suspend exam. " +
                 `patientId(${this.patientId}), visitId(${this.visitId}), tempVisitId(${this.tempVisitId})`;
@@ -96,9 +96,9 @@ export class PracticeState {
             this.patientId = 0;
             this.visitId = 0;
             this.tempVisitId = 0;
-            this.patientIdChangedCallbacks.forEach(this.patientId);
-            this.visitIdChangedCallbacks.forEach(this.visitId);
-            this.tempVisitIdChangedCallbacks.forEach(this.tempVisitId);
+            this.patientIdChangedCallbacks.forEach(cb => cb(this.patientId));
+            this.visitIdChangedCallbacks.forEach(cb => cb(this.visitId));
+            this.tempVisitIdChangedCallbacks.forEach(cb => cb(this.tempVisitId));
         } else {
             let msg = "Cannot end exam. " +
                 `patientId(${this.patientId}), visitId(${this.visitId}), tempVisitId(${this.tempVisitId})`;
@@ -114,7 +114,7 @@ export class PracticeState {
                 this.visitIdChangedCallbacks(cb => cb(this.visitId));
             } else if( visitId === this.tempVisitId ){
                 this.tempVisitId = 0;
-                this.tempVisitIdChangedCallbacks.forEach(cb => (this.tempVisitId));
+                this.tempVisitIdChangedCallbacks.forEach(cb => cb(this.tempVisitId));
             }
         } else {
             throw new Error("Cannot delete visit: visitId is zero.");
@@ -129,26 +129,6 @@ export class PracticeState {
             this.tempVisitId = tempVisitId;
             this.tempVisitIdChangedCallbacks.forEach(cb => cb(tempVisitId));
         }
-    }
-
-    async loadRecords(page) {
-        let patientId = this.patientId;
-        if (!(patientId > 0)) {
-            throw new Error("Cannot load records: patientId is is not specified.");
-        }
-        let visitPage = await rest.listVisit(patientId, page - 1);
-        for(let visit of visitPage.visits){
-            visit.hokenRep = await this.getHokenRep(visit.hoken);
-        }
-        this.recordsLoadedCallbacks.forEach(cb => cb(visitPage));
-    }
-
-    async getHokenRep(hoken) {
-        let hokenRep = await this.rest.hokenRep(hoken);
-        if (hokenRep === "") {
-            hokenRep = "［保険なし］"
-        }
-        return hokenRep;
     }
 
 }

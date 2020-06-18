@@ -47,7 +47,6 @@ export class Text extends Component {
 
     onCopied(cb){
         this.on("copied", cb);
-        //this.ele.on("text-copied", (event, copiedText) => cb(event, copiedText));
     }
 
 }

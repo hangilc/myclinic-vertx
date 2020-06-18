@@ -566,7 +566,6 @@
             <a href="javascript:void(0)" class="x-copy ml-2">コピー</a>
         </div>
     </div>
-    </div>
 </template>
 
 <template id="practice-shohousen-preview-dialog-template">
@@ -1034,6 +1033,11 @@
 
             setPatient(patient) {
                 this.display.setPatient(patient);
+                if( patient ){
+                    this.ele.removeClass("d-none");
+                } else {
+                    this.ele.addClass("d-none");
+                }
             }
 
             clear() {
@@ -1126,14 +1130,14 @@
             map.cashier.on("click", async event => {
                 let visitId = practiceState.getVisitId();
                 if (visitId <= 0) {
-                    alert("現在診察注ではないので、会計はできません。");
+                    alert("現在診察中ではないので、会計はできません。");
                     return;
                 }
                 let meisai = await rest.getMeisai(visitId);
                 let dialog = meisaiDialogFactory.create(meisai);
                 let result = await dialog.open();
                 if (result) {
-                    await practiceState.endExam(visitId, meisai.chage);
+                    await practiceState.endExam(visitId, meisai.charge);
                 }
             });
 
@@ -1141,7 +1145,7 @@
                 let visitId = practiceState.getVisitId();
                 if (visitId > 0) {
                     await practiceState.suspendExam(visitId);
-                } else if (practiceStae.getPatientId() > 0) {
+                } else if (practiceState.getPatientId() > 0) {
                     practiceState.endPatient();
                 }
             });
@@ -1692,6 +1696,7 @@
             for (let visitFull of visitFulls) {
                 let record = recordFactory.create(visitFull, visitFull.hokenRep);
                 record.onTextCopied((event, copiedText) => {
+                    console.log("oncopied", copiedText);
                     let targetRec = findRecord(copiedText.visitId);
                     if (targetRec) {
                         targetRec.addText(copiedText);

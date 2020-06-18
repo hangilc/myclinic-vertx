@@ -86,6 +86,10 @@ class Rest extends Client {
         super(baseUrl);
     }
 
+    async listWqueueFullForExam(){
+        return await this.get("/list-wqueue-full-for-exam", {});
+    }
+
     async listWqueueFull() {
         return await ajaxGet(this.url("/list-wqueue-full"), {});
     }

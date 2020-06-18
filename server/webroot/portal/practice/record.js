@@ -38,7 +38,7 @@ export class Record extends Component {
             let comp = textEnterFactory.create(this.visitFull.visit.visitId);
             comp.onEntered((event, entered) => {
                 comp.remove();
-                textFactory.create(entered).appendTo(this.textWrapperElement);
+                this.addText(entered);
             });
             comp.onCancel(event => comp.remove());
             comp.putBefore(this.enterTextElement);

@@ -59,17 +59,21 @@ export class PatientDisplay {
     }
 
     setPatient(patient){
-        let formatter = this.opts.formatter;
-        this.set(this.patientId, patient.patientId, formatter.patientId);
-        this.set(this.patientLastName, patient.lastName, formatter.lastName);
-        this.set(this.patientFirstName, patient.firstName, formatter.firstName);
-        this.set(this.patientLastNameYomi, patient.lastNameYomi, formatter.lastNameYomi);
-        this.set(this.patientFirstNameYomi, patient.firstNameYomi, formatter.firstNameYomi);
-        this.set(this.patientBirthday, birthdayData(patient.birthday), formatter.birthday);
-        this.set(this.patientSex, sexData(patient.sex), formatter.sex);
-        this.set(this.patientAddress, patient.address, formatter.address);
-        this.set(this.patientPhone, patient.phone, formatter.phone);
-        this.set(this.patientAge, ageData(patient.birthday), formatter.age);
+        if( patient ){
+            let formatter = this.opts.formatter;
+            this.set(this.patientId, patient.patientId, formatter.patientId);
+            this.set(this.patientLastName, patient.lastName, formatter.lastName);
+            this.set(this.patientFirstName, patient.firstName, formatter.firstName);
+            this.set(this.patientLastNameYomi, patient.lastNameYomi, formatter.lastNameYomi);
+            this.set(this.patientFirstNameYomi, patient.firstNameYomi, formatter.firstNameYomi);
+            this.set(this.patientBirthday, birthdayData(patient.birthday), formatter.birthday);
+            this.set(this.patientSex, sexData(patient.sex), formatter.sex);
+            this.set(this.patientAddress, patient.address, formatter.address);
+            this.set(this.patientPhone, patient.phone, formatter.phone);
+            this.set(this.patientAge, ageData(patient.birthday), formatter.age);
+        } else {
+            this.clear();
+        }
     }
 }
 

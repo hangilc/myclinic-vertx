@@ -49,7 +49,7 @@ export class Title extends Component {
     }
 
     onTempVisit(cb){
-        this.ele.on("temp-visit", (event, visitId) => cb(visitId));
+        this.on("temp-visit", (event, visitId) => cb(visitId));
     }
 
     doTempVisit(){

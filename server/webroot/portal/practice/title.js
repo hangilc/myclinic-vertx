@@ -4,7 +4,7 @@ export class Title extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
         this.textElement = map.text;
-        this.menuElement = map.menu;
+        this.menu = map.menu;
         ele.attr("data-component", 3);
     }
 
@@ -13,9 +13,10 @@ export class Title extends Component {
         this.textElement.text(this.rep(visit.visitedAt));
         this.classCurrentVisit = classCurrentVisit;
         this.classTempVisit = classTempVisit;
-        this.menuElement.append(this.menuLink("この診察を削除", event => this.doDelete()));
-        this.menuElement.append(this.menuLink("暫定診察に設定", event => this.doTempVisit()));
-        this.menuElement.append(this.menuLink("暫定診察の解除", event => this.doClearTempVisit()));
+        this.menu.delete.on("click",  event => this.doDelete());
+        this.menu.tempVisit.on("click", event => this.doTempVisit());
+        this.menu.untempVisit.on("click", event => this.doClearTempVisit());
+        this.menu.meisai.on("click", event => this.doMeisai());
     }
 
     getVisitId(){
@@ -64,15 +65,9 @@ export class Title extends Component {
         this.trigger("clear-temp-visit");
     }
 
-    menuLink(name, cb){
-        let a = $("<button>", {
-            type: "button",
-            class: "btn btn-link",
-            href:"javascript:void(0)"
-        });
-        a.text(name);
-        a.on("click", cb);
-        return a;
+    async doMeisai(){
+        let meisai = await this.rest.getMeisai(this.getVisitId());
+        console.log(JSON.stringify(meisai, null, 2));
     }
 
     rep(sqldatetime) {

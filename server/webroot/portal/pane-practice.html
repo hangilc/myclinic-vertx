@@ -1,5 +1,4 @@
 <!--suppress ALL -->
-<!-- TODO: register current patient -->
 <!-- TODO: add receipt detail menu to title -->
 <div class="row" id="practice-top">
     <h3 class="col-xl-2">診察</h3>
@@ -530,7 +529,11 @@
                     aria-expanded="false">
                 操作
             </button>
-            <div class="dropdown-menu x-menu" aria-labelledby="dropdownMenuButton">
+            <div class="dropdown-menu x-menu_" aria-labelledby="dropdownMenuButton">
+                <a href="javascript:void(0)" class="x-delete dropdown-item">この診察を削除</a>
+                <a href="javascript:void(0)" class="x-temp-visit dropdown-item">暫定診察に設定</a>
+                <a href="javascript:void(0)" class="x-untemp-visit dropdown-item">暫定診察の解除</a>
+                <a href="javascript:void(0)" class="x-meisai dropdown-item">診療明細</a>
             </div>
         </div>
     </div>
@@ -882,6 +885,10 @@
             </div>
         </template>
     </div>
+</template>
+
+<template id="practice-meisai-dialog-template">
+
 </template>
 
 <script>

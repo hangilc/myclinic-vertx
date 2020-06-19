@@ -41,6 +41,7 @@
 <div id="practice-patient-manip" class="d-none mx-2 form-inline">
     <button class="x-cashier btn btn-secondary">会計</button>
     <button class="x-end  ml-2 btn btn-secondary">患者終了</button>
+    <a href="javascript:void(0)" class="x-register-current  ml-2">診察登録</a>
     <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>
     <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>
 </div>
@@ -887,7 +888,6 @@
 
     (async function () {
         let {parseElement} = await import("./practice/parse-element.js");
-        //let {ChoosePatientDialog} = await import("./practice/choose-patient-dialog.js");
         let {PatientDisplay} = await import("./practice/patient-display.js");
         let DrawerSvg = await import("./js/drawer-svg.js");
         let {Component} = await import("./practice/component.js");
@@ -946,12 +946,6 @@
             }
             return html;
         }
-
-        // let choosePatientDialog = (function () {
-        //     let ele = $("#practice-choose-patient-dialog");
-        //     let map = parseElement(ele);
-        //     return new ChoosePatientDialog(map, rest);
-        // })();
 
         class PatientSearchDialogFactory {
             create(){
@@ -1162,6 +1156,16 @@
                     await practiceState.suspendExam(visitId);
                 } else if (practiceState.getPatientId() > 0) {
                     practiceState.endPatient();
+                }
+            });
+
+            map.registerCurrent.on("click", async event => {
+                if( practiceState.getVisitId() === 0 && practiceState.getPatientId() > 0 &&
+                        confirm("この患者を診察登録しますか？") ){
+                    let patientId = practiceState.getPatientId();
+                    practiceState.endPatient();
+                    let visitId = await rest.startVisit(patientId);
+                    await practiceState.startExam(patientId, visitId);
                 }
             });
 

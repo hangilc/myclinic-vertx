@@ -111,7 +111,7 @@ export class PracticeState {
             await this.rest.deleteVisit(visitId);
             if( visitId === this.visitId ){
                 this.visitId = 0;
-                this.visitIdChangedCallbacks(cb => cb(this.visitId));
+                this.visitIdChangedCallbacks.forEach(cb => cb(this.visitId));
             } else if( visitId === this.tempVisitId ){
                 this.tempVisitId = 0;
                 this.tempVisitIdChangedCallbacks.forEach(cb => cb(this.tempVisitId));

@@ -3,24 +3,27 @@ import {Component} from "./component.js";
 export class Dialog extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
-        this.result = {};
-        this.resolver = result => console.log("dialog result", result);
-        ele.on("hidden.bs.modal", event => {
-            this.resolver(this.result);
-        });
+        this.dialogResult = null;
     }
 
-    setResult(result){
-        this.result = result;
+    setDialogResult(result){
+        this.dialogResult = result;
     }
 
     hide(){
         this.ele.modal("hide");
     }
 
-    async open(){
+    close(){
+        this.hide();
+    }
+
+    open(){
         return new Promise(resolve => {
-            this.resolver = resolve;
+            this.ele.on("hidden.bs.modal", event => {
+                this.ele.off("hidden.bs.modal");
+                resolve(this.dialogResult);
+            });
             this.ele.modal("show");
         });
     }

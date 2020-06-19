@@ -25,11 +25,6 @@ export class Nav extends Component {
         }
         this.setPage(page);
         this.setTotal(total);
-        if( total > 1 ){
-            this.ele.removeClass("d-none");
-        } else {
-            this.ele.addClass("d-none");
-        }
     }
 
     setPage(page){
@@ -61,6 +56,14 @@ export class Nav extends Component {
 
     onChange(cb){
         this.on("change", (event, page) => cb(event, page));
+    }
+
+    show(){
+        this.ele.removeClass("d-none");
+    }
+
+    hide(){
+        this.ele.addClass("d-none");
     }
 
 }

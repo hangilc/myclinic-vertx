@@ -1,5 +1,4 @@
 <!--suppress ALL -->
-<!-- TODO: add copy shinryou -->
 <!-- TODO: reset patient search when opened -->
 <!-- TODO: register current patient -->
 <div class="row" id="practice-top">
@@ -1682,21 +1681,28 @@
                 navFactory.create().appendTo($("#practice-nav-lower"))
             ];
 
-            function set(page, totalPages) {
-                result.forEach(nav => nav.set(page, totalPages));
-            }
-
             result.forEach(nav => {
                 nav.onChange(async (event, page) => {
                     if (page >= 1) {
                         let visitPage = await fetchRecords(practiceState.getPatientId(), page);
                         setRecords(visitPage.visits);
-                        set(visitPage.page, visitPage.totalPages);
+                        setNavs(visitPage.page + 1, visitPage.totalPages);
                     }
                 });
             });
             return result;
         })();
+
+        function setNavs(page, total){
+            navs.forEach(nav => {
+                nav.set(page, total);
+                if( total > 1 ){
+                    nav.show();
+                } else {
+                    nav.hide();
+                }
+            })
+        }
 
         async function getHokenRep(hoken) {
             let hokenRep = await rest.hokenRep(hoken);
@@ -1736,9 +1742,11 @@
         practiceState.onPatientIdChanged(async patientId => {
             if (patientId === 0) {
                 setRecords([]);
+                setNavs(0, 0);
             } else {
                 let visitPage = await fetchRecords(patientId, 1);
                 setRecords(visitPage.visits);
+                setNavs(visitPage.page + 1, visitPage.totalPages);
             }
         });
 

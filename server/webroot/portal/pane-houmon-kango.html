@@ -59,7 +59,7 @@
 </div>
 
 <script>
-    (async function () {
+    async function initHoumonKango() {
         let chooser = await import("./js/choose-patient.js");
         let displayer = await import("./js/disp-patient.js");
         let Data = (await import("./houmon-kango/data.js")).Data;
@@ -343,5 +343,5 @@
             }
         }
 
-    })();
+    }
 </script>

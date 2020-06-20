@@ -502,35 +502,5 @@ class Integration extends Client {
     }
 }
 
-const WqueueStateWaitExam = 0;
-const WqueueStateInExam = 1;
-const WqueueStateWaitCashier = 2;
-const WqueueStateWaitDrug = 3;
-const WqueueStateWaitReExam = 4;
-const WqueueStateWaitAppoint = 5;
-
-const WqueueStateRep = {
-    [WqueueStateWaitExam]: "診待",
-    [WqueueStateInExam]: "診中",
-    [WqueueStateWaitCashier]: "会待",
-    [WqueueStateWaitDrug]: "薬待",
-    [WqueueStateWaitReExam]: "再待"
-};
-
-function wqueueStateCodeToRep(code) {
-    return WqueueStateRep[code];
-}
-
-function sexToRep(sex) {
-    switch (sex) {
-        case "M":
-            return "男";
-        case "F":
-            return "女";
-        default:
-            return sex;
-    }
-}
-
 
 

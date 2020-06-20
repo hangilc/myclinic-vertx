@@ -26,7 +26,7 @@
 </template>
 
 <script>
-    (async function () {
+    async function initSendFax() {
         let {Component} = await import("./js/component.js");
         let {parseElement} = await import("./js/parse-element.js");
 
@@ -101,6 +101,6 @@
             window.open(url, "_blank");
         });
 
-    })();
+    }
 
 </script>

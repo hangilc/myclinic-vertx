@@ -27,46 +27,36 @@
         <th scope="col">性別</th>
         <th scope="col">生年月日</th>
         <th scope="col">年齢</th>
+        <th scope="col"></th>
     </tr>
     </thead>
-    <tbody>
-    <tr>
-        <td>診待</td>
-        <th scope="row">123</th>
-        <td>診療 太郎</td>
-        <td>しんりょう たろう</td>
-        <td>男</td>
-        <td>昭和12年1月2日</td>
-        <td>72才</td>
-    </tr>
-    <tr class="table-active">
-        <td>診待</td>
-        <th scope="row">123</th>
-        <td>診療 太郎</td>
-        <td>しんりょう たろう</td>
-        <td>男</td>
-        <td>昭和12年1月2日</td>
-        <td>72才</td>
-    </tr>
-    <tr>
-        <td>診待</td>
-        <th scope="row">123</th>
-        <td>診療 太郎</td>
-        <td>しんりょう たろう</td>
-        <td>男</td>
-        <td>昭和12年1月2日</td>
-        <td>72才</td>
-    </tr>
-    <tr>
-        <td>診待</td>
-        <th scope="row">123</th>
-        <td>診療 太郎</td>
-        <td>しんりょう たろう</td>
-        <td>男</td>
-        <td>昭和12年1月2日</td>
-        <td>72才</td>
-    </tr>
-    </tbody>
+    <tbody></tbody>
+    <template class="x-item-template">
+        <tr>
+            <td class="x-state align-middle"></td>
+            <th scope="row" class="x-patient-id align-middle"></th>
+            <td class="x-name align-middle"></td>
+            <td class="x-yomi align-middle"></td>
+            <td class="x-sex align-middle"></td>
+            <td class="x-birthday align-middle"></td>
+            <td class="x-age align-middle"></td>
+            <td class="x-manip form-inline">
+                <div class="dropdown" id="practice-select-patient-menu">
+                    <button class="btn btn-link dropdown-toggle" type="button"
+                            data-toggle="dropdown" aria-haspopup="true"
+                            aria-expanded="false">
+                        操作
+                    </button>
+                    <div class="dropdown-menu x-menu_" aria-labelledby="dropdownMenuButton">
+                        <a href="javascript:void(0)" class="x-delete dropdown-item mx-2">削除</a>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </template>
+    <template class="x-cashier-button-template">
+        <button type="button" class="btn btn-primary">会計</button>
+    </template>
 </table>
 
 <div id="reception-bottom-commands" class="form-inline">
@@ -852,6 +842,7 @@
         let {KoukikoureiEditWidget} = await import("./reception/koukikourei-edit-widget.js");
         let {KouhiEditWidget} = await import("./reception/kouhi-edit-widget.js");
         let {HokenHelper} = await import("./reception/hoken-helper.js");
+        let {WqueueTable} = await import("./reception/wqueue-table.js");
 
         let receptionWorkarea = $("#reception-workarea");
 
@@ -1051,9 +1042,23 @@
             });
         })();
 
+        class WqueueTableFactory {
+            create(){
+                let ele = $("#reception-wqueue-table");
+                let map = parseElement(ele);
+                let comp = new WqueueTable(ele, map, rest);
+                comp.init();
+                comp.set();
+                return comp;
+            }
+        }
+
+        let wqueueTable = (new WqueueTableFactory()).create();
+
         async function refreshWqueueTable(){
             let wqueueFulls = await rest.listWqueueFull();
             console.log("wqueueFulls", wqueueFulls);
+            wqueueTable.set(wqueueFulls);
         }
 
         $("#reception-main-commands").on("pane_shown", event => refreshWqueueTable());

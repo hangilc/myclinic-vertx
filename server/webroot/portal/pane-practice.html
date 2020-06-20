@@ -968,9 +968,10 @@
 
 <script>
 
-    (async function () {
+    async function initPractice() {
         let {parseElement} = await import("./practice/parse-element.js");
         let {PatientDisplay} = await import("./practice/patient-display.js");
+        let {wqueueStateCodeToRep} = await import("./js/consts.js");
         let DrawerSvg = await import("./js/drawer-svg.js");
         let {Component} = await import("./practice/component.js");
         let {Title} = await import("./practice/title.js");
@@ -1917,6 +1918,6 @@
             });
         });
 
-    })();
+    }
 
 </script>

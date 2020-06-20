@@ -50,6 +50,8 @@
 <script>
     async function initCashier(){
 
+        let {wqueueStateCodeToRep, WqueueStateWaitCashier, sexToRep} = await import("./js/consts.js");
+
         class ChargeDialog {
             constructor(ele) {
                 this.ele = ele;
@@ -173,7 +175,6 @@
         let wqTable = new WqueueTable($("#cashier-wqueue-table"), $("#cashier-charge-dialog"));
 
         async function update(){
-            console.log("update");
             let wqList = await rest.listWqueueFull();
             wqTable.clear();
             for(let wq of wqList){

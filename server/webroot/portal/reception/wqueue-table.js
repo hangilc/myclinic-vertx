@@ -1,0 +1,50 @@
+import {Component} from "./component.js";
+import {parseElement} from "../js/parse-element.js";
+import * as consts from "../js/consts.js";
+import * as kanjidate from "../js/kanjidate.js";
+
+export class WqueueTable extends Component {
+    constructor(ele, map, rest){
+        super(ele, map, rest);
+        this.tbodyElement = ele.find("tbody");
+        this.itemTemplateHtml = map.itemTemplate.html();
+        this.cashierButtonTemplateHtml = map.cashierButtonTemplate.html();
+    }
+
+    init(){
+        super.init();
+        return this;
+    }
+
+    set(wqueueFulls){
+        super.set();
+        this.tbodyElement.html("");
+        if( wqueueFulls ){
+            for(let wqueueFull of wqueueFulls){
+                let item = this.createItem(wqueueFull);
+                this.tbodyElement.append(item);
+            }
+        }
+        return this;
+    }
+
+    createItem(wqueueFull){
+        let e = $(this.itemTemplateHtml);
+        let m = parseElement(e);
+        let wqueue = wqueueFull.wqueue;
+        let patient = wqueueFull.patient;
+        let age = kanjidate.calcAge(patient.birthday);
+        m.state.text(consts.wqueueStateCodeToRep(wqueue.waitState));
+        m.patientId.text(patient.patientId);
+        m.name.text(`${patient.lastName} ${patient.firstName}`);
+        m.yomi.text(`${patient.lastNameYomi} ${patient.firstNameYomi}`);
+        m.sex.text(consts.sexToRep(patient.sex));
+        m.birthday.text(kanjidate.sqldateToKanji(patient.birthday, {padZero: true}));
+        m.age.text(age);
+        if( wqueue.waitState === consts.WqueueStateWaitCashier ){
+            let btn = $(this.cashierButtonTemplateHtml);
+            m.manip.prepend(btn);
+        }
+        return e;
+    }
+}

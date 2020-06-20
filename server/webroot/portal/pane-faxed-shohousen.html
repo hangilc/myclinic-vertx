@@ -91,7 +91,7 @@
 <div id="faxed-nav-content-prev-groups" class="faxed-nav-content d-none"></div>
 
 <script>
-    (function () {
+    async function initFaxedShohousen() {
 
         function shohousenUrl(path, attr=null) {
             let url = "../integration/faxed-shohousen-data/" + path;
@@ -623,5 +623,5 @@
         setup();
         nav.tabPrevGroups.click();
 
-    })();
+    }
 </script>

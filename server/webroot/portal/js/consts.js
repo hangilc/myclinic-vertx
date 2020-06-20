@@ -61,3 +61,36 @@ export let MeisaiSections = [
     {name: "Sonota", label: "その他"}
 ];
 
+export const WqueueStateWaitExam = 0;
+export const WqueueStateInExam = 1;
+export const WqueueStateWaitCashier = 2;
+export const WqueueStateWaitDrug = 3;
+export const WqueueStateWaitReExam = 4;
+export const WqueueStateWaitAppoint = 5;
+
+const WqueueStateRep = {
+    [WqueueStateWaitExam]: "診待",
+    [WqueueStateInExam]: "診中",
+    [WqueueStateWaitCashier]: "会待",
+    [WqueueStateWaitDrug]: "薬待",
+    [WqueueStateWaitReExam]: "再待"
+};
+
+export function wqueueStateCodeToRep(code) {
+    return WqueueStateRep[code];
+}
+
+export function sexToRep(sex) {
+    switch (sex) {
+        case "M":
+            return "男";
+        case "F":
+            return "女";
+        default:
+            return sex;
+    }
+}
+
+
+
+

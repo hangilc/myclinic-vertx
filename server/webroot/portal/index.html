@@ -76,7 +76,22 @@
                 this.link.addClass("active");
             }
 
+            disableLinks(){
+                $(".sidebar a").addClass("disabled");
+            }
+
+            enableLinks(){
+                $(".sidebar a").removeClass("disabled");
+            }
+
             async load(){
+                if( this.link.hasClass("disabled") ){
+                    return;
+                }
+                if( currentPane === this ){
+                    return;
+                }
+                this.disableLinks();
                 if( currentPane ){
                     currentPane.save();
                 }
@@ -84,19 +99,26 @@
                     paneWrapper.append(this.ele);
                     currentPane = this;
                     this.onPaneLoaded();
+                    this.enableLinks();
                 } else {
                     paneWrapper.load(this.url, async () => {
                         currentPane = this;
                         await this.initPane();
                         this.onPaneLoaded();
+                        this.enableLinks();
                     });
                 }
             }
         }
 
         class PracticePane extends Pane {
-            constructor(){
+            constructor() {
                 super($("#index-practice-link"), "pane-practice.html");
+            }
+
+            async initPane() {
+                await super.initPane();
+                await initPractice();
             }
         }
 
@@ -115,6 +137,11 @@
             constructor(){
                 super($("#index-faxed-link"), "pane-faxed-shohousen.html");
             }
+
+            async initPane(){
+                await super.initPane();
+                await initFaxedShohousen();
+            }
         }
 
         class ReceptionPane extends Pane {
@@ -132,11 +159,21 @@
             constructor(){
                 super($("#index-houmon-kango-link"), "pane-houmon-kango.html");
             }
+
+            async initPane(){
+                await super.initPane();
+                await initHoumonKango();
+            }
         }
 
         class SendFaxPane extends Pane {
             constructor(){
                 super($("#index-send-fax-link"), "pane-send-fax.html");
+            }
+
+            async initPane(){
+                await super.initPane();
+                await initSendFax();
             }
         }
 

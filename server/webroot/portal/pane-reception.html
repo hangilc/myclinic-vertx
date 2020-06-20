@@ -824,6 +824,43 @@
     </div>
 </template>
 
+<template id="reception-cashier-dialog-template">
+    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">会計</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="x-sections"></div>
+                    <div>総点：<span class="x-total-ten"></span></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary x-print-receipt">領収書印刷</button>
+                    <button type="button" class="btn btn-secondary x-end">会計終了</button>
+                    <button type="button" class="btn btn-link x-cancel">キャンセル</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <template class="x-item-template">
+        <div>
+            <div class="x-title"></div>
+            <div class="x-detail"></div>
+        </div>
+    </template>
+    <template class="x-detail-template">
+        <div class="row">
+            <div class="col-sm-2"></div>
+            <div class="col-sm-4 x-detail-label"></div>
+            <div class="col-sm-2 x-detail-ten"></div>
+        </div>
+    </template>
+</template>
+
 <script>
 
     async function initReception() {
@@ -843,6 +880,7 @@
         let {KouhiEditWidget} = await import("./reception/kouhi-edit-widget.js");
         let {HokenHelper} = await import("./reception/hoken-helper.js");
         let {WqueueTable} = await import("./reception/wqueue-table.js");
+        let {CashierDialog} = await import("./reception/cashier-dialog.js");
 
         let receptionWorkarea = $("#reception-workarea");
 
@@ -1042,12 +1080,27 @@
             });
         })();
 
+        class CashierDialogFactory {
+            create(meisai, visitId){
+                let html = $("template#reception-cashier-dialog-template").html();
+                let ele = $(html);
+                let map = parseElement(ele);
+                let dialog = new CashierDialog(ele, map, rest);
+                dialog.init();
+                dialog.set(meisai, visitId);
+                return dialog;
+            }
+        }
+
         class WqueueTableFactory {
+            constructor() {
+                this.cashierDialogFactory = new CashierDialogFactory();
+            }
             create(){
                 let ele = $("#reception-wqueue-table");
                 let map = parseElement(ele);
                 let comp = new WqueueTable(ele, map, rest);
-                comp.init();
+                comp.init(this.cashierDialogFactory);
                 comp.set();
                 return comp;
             }

@@ -38,6 +38,13 @@ export function toSqldate(year, month, day){
     return `${y}-${m}-${d}`;
 }
 
+export function toSqldatetime(year, month, day, hours, minutes, seconds){
+    let h = ("" + hours).padStart(2, "0");
+    let m = ("" + minutes).padStart(2, "0");
+    let s= ("" + seconds).padStart(2, "0");
+    return toSqldate(year, month, day) + " " + `${h}:${m}:${s}`;
+}
+
 export function todayAsSqldate(){
     let today = new Date();
     return toSqldate(today.getFullYear(), today.getMonth() + 1, today.getDate());
@@ -124,6 +131,12 @@ export function sqldateToData(sqldate){
         kanji: `${g.name}${n}年${d.month}月${d.day}日`,
         sqldate: sqldate
     };
+}
+
+export function nowAsSqldatetime(){
+    let dt = new Date();
+    return toSqldatetime(dt.getFullYear(), dt.getMonth() + 1, dt.getDate(),
+        dt.getHours(), dt.getMinutes(), dt.getSeconds());
 }
 
 export function sqldatetimeToData(sqldatetime){

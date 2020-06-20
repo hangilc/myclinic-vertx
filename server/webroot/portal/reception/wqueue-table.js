@@ -11,8 +11,9 @@ export class WqueueTable extends Component {
         this.cashierButtonTemplateHtml = map.cashierButtonTemplate.html();
     }
 
-    init(){
+    init(cashierDialogFactory){
         super.init();
+        this.cashierDialogFactory = cashierDialogFactory;
         return this;
     }
 
@@ -43,8 +44,15 @@ export class WqueueTable extends Component {
         m.age.text(age);
         if( wqueue.waitState === consts.WqueueStateWaitCashier ){
             let btn = $(this.cashierButtonTemplateHtml);
+            btn.on("click", event => this.doCashier(wqueue.visitId));
             m.manip.prepend(btn);
         }
         return e;
+    }
+
+    async doCashier(visitId){
+        let meisai = await this.rest.getMeisai(visitId);
+        let dialog = this.cashierDialogFactory.create(meisai, visitId);
+        await dialog.open();
     }
 }

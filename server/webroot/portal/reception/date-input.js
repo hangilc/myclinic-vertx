@@ -15,7 +15,7 @@ export class DateInput {
     }
 
     set(sqldate){
-        if( sqldate ){
+        if( sqldate && sqldate !== "0000-00-00" ){
             let data = kanjidate.sqldatetimeToData(sqldate);
             this.gengouElement.val(data.gengou.name);
             this.nenElement.val(data.nen);

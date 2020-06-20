@@ -12,7 +12,20 @@ export class KoukikoureiForm {
         return this;
     }
 
-    set(){
+    set(koukikourei){
+        if( koukikourei ){
+            this.hokenshaBangouElement.val(koukikourei.hokenshaBangou);
+            this.hihokenshaBangouElement.val(koukikourei.hihokenshaBangou);
+            this.validFromElement.val(koukikourei.validFrom);
+            this.validUptoElement.val(koukikourei.validUpto);
+            this.futanWariElement.val(koukikourei.futanWari);
+        } else {
+            this.hokenshaBangouElement.val(null);
+            this.hihokenshaBangouElement.val(null);
+            this.validFromElement.val(null);
+            this.validUptoElement.val(null);
+            this.futanWariElement.val(null);
+        }
         return this;
     }
 

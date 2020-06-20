@@ -46,7 +46,8 @@ export class Record extends Component {
             comp.putBefore(this.enterTextElement);
         });
         this.sendShohousenFaxElement.on("click", event => this.doSendShohousenFax());
-        hokenFactory.create(hokenRep).appendTo(this.hokenWrapperElement);
+        let hokenComp = hokenFactory.create(visitFull.hoken, hokenRep).appendTo(this.hokenWrapperElement);
+        console.log("hokenComp", hokenComp.ele.html());
         this.shinryouMenuElement.on("click", async event => {
             let result = await shinryouRegularDialogFactory.create(visitFull.visit.visitId).open();
             if (result.mode === "entered") {

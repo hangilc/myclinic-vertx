@@ -962,6 +962,7 @@
         let {TextEdit} = await import("./practice/text-edit.js");
         let {Record} = await import("./practice/record.js");
         let {Hoken} = await import("./practice/hoken.js");
+        let {HokenDisp} = await import("./practice/hoken-disp.js");
         let {ShohousenPreviewDialog} = await import("./practice/shohousen-preview-dialog.js");
         let {ConductDisp} = await import("./practice/conduct-disp.js");
         let {DrugDisp} = await import("./practice/drug-disp.js");
@@ -1356,16 +1357,30 @@
             }
         }
 
+        class HokenDispFactory {
+            create(hokenRep){
+                let html = "<div></div>";
+                let ele = $(html);
+                let map = parseElement(ele);
+                let compDisp = new HokenDisp(ele, map, rest);
+                compDisp.init();
+                compDisp.set(hokenRep);
+                return compDisp;
+            }
+        }
+
         class HokenFactory {
             constructor() {
                 this.html = getTemplateHtml("practice-hoken-template");
+                this.hokenDispFactory = new HokenDispFactory();
             }
 
-            create(hokenRep) {
+            create(hoken, hokenRep) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let compHoken = new Hoken(ele, map, rest);
-                compHoken.init(hokenRep);
+                compHoken.init(this.hokenDispFactory);
+                compHoken.set(hoken, hokenRep);
                 return compHoken;
             }
         }
@@ -1526,6 +1541,7 @@
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let record = new Record(ele, map, rest);
+                console.log("hokenREp", hokenRep);
                 record.init(visitFull, hokenRep, this.titleFactory, this.textFactory,
                     this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
                     this.shinryouRegularDialogFactory, this.conductDispFactory,
@@ -1803,6 +1819,8 @@
             let recordWrapperElement = $("#practice-record-wrapper");
             recordWrapperElement.html("");
             for (let visitFull of visitFulls) {
+                console.log("visitFull", visitFull);
+                console.log("visitFull.hokenRep", visitFull.hokenRep);
                 let record = recordFactory.create(visitFull, visitFull.hokenRep);
                 record.onTextCopied((event, copiedText) => {
                     let targetRec = findRecord(copiedText.visitId);
@@ -1817,9 +1835,9 @@
         async function fetchRecords(patientId, page) {
             if (patientId > 0 && page >= 1) {
                 let visitPage = await rest.listVisit(patientId, page - 1);
-                visitPage.visits.forEach(async visit => {
+                for(let visit of visitPage.visits){
                     visit.hokenRep = await getHokenRep(visit.hoken);
-                });
+                }
                 return visitPage;
             } else {
                 throw new Error(`Invalid call to fetchRecords: ${patientId}, ${page}`);

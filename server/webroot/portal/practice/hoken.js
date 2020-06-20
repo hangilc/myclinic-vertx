@@ -5,7 +5,13 @@ export class Hoken extends Component {
         super(ele, map, rest);
     }
 
-    init(hokenRep){
-        this.ele.text(hokenRep);
+    init(hokenDispFactory){
+        this.hokenDispFactory = hokenDispFactory;
+    }
+
+    set(hoken, hokenRep){
+        let compDisp = this.hokenDispFactory.create(hokenRep);
+        this.ele.html("");
+        compDisp.appendTo(this.ele);
     }
 }

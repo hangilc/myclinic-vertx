@@ -6,6 +6,14 @@ export class Component {
         //his.eventDispatcher = $("<div>");
     }
 
+    init(){
+
+    }
+
+    set(){
+
+    }
+
     on(eventType, callback){
         if( !this.eventDispatcher ){
             this.eventDispatcher = $("<div>");

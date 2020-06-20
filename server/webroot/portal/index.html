@@ -150,63 +150,6 @@
         reception.link.click();
     })();
 
-    // (function(){
-    //     let currentPaneId = "";
-    //     let paneMap = {};
-    //
-    //     function setActive(e){
-    //         $(".sidebar a.active").removeClass("active");
-    //         e.addClass("active");
-    //     }
-    //
-    //     function loadPane(id, url, wrapperElement){
-    //         return new Promise((resolve, fail) => {
-    //             if( id in paneMap ){
-    //                 wrapperElement.append(paneMap[id]);
-    //                 delete paneMap[id];
-    //                 resolve(false);
-    //             } else {
-    //                 wrapperElement.load(url, async () => {
-    //                     if( id === "index-reception-link" ){
-    //                         await initReception();
-    //                     }
-    //                     resolve(true);
-    //                 });
-    //             }
-    //         });
-    //     }
-    //
-    //     async function onLinkClicked(id, url){
-    //         let wrapper = $("#index-pane-wrapper");
-    //         if( id === currentPaneId ){
-    //             return;
-    //         }
-    //         if( currentPaneId !== "" ){
-    //             paneMap[currentPaneId] = wrapper.contents().detach();
-    //         }
-    //         let fetched = await loadPane(id, url, wrapper);
-    //         currentPaneId = id;
-    //         //if( !fetched ) {
-    //             wrapper.find(".pane").trigger("pane_shown");
-    //             console.log("triggered");
-    //         //}
-    //         setActive($(this));
-    //
-    //     }
-    //
-    //     function bindLink(id, url){
-    //         $(`#${id}`).on("click", event => onLinkClicked(id, url));
-    //     }
-    //
-    //     bindLink("index-practice-link", "pane-practice.html");
-    //     bindLink("index-cashier-link", "pane-cashier.html");
-    //     bindLink("index-reception-link", "pane-reception.html");
-    //     bindLink("index-faxed-link", "pane-faxed-shohousen.html");
-    //     bindLink("index-houmon-kango-link", "pane-houmon-kango.html");
-    //     bindLink("index-send-fax-link", "pane-send-fax.html");
-    //     $("#index-reception-link").click();
-    // })();
-
 </script>
 </body>
 </html>

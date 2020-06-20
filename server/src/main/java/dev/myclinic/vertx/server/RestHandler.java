@@ -401,7 +401,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        backend.deleteKoukikourei(koukikourei);
+        backend.deleteKoukikoureiSafely(koukikourei.koukikoureiId);
         conn.commit();
         req.response().end("true");
     }

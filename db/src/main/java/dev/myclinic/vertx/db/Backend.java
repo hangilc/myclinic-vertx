@@ -2011,6 +2011,9 @@ public class Backend {
     }
 
     public void deleteShahokokuhoSafely(int shahokokuhoId) {
+        if( shahokokuhoId == 0 ){
+            return;
+        }
         int count = countVisitByShahokokuhoId(shahokokuhoId);
         if (count != 0) {
             throw new RuntimeException("この社保・国保はすでに使用されているので、削除できません。");
@@ -2052,7 +2055,7 @@ public class Backend {
         return getQuery().query(sql, ts.koukikoureiTable, patientId);
     }
 
-    public void deleteKoukikourei(KoukikoureiDTO dto) {
+    void deleteKoukikourei(KoukikoureiDTO dto) {
         deleteKoukikourei(dto.koukikoureiId);
     }
 
@@ -2065,6 +2068,9 @@ public class Backend {
     }
 
     public void deleteKoukikoureiSafely(int koukikoureiId) {
+        if( koukikoureiId == 0 ){
+            return;
+        }
         int count = countVisitByKoukikoureiId(koukikoureiId);
         if (count != 0) {
             throw new RuntimeException("この後期高齢保険はすでに使用されているので、削除できません。");
@@ -2173,6 +2179,9 @@ public class Backend {
     }
 
     private void deleteKouhiSafely(int kouhiId) {
+        if( kouhiId == 0 ){
+            return;
+        }
         int count = countVisitByKouhiId(kouhiId);
         if (count != 0) {
             throw new RuntimeException("この公費負担はすでに使用されているので、削除できません。");

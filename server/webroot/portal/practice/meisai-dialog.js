@@ -23,4 +23,5 @@ export class MeisaiDialog extends Dialog {
             this.hide();
         });
     }
+
 }

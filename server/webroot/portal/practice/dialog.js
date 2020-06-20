@@ -2,7 +2,7 @@ import {Component} from "./component.js";
 
 export class Dialog extends Component {
     constructor(ele, map, rest) {
-        super(ele, map, rest);
+        super(map.dialog || ele, map, rest);
         this.dialogResult = null;
     }
 

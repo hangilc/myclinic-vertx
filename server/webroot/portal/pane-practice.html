@@ -1,5 +1,4 @@
 <!--suppress ALL -->
-<!-- TODO: add receipt detail menu to title -->
 <div class="row" id="practice-top">
     <h3 class="col-xl-2">診察</h3>
     <div class="col-xl-10 form-inline">
@@ -887,8 +886,58 @@
     </div>
 </template>
 
-<template id="practice-meisai-dialog-template">
+<template id="practice-example-dialog-template">
+    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary x-close">閉じる</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
 
+<template id="practice-visit-meisai-dialog-template">
+    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">診療明細</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="x-sections"></div>
+                    <div>総点：<span class="x-total-ten"></span></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary x-close">閉じる</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <template class="x-item-template">
+        <div>
+            <div class="x-title"></div>
+            <div class="x-detail"></div>
+        </div>
+    </template>
+    <template class="x-detail-template">
+        <div class="row">
+            <div class="col-sm-2"></div>
+            <div class="col-sm-4 x-detail-label"></div>
+            <div class="col-sm-2 x-detail-ten"></div>
+        </div>
+    </template>
 </template>
 
 <script>
@@ -933,6 +982,7 @@
         let {SearchTextGloballyDialog} = await import("./practice/search-text-globally-dialog.js");
         let {PracticeState} = await import("./practice/practice-state.js");
         let {PatientSearchDialog} = await import("./practice/patient-search-dialog.js");
+        let {VisitMeisaiDialog} = await import("./practice/visit-meisai-dialog.js");
 
         let practiceState = new PracticeState(rest);
 
@@ -1187,17 +1237,30 @@
 
         })();
 
+        class VisitMeisaiDialogFactory {
+            create(meisai){
+                let html = $("template#practice-visit-meisai-dialog-template").html();
+                let ele = $(html);
+                let map = parseElement(ele);
+                let dialog = new VisitMeisaiDialog(ele, map, rest);
+                dialog.init();
+                dialog.set(meisai);
+                return dialog;
+            }
+        }
+
         class TitleFactory {
             constructor() {
                 this.html = $("template#practice-title-template").html();
                 this.rest = rest;
+                this.visitMeisaiDialogFactory = new VisitMeisaiDialogFactory();
             }
 
             create(visit) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new Title(ele, map, rest);
-                comp.init(visit, "current-visit", "temp-visit");
+                comp.init(visit, "current-visit", "temp-visit", this.visitMeisaiDialogFactory);
                 if (visit.visitId === practiceState.getVisitId()) {
                     comp.markAsCurrent();
                 } else if (visit.visitId === practiceState.getTempVisitId()) {

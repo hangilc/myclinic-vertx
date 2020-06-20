@@ -8,11 +8,12 @@ export class Title extends Component {
         ele.attr("data-component", 3);
     }
 
-    async init(visit, classCurrentVisit, classTempVisit) {
+    async init(visit, classCurrentVisit, classTempVisit, visitMeisaiDialogFactory) {
         this.visit = visit;
         this.textElement.text(this.rep(visit.visitedAt));
         this.classCurrentVisit = classCurrentVisit;
         this.classTempVisit = classTempVisit;
+        this.visitMeisaiDialogFactory = visitMeisaiDialogFactory;
         this.menu.delete.on("click",  event => this.doDelete());
         this.menu.tempVisit.on("click", event => this.doTempVisit());
         this.menu.untempVisit.on("click", event => this.doClearTempVisit());
@@ -67,7 +68,9 @@ export class Title extends Component {
 
     async doMeisai(){
         let meisai = await this.rest.getMeisai(this.getVisitId());
-        console.log(JSON.stringify(meisai, null, 2));
+        console.log(meisai);
+        let dialog = this.visitMeisaiDialogFactory.create(meisai);
+        await dialog.open();
     }
 
     rep(sqldatetime) {

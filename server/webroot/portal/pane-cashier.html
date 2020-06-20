@@ -48,7 +48,7 @@
 </div>
 
 <script>
-    (function(){
+    async function initCashier(){
 
         class ChargeDialog {
             constructor(ele) {
@@ -173,6 +173,7 @@
         let wqTable = new WqueueTable($("#cashier-wqueue-table"), $("#cashier-charge-dialog"));
 
         async function update(){
+            console.log("update");
             let wqList = await rest.listWqueueFull();
             wqTable.clear();
             for(let wq of wqList){
@@ -183,5 +184,5 @@
         $("#cashier-refresh-button").on("click", event => update());
 
         $("#cashier-top").on("pane_shown", event => update());
-    })();
+    }
 </script>

@@ -1,6 +1,6 @@
 <h3>受付</h3>
 
-<div id="reception-main-commands">
+<div id="reception-main-commands" class="pane">
     <button type="button" class="btn btn-secondary x-new-patient">新規患者</button>
     <button type="button" class="btn btn-secondary x-search-patient ml-2">患者検索</button>
     <button type="button" class="btn btn-link x-search-payment ml-2">会計検索</button>
@@ -836,7 +836,7 @@
 
 <script>
 
-    (async function () {
+    async function initReception() {
         let {parseElement} = await import("./js/parse-element.js");
         let {PatientSearchDialog} = await import("./reception/patient-search-dialog.js");
         let {PatientAndHokenEditWidget} = await import("./reception/patient-and-hoken-edit-widget.js");
@@ -1050,5 +1050,12 @@
                 }
             });
         })();
-    })();
+
+        async function refreshWqueueTable(){
+            let wqueueFulls = await rest.listWqueueFull();
+            console.log("wqueueFulls", wqueueFulls);
+        }
+
+        $("#reception-main-commands").on("pane_shown", event => refreshWqueueTable());
+    }
 </script>

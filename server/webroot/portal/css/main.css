@@ -1,7 +1,7 @@
 a:hover {text-decoration: none;}
 
 .sidebar { background-color:#eee; }
-.nav a.active { font-weight: bold; }
+.sidebar a.active { font-weight: bold; }
 
 .practice-title { background-color: #eee; font-weight: bold; padding: 3px 6px; }
 .practice-title.current-visit { background-color: #ff9; }

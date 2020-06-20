@@ -51,50 +51,161 @@
     window.onerror = message => alert(message);
 
     (function(){
-        let currentPaneId = "";
-        let paneMap = {};
+        let paneWrapper = $("#index-pane-wrapper");
+        let currentPane = null;
 
-        function setActive(e){
-            $(".sidebar a.active").removeClass("active");
-            e.addClass("active");
-        }
+        class Pane {
+            constructor(link, url){
+                this.link = link;
+                this.url = url;
+                this.ele = null;
+                link.on("click", event => this.load());
+            }
 
-        async function loadPane(id, url, wrapperElement){
-            return new Promise((resolve, fail) => {
-                if( id in paneMap ){
-                    wrapperElement.append(paneMap[id]);
-                    delete paneMap[id];
-                    resolve(true);
+            save(){
+                this.ele = paneWrapper.contents().detach();
+            }
+
+            async initPane(){
+
+            }
+
+            onPaneLoaded(){
+                paneWrapper.find(".pane").trigger("pane_shown");
+                $(".sidebar a.active").removeClass("active");
+                this.link.addClass("active");
+            }
+
+            async load(){
+                if( currentPane ){
+                    currentPane.save();
+                }
+                if( this.ele ){
+                    paneWrapper.append(this.ele);
+                    currentPane = this;
+                    this.onPaneLoaded();
                 } else {
-                    wrapperElement.load(url, () => resolve(true));
+                    paneWrapper.load(this.url, async () => {
+                        currentPane = this;
+                        await this.initPane();
+                        this.onPaneLoaded();
+                    });
                 }
-            });
+            }
         }
 
-        function bindLink(id, url){
-            let wrapper = $("#index-pane-wrapper");
-            $(`#${id}`).on("click", async event => {
-                if( id === currentPaneId ){
-                    return;
-                }
-                if( currentPaneId !== "" ){
-                    paneMap[currentPaneId] = wrapper.contents().detach();
-                }
-                await loadPane(id, url, wrapper);
-                currentPaneId = id;
-                wrapper.find(".pane").trigger("pane_shown");
-                setActive($(this));
-            });
+        class PracticePane extends Pane {
+            constructor(){
+                super($("#index-practice-link"), "pane-practice.html");
+            }
         }
 
-        bindLink("index-practice-link", "pane-practice.html");
-        bindLink("index-cashier-link", "pane-cashier.html");
-        bindLink("index-reception-link", "pane-reception.html");
-        bindLink("index-faxed-link", "pane-faxed-shohousen.html");
-        bindLink("index-houmon-kango-link", "pane-houmon-kango.html");
-        bindLink("index-send-fax-link", "pane-send-fax.html");
-        $("#index-practice-link").click();
+        class CashierPane extends Pane {
+            constructor(){
+                super($("#index-cashier-link"), "pane-cashier.html");
+            }
+
+            async initPane(){
+                await super.initPane();
+                await initCashier();
+            }
+        }
+
+        class FaxedShohousenPane extends Pane {
+            constructor(){
+                super($("#index-faxed-link"), "pane-faxed-shohousen.html");
+            }
+        }
+
+        class ReceptionPane extends Pane {
+            constructor(){
+                super($("#index-reception-link"), "pane-reception.html");
+            }
+
+            async initPane(){
+                await super.initPane();
+                await initReception();
+            }
+        }
+
+        class HoumonKangoPane extends Pane {
+            constructor(){
+                super($("#index-houmon-kango-link"), "pane-houmon-kango.html");
+            }
+        }
+
+        class SendFaxPane extends Pane {
+            constructor(){
+                super($("#index-send-fax-link"), "pane-send-fax.html");
+            }
+        }
+
+        let practice = new PracticePane();
+        let cashier = new CashierPane();
+        let reception = new ReceptionPane();
+        let faxedShohousen = new FaxedShohousenPane();
+        let houmonKango = new HoumonKangoPane();
+        let sendFax = new SendFaxPane();
+
+        reception.link.click();
     })();
+
+    // (function(){
+    //     let currentPaneId = "";
+    //     let paneMap = {};
+    //
+    //     function setActive(e){
+    //         $(".sidebar a.active").removeClass("active");
+    //         e.addClass("active");
+    //     }
+    //
+    //     function loadPane(id, url, wrapperElement){
+    //         return new Promise((resolve, fail) => {
+    //             if( id in paneMap ){
+    //                 wrapperElement.append(paneMap[id]);
+    //                 delete paneMap[id];
+    //                 resolve(false);
+    //             } else {
+    //                 wrapperElement.load(url, async () => {
+    //                     if( id === "index-reception-link" ){
+    //                         await initReception();
+    //                     }
+    //                     resolve(true);
+    //                 });
+    //             }
+    //         });
+    //     }
+    //
+    //     async function onLinkClicked(id, url){
+    //         let wrapper = $("#index-pane-wrapper");
+    //         if( id === currentPaneId ){
+    //             return;
+    //         }
+    //         if( currentPaneId !== "" ){
+    //             paneMap[currentPaneId] = wrapper.contents().detach();
+    //         }
+    //         let fetched = await loadPane(id, url, wrapper);
+    //         currentPaneId = id;
+    //         //if( !fetched ) {
+    //             wrapper.find(".pane").trigger("pane_shown");
+    //             console.log("triggered");
+    //         //}
+    //         setActive($(this));
+    //
+    //     }
+    //
+    //     function bindLink(id, url){
+    //         $(`#${id}`).on("click", event => onLinkClicked(id, url));
+    //     }
+    //
+    //     bindLink("index-practice-link", "pane-practice.html");
+    //     bindLink("index-cashier-link", "pane-cashier.html");
+    //     bindLink("index-reception-link", "pane-reception.html");
+    //     bindLink("index-faxed-link", "pane-faxed-shohousen.html");
+    //     bindLink("index-houmon-kango-link", "pane-houmon-kango.html");
+    //     bindLink("index-send-fax-link", "pane-send-fax.html");
+    //     $("#index-reception-link").click();
+    // })();
 
 </script>
 </body>

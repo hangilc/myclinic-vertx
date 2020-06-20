@@ -12,6 +12,7 @@ export class SearchTextDialog extends Dialog {
     }
 
     init(dialogTitle){
+        super.init();
         this.titleElement.text(dialogTitle);
         this.searchFormElement.on("submit", event => {
             this.trigger("search", 1);
@@ -25,6 +26,7 @@ export class SearchTextDialog extends Dialog {
     }
 
     set(){
+        super.set();
         this.nav.set(0, 0);
     }
 

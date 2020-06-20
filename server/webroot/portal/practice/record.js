@@ -26,6 +26,7 @@ export class Record extends Component {
          drugDispFactory, sendFaxFactory, chargeFactory, currentVisitManager) {
         this.visitFull = visitFull;
         this.textFactory = textFactory;
+        this.hokenFactory = hokenFactory;
         this.shinryouFactory = shinryouFactory;
         this.titleComponent = titleFactory.create(visitFull.visit).appendTo(this.titleElement);
         this.conductDispFactory = conductDispFactory;
@@ -46,8 +47,7 @@ export class Record extends Component {
             comp.putBefore(this.enterTextElement);
         });
         this.sendShohousenFaxElement.on("click", event => this.doSendShohousenFax());
-        let hokenComp = hokenFactory.create(visitFull.hoken, hokenRep).appendTo(this.hokenWrapperElement);
-        console.log("hokenComp", hokenComp.ele.html());
+        this.createHokenComponent(visitFull.hoken, hokenRep).appendTo(this.hokenWrapperElement);
         this.shinryouMenuElement.on("click", async event => {
             let result = await shinryouRegularDialogFactory.create(visitFull.visit.visitId).open();
             if (result.mode === "entered") {
@@ -79,6 +79,16 @@ export class Record extends Component {
 
     getPharmaTextRegex(){
         return /(.+)にファックス（(\+\d+)）で送付/;
+    }
+
+    createHokenComponent(hoken, hokenRep){
+        let visit = this.visitFull.visit;
+        let hokenComp = this.hokenFactory.create(visit.patientId, visit.visitedAt.substring(0, 10),
+            visit.visitId, hoken, hokenRep);
+        hokenComp.onChanged((hoken, hokenRep) => {
+            this.createHokenComponent(hoken, hokenRep).replace(hokenComp);
+        });
+        return hokenComp;
     }
 
     async saveShohousenFaxImage(text, reqOpts){

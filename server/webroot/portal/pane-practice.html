@@ -542,6 +542,32 @@
     <div></div>
 </template>
 
+<template id="practice-hoken-select-dialog-template">
+    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">保険選択</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body x-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary x-enter">入力</button>
+                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <template class="x-item-template">
+        <div class="form-check form-check">
+            <input type="checkbox" class="form-check-input x-input">
+            <div class="form-check-label x-label"></div>
+        </div>
+    </template>
+</template>
+
 <template id="practice-text-template">
     <div class="my-1"></div>
 </template>
@@ -963,6 +989,7 @@
         let {Record} = await import("./practice/record.js");
         let {Hoken} = await import("./practice/hoken.js");
         let {HokenDisp} = await import("./practice/hoken-disp.js");
+        let {HokenSelectDialog} = await import("./practice/hoken-select-dialog.js");
         let {ShohousenPreviewDialog} = await import("./practice/shohousen-preview-dialog.js");
         let {ConductDisp} = await import("./practice/conduct-disp.js");
         let {DrugDisp} = await import("./practice/drug-disp.js");
@@ -1357,6 +1384,18 @@
             }
         }
 
+        class HokenSelectDialogFactory {
+            create(hokenEx, visitId, current){
+                let html = $("template#practice-hoken-select-dialog-template").html();
+                let ele = $(html);
+                let map = parseElement(ele);
+                let dialog = new HokenSelectDialog(ele, map, rest);
+                dialog.init(visitId);
+                dialog.set(hokenEx, current);
+                return dialog;
+            }
+        }
+
         class HokenDispFactory {
             create(hokenRep){
                 let html = "<div></div>";
@@ -1373,13 +1412,14 @@
             constructor() {
                 this.html = getTemplateHtml("practice-hoken-template");
                 this.hokenDispFactory = new HokenDispFactory();
+                this.hokenSelectDialogFactory = new HokenSelectDialogFactory();
             }
 
-            create(hoken, hokenRep) {
+            create(patientId, date, visitId, hoken, hokenRep) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let compHoken = new Hoken(ele, map, rest);
-                compHoken.init(this.hokenDispFactory);
+                compHoken.init(patientId, date, visitId, this.hokenDispFactory, this.hokenSelectDialogFactory);
                 compHoken.set(hoken, hokenRep);
                 return compHoken;
             }
@@ -1541,7 +1581,6 @@
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let record = new Record(ele, map, rest);
-                console.log("hokenREp", hokenRep);
                 record.init(visitFull, hokenRep, this.titleFactory, this.textFactory,
                     this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
                     this.shinryouRegularDialogFactory, this.conductDispFactory,
@@ -1807,20 +1846,10 @@
             })
         }
 
-        async function getHokenRep(hoken) {
-            let hokenRep = await rest.hokenRep(hoken);
-            if (hokenRep == "") {
-                hokenRep = "［保険なし］"
-            }
-            return hokenRep;
-        }
-
         function setRecords(visitFulls) {
             let recordWrapperElement = $("#practice-record-wrapper");
             recordWrapperElement.html("");
             for (let visitFull of visitFulls) {
-                console.log("visitFull", visitFull);
-                console.log("visitFull.hokenRep", visitFull.hokenRep);
                 let record = recordFactory.create(visitFull, visitFull.hokenRep);
                 record.onTextCopied((event, copiedText) => {
                     let targetRec = findRecord(copiedText.visitId);
@@ -1836,7 +1865,7 @@
             if (patientId > 0 && page >= 1) {
                 let visitPage = await rest.listVisit(patientId, page - 1);
                 for(let visit of visitPage.visits){
-                    visit.hokenRep = await getHokenRep(visit.hoken);
+                    visit.hokenRep = await rest.hokenRep(visit.hoken);
                 }
                 return visitPage;
             } else {

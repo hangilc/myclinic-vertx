@@ -6,6 +6,18 @@ export class Dialog extends Component {
         this.dialogResult = null;
     }
 
+    init(){
+        this.ele.on("hidden.bs.modal", event => {
+            if( this.dialogResolve ){
+                this.dialogResolve(this.dialogResult);
+            }
+        });
+    }
+
+    set(){
+
+    }
+
     setDialogResult(result){
         this.dialogResult = result;
     }
@@ -20,10 +32,7 @@ export class Dialog extends Component {
 
     open(){
         return new Promise(resolve => {
-            this.ele.on("hidden.bs.modal", event => {
-                this.ele.off("hidden.bs.modal");
-                resolve(this.dialogResult);
-            });
+            this.dialogResolve = resolve;
             this.ele.modal("show");
         });
     }

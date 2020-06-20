@@ -166,7 +166,11 @@ class Rest extends Client {
     }
 
     async hokenRep(hoken) {
-        return await ajaxPost(this.url("/hoken-rep"), hoken);
+        let rep = await ajaxPost(this.url("/hoken-rep"), hoken);
+        if( !rep ){
+            rep = "［保険なし］";
+        }
+        return rep;
     }
 
     async shahokokuhoRep(shahokokuho) {
@@ -463,6 +467,10 @@ class Rest extends Client {
 
     async deleteKouhi(kouhi){
         return await this.post("/delete-kouhi", kouhi);
+    }
+
+    async updateHoken(visit){
+        return await this.post("/update-hoken", visit);
     }
 
 }

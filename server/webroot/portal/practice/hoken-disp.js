@@ -13,7 +13,6 @@ export class HokenDisp extends Component {
     set(hokenRep){
         super.set();
         this.ele.text(hokenRep);
-        console.log("hokenRep", hokenRep);
         return this;
     }
 }

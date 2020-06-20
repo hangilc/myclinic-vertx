@@ -9,6 +9,7 @@ export class ShohousenPreviewDialog extends Dialog {
     }
 
     init(ops, drawerSvgModule){
+        super.init();
         let svg = drawerSvgModule.drawerToSvg(ops,
             {width: "148mm", height: "210mm", viewBox: "0 0 148 210"});
         this.dispElement.html("");
@@ -18,5 +19,9 @@ export class ShohousenPreviewDialog extends Dialog {
             this.hide();
         });
         this.closeElement.on("click", event => this.hide());
+    }
+
+    set(){
+        super.set();
     }
 }

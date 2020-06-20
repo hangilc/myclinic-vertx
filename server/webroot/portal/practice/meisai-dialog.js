@@ -12,6 +12,7 @@ export class MeisaiDialog extends Dialog {
     }
 
     init(meisai){
+        super.init();
         let meisaiDetail = new MeisaiDetail(this.detailElement, this.detailMap, this.rest);
         meisaiDetail.init(meisai);
         this.enterElement.on("click", event => {
@@ -22,6 +23,10 @@ export class MeisaiDialog extends Dialog {
             this.setDialogResult(false);
             this.hide();
         });
+    }
+
+    set(){
+        super.set();
     }
 
 }

@@ -16,6 +16,7 @@ export class PatientSearchDialog extends Dialog {
     }
 
     init(){
+        super.init();
         this.search.form.on("submit", event => {
             let promise = this.doSearch();
             return false;
@@ -25,6 +26,10 @@ export class PatientSearchDialog extends Dialog {
         this.enterElement.on("click", event => this.doEnter());
         this.cancelElement.on("click", event => this.hide());
         this.ele.on("shown.bs.modal", event => this.search.input.focus());
+    }
+
+    set(){
+        super.set();
     }
 
     getSelectedPatient(){

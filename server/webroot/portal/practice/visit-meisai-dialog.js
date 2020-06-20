@@ -12,11 +12,13 @@ export class VisitMeisaiDialog extends Dialog {
     }
 
     init(){
+        super.init();
         this.closeElement.on("click", event => this.close());
         return this;
     }
 
     set(meisai){
+        super.set();
         for(let sect of meisai.sections){
             let e = this.createSectionElement(sect);
             this.sectionsElement.append(e);

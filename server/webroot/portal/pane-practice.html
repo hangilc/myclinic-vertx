@@ -718,6 +718,36 @@
     <div></div>
 </template>
 
+<template id="practice-charge-modify-template">
+    <div class="mb-3 border border-secondary rounded p-2">
+        <div class="d-flex p-2 mb-2" style="background-color: #ccc;">
+            <div class="font-weight-bold flex-grow-1">請求額の変更</div>
+            <div><span class="font-weight-bold x-widget-close"
+                       style="cursor: pointer;">&times;</span></div>
+        </div>
+        <div>
+            <div class="row">
+                <div class="col-sm-5 d-flex justify-content-end">診療報酬総点</div>
+                <div class="col-sm-7"><span class="x-total-ten"></span>点</div>
+                <div class="col-sm-5 d-flex justify-content-end">負担割</div>
+                <div class="col-sm-7"><span class="x-futan-wari"></span>割</div>
+                <div class="col-sm-5 d-flex justify-content-end">現在の請求額</div>
+                <div class="col-sm-7"><span class="x-current-charge"></span>円</div>
+            </div>
+            <div class="form-group row">
+                <div class="col-sm-5 col-form-label d-flex justify-content-end">変更後の請求額</div>
+                <div class="col-sm-7 form-inline">
+                    <input type="text" class="form-control x-charge" size="6"/>円
+                </div>
+            </div>
+        </div>
+        <div class="mt-2 d-flex justify-content-end">
+            <button class="btn btn-secondary x-enter">入力</button>
+            <button class="btn btn-secondary x-cancel">キャンセル</button>
+        </div>
+    </div>
+</template>
+
 <template id="practice-nav-template">
     <div class="d-none mt-2">
         <a href="javascript:void(0)" class="x-first">最初</a>
@@ -966,6 +996,20 @@
     </template>
 </template>
 
+<template id="practice-widget-example-template">
+    <div class="mb-3 border border-secondary rounded p-3">
+        <div class="d-flex p-2 mb-2" style="background-color: #ccc;">
+            <div class="font-weight-bold flex-grow-1"></div>
+            <div><span class="font-weight-bold x-widget-close"
+                       style="cursor: pointer;">&times;</span></div>
+        </div>
+        <div></div>
+        <div class="mt-2 d-flex justify-content-end">
+            <button type="button" class="x-close btn btn-secondary ml-2">閉じる</button>
+        </div>
+    </div>
+</template>
+
 <script>
 
     async function initPractice() {
@@ -999,6 +1043,7 @@
         let {FaxProgress} = await import("./practice/fax-progress.js");
         let {Charge} = await import("./practice/charge.js");
         let {ChargeDisp} = await import("./practice/charge-disp.js");
+        let {ChargeModify} = await import("./practice/charge-modify.js");
         let {Nav} = await import("./practice/nav.js");
         let {DiseaseArea} = await import("./practice/disease-area.js");
         let {DiseaseCurrent} = await import("./practice/disease-current.js");
@@ -1544,17 +1589,30 @@
             }
         }
 
+        class ChargeModifyFactory {
+            create(meisai, charge){
+                let html = $("template#practice-charge-modify-template").html();
+                let ele = $(html);
+                let map = parseElement(ele);
+                let comp = new ChargeModify(ele, map, rest);
+                comp.init();
+                comp.set(meisai, charge);
+                return comp;
+            }
+        }
+
         class ChargeFactory {
             constructor() {
                 this.html = getTemplateHtml("practice-charge-template");
                 this.chargeDispFactory = new ChargeDispFactory();
+                this.chargeModifyFactory = new ChargeModifyFactory();
             }
 
             create(charge) {
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new Charge(ele, map, rest);
-                comp.init(charge, this.chargeDispFactory);
+                comp.init(charge, this.chargeDispFactory, this.chargeModifyFactory);
                 return comp;
             }
         }

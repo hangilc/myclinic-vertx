@@ -11,7 +11,18 @@ export class KouhiForm {
         return this;
     }
 
-    set(){
+    set(kouhi){
+        if( kouhi ){
+            this.futanshaElement.val(kouhi.futansha);
+            this.jukyuushaElement.val(kouhi.jukyuusha);
+            this.validFromElement.val(kouhi.validFrom);
+            this.validUptoElement.val(kouhi.validUpto);
+        } else {
+            this.futanshaElement.val(null);
+            this.jukyuushaElement.val(null);
+            this.validFromElement.val(null);
+            this.validUptoElement.val(null);
+        }
         return this;
     }
 
@@ -57,6 +68,7 @@ export class KouhiForm {
             return undefined;
         }
         return {
+            kouhiId,
             patientId,
             futansha,
             jukyuusha,

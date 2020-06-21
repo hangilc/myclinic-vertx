@@ -6,7 +6,7 @@ export class CashierDialog extends Dialog {
     constructor(ele, map, rest) {
         super(ele, map, rest);
         this.sectionsElement = map.sections;
-        this.totalTenElement = map.totalTen;
+        this.summaryElement = map.summary;
         this.printReceiptElement = map.printReceipt;
         this.endElement = map.end;
         this.cancelElement = map.cancel;
@@ -28,18 +28,34 @@ export class CashierDialog extends Dialog {
         super.set();
         this.meisai = meisai;
         this.visitId = visitId;
+        this.chargeValue = chargeValue;
         for (let sect of meisai.sections) {
             let e = this.createSectionElement(sect);
             this.sectionsElement.append(e);
         }
-        this.totalTenElement.text(meisai.totalTen);
-        if( payments && payments.length > 0 ){
-            payments.sort(compareBy("-amount"));
-            let values = payments.map(p => p.amount.toLocaleString() + "円");
-            this.paymentsElement.text("支払い履歴：" + values.join("、"));
+        this.summaryElement.text(this.createSummary(meisai));
+        let chargeRep = chargeValue.toLocaleString();
+        let lastPayment = this.getLastPayment(payments);
+        if( lastPayment !== null ){
+            this.paymentsElement.text(`支払い済額：${lastPayment}円`);
+            this.chargeElement.text(`請求額：${chargeValue} - ${lastPayment} = ${chargeValue - lastPayment}円 `);
+        } else {
+            this.chargeElement.text(`請求額：${chargeValue}円 `);
         }
-        this.chargeElement.text(chargeValue.toLocaleString());
         return this;
+    }
+
+    getLastPayment(payments){
+        if( payments && payments.length > 0 ){
+            payments.sort(compareBy("-paytime"));
+            return payments[0].amount;
+        } else {
+            return null;
+        }
+    }
+
+    createSummary(meisai){
+        return `総点：${meisai.totalTen}点, 負担割：${meisai.futanWari}割`;
     }
 
     createSectionElement(section) {
@@ -63,7 +79,7 @@ export class CashierDialog extends Dialog {
 
     async doEnd(){
         let visitId = this.visitId;
-        let charge = this.meisai.charge;
+        let charge = this.chargeValue;
         let paytime = kanjidate.nowAsSqldatetime();
         await this.rest.finishCharge(visitId, charge, paytime);
         this.close(true);

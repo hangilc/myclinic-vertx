@@ -39,8 +39,9 @@ export class ChargeModify extends Widget {
             alert("Charge is not available.");
             return;
         }
-        await this.rest.modifyCharge(charge.visitId, value);
-        let updated = await this.rest.getCharge(charge.visitId);
+        let visitId = charge.visitId;
+        await this.rest.modifyCharge(visitId, value);
+        let updated = await this.rest.getCharge(visitId);
         this.close(updated);
     }
 

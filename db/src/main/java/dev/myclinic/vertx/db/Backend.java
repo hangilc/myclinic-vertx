@@ -578,13 +578,15 @@ public class Backend {
     public void modifyCharge(int visitId, int charge) {
         ChargeDTO cur = getCharge(visitId);
         if (cur == null) {
-            ChargeDTO dto = new ChargeDTO();
-            dto.visitId = visitId;
-            dto.charge = charge;
-            enterCharge(dto);
+            enterCharge(visitId, charge);
+//            ChargeDTO dto = new ChargeDTO();
+//            dto.visitId = visitId;
+//            dto.charge = charge;
+//            enterCharge(dto);
         } else {
-            cur.charge = charge;
-            updateCharge(cur);
+            updateCharge(visitId, charge);
+//            cur.charge = charge;
+//            updateCharge(cur);
         }
     }
 

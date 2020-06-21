@@ -50,9 +50,22 @@ export class WqueueTable extends Component {
         return e;
     }
 
+    onChanged(cb){
+        this.on("changed", event => cb());
+    }
+
     async doCashier(visitId){
+        let charge = await this.rest.getCharge(visitId);
+        if( !charge ){
+            alert("Cannot find charge.");
+            return;
+        }
         let meisai = await this.rest.getMeisai(visitId);
-        let dialog = this.cashierDialogFactory.create(meisai, visitId);
-        await dialog.open();
+        let payments = await this.rest.listPayment(visitId);
+        let dialog = this.cashierDialogFactory.create(meisai, visitId, charge.charge, payments);
+        let result = await dialog.open();
+        if( result){
+            this.trigger("changed");
+        }
     }
 }

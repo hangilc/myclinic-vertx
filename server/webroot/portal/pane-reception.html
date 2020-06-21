@@ -837,6 +837,10 @@
                 <div class="modal-body">
                     <div class="x-sections"></div>
                     <div>総点：<span class="x-total-ten"></span></div>
+                    <div class="x-payments"></div>
+                    <div class="font-weight-bold">
+                        請求額：<span class="x-charge mr-1"></span>円
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary x-print-receipt">領収書印刷</button>
@@ -1081,13 +1085,13 @@
         })();
 
         class CashierDialogFactory {
-            create(meisai, visitId){
+            create(meisai, visitId, chargeValue, payments){
                 let html = $("template#reception-cashier-dialog-template").html();
                 let ele = $(html);
                 let map = parseElement(ele);
                 let dialog = new CashierDialog(ele, map, rest);
                 dialog.init();
-                dialog.set(meisai, visitId);
+                dialog.set(meisai, visitId, chargeValue, payments);
                 return dialog;
             }
         }
@@ -1107,6 +1111,7 @@
         }
 
         let wqueueTable = (new WqueueTableFactory()).create();
+        wqueueTable.onChanged(() => refreshWqueueTable());
 
         async function refreshWqueueTable(){
             let wqueueFulls = await rest.listWqueueFull();

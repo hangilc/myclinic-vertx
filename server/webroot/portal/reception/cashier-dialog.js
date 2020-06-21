@@ -1,5 +1,6 @@
 import {Dialog} from "./dialog.js";
 import {parseElement} from "../js/parse-element.js";
+import {compareBy} from "../js/general-util.js";
 
 export class CashierDialog extends Dialog {
     constructor(ele, map, rest) {
@@ -11,6 +12,8 @@ export class CashierDialog extends Dialog {
         this.cancelElement = map.cancel;
         this.itemTemplateHtml = map.itemTemplate.html();
         this.detailTemplateHtml = map.detailTemplate.html();
+        this.paymentsElement = map.payments;
+        this.chargeElement = map.charge;
     }
 
     init() {
@@ -21,7 +24,7 @@ export class CashierDialog extends Dialog {
         return this;
     }
 
-    set(meisai, visitId) {
+    set(meisai, visitId, chargeValue, payments) {
         super.set();
         this.meisai = meisai;
         this.visitId = visitId;
@@ -30,6 +33,12 @@ export class CashierDialog extends Dialog {
             this.sectionsElement.append(e);
         }
         this.totalTenElement.text(meisai.totalTen);
+        if( payments && payments.length > 0 ){
+            payments.sort(compareBy("-amount"));
+            let values = payments.map(p => p.amount.toLocaleString() + "円");
+            this.paymentsElement.text("支払い履歴：" + values.join("、"));
+        }
+        this.chargeElement.text(chargeValue.toLocaleString());
         return this;
     }
 
@@ -56,8 +65,8 @@ export class CashierDialog extends Dialog {
         let visitId = this.visitId;
         let charge = this.meisai.charge;
         let paytime = kanjidate.nowAsSqldatetime();
-        console.log(charge, visitId, paytime);
-        // await this.rest.finishCharge(visitId, charge, paytime);
+        await this.rest.finishCharge(visitId, charge, paytime);
+        this.close(true);
     }
 
 }

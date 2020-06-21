@@ -125,6 +125,10 @@ class Rest extends Client {
         return await this.get("/get-charge", {"visit-id": visitId});
     }
 
+    async listPayment(visitId){
+        return await this.get("/list-payment", {"visit-id": visitId});
+    }
+
     async getClinicInfo() {
         return await this.get("/get-clinic-info", {});
     }

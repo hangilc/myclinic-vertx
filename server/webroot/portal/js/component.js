@@ -3,7 +3,6 @@ export class Component {
         this.ele = ele;
         this.map = map;
         this.rest = rest;
-        //his.eventDispatcher = $("<div>");
     }
 
     init(){

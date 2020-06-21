@@ -7,28 +7,24 @@ export class Widget extends Component {
     }
 
     init(){
+        super.init();
         if( this.widgetCloseElement ){
-            this.widgetCloseElement.on("click", event => this.close());
+            this.widgetCloseElement.on("click", event => this.close(null));
         }
         return this;
     }
 
     set(){
+        super.set();
         return this;
     }
 
     onClose(cb){
-        this.onCloseCallback = cb;
+        this.on("close", (event, result) => cb(result));
     }
 
-    close(){
-        if( this.onCloseCallback ){
-            let response = this.onCloseCallback();
-            if( response === false ){
-                return;
-            }
-        }
-        this.ele.remove();
+    close(result){
+        this.trigger("close", result);
     }
 
 }

@@ -728,22 +728,22 @@
         <div>
             <div class="row">
                 <div class="col-sm-5 d-flex justify-content-end">診療報酬総点</div>
-                <div class="col-sm-7"><span class="x-total-ten"></span>点</div>
+                <div class="col-sm-7"><span class="x-total-ten mr-1"></span>点</div>
                 <div class="col-sm-5 d-flex justify-content-end">負担割</div>
-                <div class="col-sm-7"><span class="x-futan-wari"></span>割</div>
+                <div class="col-sm-7"><span class="x-futan-wari mr-1"></span>割</div>
                 <div class="col-sm-5 d-flex justify-content-end">現在の請求額</div>
-                <div class="col-sm-7"><span class="x-current-charge"></span>円</div>
+                <div class="col-sm-7"><span class="x-current-charge mr-1"></span>円</div>
             </div>
             <div class="form-group row">
-                <div class="col-sm-5 col-form-label d-flex justify-content-end">変更後の請求額</div>
+                <div class="col-sm-5 col-form-label d-flex justify-content-end">変更後請求額</div>
                 <div class="col-sm-7 form-inline">
-                    <input type="text" class="form-control x-charge" size="6"/>円
+                    <input type="text" class="form-control x-charge mr-1" size="6"/>円
                 </div>
             </div>
         </div>
         <div class="mt-2 d-flex justify-content-end">
             <button class="btn btn-secondary x-enter">入力</button>
-            <button class="btn btn-secondary x-cancel">キャンセル</button>
+            <button class="btn btn-secondary x-cancel ml-2">キャンセル</button>
         </div>
     </div>
 </template>
@@ -1612,7 +1612,8 @@
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new Charge(ele, map, rest);
-                comp.init(charge, this.chargeDispFactory, this.chargeModifyFactory);
+                comp.init(this.chargeDispFactory, this.chargeModifyFactory);
+                comp.set(charge);
                 return comp;
             }
         }

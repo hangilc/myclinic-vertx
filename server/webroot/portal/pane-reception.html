@@ -1110,7 +1110,6 @@
 
         async function refreshWqueueTable(){
             let wqueueFulls = await rest.listWqueueFull();
-            console.log("wqueueFulls", wqueueFulls);
             wqueueTable.set(wqueueFulls);
         }
 

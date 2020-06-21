@@ -117,6 +117,14 @@ class Rest extends Client {
         return await ajaxPost(this.url("/finish-cashier"), dto);
     }
 
+    async modifyCharge(visitId, amount){
+        return await this.get("/modify-charge", {"visit-id": visitId, charge: amount});
+    }
+
+    async getCharge(visitId){
+        return await this.get("/get-charge", {"visit-id": visitId});
+    }
+
     async getClinicInfo() {
         return await this.get("/get-clinic-info", {});
     }

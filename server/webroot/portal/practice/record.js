@@ -77,10 +77,6 @@ export class Record extends Component {
         return this.visitFull.visit.visitId;
     }
 
-    getPharmaTextRegex(){
-        return /(.+)にファックス（(\+\d+)）で送付/;
-    }
-
     createHokenComponent(hoken, hokenRep){
         let visit = this.visitFull.visit;
         let hokenComp = this.hokenFactory.create(visit.patientId, visit.visitedAt.substring(0, 10),
@@ -120,6 +116,10 @@ export class Record extends Component {
         let newShinryouIds = await this.rest.batchCopyShinryou(targetVisitId, shinryouList);
         let shinryouFulls = await this.rest.listShinryouFullByIds(newShinryouIds);
         this.trigger("shinryou-copied", [targetVisitId, shinryouFulls]);
+    }
+
+    getPharmaTextRegex(){
+        return /(.+)にファックス（(\+\d+)）で送付/;
     }
 
     async doSendShohousenFax(){

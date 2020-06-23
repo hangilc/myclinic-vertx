@@ -55,7 +55,7 @@ export class Nav extends Component {
     }
 
     onChange(cb){
-        this.on("change", (event, page) => cb(event, page));
+        this.on("change", (event, page) => cb(page));
     }
 
     show(){

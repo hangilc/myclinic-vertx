@@ -2,6 +2,7 @@
 
 <div>
     <button type="button" class="btn btn-secondary" id="shujii-select-patient-button">患者選択</button>
+    <button type="button" class="btn btn-secondary ml-2" id="shujii-save-button">保存</button>
 </div>
 <div class="mt-2 row">
     <div class="col-lg-7">
@@ -58,9 +59,15 @@
     <div class="mb-3">
         <div class="x-title font-weight-bold py-1 px-2" style="background-color: #eee"></div>
         <div class="x-text-wrapper"></div>
-        <div class="x-drug-wrapper"></div>
+        <div class="x-drug-wrapper">
+            <div class="d-none x-drug-prep">Rp）</div>
+        </div>
         <div class="x-conduct-wrapper"></div>
     </div>
+</template>
+
+<template id="shujii-drug-template">
+    <div><span class="x-index"></span>）<span class="x-rep"></span></div>
 </template>
 
 <script>
@@ -72,6 +79,7 @@
         let {Record} = await import("./shujii/record.js");
         let {Title} = await import("./shujii/title.js");
         let {Text} = await import("./shujii/text.js");
+        let {Drug} = await import("./shujii/drug.js");
         let currentPatient = null;
 
         class PatientSelectDialogFactory {
@@ -104,6 +112,7 @@
 
         let navFactory = new NavFactory();
         let nav = navFactory.create();
+        nav.onChange(page => loadPage(page));
         nav.appendTo($("#shujii-nav-wrapper"));
 
         function setNav(page, total) {
@@ -137,18 +146,31 @@
             }
         }
 
+        class DrugFactory {
+            create(index, drugFull){
+                let html = $("template#shujii-drug-template").html();
+                let ele = $(html);
+                let map = parseElement(ele);
+                let comp = new Drug(ele, map, rest);
+                comp.init();
+                comp.set(index, drugFull);
+                return comp;
+            }
+        }
+
         class RecordFactory {
             constructor(){
                 this.html = $("template#shujii-record-template").html();
                 this.titleFactory = new TitleFactory();
                 this.textFactory = new TextFactory();
+                this.drugFactory = new DrugFactory();
             }
 
             create(visitFull){
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new Record(ele, map, rest);
-                comp.init(this.titleFactory, this.textFactory);
+                comp.init(this.titleFactory, this.textFactory, this.drugFactory);
                 comp.set(visitFull);
                 return comp;
             }
@@ -158,10 +180,17 @@
 
         function setRecords(visitFulls){
             let wrapper = $("#shujii-record-wrapper");
+            wrapper.html("");
             for(let visitFull of visitFulls){
                 let record = recordFactory.create(visitFull);
                 record.appendTo(wrapper);
             }
+        }
+
+        async function loadPage(page){
+            let visitPage = await rest.listVisit(currentPatient.patientId, page - 1);
+            setNav(visitPage.page + 1, visitPage.totalPages);
+            setRecords(visitPage.visits);
         }
 
         $("#shujii-select-patient-button").on("click", async event => {
@@ -170,14 +199,22 @@
             if (!result) {
                 return;
             }
-            let currentPatient = result;
+            currentPatient = result;
             let masterText = await rest.getShujiiMasterText(currentPatient);
             let textarea = $("#shujii-master-textarea");
             textarea.val(masterText);
-            let visitPage = await rest.listVisit(currentPatient.patientId, 0);
-            setNav(visitPage.page + 1, visitPage.totalPages);
-            setRecords(visitPage.visits);
+            await loadPage(1);
         });
+
+        $("#shujii-save-button").on("click", async event => {
+            if( currentPatient ){
+                let name = currentPatient.lastName + currentPatient.firstName;
+                let textarea = $("#shujii-master-textarea");
+                let text = textarea.val();
+                await rest.saveShujiiMasterText(name, text);
+            }
+        });
+
     }
 
 </script>

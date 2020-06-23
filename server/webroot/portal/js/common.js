@@ -485,6 +485,18 @@ class Rest extends Client {
         return await this.post("/update-hoken", visit);
     }
 
+    async listShujiiPatient(){
+        return await this.get("/list-shujii-patient");
+    }
+
+    async batchGetPatient(patientIds){
+        return await this.post("/batch-get-patient", patientIds);
+    }
+
+    async getShujiiMasterText(patient){
+        return await this.post("/get-shujii-master-text", patient);
+    }
+
 }
 
 class Integration extends Client {

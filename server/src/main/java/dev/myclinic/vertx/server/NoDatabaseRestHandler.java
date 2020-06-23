@@ -283,6 +283,27 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("probe-shohousen-fax-image", this::probeShohousenFaxImage);
         noDatabaseFuncMap.put("show-pdf", this::showPdf);
         noDatabaseFuncMap.put("list-shujii-patient", this::listShujiiPatient);
+        noDatabaseFuncMap.put("get-shujii-master-text", this::getShujiiMasterText);
+    }
+
+    private void getShujiiMasterText(RoutingContext ctx) {
+        try {
+            String shujiiDir = System.getenv("MYCLINIC_SHUJII_DIR");
+            if( shujiiDir == null ){
+                throw new RuntimeException("Cannot find env var MYCLINIC_SHUJII_DIR.");
+            }
+            PatientDTO patient = this.mapper.readValue(ctx.getBody().getBytes(), PatientDTO.class);
+            String patientName = patient.lastName + patient.firstName;
+            Path patientDir = Path.of(shujiiDir, patientName);
+            Path masterPath = patientDir.resolve(patientName + ".txt");
+            if( !(Files.exists(masterPath)) ){
+                ctx.response().end(jsonEncode(null));
+            } else {
+                ctx.response().end(jsonEncode(readFileContent(masterPath)));
+            }
+        } catch(Exception e){
+            ctx.fail(e);
+        }
     }
 
     private List<String> readTextFile(Path path) throws Exception{
@@ -290,6 +311,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             return Files.readAllLines(path, StandardCharsets.UTF_8);
         } catch(MalformedInputException ex){
             return Files.readAllLines(path, Charset.defaultCharset());
+        }
+    }
+
+    private String readFileContent(Path path) throws Exception {
+        try {
+            return Files.readString(path, StandardCharsets.UTF_8);
+        } catch(MalformedInputException ex){
+            return Files.readString(path, Charset.defaultCharset());
         }
     }
 

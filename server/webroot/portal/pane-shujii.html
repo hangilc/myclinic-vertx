@@ -3,6 +3,15 @@
 <div>
     <button type="button" class="btn btn-secondary" id="shujii-select-patient-button">患者選択</button>
 </div>
+<div class="mt-2 row">
+    <div class="col-lg-7">
+        <textarea class="form-control" id="shujii-master-textarea" rows="20"></textarea>
+    </div>
+    <div class="col-lg-5">
+        <div id="shujii-nav-wrapper"></div>
+        <div id="shujii-record-wrapper" class="mt-2"></div>
+    </div>
+</div>
 
 <template id="shujii-patient-select-dialog-template">
     <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
@@ -35,14 +44,38 @@
     </div>
 </template>
 
+<template id="shujii-nav-template">
+    <div class="d-none mt-2">
+        <a href="javascript:void(0)" class="x-first">最初</a>
+        <a href="javascript:void(0)" class="x-prev ml-1">前へ</a>
+        <a href="javascript:void(0)" class="x-next ml-1">次へ</a>
+        <a href="javascript:void(0)" class="x-last ml-1 mr-1">最後</a>
+        [<span class="x-page"></span>/<span class="x-total"></span>]
+    </div>
+</template>
+
+<template id="shujii-record-template">
+    <div class="mb-3">
+        <div class="x-title font-weight-bold py-1 px-2" style="background-color: #eee"></div>
+        <div class="x-text-wrapper"></div>
+        <div class="x-drug-wrapper"></div>
+        <div class="x-conduct-wrapper"></div>
+    </div>
+</template>
+
 <script>
 
     async function initShujii() {
         let {parseElement} = await import("./js/parse-element.js");
         let {PatientSelectDialog} = await import("./shujii/patient-select-dialog.js");
+        let {Nav} = await import("./shujii/nav.js");
+        let {Record} = await import("./shujii/record.js");
+        let {Title} = await import("./shujii/title.js");
+        let {Text} = await import("./shujii/text.js");
+        let currentPatient = null;
 
         class PatientSelectDialogFactory {
-            create(){
+            create() {
                 let html = $("template#shujii-patient-select-dialog-template").html();
                 let ele = $(html);
                 let map = parseElement(ele);
@@ -55,10 +88,95 @@
 
         let patientSelectDialogFactory = new PatientSelectDialogFactory();
 
+        class NavFactory {
+            constructor() {
+                this.html = $("template#shujii-nav-template").html();
+            }
+
+            create() {
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new Nav(ele, map, rest);
+                comp.init();
+                return comp;
+            }
+        }
+
+        let navFactory = new NavFactory();
+        let nav = navFactory.create();
+        nav.appendTo($("#shujii-nav-wrapper"));
+
+        function setNav(page, total) {
+            nav.set(page, total);
+            if (total > 1) {
+                nav.show();
+            } else {
+                nav.hide();
+            }
+        }
+
+        class TitleFactory {
+            create(visit){
+                let ele = $("<div>");
+                let map = parseElement(ele);
+                let comp = new Title(ele, map, rest);
+                comp.init();
+                comp.set(visit);
+                return comp;
+            }
+        }
+
+        class TextFactory {
+            create(text){
+                let ele = $("<div>");
+                let map = parseElement(ele);
+                let comp = new Text(ele, map, rest);
+                comp.init();
+                comp.set(text);
+                return comp;
+            }
+        }
+
+        class RecordFactory {
+            constructor(){
+                this.html = $("template#shujii-record-template").html();
+                this.titleFactory = new TitleFactory();
+                this.textFactory = new TextFactory();
+            }
+
+            create(visitFull){
+                let ele = $(this.html);
+                let map = parseElement(ele);
+                let comp = new Record(ele, map, rest);
+                comp.init(this.titleFactory, this.textFactory);
+                comp.set(visitFull);
+                return comp;
+            }
+        }
+
+        let recordFactory = new RecordFactory();
+
+        function setRecords(visitFulls){
+            let wrapper = $("#shujii-record-wrapper");
+            for(let visitFull of visitFulls){
+                let record = recordFactory.create(visitFull);
+                record.appendTo(wrapper);
+            }
+        }
+
         $("#shujii-select-patient-button").on("click", async event => {
             let dialog = patientSelectDialogFactory.create();
             let result = await dialog.open();
-            console.log("result", result);
+            if (!result) {
+                return;
+            }
+            let currentPatient = result;
+            let masterText = await rest.getShujiiMasterText(currentPatient);
+            let textarea = $("#shujii-master-textarea");
+            textarea.val(masterText);
+            let visitPage = await rest.listVisit(currentPatient.patientId, 0);
+            setNav(visitPage.page + 1, visitPage.totalPages);
+            setRecords(visitPage.visits);
         });
     }
 

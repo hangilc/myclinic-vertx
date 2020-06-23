@@ -85,7 +85,7 @@ function cmp(...props){
 
 let cmpPatient = cmp("lastNameYomi", "firstNameYomi", "patientId");
 
-function sortPatients(patientList){
+export function sortPatients(patientList){
     patientList.sort(cmpPatient);
 }
 

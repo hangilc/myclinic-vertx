@@ -2154,6 +2154,21 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("list-recent-visit-with-patient", this::listRecentVisitWithPatient);
         funcMap.put("list-visit-patient-at", this::listVisitPatientAt);
         funcMap.put("list-shinryou", this::listShinryou);
+        funcMap.put("batch-get-patient", this::batchGetPatient);
+    }
+
+    private void batchGetPatient(RoutingContext ctx, Connection conn) throws Exception {
+        List<Integer> patientIds = this.mapper.readValue(ctx.getBody().getBytes(),
+                new TypeReference<>(){});
+        List<PatientDTO> result = new ArrayList<>();
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        for(int patientId: patientIds){
+            PatientDTO patient = backend.getPatient(patientId);
+            result.add(patient);
+        }
+        conn.commit();
+        ctx.response().end(jsonEncode(result));
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////

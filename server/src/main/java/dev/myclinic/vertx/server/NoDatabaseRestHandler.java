@@ -28,17 +28,19 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.MalformedInputException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingContext> {
 
@@ -87,7 +89,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             return Files.list(patientDir)
                     .filter(p -> matcher.matches(p.getFileName()))
                     .map(p -> p.getFileName().toString())
-                    .collect(Collectors.toList());
+                    .collect(toList());
         } else {
             return Collections.emptyList();
         }
@@ -280,6 +282,77 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("poll-fax", this::pollFax);
         noDatabaseFuncMap.put("probe-shohousen-fax-image", this::probeShohousenFaxImage);
         noDatabaseFuncMap.put("show-pdf", this::showPdf);
+        noDatabaseFuncMap.put("list-shujii-patient", this::listShujiiPatient);
+    }
+
+    private List<String> readTextFile(Path path) throws Exception{
+        try {
+            return Files.readAllLines(path, StandardCharsets.UTF_8);
+        } catch(MalformedInputException ex){
+            return Files.readAllLines(path, Charset.defaultCharset());
+        }
+    }
+
+    private void listShujiiPatient(RoutingContext ctx) {
+        Pattern patientIdPat = Pattern.compile("\\((\\d+)\\)");
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                String shujiiDir = System.getenv("MYCLINIC_SHUJII_DIR");
+                if( shujiiDir == null ){
+                    throw new RuntimeException("Cannot find env var MYCLINIC_SHUJII_DIR.");
+                }
+                List<Integer> patientIds = new ArrayList<>();
+                for(Path path : Files.list(Path.of(shujiiDir)).collect(toList())){
+                    String name = path.getFileName().toString();
+                    if( "arch".equals(name) ){
+                        continue;
+                    }
+                    if( !Files.isDirectory(path) ){
+                        continue;
+                    }
+                    String repFile = name + ".txt";
+                    for(Path subpath : Files.list(path).collect(toList())){
+                        String subname = subpath.getFileName().toString();
+                        int patientId = 0;
+                        if( repFile.equals(subname) ){
+                            List<String> lines = readTextFile(subpath);
+                            String firstLine = null;
+                            for(String line: lines){
+                                line = line.trim();
+                                if( !"".equals(line) ){
+                                    firstLine = line;
+                                    break;
+                                }
+                            }
+                            if( firstLine == null ){
+                                throw new RuntimeException("Empty file: " + subpath.toString());
+                            }
+                            Matcher m = patientIdPat.matcher(firstLine);
+                            if( m.find() ){
+                                patientId = Integer.parseInt(m.group(1));
+                                if( !firstLine.contains(name) ){
+                                    throw new RuntimeException("Cannot find patient name: " + subpath.toString());
+                                }
+                                patientIds.add(patientId);
+                            } else {
+                                throw new RuntimeException("Cannot find patientId: " + subpath.toString());
+                            }
+                            break;
+                        }
+                    }
+                }
+                promise.complete(jsonEncode(patientIds));
+            } catch(Exception e){
+                throw new RuntimeException(e);
+            }
+
+        }, ar -> {
+            if( ar.succeeded() ){
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
     }
 
     private void showPdf(RoutingContext ctx) {

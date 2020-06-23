@@ -1,0 +1,65 @@
+<h3>主治医意見書</h3>
+
+<div>
+    <button type="button" class="btn btn-secondary" id="shujii-select-patient-button">患者選択</button>
+</div>
+
+<template id="shujii-patient-select-dialog-template">
+    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">患者選択</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="x-search_">
+                        <form class="form-inline x-form">
+                            <input type="text" class="form-control x-search-text"/>
+                            <button type="submit" class="btn btn-secondary ml-2">検索</button>
+                            <button type="submit" class="btn btn-secondary ml-2 x-prev">既出患者</button>
+                        </form>
+                        <select size="10" class="x-select form-control mt-2"></select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary x-enter">選択</button>
+                        <button type="button" class="btn btn-secondary x-cancel ml-2">キャンセル</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+
+    async function initShujii() {
+        let {parseElement} = await import("./js/parse-element.js");
+        let {PatientSelectDialog} = await import("./shujii/patient-select-dialog.js");
+
+        class PatientSelectDialogFactory {
+            create(){
+                let html = $("template#shujii-patient-select-dialog-template").html();
+                let ele = $(html);
+                let map = parseElement(ele);
+                let dialog = new PatientSelectDialog(ele, map, rest);
+                dialog.init();
+                dialog.set();
+                return dialog;
+            }
+        }
+
+        let patientSelectDialogFactory = new PatientSelectDialogFactory();
+
+        $("#shujii-select-patient-button").on("click", async event => {
+            let dialog = patientSelectDialogFactory.create();
+            let result = await dialog.open();
+            console.log("result", result);
+        });
+    }
+
+</script>

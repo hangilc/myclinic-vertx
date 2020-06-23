@@ -34,6 +34,7 @@
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-reception-link">受付</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-faxed-link">ファックス済処方箋</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-houmon-kango-link">訪問看護</a></li>
+                <li><a href="javascript:void(0)" class="scroll-link" id="index-shujii-link">主治医意見書</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-send-fax-link">ファックス送信</a></li>
             </ul>
         </div>
@@ -166,6 +167,17 @@
             }
         }
 
+        class ShujiiPane extends Pane {
+            constructor(){
+                super($("#index-shujii-link"), "pane-shujii.html");
+            }
+
+            async initPane(){
+                await super.initPane();
+                await initShujii();
+            }
+        }
+
         class SendFaxPane extends Pane {
             constructor(){
                 super($("#index-send-fax-link"), "pane-send-fax.html");
@@ -182,9 +194,10 @@
         let reception = new ReceptionPane();
         let faxedShohousen = new FaxedShohousenPane();
         let houmonKango = new HoumonKangoPane();
+        let shujii = new ShujiiPane();
         let sendFax = new SendFaxPane();
 
-        reception.link.click();
+        shujii.link.click();
     })();
 
 </script>

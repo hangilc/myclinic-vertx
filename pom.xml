@@ -161,6 +161,7 @@
         <module>drawer</module>
         <module>shohousen-drawer</module>
         <module>romaji</module>
+        <module>drawer-form</module>
     </modules>
 
 </project>

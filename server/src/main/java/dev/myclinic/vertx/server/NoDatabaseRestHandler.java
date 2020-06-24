@@ -289,34 +289,35 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private void saveShujiiMasterText(RoutingContext ctx) {
-        try {
-            String name = ctx.request().getParam("name");
-            if( name == null || name.isEmpty() ){
-                throw new RuntimeException("Missing parameter: name");
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                String name = ctx.request().getParam("name");
+                if( name == null || name.isEmpty() ){
+                    throw new RuntimeException("Missing parameter: name");
+                }
+                String text = this.mapper.readValue(ctx.getBody().getBytes(), String.class);
+                String shujiiDir = System.getenv("MYCLINIC_SHUJII_DIR");
+                if( shujiiDir == null ){
+                    throw new RuntimeException("Cannot find env var MYCLINIC_SHUJII_DIR.");
+                }
+                Path patientDir = Path.of(shujiiDir, name);
+                if( !Files.isDirectory(patientDir) ){
+                    //noinspection ResultOfMethodCallIgnored
+                    patientDir.toFile().mkdirs();
+                }
+                Path patientFile = patientDir.resolve(name + ".txt");
+                Files.write(patientFile, text.getBytes(StandardCharsets.UTF_8));
+                promise.complete("true");
+            } catch(Exception e){
+                throw new RuntimeException(e);
             }
-            String text = this.mapper.readValue(ctx.getBody().getBytes(), String.class);
-            String shujiiDir = System.getenv("MYCLINIC_SHUJII_DIR");
-            if( shujiiDir == null ){
-                throw new RuntimeException("Cannot find env var MYCLINIC_SHUJII_DIR.");
+        }, ar -> {
+            if( ar.succeeded() ){
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
             }
-            Path patientDir = Path.of(shujiiDir, name);
-            if( !Files.isDirectory(patientDir) ){
-                //noinspection ResultOfMethodCallIgnored
-                patientDir.toFile().mkdirs();
-            }
-            Path patientFile = patientDir.resolve(name + ".txt");
-            vertx.fileSystem().writeFile(patientFile.toString(),
-                    Buffer.buffer(text.getBytes(StandardCharsets.UTF_8)),
-                    ar -> {
-                        if( ar.succeeded() ){
-                            ctx.response().end("true");
-                        } else {
-                            ctx.fail(ar.cause());
-                        }
-                    });
-        } catch(Exception e){
-            ctx.fail(e);
-        }
+        });
     }
 
     private void getShujiiMasterText(RoutingContext ctx) {

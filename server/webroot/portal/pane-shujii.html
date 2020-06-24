@@ -178,19 +178,24 @@
 
         let recordFactory = new RecordFactory();
 
-        function setRecords(visitFulls){
+        function setRecords(visitFulls, scrollToBottom=true){
             let wrapper = $("#shujii-record-wrapper");
             wrapper.html("");
+            let lastRecord = null;
             for(let visitFull of visitFulls){
                 let record = recordFactory.create(visitFull);
                 record.appendTo(wrapper);
+                lastRecord = record;
+            }
+            if( scrollToBottom ) {
+                lastRecord.ele[0].scrollIntoView();
             }
         }
 
-        async function loadPage(page){
+        async function loadPage(page, scrollToBottom=true){
             let visitPage = await rest.listVisit(currentPatient.patientId, page - 1);
             setNav(visitPage.page + 1, visitPage.totalPages);
-            setRecords(visitPage.visits);
+            setRecords(visitPage.visits, scrollToBottom);
         }
 
         $("#shujii-select-patient-button").on("click", async event => {
@@ -201,9 +206,14 @@
             }
             currentPatient = result;
             let masterText = await rest.getShujiiMasterText(currentPatient);
+            if( !masterText ){
+                let p = currentPatient;
+                masterText = `(${p.patientId})${p.lastName}${p.firstName}`;
+                masterText += "\n\n";
+            }
             let textarea = $("#shujii-master-textarea");
             textarea.val(masterText);
-            await loadPage(1);
+            await loadPage(1, false);
         });
 
         $("#shujii-save-button").on("click", async event => {

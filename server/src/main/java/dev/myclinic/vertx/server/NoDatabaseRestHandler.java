@@ -287,6 +287,22 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("get-shujii-master-text", this::getShujiiMasterText);
         noDatabaseFuncMap.put("save-shujii-master-text", this::saveShujiiMasterText);
         noDatabaseFuncMap.put("save-printer-setting", this::savePrinterSetting);
+        noDatabaseFuncMap.put("list-printer-setting", this::listPrinterSetting);
+    }
+
+    private void listPrinterSetting(RoutingContext ctx) {
+        try {
+            String dir = System.getenv("MYCLINIC_PRINTER_SETTINGS_DIR");
+            if( dir == null || dir.isEmpty() ){
+                throw new RuntimeException("Missing env var: MYCLINIC_PRINTER_SETTINGS_DIR");
+            }
+            List<String> names = Files.list(Path.of(dir)).filter(path -> path.getFileName().endsWith(".devmode"))
+                    .map(path -> path.getFileName().toString().replaceAll("\\.devmode$", ""))
+                    .collect(toList());
+            ctx.response().end(jsonEncode(names));
+        } catch(Exception e){
+            ctx.fail(e);
+        }
     }
 
     private void savePrinterSetting(RoutingContext ctx) {

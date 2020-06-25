@@ -36,6 +36,7 @@
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-houmon-kango-link">訪問看護</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-shujii-link">主治医意見書</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-send-fax-link">ファックス送信</a></li>
+                <li><a href="javascript:void(0)" class="scroll-link" id="index-printer-setting-link">印刷設定</a></li>
             </ul>
         </div>
 
@@ -189,6 +190,17 @@
             }
         }
 
+        class PrinterSettingPane extends Pane {
+            constructor(){
+                super($("#index-printer-setting-link"), "pane-printer-setting.html");
+            }
+
+            async initPane(){
+                await super.initPane();
+                await initPrinterSetting();
+            }
+        }
+
         let practice = new PracticePane();
         let cashier = new CashierPane();
         let reception = new ReceptionPane();
@@ -196,8 +208,9 @@
         let houmonKango = new HoumonKangoPane();
         let shujii = new ShujiiPane();
         let sendFax = new SendFaxPane();
+        let printerSetting = new PrinterSettingPane();
 
-        shujii.link.click();
+        printerSetting.link.click();
     })();
 
 </script>

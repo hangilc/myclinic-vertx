@@ -1,0 +1,17 @@
+<h3>印刷設定</h3>
+
+<div>
+    <button type="button" class="btn btn-secondary"
+        id="printer-setting-new-setting-button">新規印刷設定</button>
+</div>
+
+<script>
+
+    async function initPrinterSetting(){
+        $("#printer-setting-new-setting-button").on("click", event => {
+            let name = prompt("新規印刷設定の名前");
+            alert(name);
+        });
+    }
+
+</script>

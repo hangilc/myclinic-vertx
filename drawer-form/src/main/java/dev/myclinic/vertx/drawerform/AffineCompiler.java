@@ -1,17 +1,21 @@
 package dev.myclinic.vertx.drawerform;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static java.util.stream.Collectors.toList;
 
 class AffineCompiler extends OpCompiler {
 
-    private double scale = 1.0;
+    private double scaleX = 1.0;
+    private double scaleY = 1.0;
     private double offsetX = 0;
     private double offsetY = 0;
 
-    public void setScale(double scale){
-        this.scale = scale;
+    public void setScale(double scaleX, double scaleY){
+        this.scaleX = scaleX;
+        this.scaleY = scaleY;
     }
 
     public void setOffsetX(double offsetX){
@@ -23,11 +27,11 @@ class AffineCompiler extends OpCompiler {
     }
 
     private double transX(double x){
-        return x * scale + offsetX;
+        return x * scaleX + offsetX;
     }
 
     private double transY(double y){
-        return y * scale + offsetY;
+        return y * scaleY + offsetY;
     }
 
     @Override
@@ -46,7 +50,7 @@ class AffineCompiler extends OpCompiler {
 
     @Override
     public void createFont(String name, String fontName, double size, int weight, boolean italic){
-        super.createFont(name, fontName, size * scale, weight, italic);
+        super.createFont(name, fontName, size * scaleY, weight, italic);
     }
 
     @Override
@@ -58,14 +62,14 @@ class AffineCompiler extends OpCompiler {
 
     @Override
     public void createPen(String name, int red, int green, int blue, double width, int penStyle){
-        super.createPen(name, red, green, blue, width * scale, penStyle);
+        super.createPen(name, red, green, blue, width * scaleY, penStyle);
     }
 
     @Override
     public void circle(double cx, double cy, double r){
         cx = transX(cx);
         cy = transY(cy);
-        r *= scale;
+        r *= scaleY;
         super.circle(cx, cy, r);
     }
 

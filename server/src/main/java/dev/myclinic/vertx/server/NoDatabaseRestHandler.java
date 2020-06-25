@@ -286,6 +286,39 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("list-shujii-patient", this::listShujiiPatient);
         noDatabaseFuncMap.put("get-shujii-master-text", this::getShujiiMasterText);
         noDatabaseFuncMap.put("save-shujii-master-text", this::saveShujiiMasterText);
+        noDatabaseFuncMap.put("save-printer-setting", this::savePrinterSetting);
+    }
+
+    private void savePrinterSetting(RoutingContext ctx) {
+        try {
+            String dir = System.getenv("MYCLINIC_PRINTER_SETTINGS_DIR");
+            if( dir == null || dir.isEmpty() ){
+                throw new RuntimeException("Missing env var: MYCLINIC_PRINTER_SETTINGS_DIR");
+            }
+            String name = ctx.request().getParam("name");
+            if( name == null || name.isEmpty() ){
+                throw new RuntimeException("Missing parameter: name");
+            }
+            executorService.execute(() -> {
+                DrawerPrinter printer = new DrawerPrinter();
+                DrawerPrinter.DialogResult result = printer.printDialog(null, null);
+                if( result.ok ){
+                    try {
+                        Path devFile = Path.of(dir, name + ".devmode");
+                        Files.write(devFile, result.devmodeData);
+                        Path namesFile = Path.of(dir, name + ".devnames");
+                        Files.write(namesFile, result.devnamesData);
+                        Path jsonFile = Path.of(dir, name + ".json");
+                        Files.write(jsonFile, "{}".getBytes());
+                    } catch (IOException e) {
+                        logger.error("Files.write failed.", e);
+                    }
+                }
+            });
+            ctx.response().end("true");
+        } catch(Exception e){
+            throw new RuntimeException(e);
+        }
     }
 
     private void saveShujiiMasterText(RoutingContext ctx) {

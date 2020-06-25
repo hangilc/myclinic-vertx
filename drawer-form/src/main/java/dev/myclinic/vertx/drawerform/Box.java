@@ -51,6 +51,14 @@ public class Box {
         return this.bottom - this.top;
     }
 
+    public double cx(){
+        return (left + right) / 2.0;
+    }
+
+    public double cy(){
+        return (top + bottom) / 2.0;
+    }
+
     public Box innerBox(double left, double top, double right, double bottom){
         return new Box(this.left + left, this.top + top, this.left + right, this.top + bottom);
     }

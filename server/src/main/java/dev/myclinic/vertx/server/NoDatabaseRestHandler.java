@@ -14,6 +14,8 @@ import dev.myclinic.vertx.drawer.printer.DrawerPrinter;
 import dev.myclinic.vertx.drawerform.Box;
 import dev.myclinic.vertx.drawerform.FormCompiler;
 import dev.myclinic.vertx.drawerform.Paper;
+import dev.myclinic.vertx.drawerform.shujiiform.ShujiiData;
+import dev.myclinic.vertx.drawerform.shujiiform.ShujiiForm;
 import dev.myclinic.vertx.dto.*;
 import dev.myclinic.vertx.mastermap.MasterMap;
 import dev.myclinic.vertx.romaji.Romaji;
@@ -288,6 +290,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("list-shujii-patient", this::listShujiiPatient);
         noDatabaseFuncMap.put("get-shujii-master-text", this::getShujiiMasterText);
         noDatabaseFuncMap.put("save-shujii-master-text", this::saveShujiiMasterText);
+        noDatabaseFuncMap.put("compile-shujii-drawer", this::compileShujiiDrawer);
         noDatabaseFuncMap.put("create-printer-setting", this::createPrinterSetting);
         noDatabaseFuncMap.put("modify-printer-setting", this::modifyPrinterSetting);
         noDatabaseFuncMap.put("list-printer-setting", this::listPrinterSetting);
@@ -528,6 +531,23 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             ctx.response().end("true");
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void compileShujiiDrawer(RoutingContext ctx){
+        try {
+            ShujiiData data = mapper.readValue(ctx.getBody().getBytes(), ShujiiData.class);
+            String settingName = ctx.request().getParam("setting");
+            PrinterJsonSetting jsonSetting = PrinterJsonSetting.get(settingName, mapper);
+            ShujiiForm form = new ShujiiForm();
+            FormCompiler c = form.getCompiler();
+            c.setScale(jsonSetting.scaleX, jsonSetting.scaleY);
+            c.setOffsetX(jsonSetting.offsetX);
+            c.setOffsetY(jsonSetting.offsetY);
+            List<Op> ops = form.render(data);
+            ctx.response().end(jsonEncode(ops));
+        } catch(Exception e){
+            ctx.fail(e);
         }
     }
 

@@ -17,7 +17,7 @@ public class ShujiiForm {
 
     public ShujiiForm(){
         c.createFont("small", "MS Gothic", 3);
-        c.createFont("regular", "MS Gothic", 4);
+        c.createFont("regular", "MS Gothic", 3.8);
     }
 
     public FormCompiler getCompiler(){
@@ -28,10 +28,6 @@ public class ShujiiForm {
         leftBox(new Box(40, 59-15, 40+97, 59));
         rightBox(new Box(210-56, 56.5-10, 210-13, 56));
         detail(new Box(12.5, 150, 210-11, 380));
-        c.createPen("regular", 0, 0, 0, 0.2);
-        c.setPen("regular");
-        c.box(new Box(40, 59-15, 40+97, 59));
-        c.box(marks.get("doctorName"));
         if( data != null ){
             writeSmall("doctorName", data.doctorName);
             writeSmall("clinicName", data.clinicName);
@@ -73,7 +69,7 @@ public class ShujiiForm {
     }
 
     private void detail(Box box){
-        marks.put("detail", box);
+        marks.put("detail", box.inset(2, 1, 2, 0));
     }
 
 }

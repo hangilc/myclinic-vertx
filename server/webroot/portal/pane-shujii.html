@@ -7,6 +7,11 @@
 <div class="mt-2 row">
     <div class="col-lg-7">
         <textarea class="form-control" id="shujii-master-textarea" rows="20"></textarea>
+        <h4 class="mt-3">作成</h4>
+        <textarea class="form-control" id="shujii-detail-textarea" rows="8"></textarea>
+        <div class="mt-2">
+            <button type="button" class="btn btn-success" id="shujii-print-button">印刷</button>
+        </div>
     </div>
     <div class="col-lg-5">
         <div id="shujii-nav-wrapper"></div>
@@ -223,6 +228,22 @@
                 let text = textarea.val();
                 await rest.saveShujiiMasterText(name, text);
             }
+        });
+
+        $("#shujii-print-button").on("click", async event => {
+            let detail = $("#shujii-detail-textarea").val();
+            let clinicInfo = await rest.getClinicInfo();
+            let data = {
+                doctorName: clinicInfo.doctorName,
+                clinicName: clinicInfo.name,
+                clinicAddress: clinicInfo.address,
+                phone: clinicInfo.tel,
+                fax: clinicInfo.fax,
+                detail: detail
+            };
+            let setting = "shujii";
+            let ops = await rest.compileShujiiDrawer(data, setting);
+            await rest.printDrawer([ops], setting);
         });
 
     }

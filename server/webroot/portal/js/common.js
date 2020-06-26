@@ -227,8 +227,10 @@ class Rest extends Client {
         return await this.post("/calc-futan-wari", req);
     }
 
-    async printDrawer(pages){
-        return await this.post("/print-drawer", pages);
+    async printDrawer(pages, setting){
+        return await this.post("/print-drawer", pages, {
+            params: {setting}
+        });
     }
 
     async saveDrawerAsPdf(pages, paperSize, savePath, ops){
@@ -500,6 +502,12 @@ class Rest extends Client {
     async saveShujiiMasterText(patientName, text){
         return await this.post("/save-shujii-master-text", text, {
             params: {name: patientName}
+        });
+    }
+
+    async compileShujiiDrawer(shujiiData, setting){
+        return await this.post("/compile-shujii-drawer", shujiiData, {
+            params: {setting}
         });
     }
 

@@ -503,6 +503,32 @@ class Rest extends Client {
         });
     }
 
+    async listPrinterSetting(){
+        return await this.get("/list-printer-setting");
+    }
+    
+    async createPrinterSetting(setting){
+        return await this.get("/create-printer-setting", {setting});
+    }
+
+    async modifyPrinterSetting(setting){
+        return await this.get("/modify-printer-setting", {setting});
+    }
+
+    async printGuideFrame(paper, setting, inset){ // all params are optional
+        return await this.get("/print-guide-frame", {paper, setting, inset});
+    }
+
+    async getPrinterJsonSetting(setting){
+        return await this.get("/get-printer-json-setting", {setting});
+    }
+
+    async savePrinterJsonSetting(setting, jsonSetting){
+        return await this.post("/save-printer-json-setting", jsonSetting, {
+            params: {setting}
+        });
+    }
+
 }
 
 class Integration extends Client {

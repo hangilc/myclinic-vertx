@@ -9,7 +9,11 @@ import dev.myclinic.vertx.drawer.DrawerColor;
 import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.drawer.PaperSize;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
+import dev.myclinic.vertx.drawer.printer.AuxSetting;
 import dev.myclinic.vertx.drawer.printer.DrawerPrinter;
+import dev.myclinic.vertx.drawerform.Box;
+import dev.myclinic.vertx.drawerform.FormCompiler;
+import dev.myclinic.vertx.drawerform.Paper;
 import dev.myclinic.vertx.dto.*;
 import dev.myclinic.vertx.mastermap.MasterMap;
 import dev.myclinic.vertx.romaji.Romaji;
@@ -19,7 +23,6 @@ import dev.myclinic.vertx.util.*;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
@@ -39,7 +42,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -286,53 +288,245 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("list-shujii-patient", this::listShujiiPatient);
         noDatabaseFuncMap.put("get-shujii-master-text", this::getShujiiMasterText);
         noDatabaseFuncMap.put("save-shujii-master-text", this::saveShujiiMasterText);
-        noDatabaseFuncMap.put("save-printer-setting", this::savePrinterSetting);
+        noDatabaseFuncMap.put("create-printer-setting", this::createPrinterSetting);
+        noDatabaseFuncMap.put("modify-printer-setting", this::modifyPrinterSetting);
         noDatabaseFuncMap.put("list-printer-setting", this::listPrinterSetting);
+        noDatabaseFuncMap.put("print-guide-frame", this::printGuideFrame);
+        noDatabaseFuncMap.put("get-printer-json-setting", this::getPrinterJsonSetting);
+        noDatabaseFuncMap.put("save-printer-json-setting", this::savePrinterJsonSetting);
+    }
+
+    private static double objectToDouble(Object obj) {
+        if (obj instanceof Number) {
+            return ((Number) obj).doubleValue();
+        } else if (obj instanceof String) {
+            return Double.parseDouble((String) obj);
+        } else {
+            throw new RuntimeException("Cannot convert to double: " + obj);
+        }
+    }
+
+    private static class PrinterSettingPaths {
+        private final String dir;
+        private final String settingName;
+
+        PrinterSettingPaths(String settingName) {
+            this.dir = System.getenv("MYCLINIC_PRINTER_SETTINGS_DIR");
+            this.settingName = settingName;
+        }
+
+        private Path getPath(String suffix) {
+            if (dir == null || dir.isEmpty()) {
+                throw new RuntimeException("Missing env var: MYCLINIC_PRINTER_SETTINGS_DIR");
+            }
+            return Path.of(dir, this.settingName + suffix);
+        }
+
+        Path getDevmodePath() {
+            return getPath(".devmode");
+        }
+
+        Path getDevnamesPath() {
+            return getPath(".devnames");
+        }
+
+        Path getJsonSettingPath() {
+            return getPath(".json");
+        }
+    }
+
+    public static class PrinterJsonSetting {
+        public double scaleX = 1.0;
+        public double scaleY = 1.0;
+        public double offsetX = 0.0;
+        public double offsetY = 0.0;
+
+        public static PrinterJsonSetting get(String settingName, ObjectMapper mapper) {
+            PrinterJsonSetting result = new PrinterJsonSetting();
+            if (settingName != null) {
+                PrinterSettingPaths paths = new PrinterSettingPaths(settingName);
+                Map<String, Object> dict;
+                try {
+                    dict = mapper.readValue(paths.getJsonSettingPath().toFile(),
+                            new TypeReference<>() {
+                            });
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                if (dict.containsKey("scale")) {
+                    result.scaleX = result.scaleY = objectToDouble(dict.get("scale"));
+                }
+                if (dict.containsKey("scaleX")) {
+                    result.scaleX = objectToDouble(dict.get("scaleX"));
+                }
+                if (dict.containsKey("scaleY")) {
+                    result.scaleY = objectToDouble(dict.get("scaleY"));
+                }
+                if (dict.containsKey("offsetX")) {
+                    result.offsetX = objectToDouble(dict.get("offsetX"));
+                }
+                if (dict.containsKey("offsetY")) {
+                    result.offsetY = objectToDouble(dict.get("offsetY"));
+                }
+            }
+            return result;
+        }
+    }
+
+    private static class PrinterSetting {
+        public byte[] devmode;
+        public byte[] devnames;
+
+        public static PrinterSetting read(String name) {
+            try {
+                PrinterSetting result = new PrinterSetting();
+                if (name != null) {
+                    PrinterSettingPaths paths = new PrinterSettingPaths(name);
+                    result.devmode = Files.readAllBytes(paths.getDevmodePath());
+                    result.devnames = Files.readAllBytes(paths.getDevnamesPath());
+                    return result;
+                }
+                return result;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void savePrinterJsonSetting(RoutingContext ctx) {
+        try {
+            String setting = ctx.request().getParam("setting");
+            if (setting == null || setting.isEmpty()) {
+                throw new RuntimeException("Missing parameter: setting");
+            }
+            byte[] bytes = ctx.getBody().getBytes();
+            PrinterSettingPaths paths = new PrinterSettingPaths(setting);
+            Files.write(paths.getJsonSettingPath(), bytes);
+            ctx.response().end("true");
+        } catch (Exception e) {
+            ctx.fail(e);
+        }
+    }
+
+    private void getPrinterJsonSetting(RoutingContext ctx) {
+        try {
+            String settingName = ctx.request().getParam("setting");
+            if (settingName == null) {
+                throw new RuntimeException("Missing parameter: setting");
+            }
+            PrinterSettingPaths paths = new PrinterSettingPaths(settingName);
+            PrinterJsonSetting jsonSetting = PrinterJsonSetting.get(settingName, mapper);
+            ctx.response().end(jsonEncode(jsonSetting));
+        } catch (Exception e) {
+            ctx.fail(e);
+        }
+    }
+
+    private void printGuideFrame(RoutingContext ctx) {
+        try {
+            String settingName = ctx.request().getParam("setting");
+            String paperName = ctx.request().getParam("paper");
+            String insetArg = ctx.request().getParam("inset");
+            Paper paperTmp = Paper.A4;
+            if (paperName != null) {
+                paperTmp = Paper.getPaperByName(paperName);
+                if (paperTmp == null) {
+                    throw new RuntimeException("Unknown paper: " + paperName);
+                }
+            }
+            final Paper paper = paperTmp;
+            executorService.execute(() -> {
+                PrinterSetting setting = PrinterSetting.read(settingName);
+                PrinterJsonSetting jsonSetting = PrinterJsonSetting.get(settingName, mapper);
+                double inset = 10.0;
+                if (insetArg != null) {
+                    inset = Double.parseDouble(insetArg);
+                }
+                FormCompiler c = new FormCompiler();
+                c.setScale(jsonSetting.scaleX, jsonSetting.scaleY);
+                c.setOffsetX(jsonSetting.offsetX);
+                c.setOffsetY(jsonSetting.offsetY);
+                c.createPen("regular", 0, 0, 0, 0.2);
+                c.box(new Box(0, 0, paper.getWidth(), paper.getHeight()).inset(inset));
+                List<Op> ops = c.getOps();
+                DrawerPrinter printer = new DrawerPrinter();
+                printer.print(ops, setting.devmode, setting.devnames);
+            });
+            ctx.response().end("true");
+        } catch (Exception e) {
+            ctx.fail(e);
+        }
     }
 
     private void listPrinterSetting(RoutingContext ctx) {
         try {
             String dir = System.getenv("MYCLINIC_PRINTER_SETTINGS_DIR");
-            if( dir == null || dir.isEmpty() ){
+            if (dir == null || dir.isEmpty()) {
                 throw new RuntimeException("Missing env var: MYCLINIC_PRINTER_SETTINGS_DIR");
             }
-            List<String> names = Files.list(Path.of(dir)).filter(path -> path.getFileName().endsWith(".devmode"))
+            List<String> names = Files.list(Path.of(dir)).filter(path ->
+                    path.getFileName().toString().endsWith(".devmode"))
                     .map(path -> path.getFileName().toString().replaceAll("\\.devmode$", ""))
                     .collect(toList());
             ctx.response().end(jsonEncode(names));
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
 
-    private void savePrinterSetting(RoutingContext ctx) {
+    private void modifyPrinterSetting(RoutingContext ctx) {
+        try {
+            String settingName = ctx.request().getParam("setting");
+            if( settingName == null || settingName.isEmpty() ){
+                throw new RuntimeException("Missing parameter: setting");
+            }
+            executorService.execute(() -> {
+                PrinterSetting setting = PrinterSetting.read(settingName);
+                DrawerPrinter printer = new DrawerPrinter();
+                DrawerPrinter.DialogResult result = printer.printDialog(
+                        setting.devmode, setting.devnames
+                );
+                if( result.ok ){
+                    try {
+                        PrinterSettingPaths paths = new PrinterSettingPaths(settingName);
+                        Files.write(paths.getDevmodePath(), result.devmodeData);
+                        Files.write(paths.getDevnamesPath(), result.devnamesData);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+        } catch (Exception e) {
+            ctx.fail(e);
+        }
+    }
+
+    private void createPrinterSetting(RoutingContext ctx) {
         try {
             String dir = System.getenv("MYCLINIC_PRINTER_SETTINGS_DIR");
-            if( dir == null || dir.isEmpty() ){
+            if (dir == null || dir.isEmpty()) {
                 throw new RuntimeException("Missing env var: MYCLINIC_PRINTER_SETTINGS_DIR");
             }
-            String name = ctx.request().getParam("name");
-            if( name == null || name.isEmpty() ){
+            String name = ctx.request().getParam("setting");
+            if (name == null || name.isEmpty()) {
                 throw new RuntimeException("Missing parameter: name");
             }
             executorService.execute(() -> {
                 DrawerPrinter printer = new DrawerPrinter();
                 DrawerPrinter.DialogResult result = printer.printDialog(null, null);
-                if( result.ok ){
+                if (result.ok) {
                     try {
-                        Path devFile = Path.of(dir, name + ".devmode");
-                        Files.write(devFile, result.devmodeData);
-                        Path namesFile = Path.of(dir, name + ".devnames");
-                        Files.write(namesFile, result.devnamesData);
-                        Path jsonFile = Path.of(dir, name + ".json");
-                        Files.write(jsonFile, "{}".getBytes());
+                        PrinterSettingPaths paths = new PrinterSettingPaths(name);
+                        Files.write(paths.getDevmodePath(), result.devmodeData);
+                        Files.write(paths.getDevnamesPath(), result.devnamesData);
+                        Files.write(paths.getJsonSettingPath(), "{}".getBytes());
                     } catch (IOException e) {
-                        logger.error("Files.write failed.", e);
+                        throw new RuntimeException(e);
                     }
                 }
             });
             ctx.response().end("true");
-        } catch(Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -341,27 +535,27 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         vertx.<String>executeBlocking(promise -> {
             try {
                 String name = ctx.request().getParam("name");
-                if( name == null || name.isEmpty() ){
+                if (name == null || name.isEmpty()) {
                     throw new RuntimeException("Missing parameter: name");
                 }
                 String text = this.mapper.readValue(ctx.getBody().getBytes(), String.class);
                 String shujiiDir = System.getenv("MYCLINIC_SHUJII_DIR");
-                if( shujiiDir == null ){
+                if (shujiiDir == null) {
                     throw new RuntimeException("Cannot find env var MYCLINIC_SHUJII_DIR.");
                 }
                 Path patientDir = Path.of(shujiiDir, name);
-                if( !Files.isDirectory(patientDir) ){
+                if (!Files.isDirectory(patientDir)) {
                     //noinspection ResultOfMethodCallIgnored
                     patientDir.toFile().mkdirs();
                 }
                 Path patientFile = patientDir.resolve(name + ".txt");
                 Files.write(patientFile, text.getBytes(StandardCharsets.UTF_8));
                 promise.complete("true");
-            } catch(Exception e){
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }, ar -> {
-            if( ar.succeeded() ){
+            if (ar.succeeded()) {
                 ctx.response().end(ar.result());
             } else {
                 ctx.fail(ar.cause());
@@ -372,27 +566,27 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private void getShujiiMasterText(RoutingContext ctx) {
         try {
             String shujiiDir = System.getenv("MYCLINIC_SHUJII_DIR");
-            if( shujiiDir == null ){
+            if (shujiiDir == null) {
                 throw new RuntimeException("Cannot find env var MYCLINIC_SHUJII_DIR.");
             }
             PatientDTO patient = this.mapper.readValue(ctx.getBody().getBytes(), PatientDTO.class);
             String patientName = patient.lastName + patient.firstName;
             Path patientDir = Path.of(shujiiDir, patientName);
             Path masterPath = patientDir.resolve(patientName + ".txt");
-            if( !(Files.exists(masterPath)) ){
+            if (!(Files.exists(masterPath))) {
                 ctx.response().end(jsonEncode(null));
             } else {
                 ctx.response().end(jsonEncode(readFileContent(masterPath)));
             }
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
 
-    private List<String> readTextFile(Path path) throws Exception{
+    private List<String> readTextFile(Path path) throws Exception {
         try {
             return Files.readAllLines(path, StandardCharsets.UTF_8);
-        } catch(MalformedInputException ex){
+        } catch (MalformedInputException ex) {
             return Files.readAllLines(path, Charset.defaultCharset());
         }
     }
@@ -400,7 +594,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private String readFileContent(Path path) throws Exception {
         try {
             return Files.readString(path, StandardCharsets.UTF_8);
-        } catch(MalformedInputException ex){
+        } catch (MalformedInputException ex) {
             return Files.readString(path, Charset.defaultCharset());
         }
     }
@@ -410,39 +604,39 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         vertx.<String>executeBlocking(promise -> {
             try {
                 String shujiiDir = System.getenv("MYCLINIC_SHUJII_DIR");
-                if( shujiiDir == null ){
+                if (shujiiDir == null) {
                     throw new RuntimeException("Cannot find env var MYCLINIC_SHUJII_DIR.");
                 }
                 List<Integer> patientIds = new ArrayList<>();
-                for(Path path : Files.list(Path.of(shujiiDir)).collect(toList())){
+                for (Path path : Files.list(Path.of(shujiiDir)).collect(toList())) {
                     String name = path.getFileName().toString();
-                    if( "arch".equals(name) ){
+                    if ("arch".equals(name)) {
                         continue;
                     }
-                    if( !Files.isDirectory(path) ){
+                    if (!Files.isDirectory(path)) {
                         continue;
                     }
                     String repFile = name + ".txt";
-                    for(Path subpath : Files.list(path).collect(toList())){
+                    for (Path subpath : Files.list(path).collect(toList())) {
                         String subname = subpath.getFileName().toString();
                         int patientId = 0;
-                        if( repFile.equals(subname) ){
+                        if (repFile.equals(subname)) {
                             List<String> lines = readTextFile(subpath);
                             String firstLine = null;
-                            for(String line: lines){
+                            for (String line : lines) {
                                 line = line.trim();
-                                if( !"".equals(line) ){
+                                if (!"".equals(line)) {
                                     firstLine = line;
                                     break;
                                 }
                             }
-                            if( firstLine == null ){
+                            if (firstLine == null) {
                                 throw new RuntimeException("Empty file: " + subpath.toString());
                             }
                             Matcher m = patientIdPat.matcher(firstLine);
-                            if( m.find() ){
+                            if (m.find()) {
                                 patientId = Integer.parseInt(m.group(1));
-                                if( !firstLine.contains(name) ){
+                                if (!firstLine.contains(name)) {
                                     throw new RuntimeException("Cannot find patient name: " + subpath.toString());
                                 }
                                 patientIds.add(patientId);
@@ -454,12 +648,12 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     }
                 }
                 promise.complete(jsonEncode(patientIds));
-            } catch(Exception e){
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
 
         }, ar -> {
-            if( ar.succeeded() ){
+            if (ar.succeeded()) {
                 ctx.response().end(ar.result());
             } else {
                 ctx.fail(ar.cause());
@@ -685,18 +879,26 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private void printDrawer(RoutingContext ctx) {
-        executorService.execute(() -> {
-            try {
-                byte[] bytes = ctx.getBody().getBytes();
-                List<List<Op>> pages = mapper.readValue(bytes, new TypeReference<>() {
-                });
-                DrawerPrinter printer = new DrawerPrinter();
-                printer.printPages(pages);
-            } catch (Exception e) {
-                logger.error("print-drawer failed", e);
-            }
-        });
-        ctx.response().end("true");
+        try {
+            String settingName = ctx.request().getParam("setting");
+            final PrinterSetting setting = PrinterSetting.read(settingName);
+            AuxSetting auxSetting = new AuxSetting();
+            executorService.execute(() -> {
+                try {
+                    byte[] bytes = ctx.getBody().getBytes();
+                    List<List<Op>> pages = mapper.readValue(bytes, new TypeReference<>() {
+                    });
+                    DrawerPrinter printer = new DrawerPrinter();
+                    // jsonSetting is not used. It is used when pages are created.
+                    printer.printPages(pages, setting.devmode, setting.devnames, auxSetting);
+                } catch (Exception e) {
+                    logger.error("print-drawer failed", e);
+                }
+            });
+            ctx.response().end("true");
+        } catch (Exception e) {
+            ctx.fail(e);
+        }
     }
 
     private void calcRcptAge(RoutingContext ctx) {
@@ -850,7 +1052,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void shahokokuhoRep(RoutingContext ctx){
+    private void shahokokuhoRep(RoutingContext ctx) {
         try {
             ShahokokuhoDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), ShahokokuhoDTO.class);
             String rep = mapper.writeValueAsString(ShahokokuhoUtil.rep(hoken));
@@ -860,7 +1062,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void koukikoureiRep(RoutingContext ctx){
+    private void koukikoureiRep(RoutingContext ctx) {
         try {
             KoukikoureiDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), KoukikoureiDTO.class);
             String rep = mapper.writeValueAsString(KoukikoureiUtil.rep(hoken));
@@ -870,7 +1072,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void roujinRep(RoutingContext ctx){
+    private void roujinRep(RoutingContext ctx) {
         try {
             RoujinDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), RoujinDTO.class);
             String rep = mapper.writeValueAsString(RoujinUtil.rep(hoken));
@@ -880,7 +1082,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void kouhiRep(RoutingContext ctx){
+    private void kouhiRep(RoutingContext ctx) {
         try {
             KouhiDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), KouhiDTO.class);
             String rep = mapper.writeValueAsString(KouhiUtil.rep(hoken));

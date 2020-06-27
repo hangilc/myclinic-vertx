@@ -27,6 +27,7 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -292,6 +293,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("save-shujii-master-text", this::saveShujiiMasterText);
         noDatabaseFuncMap.put("compile-shujii-drawer", this::compileShujiiDrawer);
         noDatabaseFuncMap.put("shujii-criteria", this::shujiiCriteria);
+        noDatabaseFuncMap.put("save-shujii-image", this::saveShujiiImage);
         noDatabaseFuncMap.put("create-printer-setting", this::createPrinterSetting);
         noDatabaseFuncMap.put("modify-printer-setting", this::modifyPrinterSetting);
         noDatabaseFuncMap.put("list-printer-setting", this::listPrinterSetting);
@@ -535,6 +537,49 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
+    private void saveShujiiImage(RoutingContext ctx){
+        try {
+            String name = ctx.request().getParam("name");
+            if (name == null || name.isEmpty()) {
+                throw new RuntimeException("Missing parameter: name");
+            }
+            String patientId = ctx.request().getParam("patient-id");
+            if( patientId == null || patientId.isEmpty() ){
+                throw new RuntimeException("Missing parameter: patient-id");
+            }
+            String shujiiDir = System.getenv("MYCLINIC_SHUJII_DIR");
+            if (shujiiDir == null) {
+                throw new RuntimeException("Cannot find env var MYCLINIC_SHUJII_DIR.");
+            }
+            Path patientDir = Path.of(shujiiDir, String.format("%s-%s", name, patientId));
+            if( !Files.isDirectory(patientDir) ){
+                throw new RuntimeException("No such directory: " + patientDir.toString());
+            }
+            Set<FileUpload> uploads = ctx.fileUploads();
+            vertx.executeBlocking(promise -> {
+                try {
+                    for (FileUpload f : uploads) {
+                        String filename = f.fileName();
+                        String uploaded = f.uploadedFileName();
+                        Path dst = patientDir.resolve(filename);
+                        Files.move(Path.of(uploaded), dst);
+                    }
+                    promise.complete();
+                } catch(Exception e){
+                    promise.fail(e);
+                }
+            }, ar -> {
+                if( ar.succeeded() ){
+                    ctx.response().end("true");
+                } else {
+                    ctx.fail(ar.cause());
+                }
+            });
+        } catch(Exception e){
+            ctx.fail(e);
+        }
+    }
+
     private void shujiiCriteria(RoutingContext ctx){
         String shujiiDir = System.getenv("MYCLINIC_SHUJII_DIR");
         if (shujiiDir == null) {
@@ -569,12 +614,16 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 if (name == null || name.isEmpty()) {
                     throw new RuntimeException("Missing parameter: name");
                 }
+                String patientId = ctx.request().getParam("patient-id");
+                if( patientId == null || patientId.isEmpty() ){
+                    throw new RuntimeException("Missing parameter: patient-id");
+                }
                 String text = this.mapper.readValue(ctx.getBody().getBytes(), String.class);
                 String shujiiDir = System.getenv("MYCLINIC_SHUJII_DIR");
                 if (shujiiDir == null) {
                     throw new RuntimeException("Cannot find env var MYCLINIC_SHUJII_DIR.");
                 }
-                Path patientDir = Path.of(shujiiDir, name);
+                Path patientDir = Path.of(shujiiDir, String.format("%s-%s", name, patientId));
                 if (!Files.isDirectory(patientDir)) {
                     //noinspection ResultOfMethodCallIgnored
                     patientDir.toFile().mkdirs();
@@ -602,7 +651,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             }
             PatientDTO patient = this.mapper.readValue(ctx.getBody().getBytes(), PatientDTO.class);
             String patientName = patient.lastName + patient.firstName;
-            Path patientDir = Path.of(shujiiDir, patientName);
+            Path patientDir = Path.of(shujiiDir, String.format("%s-%d", patientName, patient.patientId));
             Path masterPath = patientDir.resolve(patientName + ".txt");
             if (!(Files.exists(masterPath))) {
                 ctx.response().end(jsonEncode(null));
@@ -611,14 +660,6 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             }
         } catch (Exception e) {
             ctx.fail(e);
-        }
-    }
-
-    private List<String> readTextFile(Path path) throws Exception {
-        try {
-            return Files.readAllLines(path, StandardCharsets.UTF_8);
-        } catch (MalformedInputException ex) {
-            return Files.readAllLines(path, Charset.defaultCharset());
         }
     }
 
@@ -631,7 +672,6 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private void listShujiiPatient(RoutingContext ctx) {
-        Pattern patientIdPat = Pattern.compile("\\((\\d+)\\)");
         vertx.<String>executeBlocking(promise -> {
             try {
                 String shujiiDir = System.getenv("MYCLINIC_SHUJII_DIR");
@@ -647,36 +687,11 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     if (!Files.isDirectory(path)) {
                         continue;
                     }
-                    String repFile = name + ".txt";
-                    for (Path subpath : Files.list(path).collect(toList())) {
-                        String subname = subpath.getFileName().toString();
-                        int patientId = 0;
-                        if (repFile.equals(subname)) {
-                            List<String> lines = readTextFile(subpath);
-                            String firstLine = null;
-                            for (String line : lines) {
-                                line = line.trim();
-                                if (!"".equals(line)) {
-                                    firstLine = line;
-                                    break;
-                                }
-                            }
-                            if (firstLine == null) {
-                                throw new RuntimeException("Empty file: " + subpath.toString());
-                            }
-                            Matcher m = patientIdPat.matcher(firstLine);
-                            if (m.find()) {
-                                patientId = Integer.parseInt(m.group(1));
-                                if (!firstLine.contains(name)) {
-                                    throw new RuntimeException("Cannot find patient name: " + subpath.toString());
-                                }
-                                patientIds.add(patientId);
-                            } else {
-                                throw new RuntimeException("Cannot find patientId: " + subpath.toString());
-                            }
-                            break;
-                        }
+                    String[] parts = name.split("-");
+                    if( parts.length != 2 ){
+                        throw new RuntimeException("Invalid directory: " + name);
                     }
+                    patientIds.add(Integer.parseInt(parts[1]));
                 }
                 promise.complete(jsonEncode(patientIds));
             } catch (Exception e) {

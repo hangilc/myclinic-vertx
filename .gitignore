@@ -19,6 +19,8 @@ docker/builds/database-service/*.jar
 ansible/profiles
 __pycache__
 *.pyc
+file-uploads
+
 
 
 

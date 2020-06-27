@@ -499,9 +499,9 @@ class Rest extends Client {
         return await this.post("/get-shujii-master-text", patient);
     }
 
-    async saveShujiiMasterText(patientName, text){
+    async saveShujiiMasterText(patientName, patientId, text){
         return await this.post("/save-shujii-master-text", text, {
-            params: {name: patientName}
+            params: {name: patientName, "patient-id": patientId}
         });
     }
 

@@ -37,6 +37,7 @@
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-shujii-link">主治医意見書</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-send-fax-link">ファックス送信</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-printer-setting-link">印刷設定</a></li>
+                <li><a href="javascript:void(0)" class="scroll-link" id="index-refer-link">紹介状</a></li>
             </ul>
         </div>
 
@@ -190,6 +191,17 @@
             }
         }
 
+        class ReferPane extends Pane {
+            constructor(){
+                super($("#index-refer-link"), "pane-refer.html");
+            }
+
+            async initPane(){
+                await super.initPane();
+                await initRefer();
+            }
+        }
+
         class PrinterSettingPane extends Pane {
             constructor(){
                 super($("#index-printer-setting-link"), "pane-printer-setting.html");
@@ -208,9 +220,10 @@
         let houmonKango = new HoumonKangoPane();
         let shujii = new ShujiiPane();
         let sendFax = new SendFaxPane();
+        let refer = new ReferPane();
         let printerSetting = new PrinterSettingPane();
 
-        shujii.link.click();
+        refer.link.click();
     })();
 
 </script>

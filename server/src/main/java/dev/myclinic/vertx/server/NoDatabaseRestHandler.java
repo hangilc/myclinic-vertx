@@ -291,6 +291,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("get-shujii-master-text", this::getShujiiMasterText);
         noDatabaseFuncMap.put("save-shujii-master-text", this::saveShujiiMasterText);
         noDatabaseFuncMap.put("compile-shujii-drawer", this::compileShujiiDrawer);
+        noDatabaseFuncMap.put("shujii-criteria", this::shujiiCriteria);
         noDatabaseFuncMap.put("create-printer-setting", this::createPrinterSetting);
         noDatabaseFuncMap.put("modify-printer-setting", this::modifyPrinterSetting);
         noDatabaseFuncMap.put("list-printer-setting", this::listPrinterSetting);
@@ -532,6 +533,16 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void shujiiCriteria(RoutingContext ctx){
+        String shujiiDir = System.getenv("MYCLINIC_SHUJII_DIR");
+        if (shujiiDir == null) {
+            throw new RuntimeException("Cannot find env var MYCLINIC_SHUJII_DIR.");
+        }
+        Path file = Path.of(shujiiDir, "criteria.pdf");
+        ctx.response().putHeader("content-type", "application/pdf");
+        ctx.response().sendFile(file.toString().toString());
     }
 
     private void compileShujiiDrawer(RoutingContext ctx){

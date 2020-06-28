@@ -14,6 +14,8 @@ import dev.myclinic.vertx.drawer.printer.DrawerPrinter;
 import dev.myclinic.vertx.drawerform.Box;
 import dev.myclinic.vertx.drawerform.FormCompiler;
 import dev.myclinic.vertx.drawerform.Paper;
+import dev.myclinic.vertx.drawerform.referform.ReferData;
+import dev.myclinic.vertx.drawerform.referform.ReferForm;
 import dev.myclinic.vertx.drawerform.shujiiform.ShujiiData;
 import dev.myclinic.vertx.drawerform.shujiiform.ShujiiForm;
 import dev.myclinic.vertx.dto.*;
@@ -300,6 +302,18 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("print-guide-frame", this::printGuideFrame);
         noDatabaseFuncMap.put("get-printer-json-setting", this::getPrinterJsonSetting);
         noDatabaseFuncMap.put("save-printer-json-setting", this::savePrinterJsonSetting);
+        noDatabaseFuncMap.put("refer-drawer", this::referDrawer);
+    }
+
+    private void referDrawer(RoutingContext ctx) {
+        try {
+            ReferData data = mapper.readValue(ctx.getBody().getBytes(), ReferData.class);
+            ReferForm form = new ReferForm();
+            List<Op> ops = form.render(data);
+            ctx.response().end(jsonEncode(ops));
+        } catch(Exception e){
+            ctx.fail(e);
+        }
     }
 
     private static double objectToDouble(Object obj) {

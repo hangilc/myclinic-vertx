@@ -537,6 +537,10 @@ class Rest extends Client {
         });
     }
 
+    async referDrawer(data){
+        return await this.post("/refer-drawer", data);
+    }
+
 }
 
 class Integration extends Client {

@@ -4,7 +4,7 @@ import dev.myclinic.vertx.drawer.DrawerConsts;
 import dev.myclinic.vertx.drawer.OpCreatePen;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import static java.util.stream.Collectors.toList;
 
@@ -51,8 +51,20 @@ public class FormCompiler extends AffineCompiler {
         lineTo(box.getLeft(), box.getTop());
     }
 
+    public static List<Double> addExtraSpaces(List<Double> mes, double spc){
+        return mes.stream().map(cw -> cw + spc).collect(toList());
+    }
+
     public Box textAt(String text, double x, double y, HAlign halign, VAlign valign){
+        return textAt(text, x, y, halign, valign, null);
+    }
+
+    public Box textAt(String text, double x, double y, HAlign halign, VAlign valign,
+                      Function<List<Double>, List<Double>> mesModifier){
         List<Double> mes = textMetrics.measureChars(text, getCurrentFontSize());
+        if( mesModifier != null ){
+            mes = mesModifier.apply(mes);
+        }
         double width = sum(mes);
         double left;
         switch(halign){
@@ -96,7 +108,7 @@ public class FormCompiler extends AffineCompiler {
     private List<String> breakParagraphLine(String text, double fontSize, double width){
         List<String> lines = new ArrayList<>();
         for(String s: splitToLines(text)){
-            lines.addAll(textMetrics.breakLine(text, fontSize, width));
+            lines.addAll(textMetrics.breakLine(s, fontSize, width));
         }
         return lines;
     }

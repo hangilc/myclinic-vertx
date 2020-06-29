@@ -4,7 +4,12 @@
     <button type="button" class="btn btn-secondary" id="refer-select-patient-button">患者選択</button>
 </div>
 
-<div id="refer-current-wrapper" class="mt-3"></div>
+<div class="mt-3 row">
+    <div class="col-lg-7">
+        <div id="refer-current-wrapper"></div>
+    </div>
+    <div class="col-lg-5" id="refer-record-list-wrapper"></div>
+</div>
 
 <template id="refer-patient-select-dialog-template">
     <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
@@ -43,8 +48,8 @@
         </div>
         <div class="mt-2">
             <div class="form row">
-                <div class="col-sm-2 d-flex justify-content-end col-form-label">紹介病院</div>
-                <div class="col-sm-9">
+                <div class="col-sm-3 d-flex justify-content-end col-form-label">紹介病院</div>
+                <div class="col-sm-8">
                     <input type="text" class="x-refer-hospital form-control"/>
                 </div>
                 <div class="col-sm-1 pl-0 dropleft">
@@ -56,20 +61,20 @@
                 </div>
             </div>
             <div class="form row mt-2">
-                <div class="col-sm-2 d-flex justify-content-end col-form-label">紹介先生</div>
-                <div class="col-sm-10">
+                <div class="col-sm-3 d-flex justify-content-end col-form-label">紹介先生</div>
+                <div class="col-sm-9">
                     <input type="text" class="x-refer-doctor form-control"/>
                 </div>
             </div>
             <div class="form row mt-2">
-                <div class="col-sm-2 d-flex justify-content-end col-form-label">診断</div>
-                <div class="col-sm-10">
+                <div class="col-sm-3 d-flex justify-content-end col-form-label">診断</div>
+                <div class="col-sm-9">
                     <input type="text" class="x-diagnosis form-control"/>
                 </div>
             </div>
             <div class="form row mt-2">
-                <div class="col-sm-2 d-flex justify-content-end col-form-label">発行日</div>
-                <div class="col-sm-10">
+                <div class="col-sm-3 d-flex justify-content-end col-form-label">発行日</div>
+                <div class="col-sm-9">
                     <input type="text" class="x-issue-date form-control"/>
                 </div>
             </div>
@@ -97,12 +102,31 @@
     </div>
 </template>
 
+<template id="refer-record-list-template">
+    <div>
+        <div class="x-nav-wrapper"></div>
+        <div class="x-records-wrapper"></div>
+    </div>
+
+    <template class="x-nav-template">
+        <div class="d-none mt-2">
+            <a href="javascript:void(0)" class="x-first">最初</a>
+            <a href="javascript:void(0)" class="x-prev ml-1">前へ</a>
+            <a href="javascript:void(0)" class="x-next ml-1">次へ</a>
+            <a href="javascript:void(0)" class="x-last ml-1 mr-1">最後</a>
+            [<span class="x-page"></span>/<span class="x-total"></span>]
+        </div>
+    </template>
+
+</template>
+
 <script>
 
     async function initRefer(){
         let {PatientSelectDialog} = await import("./refer/patient-select-dialog.js");
         let {parseElement} = await import("./js/parse-element.js");
         let {Current} = await import("./refer/current.js");
+        let {recordListFactory} = await import("./refer/record-list/record-list.js");
 
         let currentPatient = null;
 
@@ -144,6 +168,9 @@
                 let prevs = await rest.listRefer(currentPatient.patientId);
                 let current = currentFactory.create(currentPatient, prevs, referList);
                 current.prependTo($("#refer-current-wrapper"));
+                let recordList = recordListFactory.create(currentPatient.patientId, rest);
+                await recordList.update(1);
+                recordList.appendTo($("#refer-record-list-wrapper").html(""));
             }
         });
     }

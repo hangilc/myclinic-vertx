@@ -38,7 +38,6 @@ export class Current extends Component {
     initSuggest(referList){
         this.suggestDropdownItemsElement.html("");
         for(let ref of referList){
-            console.log("ref", ref);
             let a = $(suggestTemplate);
             let hospital = ref.hospital || "";
             let section = ref.section || "";
@@ -48,7 +47,6 @@ export class Current extends Component {
             a.on("click", event => this.doSuggest(hospital, section, doctor));
             this.suggestDropdownItemsElement.append(a);
         }
-        console.log("suggest", this.suggestDropdownItemsElement);
     }
 
     set(patient, prevs){
@@ -66,10 +64,6 @@ export class Current extends Component {
 
     doSuggest(hospital, section, doctor){
         this.referHospitalElement.val(hospital);
-        if( !doctor ){
-            doctor = "　　　　　　　";
-        }
-        doctor += " 先生";
         let doctorValue = [section, doctor].filter(a => a).join(" ");
         this.referDoctorElement.val(doctorValue);
     }

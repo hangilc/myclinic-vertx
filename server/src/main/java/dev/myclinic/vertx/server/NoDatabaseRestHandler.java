@@ -27,6 +27,7 @@ import dev.myclinic.vertx.util.*;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.FileUpload;
@@ -306,11 +307,40 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("refer-drawer", this::referDrawer);
         noDatabaseFuncMap.put("save-refer", this::saveRefer);
         noDatabaseFuncMap.put("list-refer", this::listRefer);
+        noDatabaseFuncMap.put("get-refer", this::getRefer);
     }
 
-    private Path getReferDir(int patientId){
+    private void getRefer(RoutingContext ctx) {
+        String patientIdParam = ctx.request().getParam("patient-id");
+        String file = ctx.request().getParam("file");
+        if( patientIdParam == null ){
+            throw new RuntimeException("Missing parameter: patient-id");
+        }
+        int patientId = Integer.parseInt(patientIdParam);
+        if( file == null || file.isEmpty() ){
+            throw new RuntimeException("Missing parameter: file");
+        }
+        Path dir = getReferDir(patientId);
+        Path path = dir.resolve(file);
+        vertx.<Buffer>executeBlocking(promise -> {
+            try {
+                byte[] bytes = Files.readAllBytes(path);
+                promise.complete(Buffer.buffer(bytes));
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
+    }
+
+    private Path getReferDir(int patientId) {
         String dir = System.getenv("MYCLINIC_REFER_DIR");
-        if( dir == null ){
+        if (dir == null) {
             throw new RuntimeException("Missing env var: MYCLINIC_REFER_DIR");
         }
         return Path.of(dir, String.format("%d", patientId));
@@ -319,11 +349,11 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private final static Pattern referFilePattern =
             Pattern.compile("\\d+-refer-\\d{8}.*\\.json");
 
-    private void saveRefer(RoutingContext ctx){
+    private void saveRefer(RoutingContext ctx) {
         vertx.<String>executeBlocking(resolve -> {
             try {
                 String patientIdParam = ctx.request().getParam("patient-id");
-                if( patientIdParam == null ){
+                if (patientIdParam == null) {
                     throw new RuntimeException("Missing param: patient-id");
                 }
                 int patientId = Integer.parseInt(patientIdParam);
@@ -331,17 +361,17 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 String stamp = DateTimeUtil.toPackedSqlDateTime(LocalDateTime.now());
                 String filename = String.format("%d-refer-%s.json", patientId, stamp);
                 Path referDir = getReferDir(patientId);
-                if( !Files.isDirectory(referDir) ){
+                if (!Files.isDirectory(referDir)) {
                     Files.createDirectories(referDir);
                 }
                 Path file = referDir.resolve(filename);
                 Files.write(file, bytes);
                 resolve.complete(jsonEncode(filename));
-            } catch(Exception e){
+            } catch (Exception e) {
                 resolve.fail(e);
             }
         }, ar -> {
-            if( ar.succeeded() ){
+            if (ar.succeeded()) {
                 ctx.response().end(ar.result());
             } else {
                 ctx.fail(ar.cause());
@@ -353,7 +383,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         vertx.<String>executeBlocking(promise -> {
             try {
                 String patientIdParam = ctx.request().getParam("patient-id");
-                if( patientIdParam == null ){
+                if (patientIdParam == null) {
                     throw new RuntimeException("Missing param: patient-id");
                 }
                 int patientId = Integer.parseInt(patientIdParam);
@@ -367,11 +397,11 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                         .filter(Objects::nonNull)
                         .collect(toList());
                 promise.complete(jsonEncode(list));
-            } catch(Exception e){
+            } catch (Exception e) {
                 promise.fail(e);
             }
         }, ar -> {
-            if( ar.succeeded() ){
+            if (ar.succeeded()) {
                 ctx.response().end(ar.result());
             } else {
                 ctx.fail(ar.cause());
@@ -385,7 +415,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             ReferForm form = new ReferForm();
             List<Op> ops = form.render(data);
             ctx.response().end(jsonEncode(ops));
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
@@ -571,7 +601,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private void modifyPrinterSetting(RoutingContext ctx) {
         try {
             String settingName = ctx.request().getParam("setting");
-            if( settingName == null || settingName.isEmpty() ){
+            if (settingName == null || settingName.isEmpty()) {
                 throw new RuntimeException("Missing parameter: setting");
             }
             executorService.execute(() -> {
@@ -580,7 +610,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 DrawerPrinter.DialogResult result = printer.printDialog(
                         setting.devmode, setting.devnames
                 );
-                if( result.ok ){
+                if (result.ok) {
                     try {
                         PrinterSettingPaths paths = new PrinterSettingPaths(settingName);
                         Files.write(paths.getDevmodePath(), result.devmodeData);
@@ -625,14 +655,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void saveShujiiImage(RoutingContext ctx){
+    private void saveShujiiImage(RoutingContext ctx) {
         try {
             String name = ctx.request().getParam("name");
             if (name == null || name.isEmpty()) {
                 throw new RuntimeException("Missing parameter: name");
             }
             String patientId = ctx.request().getParam("patient-id");
-            if( patientId == null || patientId.isEmpty() ){
+            if (patientId == null || patientId.isEmpty()) {
                 throw new RuntimeException("Missing parameter: patient-id");
             }
             String shujiiDir = System.getenv("MYCLINIC_SHUJII_DIR");
@@ -640,7 +670,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 throw new RuntimeException("Cannot find env var MYCLINIC_SHUJII_DIR.");
             }
             Path patientDir = Path.of(shujiiDir, String.format("%s-%s", name, patientId));
-            if( !Files.isDirectory(patientDir) ){
+            if (!Files.isDirectory(patientDir)) {
                 throw new RuntimeException("No such directory: " + patientDir.toString());
             }
             Set<FileUpload> uploads = ctx.fileUploads();
@@ -653,22 +683,22 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                         Files.move(Path.of(uploaded), dst);
                     }
                     promise.complete();
-                } catch(Exception e){
+                } catch (Exception e) {
                     promise.fail(e);
                 }
             }, ar -> {
-                if( ar.succeeded() ){
+                if (ar.succeeded()) {
                     ctx.response().end("true");
                 } else {
                     ctx.fail(ar.cause());
                 }
             });
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
 
-    private void shujiiCriteria(RoutingContext ctx){
+    private void shujiiCriteria(RoutingContext ctx) {
         String shujiiDir = System.getenv("MYCLINIC_SHUJII_DIR");
         if (shujiiDir == null) {
             throw new RuntimeException("Cannot find env var MYCLINIC_SHUJII_DIR.");
@@ -678,7 +708,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         ctx.response().sendFile(file.toString().toString());
     }
 
-    private void compileShujiiDrawer(RoutingContext ctx){
+    private void compileShujiiDrawer(RoutingContext ctx) {
         try {
             ShujiiData data = mapper.readValue(ctx.getBody().getBytes(), ShujiiData.class);
             String settingName = ctx.request().getParam("setting");
@@ -690,7 +720,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             c.setOffsetY(jsonSetting.offsetY);
             List<Op> ops = form.render(data);
             ctx.response().end(jsonEncode(ops));
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
@@ -703,7 +733,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     throw new RuntimeException("Missing parameter: name");
                 }
                 String patientId = ctx.request().getParam("patient-id");
-                if( patientId == null || patientId.isEmpty() ){
+                if (patientId == null || patientId.isEmpty()) {
                     throw new RuntimeException("Missing parameter: patient-id");
                 }
                 String text = this.mapper.readValue(ctx.getBody().getBytes(), String.class);
@@ -776,7 +806,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                         continue;
                     }
                     String[] parts = name.split("-");
-                    if( parts.length != 2 ){
+                    if (parts.length != 2) {
                         throw new RuntimeException("Invalid directory: " + name);
                     }
                     patientIds.add(Integer.parseInt(parts[1]));

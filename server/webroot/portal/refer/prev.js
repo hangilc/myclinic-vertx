@@ -25,13 +25,13 @@ export class Prev extends Component {
         return this;
     }
 
-    set(prevs){
+    set(patientId, prevs){
         super.set();
-        this.setPrevs(prevs);
+        this.setPrevs(patientId, prevs);
         return this;
     }
 
-    setPrevs(prevs){
+    setPrevs(patientId, prevs){
         this.tbodyElement.html("");
         for(let prev of prevs){
             let m = prev.match(filePattern);
@@ -41,8 +41,18 @@ export class Prev extends Component {
                 let item = $(itemTemplate);
                 let map = parseElement(item);
                 map.date.text(rep);
+                map.copy.on("click", event => this.doCopy(patientId, prev));
                 this.tbodyElement.append(item);
             }
         }
+    }
+
+    onCopy(cb){
+        this.on("copy", (event, data) => cb(data));
+    }
+
+    async doCopy(patientId, prev){
+        let data = await this.rest.getRefer(patientId, prev);
+        this.trigger("copy", data);
     }
 }

@@ -554,6 +554,10 @@ class Rest extends Client {
     async listRefer(patientId){
         return await this.get("/list-refer", {"patient-id": patientId});
     }
+
+    async getRefer(patientId, file){
+        return await this.get("/get-refer", {"patient-id": patientId, "file": file});
+    }
 }
 
 class Integration extends Client {

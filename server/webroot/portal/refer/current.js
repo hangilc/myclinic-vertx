@@ -24,16 +24,28 @@ export class Current extends Component {
         this.prev.init();
         this.printElement.on("click", event => this.doPrint());
         this.saveElement.on("click", event => this.doSave());
+        this.prev.onCopy(data => this.doCopy(data));
         return this;
     }
 
     set(patient, prevs){
         super.set();
-        this.prev.set(prevs);
+        if( patient ) {
+            this.prev.set(patient.patientId, prevs);
+        }
         this.patient = patient;
         this.patientIdElement.text(patient.patientId);
         this.nameElement.text(patient.lastName + patient.firstName);
+        let issueDate = kanjidate.todayAsSqldate();
+        this.issueDateElement.val(kanjidate.sqldateToKanji(issueDate));
         return this;
+    }
+
+    doCopy(data){
+        this.referHospitalElement.val(data.referHospital);
+        this.referDoctorElement.val(data.referDoctor);
+        this.diagnosisElement.val(data.diagnosis);
+        this.contentElement.val(data.content);
     }
 
     async compileData(){

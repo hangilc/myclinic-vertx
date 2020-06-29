@@ -42,6 +42,7 @@ import java.nio.charset.MalformedInputException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -303,6 +304,71 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("get-printer-json-setting", this::getPrinterJsonSetting);
         noDatabaseFuncMap.put("save-printer-json-setting", this::savePrinterJsonSetting);
         noDatabaseFuncMap.put("refer-drawer", this::referDrawer);
+        noDatabaseFuncMap.put("save-refer", this::saveRefer);
+        noDatabaseFuncMap.put("list-refer", this::listRefer);
+    }
+
+    private Path getReferDir(int patientId){
+        String dir = System.getenv("MYCLINIC_REFER_DIR");
+        if( dir == null ){
+            throw new RuntimeException("Missing env var: MYCLINIC_REFER_DIR");
+        }
+        return Path.of(dir, String.format("%d", patientId));
+    }
+
+    private final static Pattern referFilePattern =
+            Pattern.compile("\\d+-refer-\\d{8}.*\\.json");
+
+    private void saveRefer(RoutingContext ctx){
+        vertx.<String>executeBlocking(resolve -> {
+            try {
+                String patientIdParam = ctx.request().getParam("patient-id");
+                if( patientIdParam == null ){
+                    throw new RuntimeException("Missing param: patient-id");
+                }
+                int patientId = Integer.parseInt(patientIdParam);
+                byte[] bytes = ctx.getBody().getBytes();
+                String stamp = DateTimeUtil.toPackedSqlDateTime(LocalDateTime.now());
+                String filename = String.format("%d-refer-%s.json", patientId, stamp);
+                Path referDir = getReferDir(patientId);
+                if( !Files.isDirectory(referDir) ){
+                    Files.createDirectories(referDir);
+                }
+                Path file = referDir.resolve(filename);
+                Files.write(file, bytes);
+                resolve.complete(jsonEncode(filename));
+            } catch(Exception e){
+                resolve.fail(e);
+            }
+        }, ar -> {
+            if( ar.succeeded() ){
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
+    }
+
+    private void listRefer(RoutingContext ctx) {
+        try {
+            String patientIdParam = ctx.request().getParam("patient-id");
+            if( patientIdParam == null ){
+                throw new RuntimeException("Missing param: patient-id");
+            }
+            int patientId = Integer.parseInt(patientIdParam);
+            Path referDir = getReferDir(patientId);
+            List<String> list = Files.list(referDir)
+                    .map(path -> {
+                        String filename = path.getFileName().toString();
+                        Matcher m = referFilePattern.matcher(filename);
+                        return m.matches() ? filename : null;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(toList());
+            ctx.response().end(jsonEncode(list));
+        } catch(Exception e){
+            ctx.fail(e);
+        }
     }
 
     private void referDrawer(RoutingContext ctx) {

@@ -9,6 +9,7 @@ public class DateTimeUtil {
 
     private static DateTimeFormatter sqlDateFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd");
     private static DateTimeFormatter sqlDateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
+    private static DateTimeFormatter packedSqlDateTimeFormatter = DateTimeFormatter.ofPattern("uuuuMMddHHmmss");
 //    public static Function<KanjiDateRepBuilder, KanjiDateRepBuilder> kanjiFormatter1 = KanjiDateRepBuilder::format1;
 //    public static Function<KanjiDateRepBuilder, KanjiDateRepBuilder> kanjiFormatter2 = KanjiDateRepBuilder::format2;
 //    public static Function<KanjiDateRepBuilder, KanjiDateRepBuilder> kanjiFormatter3 = KanjiDateRepBuilder::format3;
@@ -80,6 +81,10 @@ public class DateTimeUtil {
 	public static String toSqlDateTime(LocalDateTime at){
 		return at.format(sqlDateTimeFormatter);
 	}
+
+	public static String toPackedSqlDateTime(LocalDateTime at){
+        return at.format(packedSqlDateTimeFormatter);
+    }
 
     public static int calcAge(LocalDate birthday, LocalDate at) {
         return (int) birthday.until(at, ChronoUnit.YEARS);

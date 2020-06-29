@@ -227,9 +227,13 @@ class Rest extends Client {
         return await this.post("/calc-futan-wari", req);
     }
 
-    async printDrawer(pages, setting){
+    async printDrawer(pages, setting = null){ // setting is optional
+        let params = {};
+        if( setting ){
+            params.setting = setting;
+        }
         return await this.post("/print-drawer", pages, {
-            params: {setting}
+            params: params
         });
     }
 
@@ -539,6 +543,12 @@ class Rest extends Client {
 
     async referDrawer(data){
         return await this.post("/refer-drawer", data);
+    }
+
+    async saveRefer(data, patientId){
+        return await this.post("/save-refer", data, {
+            params: {"patient-id": patientId}
+        });
     }
 
 }

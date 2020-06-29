@@ -562,6 +562,10 @@ class Rest extends Client {
     async deleteRefer(patientId, file){
         return await this.get("/delete-refer", {"patient-id": patientId, "file": file});
     }
+
+    async getReferList(){
+        return await this.get("/get-refer-list");
+    }
 }
 
 class Integration extends Client {

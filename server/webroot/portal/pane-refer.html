@@ -47,8 +47,12 @@
                 <div class="col-sm-9">
                     <input type="text" class="x-refer-hospital form-control"/>
                 </div>
-                <div class="col-sm-1 pl-0">
-                    <button type="button" class="btn btn-link ml-0 pl-0">選択</button>
+                <div class="col-sm-1 pl-0 dropleft">
+                    <button type="button" class="btn btn-link ml-0 pl-0 dropdown-toggle"
+                        data-toggle="dropdown">選択</button>
+                    <div class="dropdown-menu x-suggest-dropdown-items">
+                        <a href="javascript:void(0)" class="dropdown-item">河北病院</a>
+                    </div>
                 </div>
             </div>
             <div class="form row mt-2">
@@ -102,6 +106,8 @@
 
         let currentPatient = null;
 
+        let referList = await rest.getReferList();
+
         class PatientSearchDialogFactory {
             create(){
                 let html = $("#refer-patient-select-dialog-template").html();
@@ -117,12 +123,12 @@
         let patientSelectDialogFactory = new PatientSearchDialogFactory();
 
         class CurrentFactory {
-            create(patient, prevs){
+            create(patient, prevs, referList){
                 let html = $("#refer-current-template").html();
                 let ele = $(html);
                 let map = parseElement(ele);
                 let comp = new Current(ele, map, rest);
-                comp.init();
+                comp.init(referList);
                 comp.set(patient, prevs);
                 return comp;
             }
@@ -136,7 +142,7 @@
             if( result ){
                 currentPatient = result;
                 let prevs = await rest.listRefer(currentPatient.patientId);
-                let current = currentFactory.create(currentPatient, prevs);
+                let current = currentFactory.create(currentPatient, prevs, referList);
                 current.prependTo($("#refer-current-wrapper"));
             }
         });

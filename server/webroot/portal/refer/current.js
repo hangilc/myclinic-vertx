@@ -2,6 +2,10 @@ import {Component} from "./component.js";
 import * as kanjidate from "../js/kanjidate.js";
 import {Prev} from "./prev.js";
 
+let suggestTemplate = `
+    <a href="javascript:void(0)" class="dropdown-item"></a>
+`;
+
 export class Current extends Component {
     constructor(ele, map, rest){
         super(ele, map, rest);
@@ -17,16 +21,34 @@ export class Current extends Component {
         this.diagnosisElement = map.diagnosis;
         this.contentElement = map.content;
         this.issueDateElement = map.issueDate;
+        this.suggestDropdownItemsElement = map.suggestDropdownItems;
     }
 
-    init(){
+    init(referList){
         super.init();
         this.prev.init();
+        this.initSuggest(referList);
         this.printElement.on("click", event => this.doPrint());
         this.saveElement.on("click", event => this.doSave());
         this.prev.onCopy(data => this.doCopy(data));
         this.prev.onDeleted(() => this.doDeleted());
         return this;
+    }
+
+    initSuggest(referList){
+        this.suggestDropdownItemsElement.html("");
+        for(let ref of referList){
+            console.log("ref", ref);
+            let a = $(suggestTemplate);
+            let hospital = ref.hospital || "";
+            let section = ref.section || "";
+            let doctor = ref.doctor || "";
+            let rep = [hospital, section, doctor].filter(a => a).join(" ");
+            a.text(rep);
+            a.on("click", event => this.doSuggest(hospital, section, doctor));
+            this.suggestDropdownItemsElement.append(a);
+        }
+        console.log("suggest", this.suggestDropdownItemsElement);
     }
 
     set(patient, prevs){
@@ -40,6 +62,16 @@ export class Current extends Component {
         let issueDate = kanjidate.todayAsSqldate();
         this.issueDateElement.val(kanjidate.sqldateToKanji(issueDate));
         return this;
+    }
+
+    doSuggest(hospital, section, doctor){
+        this.referHospitalElement.val(hospital);
+        if( !doctor ){
+            doctor = "　　　　　　　";
+        }
+        doctor += " 先生";
+        let doctorValue = [section, doctor].filter(a => a).join(" ");
+        this.referDoctorElement.val(doctorValue);
     }
 
     doCopy(data){
@@ -61,7 +93,14 @@ export class Current extends Component {
         }
         let clinicInfo = await this.rest.getClinicInfo();
         data.referHospital = this.referHospitalElement.val();
-        data.referDoctor = this.referDoctorElement.val();
+        let doctorValue = this.referDoctorElement.val().trim();
+        if( doctorValue === "" ){
+            doctorValue = "　　　　　　　　"
+        }
+        if( !doctorValue.includes("先生") ){
+            doctorValue += " 先生";
+        }
+        data.referDoctor = doctorValue;
         data.diagnosis = "診断： " + this.diagnosisElement.val();
         data.content = this.contentElement.val();
         data.issueDate = this.issueDateElement.val();

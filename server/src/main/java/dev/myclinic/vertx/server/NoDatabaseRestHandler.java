@@ -420,15 +420,19 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 }
                 int patientId = Integer.parseInt(patientIdParam);
                 Path referDir = getReferDir(patientId);
-                List<String> list = Files.list(referDir)
-                        .map(path -> {
-                            String filename = path.getFileName().toString();
-                            Matcher m = referFilePattern.matcher(filename);
-                            return m.matches() ? filename : null;
-                        })
-                        .filter(Objects::nonNull)
-                        .collect(toList());
-                promise.complete(jsonEncode(list));
+                if( Files.exists(referDir) ){
+                    List<String> list = Files.list(referDir)
+                            .map(path -> {
+                                String filename = path.getFileName().toString();
+                                Matcher m = referFilePattern.matcher(filename);
+                                return m.matches() ? filename : null;
+                            })
+                            .filter(Objects::nonNull)
+                            .collect(toList());
+                    promise.complete(jsonEncode(list));
+                } else {
+                    promise.complete("[]");
+                }
             } catch (Exception e) {
                 promise.fail(e);
             }

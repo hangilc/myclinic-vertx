@@ -3,6 +3,7 @@ import {parseElement} from "../../js/parse-element.js";
 import {titleFactory} from "./title.js";
 import {textFactory} from "./text.js";
 import {drugFactory} from "./drug.js";
+import {conductFactory} from "./conduct.js";
 
 let template = `
     <div class="mb-3">
@@ -35,7 +36,7 @@ class Record extends Component {
         let compTitle = titleFactory.create(visitFull.visit, this.rest);
         compTitle.appendTo(this.titleElement);
         for(let text of visitFull.texts){
-            let compText = textFactory.create(text);
+            let compText = textFactory.create(text, this.rest);
             compText.appendTo(this.textWrapperElement);
         }
         if( visitFull.drugs.length > 0 ){
@@ -43,8 +44,12 @@ class Record extends Component {
         }
         let drugIndex = 1;
         for(let drug of visitFull.drugs){
-            let compDrug = drugFactory.create(drugIndex++, drug);
+            let compDrug = drugFactory.create(drugIndex++, drug, this.rest);
             compDrug.appendTo(this.drugWrapperElement);
+        }
+        for(let conduct of visitFull.conducts){
+            let compConduct = conductFactory.create(conduct, this.rest);
+            compConduct.appendTo(this.conductWrapperElement);
         }
         return this;
     }

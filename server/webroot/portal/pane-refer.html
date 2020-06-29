@@ -77,6 +77,19 @@
             <button type="button" class="btn btn-success x-print">印刷</button>
             <button type="button" class="btn btn-success x-save ml-2">保存</button>
         </div>
+        <div class="mt-3 x-prev_">
+            <h5>履歴</h5>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>作成日</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+        </div>
     </div>
 </template>
 
@@ -104,13 +117,13 @@
         let patientSelectDialogFactory = new PatientSearchDialogFactory();
 
         class CurrentFactory {
-            create(patient){
+            create(patient, prevs){
                 let html = $("#refer-current-template").html();
                 let ele = $(html);
                 let map = parseElement(ele);
                 let comp = new Current(ele, map, rest);
                 comp.init();
-                comp.set(patient);
+                comp.set(patient, prevs);
                 return comp;
             }
         }
@@ -122,7 +135,8 @@
             let result = await dialog.open();
             if( result ){
                 currentPatient = result;
-                let current = currentFactory.create(currentPatient);
+                let prevs = await rest.listRefer(currentPatient.patientId);
+                let current = currentFactory.create(currentPatient, prevs);
                 current.prependTo($("#refer-current-wrapper"));
             }
         });

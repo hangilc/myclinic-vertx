@@ -350,25 +350,33 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private void listRefer(RoutingContext ctx) {
-        try {
-            String patientIdParam = ctx.request().getParam("patient-id");
-            if( patientIdParam == null ){
-                throw new RuntimeException("Missing param: patient-id");
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                String patientIdParam = ctx.request().getParam("patient-id");
+                if( patientIdParam == null ){
+                    throw new RuntimeException("Missing param: patient-id");
+                }
+                int patientId = Integer.parseInt(patientIdParam);
+                Path referDir = getReferDir(patientId);
+                List<String> list = Files.list(referDir)
+                        .map(path -> {
+                            String filename = path.getFileName().toString();
+                            Matcher m = referFilePattern.matcher(filename);
+                            return m.matches() ? filename : null;
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(toList());
+                promise.complete(jsonEncode(list));
+            } catch(Exception e){
+                promise.fail(e);
             }
-            int patientId = Integer.parseInt(patientIdParam);
-            Path referDir = getReferDir(patientId);
-            List<String> list = Files.list(referDir)
-                    .map(path -> {
-                        String filename = path.getFileName().toString();
-                        Matcher m = referFilePattern.matcher(filename);
-                        return m.matches() ? filename : null;
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(toList());
-            ctx.response().end(jsonEncode(list));
-        } catch(Exception e){
-            ctx.fail(e);
-        }
+        }, ar -> {
+            if( ar.succeeded() ){
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
     }
 
     private void referDrawer(RoutingContext ctx) {

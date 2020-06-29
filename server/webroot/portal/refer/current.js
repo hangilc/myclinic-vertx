@@ -1,9 +1,11 @@
 import {Component} from "./component.js";
 import * as kanjidate from "../js/kanjidate.js";
+import {Prev} from "./prev.js";
 
 export class Current extends Component {
     constructor(ele, map, rest){
         super(ele, map, rest);
+        this.prev = new Prev(map.prev_, map.prev, rest);
         this.patientIdElement = map.patientId;
         this.nameElement = map.name;
         this.printElement = map.print;
@@ -19,13 +21,15 @@ export class Current extends Component {
 
     init(){
         super.init();
+        this.prev.init();
         this.printElement.on("click", event => this.doPrint());
         this.saveElement.on("click", event => this.doSave());
         return this;
     }
 
-    set(patient){
+    set(patient, prevs){
         super.set();
+        this.prev.set(prevs);
         this.patient = patient;
         this.patientIdElement.text(patient.patientId);
         this.nameElement.text(patient.lastName + patient.firstName);

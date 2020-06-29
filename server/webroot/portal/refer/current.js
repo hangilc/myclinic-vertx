@@ -25,6 +25,7 @@ export class Current extends Component {
         this.printElement.on("click", event => this.doPrint());
         this.saveElement.on("click", event => this.doSave());
         this.prev.onCopy(data => this.doCopy(data));
+        this.prev.onDeleted(() => this.doDeleted());
         return this;
     }
 
@@ -85,6 +86,14 @@ export class Current extends Component {
             let data = await this.compileData();
             let file = await this.rest.saveRefer(data, patient.patientId);
             console.log(file);
+        }
+    }
+
+    async doDeleted(){
+        let patient = this.patient;
+        if( patient ){
+            let prevs = await this.rest.listRefer(patient.patientId);
+            this.prev.set(patient.patientId, prevs);
         }
     }
 }

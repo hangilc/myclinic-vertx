@@ -308,6 +308,38 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("save-refer", this::saveRefer);
         noDatabaseFuncMap.put("list-refer", this::listRefer);
         noDatabaseFuncMap.put("get-refer", this::getRefer);
+        noDatabaseFuncMap.put("delete-refer", this::deleteRefer);
+    }
+
+    private void deleteRefer(RoutingContext ctx) {
+        String patientIdParam = ctx.request().getParam("patient-id");
+        String file = ctx.request().getParam("file");
+        if( patientIdParam == null ){
+            throw new RuntimeException("Missing parameter: patient-id");
+        }
+        int patientId = Integer.parseInt(patientIdParam);
+        if( file == null || file.isEmpty() ){
+            throw new RuntimeException("Missing parameter: file");
+        }
+        Path dir = getReferDir(patientId);
+        Path path = dir.resolve(file);
+        if( !Files.exists(path) ){
+            throw new RuntimeException("No such file: " + path.toString());
+        }
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                Files.delete(path);
+                promise.complete("true");
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
     }
 
     private void getRefer(RoutingContext ctx) {

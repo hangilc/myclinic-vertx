@@ -42,6 +42,7 @@ export class Prev extends Component {
                 let map = parseElement(item);
                 map.date.text(rep);
                 map.copy.on("click", event => this.doCopy(patientId, prev));
+                map.delete.on("click", event => this.doDelete(patientId, prev));
                 this.tbodyElement.append(item);
             }
         }
@@ -54,5 +55,16 @@ export class Prev extends Component {
     async doCopy(patientId, prev){
         let data = await this.rest.getRefer(patientId, prev);
         this.trigger("copy", data);
+    }
+
+    onDeleted(cb){
+        this.on("deleted", event => cb());
+    }
+
+    async doDelete(patientId, prev){
+        if( confirm("この紹介状の記録を本当に削除していいですか？") ){
+            await this.rest.deleteRefer(patientId, prev);
+            this.trigger("deleted");
+        }
     }
 }

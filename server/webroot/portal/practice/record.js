@@ -1,4 +1,5 @@
 import {Component} from "./component.js";
+import {shinryouSearchEnterWidgetFactory} from "./shinryou-search-enter-widget/shinryou-search-enter-widget.js";
 
 export class Record extends Component {
     constructor(ele, map, rest) {
@@ -15,6 +16,7 @@ export class Record extends Component {
         this.drugWrapperElement = map.right.drugWrapper;
         this.shinryouMenuElement = map.right.shinryouMenu;
         this.shinryouAuxMenuMap = map.right.shinryouAuxMenu;
+        this.shinryouWidgetWorkareaElement = map.right.shinryouWidgetWorkarea;
         this.shinryouWrapperElement = map.right.shinryouWrapper;
         this.conductMenuElement = map.right.conductMenu;
         this.conductWrapperElement = map.right.conductWrapper;
@@ -70,11 +72,16 @@ export class Record extends Component {
         visitFull.conducts.forEach(cfull => this.addConduct(cfull));
         let compCharge = chargeFactory.create(visitFull.charge);
         compCharge.appendTo(this.chargeWrapperElement);
+        this.shinryouAuxMenuMap.searchEnter.on("click", event => this.doSearchEnter());
         this.shinryouAuxMenuMap.copyAll.on("click", event => this.doCopyAll());
     }
 
     getVisitId(){
         return this.visitFull.visit.visitId;
+    }
+
+    getVisitedAt(){
+        return this.visitFull.visit.visitedAt;
     }
 
     createHokenComponent(hoken, hokenRep){
@@ -104,6 +111,11 @@ export class Record extends Component {
 
     onShinryouCopied(cb){
         this.on("shinryou-copied", (event, targetVisitId, shinryouList) => cb(targetVisitId, shinryouList));
+    }
+
+    async doSearchEnter(){
+        let widget = shinryouSearchEnterWidgetFactory.create(this.getVisitId(), this.getVisitedAt(), this.rest);
+        widget.prependTo(this.shinryouWidgetWorkareaElement);
     }
 
     async doCopyAll(){

@@ -46,7 +46,7 @@ public class HoumonKangoHandler {
     private void addRoutes(Router router) {
         router.route(HttpMethod.POST, "/create-shijisho").handler(this::handleCreateShijisho);
         router.route(HttpMethod.GET, "/list-params").handler(this::handleListParams);
-        router.route(HttpMethod.GET, "/get-clinic-param").handler(this::handleGetClinicParam);
+        //router.route(HttpMethod.GET, "/get-clinic-param").handler(this::handleGetClinicParam);
         router.route(HttpMethod.GET, "/get-record").handler(this::handleGetRecord);
         router.route(HttpMethod.POST, "/save-record").handler(this::handleSaveRecord);
     }
@@ -68,13 +68,6 @@ public class HoumonKangoHandler {
                 ctx.fail(ar.cause());
             }
         });
-//        vertx.fileSystem().writeFile(path.toFile().getAbsolutePath(), ctx.getBody(), ar -> {
-//            if( ar.succeeded() ){
-//                ctx.response().end("true");
-//            } else {
-//                ctx.fail(ar.cause());
-//            }
-//        });
     }
 
     private void handleGetRecord(RoutingContext ctx) {
@@ -87,10 +80,10 @@ public class HoumonKangoHandler {
         }
     }
 
-    private void handleGetClinicParam(RoutingContext ctx) {
-        Path path = getHoumonKangoConfigDir().resolve("clinic-param.json");
-        ctx.response().sendFile(path.toFile().getAbsolutePath());
-    }
+//    private void handleGetClinicParam(RoutingContext ctx) {
+//        Path path = getHoumonKangoConfigDir().resolve("clinic-param.json");
+//        ctx.response().sendFile(path.toFile().getAbsolutePath());
+//    }
 
     private void handleCreateShijisho(RoutingContext ctx) {
         Path springProjectDir = IntegrationUtil.getMyclinicSpringProjectDir();

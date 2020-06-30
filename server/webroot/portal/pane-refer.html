@@ -1,9 +1,8 @@
-<!-- TODO: finish patient -->
-<!-- TODO: single patient only at on time -->
 <h3>紹介状</h3>
 
 <div>
     <button type="button" class="btn btn-secondary" id="refer-select-patient-button">患者選択</button>
+    <button type="button" class="btn btn-link" id="refer-end-patient-button">患者終了</button>
 </div>
 
 <div class="mt-3 row">
@@ -143,6 +142,7 @@
         }
 
         let currentFactory = new CurrentFactory();
+        let currentComponent = null;
 
         $("#refer-select-patient-button").on("click", async event => {
             let dialog = patientSelectDialogFactory.create();
@@ -151,11 +151,26 @@
                 currentPatient = result;
                 let prevs = await rest.listRefer(currentPatient.patientId);
                 let current = currentFactory.create(currentPatient, prevs, referList);
-                current.prependTo($("#refer-current-wrapper"));
+                current.prependTo($("#refer-current-wrapper").html(""));
                 let recordList = recordListFactory.create(currentPatient.patientId, rest);
                 await recordList.update(1);
                 recordList.appendTo($("#refer-record-list-wrapper").html(""));
+                currentComponent = current;
             }
+        });
+
+        $("#refer-end-patient-button").on("click", event => {
+            if( currentComponent ){
+                if( currentComponent.getContent() ){
+                    if( !confirm("この患者を終了していいですか？") ){
+                        return;
+                    }
+                }
+                currentPatient = null;
+                currentComponent = null;
+            }
+            $("#refer-current-wrapper").html("");
+            $("#refer-record-list-wrapper").html("");
         });
     }
 

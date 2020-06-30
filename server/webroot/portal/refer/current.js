@@ -75,6 +75,10 @@ export class Current extends Component {
         this.contentElement.val(data.content);
     }
 
+    getContent(){
+        return this.contentElement.val();
+    }
+
     async compileData(){
         let data = { };
         if( this.patient ){

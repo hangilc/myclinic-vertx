@@ -6,6 +6,7 @@ export class TextEdit extends Component {
         this.textareaElement = map.textarea;
         this.enterElement = map.enter;
         this.cancelElement = map.cancel;
+        this.copyMemoElement = map.copyMemo;
         this.deleteElement = map.delete;
         this.shohousenElement = map.shohousen;
         this.shohousenFaxElement = map.shohousenFax;
@@ -19,6 +20,7 @@ export class TextEdit extends Component {
         this.textareaElement.val(text.content);
         this.enterElement.on("click", event => this.doEnter());
         this.cancelElement.on("click", event => this.ele.trigger("cancel"));
+        this.copyMemoElement.on("click", event => this.doCopyMemo());
         this.deleteElement.on("click", event => this.doDelete());
         this.shohousenElement.on("click", event => this.doShohousen());
         this.shohousenFaxElement.on("click", event => this.doShohousenFax());
@@ -87,6 +89,28 @@ export class TextEdit extends Component {
         this.trigger("copied", copied);
     }
 
+    async doCopyMemo(){
+        let targetVisitId = this.currentVisitManager.resolveCopyTarget();
+        if (targetVisitId === 0) {
+            alert("コピー先が設定されていません。");
+            return;
+        }
+        if (targetVisitId === this.text.visitId) {
+            alert("同じ診療記録にはコピーできません。");
+            return;
+        }
+        let memo = extractMemo(this.text.content);
+        if( memo ){
+            let t = {
+                textId: 0,
+                visitId: targetVisitId,
+                content: memo
+            }
+            let textId = await this.rest.enterText(t);
+            let copied = await this.rest.getText(textId);
+            this.trigger("copied", copied);
+        }
+    }
 
     async doEnter() {
         let content = this.textareaElement.val();
@@ -115,4 +139,19 @@ export class TextEdit extends Component {
     onCancel(cb) {
         this.ele.on("cancel", cb);
     }
+}
+
+let lineTermPattern = /\r\n|\n|\r/;
+
+function extractMemo(content){
+    let lines = content.split(lineTermPattern);
+    let memo = [];
+    for(let line of lines){
+        if( line.startsWith("●") || line.startsWith("★") ){
+            memo.push(line);
+        } else {
+            break;
+        }
+    }
+    return memo.join("\n");
 }

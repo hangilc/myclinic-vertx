@@ -1,5 +1,4 @@
 <!--suppress ALL -->
-<!-- TODO: fix search textg -->
 <!-- TODO: 診療行為検索入力 -->
 <!-- TODO: 引継ぎ分のコピー (visit_text) -->
 <div class="row" id="practice-top">
@@ -1071,7 +1070,7 @@
 
         let currentVisitManager = new CurrentVisitManager();
 
-        let getCurrentPatientId = practiceState.getPatientId();
+        //let getCurrentPatientId = practiceState.getPatientId();
 
         function getTemplateHtml(templateId) {
             let html = $("template#" + templateId).html();
@@ -1304,7 +1303,8 @@
             });
 
             map.searchText.on("click", async event => {
-                let dialog = searchTextForPatientDialogFactory.create(getCurrentPatientId());
+                let patientId = practiceState.getPatientId();
+                let dialog = searchTextForPatientDialogFactory.create(patientId);
                 await dialog.open();
             });
 

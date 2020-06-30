@@ -9,6 +9,7 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -80,26 +81,42 @@ public class HoumonKangoHandler {
         }
     }
 
-//    private void handleGetClinicParam(RoutingContext ctx) {
-//        Path path = getHoumonKangoConfigDir().resolve("clinic-param.json");
-//        ctx.response().sendFile(path.toFile().getAbsolutePath());
-//    }
+    private Path createHoumonKangoTmpFile(){
+        Path tmpDir = Path.of("server", "webroot", "portal", "tmp");
+        try {
+            if( !Files.exists(tmpDir) ){
+                Files.createDirectory(tmpDir);
+            }
+            return Files.createTempFile(tmpDir, "houmon-kango", ".pdf");
+        } catch(Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String jsonEncode(Object obj){
+        try {
+            return mapper.writeValueAsString(obj);
+        } catch(Exception ex){
+            throw new RuntimeException(ex);
+        }
+    }
 
     private void handleCreateShijisho(RoutingContext ctx) {
         Path springProjectDir = IntegrationUtil.getMyclinicSpringProjectDir();
         String url = "https://deno.myclinic.dev/houmon-kango/create-houmon-kango-form.ts";
-        vertx.<Buffer>executeBlocking(promise -> {
+        vertx.<String>executeBlocking(promise -> {
             ExecRequest req1 = new ExecRequest();
             req1.command = List.of("deno", "run", "--allow-net", url, "-");
             Map<String, String> env = new HashMap<>();
             env.put("NO_COLOR", "yes");
             req1.env = env;
-            String dataAttr = ctx.request().getFormAttribute("data");
-            if( dataAttr != null ){
-                req1.stdIn = dataAttr.getBytes(StandardCharsets.UTF_8);
-            } else {
-                req1.stdIn = ctx.getBody().getBytes();
-            }
+            req1.stdIn = ctx.getBody().getBytes();
+//            String dataAttr = ctx.request().getFormAttribute("data");
+//            if( dataAttr != null ){
+//                req1.stdIn = dataAttr.getBytes(StandardCharsets.UTF_8);
+//            } else {
+//                req1.stdIn = ctx.getBody().getBytes();
+//            }
             if( req1.stdIn.length == 0 ){
                 req1.stdIn = "{}".getBytes();
             }
@@ -111,8 +128,10 @@ public class HoumonKangoHandler {
             byte[] drawer = er1.stdOut;
             Path jar = Path.of(springProjectDir.toFile().getAbsolutePath(), "drawer-printer",
                     "target", "drawer-printer-1.0.0-SNAPSHOT.jar");
+            Path outFile = createHoumonKangoTmpFile();
             ExecRequest req2 = new ExecRequest();
-            req2.command = List.of("java", "-jar", jar.toString(), "-e", "utf-8", "--pdf", "-");
+            req2.command = List.of("java", "-jar", jar.toString(), "-e", "utf-8", "--pdf",
+                    outFile.toString());
             req2.stdIn = drawer;
             ExecResult er2 = IntegrationUtil.exec(req2);
             if (er2.isError()) {
@@ -120,7 +139,7 @@ public class HoumonKangoHandler {
                 return;
             }
             ctx.response().putHeader("content-type", "application/pdf");
-            promise.complete(Buffer.buffer(er2.stdOut));
+            promise.complete(jsonEncode(outFile.getFileName().toString()));
         }, ar -> {
             if (ar.succeeded()) {
                 ctx.response().end(ar.result());

@@ -38,9 +38,7 @@ let template = `
         <textarea class="form-control x-data" rows="10"></textarea>
     </div>
     
-    <form class="form-inline mt-2 x-create-shijisho-form"
-          enctype="application/x-www-form-urlencoded"
-          target="_blank" action="javascript:void(0)" method="post">
+    <div class="form-inline mt-2 x-create-shijisho-form">
         <button type="button"
                 class="btn btn-primary x-create-shijisho">指示書作成
         </button>
@@ -50,8 +48,8 @@ let template = `
         <a href="/integration/houmon-kango/list-params"
            class="btn btn-link form-control ml-2"
            target="_blank">属性一覧</a>
-        <input type="text" name="data" formenctype="text/plain" class="d-none"/>
-    </form>
+<!--        <input type="text" name="data" formenctype="text/plain" class="d-none"/>-->
+    </div>
     
     <div class="houmon-kango-history mt-3">
         <h5>履歴</h5>
@@ -72,23 +70,39 @@ let template = `
 
 export class HoumonKango extends Component {
 
-    constructor(rest, clinicInfo){
+    constructor(rest, integration, clinicInfo){
         super($(template));
         this.rest = rest;
+        this.integration = integration;
+        this.clinicInfo = clinicInfo;
         let map = parseElement(this.ele);
         this.fromDateElement = map.fromDate;
-        this.fromDateElement.on("change", event => this.updateDataFromDate());
         this.uptoDateElement = map.uptoDate;
-        this.uptoDateElement.on("change", event => this.updateDataUptoDate());
         this.issueDateElement = map.issueDate;
-        this.issueDateElement.on("change", event => this.updateDataIssueDate());
         this.recipientElement = map.recipient;
-        this.recipientElement.on("change", event => this.updateDataRecipient());
         this.patientElement = map.patient;
         this.dataElement = map.data;
-        map.selectPatient.on("click", event => this.doSelectPatient());
-        this.setData(clinicInfoToData(clinicInfo));
+        this.createShijihoElement = map.createShijisho;
+        this.createShijishoForm = map.createShijishoForm;
+        this.selectPatientElement = map.selectPatient;
+        this.init();
+    }
+
+    init(){
+        this.fromDateElement.on("change", event => this.updateDataFromDate());
+        this.uptoDateElement.on("change", event => this.updateDataUptoDate());
+        this.issueDateElement.on("change", event => this.updateDataIssueDate());
+        this.recipientElement.on("change", event => this.updateDataRecipient());
+        this.selectPatientElement.on("click", event => this.doSelectPatient());
+        this.setData(clinicInfoToData(this.clinicInfo));
         this.issueDateElement.val(kanjidate.todayAsSqldate()).trigger("change");
+        this.createShijihoElement.on("click", event => this.doCreateShijisho());
+    }
+
+    async doCreateShijisho(){
+        let data = this.getData();
+        let result = await this.integration.createShijisho(data);
+        window.open("/portal/tmp/" + result, "_blank");
     }
 
     async doSelectPatient(){

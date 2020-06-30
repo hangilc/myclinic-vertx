@@ -7,7 +7,7 @@
         let {HoumonKango} = await import("./houmon-kango/houmon-kango.js");
 
         let clinicInfo = await rest.getClinicInfo();
-        let comp = new HoumonKango(rest, clinicInfo);
+        let comp = new HoumonKango(rest, integration, clinicInfo);
         comp.prependTo($("#houmon-kango-wrapper").html(""));
     }
 

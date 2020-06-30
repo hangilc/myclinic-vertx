@@ -321,6 +321,14 @@ class Rest extends Client {
         return await this.get("/list-shinryou-full-by-ids", {"shinryou-id": shinryouIds});
     }
 
+    async getShinryouFull(shinryouId){
+        return await this.get("/get-shinryou-full", {"shinryou-id": shinryouId});
+    }
+
+    async enterShinryou(shinryou){
+        return await this.post("/enter-shinryou", shinryou);
+    }
+
     async deleteShinryou(shinryouId){
         return await this.get("/delete-shinryou", {"shinryou-id": shinryouId});
     }

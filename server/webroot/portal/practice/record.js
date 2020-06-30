@@ -115,7 +115,9 @@ export class Record extends Component {
 
     async doSearchEnter(){
         let widget = shinryouSearchEnterWidgetFactory.create(this.getVisitId(), this.getVisitedAt(), this.rest);
+        widget.onEntered(entered => this.addShinryou(entered));
         widget.prependTo(this.shinryouWidgetWorkareaElement);
+        widget.focus();
     }
 
     async doCopyAll(){

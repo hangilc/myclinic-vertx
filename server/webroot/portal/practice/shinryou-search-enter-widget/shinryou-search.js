@@ -68,4 +68,8 @@ export class ShinryouSearch extends Component {
             this.setResult(result);
         }
     }
+
+    focus(){
+        this.searchTextElement.focus();
+    }
 }

@@ -32,6 +32,10 @@ class ShinryouSearchEnterWidget extends WidgetBase {
         return this;
     }
 
+    onEntered(cb){
+        this.on("entered", (event, shinryouFull) => cb(shinryouFull));
+    }
+
     async doEnter(){
         let master = this.shinryouSearch.getSelectedData();
         if( !master ){
@@ -41,7 +45,18 @@ class ShinryouSearchEnterWidget extends WidgetBase {
             alert("Missing visitId");
             return;
         }
+        let shinryou = {
+            visitId: this.visitId,
+            shinryoucode: master.shinryoucode
+        };
+        let shinryouId = await this.rest.enterShinryou(shinryou);
+        let entered = await this.rest.getShinryouFull(shinryouId);
+        this.trigger("entered", entered);
+        this.close();
+    }
 
+    focus(){
+        this.shinryouSearch.focus();
     }
 }
 

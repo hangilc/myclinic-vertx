@@ -1,5 +1,5 @@
 <!-- TODO: add reset button -->
-<h3>訪問看護指示書</h3>
+<h3 id="houmon-kango-leader">訪問看護指示書</h3>
 
 <div class="form-inline">
     <span>開始日</span>
@@ -21,6 +21,9 @@
 <div class="mt-2">
     <button type="button" class="btn btn-secondary"
             id="houmon-kango-select-patient">患者選択
+    </button>
+    <button type="button" class="btn btn-secondary ml-2"
+            id="houmon-kango-end-patient">患者終了
     </button>
 </div>
 <div id="houmon-kango-patient" class="my-4"></div>
@@ -63,7 +66,7 @@
     async function initHoumonKango() {
         let chooser = await import("./js/choose-patient.js");
         let displayer = await import("./js/disp-patient.js");
-        let Data = (await import("./houmon-kango/data.js")).Data;
+        let {Data} = await import("./houmon-kango/data.js");
 
         let clinicParam = await integration.getHoumonKangoClinicParam();
 
@@ -76,7 +79,14 @@
             };
         }
 
-        initRecord(null);
+        initRecord(0);
+
+        function resetRecord(){
+            theRecord.patientId = 0;
+            theRecord.history = [];
+        }
+
+        $("#houmon-kango-leader").on("reset", event => resetRecord());
 
         function setRecord(record) {
             theRecord = record;
@@ -87,10 +97,6 @@
                 stamp: getTimeStamp(),
                 data: data
             });
-        }
-
-        function getCurrentRecord() {
-            return theRecord;
         }
 
         function getRecordHistory() {
@@ -128,12 +134,20 @@
 
         setData(clinicParam);
 
+        $("#houmon-kango-leader").on("reset", event => setData(clinicParam));
+
         function adaptToData() {
             let data = new Data(getData());
             $(".houmon-kango-from-date").val(data.getSubtitle1FromDate());
             $(".houmon-kango-upto-date").val(data.getSubtitle1UptoDate());
             $(".houmon-kango-recipient").val(data.getRecipient());
         }
+
+        $("#houmon-kango-leader").on("reset", event => {
+            $(".houmon-kango-from-date").val("");
+            $(".houmon-kango-upto-date").val("");
+            $(".houmon-kango-recipient").val("");
+        });
 
         $(".houmon-kango-from-date").on("change", event => {
             let data = getData();
@@ -343,6 +357,8 @@
                 tbody.append(tr);
             }
         }
+
+        $("#houmon-kango-end-patient").on("click", event => $("#houmon-kango-leader").trigger("reset"));
 
     }
 </script>

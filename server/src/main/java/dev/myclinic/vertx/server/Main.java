@@ -3,19 +3,19 @@ package dev.myclinic.vertx.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import dev.myclinic.vertx.drawer.JacksonOpDeserializer;
-import dev.myclinic.vertx.drawer.JacksonOpSerializer;
-import dev.myclinic.vertx.drawer.Op;
-import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
-import dev.myclinic.vertx.mastermap.MasterMap;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.appconfig.FileBasedAppConfig;
 import dev.myclinic.vertx.db.MysqlDataSourceConfig;
 import dev.myclinic.vertx.db.MysqlDataSourceFactory;
 import dev.myclinic.vertx.db.TableSet;
+import dev.myclinic.vertx.drawer.JacksonOpDeserializer;
+import dev.myclinic.vertx.drawer.JacksonOpSerializer;
+import dev.myclinic.vertx.drawer.Op;
+import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
+import dev.myclinic.vertx.mastermap.MasterMap;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
@@ -24,7 +24,11 @@ import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 
 import javax.sql.DataSource;
-import java.time.LocalDateTime;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,18 +54,19 @@ public class Main {
         int port = 28080;
         List<String> args = new ArrayList<>();
 
-        public static CmdArgs parse(String[] args){
+        public static CmdArgs parse(String[] args) {
             CmdArgs cmdArgs = new CmdArgs();
-            int i=0;
-            first: for(i=0;i<args.length;i++){
+            int i = 0;
+            first:
+            for (i = 0; i < args.length; i++) {
                 String arg = args[i];
-                switch(arg){
+                switch (arg) {
                     case "--port": {
                         cmdArgs.port = Integer.parseInt(args[++i]);
                         break;
                     }
                     default: {
-                        if( arg.startsWith("-") ){
+                        if (arg.startsWith("-")) {
                             System.err.println(String.format("Invalid option: %s", arg));
                             System.err.println();
                             usage();
@@ -72,13 +77,13 @@ public class Main {
                     }
                 }
             }
-            for(;i<args.length;i++){
+            for (; i < args.length; i++) {
                 cmdArgs.args.add(args[i]);
             }
             return cmdArgs;
         }
 
-        public static void usage(){
+        public static void usage() {
             System.err.println("Usage: server [options]");
             System.err.println("  options:");
             System.err.println("    --port PORT       server listening port");
@@ -115,6 +120,8 @@ public class Main {
         router.route("/portal").handler(ctx -> ctx.response().setStatusCode(301)
                 .putHeader("Location", "/portal/index.html")
                 .end());
+        addStaticPath(router, "/portal-tmp", GlobalService.getInstance().getAppDirectory("/portal-tmp"));
+        addStaticPath(router, "/paper-scan", GlobalService.getInstance().getAppDirectory("/paper-scan"));
         server.requestHandler(router);
         server.webSocketHandler(ws -> {
             System.out.println("opened: " + ws.path());
@@ -124,6 +131,22 @@ public class Main {
         int port = cmdArgs.port;
         server.listen(port);
         System.out.println(String.format("server started at port %d", port));
+    }
+
+    private static void addStaticPath(Router router, String url, Path root){
+        if( !url.endsWith("/") ){
+            url += "/";
+        }
+        String urlPrefix = url;
+        router.get(urlPrefix + "*").handler(ctx -> {
+            try {
+                String path = URLDecoder.decode(ctx.request().path(), StandardCharsets.UTF_8)
+                        .substring(urlPrefix.length());
+                ctx.response().sendFile(root.resolve(path).toString());
+            } catch(Exception e){
+                ctx.fail(e);
+            }
+        });
     }
 
     private static AppConfig createConfig(Vertx vertx) {

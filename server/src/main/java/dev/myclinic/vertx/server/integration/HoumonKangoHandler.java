@@ -1,6 +1,7 @@
 package dev.myclinic.vertx.server.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.server.GlobalService;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
@@ -9,7 +10,6 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -81,18 +81,6 @@ public class HoumonKangoHandler {
         }
     }
 
-    private Path createHoumonKangoTmpFile(){
-        Path tmpDir = Path.of("server", "webroot", "portal", "tmp");
-        try {
-            if( !Files.exists(tmpDir) ){
-                Files.createDirectory(tmpDir);
-            }
-            return Files.createTempFile(tmpDir, "houmon-kango", ".pdf");
-        } catch(Exception e){
-            throw new RuntimeException(e);
-        }
-    }
-
     private String jsonEncode(Object obj){
         try {
             return mapper.writeValueAsString(obj);
@@ -111,12 +99,6 @@ public class HoumonKangoHandler {
             env.put("NO_COLOR", "yes");
             req1.env = env;
             req1.stdIn = ctx.getBody().getBytes();
-//            String dataAttr = ctx.request().getFormAttribute("data");
-//            if( dataAttr != null ){
-//                req1.stdIn = dataAttr.getBytes(StandardCharsets.UTF_8);
-//            } else {
-//                req1.stdIn = ctx.getBody().getBytes();
-//            }
             if( req1.stdIn.length == 0 ){
                 req1.stdIn = "{}".getBytes();
             }
@@ -128,7 +110,9 @@ public class HoumonKangoHandler {
             byte[] drawer = er1.stdOut;
             Path jar = Path.of(springProjectDir.toFile().getAbsolutePath(), "drawer-printer",
                     "target", "drawer-printer-1.0.0-SNAPSHOT.jar");
-            Path outFile = createHoumonKangoTmpFile();
+            GlobalService gs = GlobalService.getInstance();
+            String outFileId = gs.createTempAppFilePath("portal-tmp", "houmon-kango", ".pdf");
+            Path outFile = gs.fileIdToPath(outFileId);
             ExecRequest req2 = new ExecRequest();
             req2.command = List.of("java", "-jar", jar.toString(), "-e", "utf-8", "--pdf",
                     outFile.toString());

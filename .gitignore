@@ -20,7 +20,7 @@ ansible/profiles
 __pycache__
 *.pyc
 file-uploads
-server/webroot/portal/tmp
+
 
 
 

@@ -3,11 +3,12 @@ import {PatientSelectDialog} from "./patient-select-dialog.js"
 import * as kanjidate from "../js/kanjidate.js";
 import {PatientDispCard} from "./patient-disp-card.js";
 import {PdfItem} from "./pdf-item.js";
+import {HistoryItem} from "./history-item.js";
 
 // language=HTML
 let template = `
 <div>
-    <h3 id="houmon-kango-leader">訪問看護指示書</h3>
+    <h3>訪問看護指示書</h3>
     
     <div class="form-inline">
         <span>開始日</span>
@@ -27,11 +28,8 @@ let template = `
     </div>
     
     <div class="mt-2">
-        <button type="button" class="btn btn-secondary x-select-patient">患者選択
-        </button>
-        <button type="button" class="btn btn-secondary ml-2"
-                id="houmon-kango-end-patient">患者終了
-        </button>
+        <button type="button" class="btn btn-secondary x-select-patient">患者選択</button>
+        <button type="button" class="btn btn-secondary ml-2 x-end-patient">患者終了</button>
     </div>
     <div class="my-4 x-patient"></div>
     
@@ -49,14 +47,14 @@ let template = `
                 class="btn btn-primary x-create-shijisho">指示書作成
         </button>
         <button type="button"
-                class="btn btn-secondary ml-2 x-save-history">データ保存
+                class="btn btn-secondary ml-2 x-save-data">データ保存
         </button>
         <a href="/integration/houmon-kango/list-params"
            class="btn btn-link form-control ml-2"
            target="_blank">属性一覧</a>
     </div>
     
-    <div class="houmon-kango-history mt-3">
+    <div class="x-history mt-3">
         <h5>履歴</h5>
         <table class="table">
             <thead>
@@ -92,6 +90,9 @@ export class HoumonKango extends Component {
         this.selectPatientElement = map.selectPatient;
         this.pdfListElement = map.pdfList;
         this.pdfListContentElement = map.pdfListContent;
+        this.saveDataElement = map.saveData;
+        this.historyElement = map.history;
+        this.setClickHandler(map.saveData, () => this.doSaveData());
         this.init();
     }
 
@@ -106,15 +107,38 @@ export class HoumonKango extends Component {
         this.createShijihoElement.on("click", event => this.doCreateShijisho());
     }
 
+    async doSaveData(){
+        let patientId = this.getPatientId();
+        if( patientId > 0 && this.record ){
+            let data = this.getData();
+            let stamp = kanjidate.nowAsSqldatetime();
+            let record = this.record;
+            record.history.push({
+                stamp, data
+            });
+            await this.integration.saveHoumonKangoRecord(record);
+            this.record = await this.integration.getHoumonKangoRecord(patientId);
+            this.updateHistory();
+        }
+    }
+
     addPdfItem(pdfItem){
         pdfItem.appendTo(this.pdfListContentElement);
         this.pdfListElement.removeClass("d-none");
+    }
+
+    removePdfItem(pdfItem){
+        pdfItem.remove();
+        if( this.pdfListContentElement.children().length === 0 ){
+            this.pdfListElement.addClass("d-none");
+        }
     }
 
     async doCreateShijisho(){
         let data = this.getData();
         let url = await this.integration.createShijisho(data);
         let item = new PdfItem(url, this.getPatientId(), this.rest);
+        item.onDeleted(() => this.removePdfItem(item));
         this.addPdfItem(item);
     }
 
@@ -127,10 +151,32 @@ export class HoumonKango extends Component {
         let result = await dialog.open();
         if( result ){
             this.patient = result;
+            this.record = await this.integration.getHoumonKangoRecord(this.patient.patientId);
             this.updatePatientCard();
             this.updateDataPatient();
+            this.updateHistory();
         }
     }
+
+    updateHistory(){
+        if( this.record ){
+            let tbody = this.historyElement.find("tbody").html("");
+            for(let h of this.record.history){
+                let item = new HistoryItem(h);
+                item.onCopy(() => this.copyHistoryData(h.data));
+                item.appendTo(tbody);
+            }
+        }
+    }
+
+    copyHistoryData(data){
+        data = Object.assign({}, data);
+        this.recipientElement.val(data.recipient);
+        this.setData(data);
+        this.fromDateElement.change();
+        this.uptoDateElement.change();
+    }
+
 
     updatePatientCard(){
         let patient = this.patient;
@@ -159,9 +205,9 @@ export class HoumonKango extends Component {
             data["subtitle1.from.month"] = "" + dateData.month;
             data["subtitle1.from.day"] = "" + dateData.day;
         } else {
-            data["subtitle1.from.nen"] = "";
-            data["subtitle1.from.month"] = "";
-            data["subtitle1.from.day"] = "";
+            delete data["subtitle1.from.nen"]
+            delete data["subtitle1.from.month"];
+            delete data["subtitle1.from.day"];
         }
         this.setData(data);
     }
@@ -175,9 +221,9 @@ export class HoumonKango extends Component {
             data["subtitle1.upto.month"] = "" + dateData.month;
             data["subtitle1.upto.day"] = "" + dateData.day;
         } else {
-            data["subtitle1.upto.nen"] = "";
-            data["subtitle1.upto.month"] = "";
-            data["subtitle1.upto.day"] = "";
+            delete data["subtitle1.upto.nen"];
+            delete data["subtitle1.upto.month"];
+            delete data["subtitle1.upto.day"];
         }
         this.setData(data);
     }

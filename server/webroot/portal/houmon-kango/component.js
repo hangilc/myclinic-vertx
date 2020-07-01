@@ -1,4 +1,5 @@
 export {parseElement} from "../js/parse-element.js";
+import {parseElement} from "../js/parse-element.js";
 
 let template = "<div></div>";
 
@@ -10,12 +11,20 @@ export class Component {
         this.ele = ele;
     }
 
+    getMap(){
+        return parseElement(this.ele);
+    }
+
+    setClickHandler(ele, handler){
+        ele.on("click", event => handler());
+    }
+
     on(eventType, callback){
         if( !this.eventDispatcher ){
             this.eventDispatcher = {};
         }
         let fs = this.eventDispatcher[eventType];
-        if( fs ){
+        if( !fs ){
             fs = [callback];
             this.eventDispatcher[eventType] = fs;
         } else {

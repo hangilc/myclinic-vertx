@@ -35,8 +35,16 @@ export class PdfItem extends Component {
         this.deleteTmpElement.on("click", event => this.doDeleteTmp());
     }
 
-    async doDeleteTmp(){
+    onDeleted(cb){
+        this.on("deleted", () => cb());
+    }
 
+    async doDeleteTmp(){
+        let url = this.url;
+        if( url ){
+            await this.rest.deleteAppFile(url);
+            this.trigger("deleted");
+        }
     }
 
     async doSave(){

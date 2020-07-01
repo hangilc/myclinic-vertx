@@ -578,6 +578,14 @@ class Rest extends Client {
     async getReferList(){
         return await this.get("/get-refer-list");
     }
+
+    async moveAppFile(src, dst){
+        return await this.get("/move-app-file", {src, dst});
+    }
+
+    async deleteAppFile(file){
+        return await this.get("/delete-app-file", {file});
+    }
 }
 
 class Integration extends Client {
@@ -585,8 +593,8 @@ class Integration extends Client {
         super(baseUrl);
     }
 
-    async getHoumonKangoClinicParam() {
-        return await this.get("/houmon-kango/get-clinic-param");
+    async createShijisho(data){
+        return await this.post("/houmon-kango/create-shijisho", data);
     }
 
     async getHoumonKangoRecord(patientId) {

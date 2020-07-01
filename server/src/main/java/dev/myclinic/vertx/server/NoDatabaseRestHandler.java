@@ -309,6 +309,54 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("list-refer", this::listRefer);
         noDatabaseFuncMap.put("get-refer", this::getRefer);
         noDatabaseFuncMap.put("delete-refer", this::deleteRefer);
+        noDatabaseFuncMap.put("move-app-file", this::moveAppFile);
+        noDatabaseFuncMap.put("delete-app-file", this::deleteAppFile);
+    }
+
+    private void deleteAppFile(RoutingContext ctx) {
+        String file = ctx.request().getParam("file");
+        if( file == null || file.isEmpty() ){
+            throw new RuntimeException("Missing parameter: file");
+        }
+        vertx.executeBlocking(promise -> {
+            try {
+                GlobalService.getInstance().deleteAppFile(file);
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().end("true");
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
+    }
+
+    private void moveAppFile(RoutingContext ctx) {
+        String src = ctx.request().getParam("src");
+        String dst = ctx.request().getParam("dst");
+        if( src == null || src.isEmpty() ){
+            throw new RuntimeException("Missing parameter: src");
+        }
+        if( dst == null || dst.isEmpty() ){
+            throw new RuntimeException("Missing parameter: dst");
+        }
+        vertx.executeBlocking(promise -> {
+            try {
+                GlobalService.getInstance().moveAppFile(src, dst);
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().end("true");
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
     }
 
     private void deleteRefer(RoutingContext ctx) {

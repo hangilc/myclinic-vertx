@@ -1,6 +1,7 @@
 package dev.myclinic.vertx.server.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.server.GlobalService;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
@@ -46,7 +47,7 @@ public class HoumonKangoHandler {
     private void addRoutes(Router router) {
         router.route(HttpMethod.POST, "/create-shijisho").handler(this::handleCreateShijisho);
         router.route(HttpMethod.GET, "/list-params").handler(this::handleListParams);
-        router.route(HttpMethod.GET, "/get-clinic-param").handler(this::handleGetClinicParam);
+        //router.route(HttpMethod.GET, "/get-clinic-param").handler(this::handleGetClinicParam);
         router.route(HttpMethod.GET, "/get-record").handler(this::handleGetRecord);
         router.route(HttpMethod.POST, "/save-record").handler(this::handleSaveRecord);
     }
@@ -68,13 +69,6 @@ public class HoumonKangoHandler {
                 ctx.fail(ar.cause());
             }
         });
-//        vertx.fileSystem().writeFile(path.toFile().getAbsolutePath(), ctx.getBody(), ar -> {
-//            if( ar.succeeded() ){
-//                ctx.response().end("true");
-//            } else {
-//                ctx.fail(ar.cause());
-//            }
-//        });
     }
 
     private void handleGetRecord(RoutingContext ctx) {
@@ -87,26 +81,24 @@ public class HoumonKangoHandler {
         }
     }
 
-    private void handleGetClinicParam(RoutingContext ctx) {
-        Path path = getHoumonKangoConfigDir().resolve("clinic-param.json");
-        ctx.response().sendFile(path.toFile().getAbsolutePath());
+    private String jsonEncode(Object obj){
+        try {
+            return mapper.writeValueAsString(obj);
+        } catch(Exception ex){
+            throw new RuntimeException(ex);
+        }
     }
 
     private void handleCreateShijisho(RoutingContext ctx) {
         Path springProjectDir = IntegrationUtil.getMyclinicSpringProjectDir();
         String url = "https://deno.myclinic.dev/houmon-kango/create-houmon-kango-form.ts";
-        vertx.<Buffer>executeBlocking(promise -> {
+        vertx.<String>executeBlocking(promise -> {
             ExecRequest req1 = new ExecRequest();
             req1.command = List.of("deno", "run", "--allow-net", url, "-");
             Map<String, String> env = new HashMap<>();
             env.put("NO_COLOR", "yes");
             req1.env = env;
-            String dataAttr = ctx.request().getFormAttribute("data");
-            if( dataAttr != null ){
-                req1.stdIn = dataAttr.getBytes(StandardCharsets.UTF_8);
-            } else {
-                req1.stdIn = ctx.getBody().getBytes();
-            }
+            req1.stdIn = ctx.getBody().getBytes();
             if( req1.stdIn.length == 0 ){
                 req1.stdIn = "{}".getBytes();
             }
@@ -118,16 +110,21 @@ public class HoumonKangoHandler {
             byte[] drawer = er1.stdOut;
             Path jar = Path.of(springProjectDir.toFile().getAbsolutePath(), "drawer-printer",
                     "target", "drawer-printer-1.0.0-SNAPSHOT.jar");
+            GlobalService gs = GlobalService.getInstance();
+            gs.ensureAppDirectory("/portal-tmp");
+            String outFileId = gs.createTempAppFilePath("/portal-tmp", "houmon-kango", ".pdf");
+            Path outFile = gs.fileIdToPath(outFileId);
             ExecRequest req2 = new ExecRequest();
-            req2.command = List.of("java", "-jar", jar.toString(), "-e", "utf-8", "--pdf", "-");
+            req2.command = List.of("java", "-jar", jar.toString(), "-e", "utf-8", "--pdf",
+                    outFile.toString());
             req2.stdIn = drawer;
             ExecResult er2 = IntegrationUtil.exec(req2);
             if (er2.isError()) {
                 promise.fail(er2.getErrorMessage());
                 return;
             }
-            ctx.response().putHeader("content-type", "application/pdf");
-            promise.complete(Buffer.buffer(er2.stdOut));
+            ctx.response().putHeader("content-type", "text/plain; charset=UTF-8");
+            promise.complete(jsonEncode(outFileId));
         }, ar -> {
             if (ar.succeeded()) {
                 ctx.response().end(ar.result());

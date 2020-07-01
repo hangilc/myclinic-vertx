@@ -1,69 +1,17 @@
 <!-- TODO: add reset button -->
-<h3 id="houmon-kango-leader">訪問看護指示書</h3>
-
-<div class="form-inline">
-    <span>開始日</span>
-    <input type="date" class="form-control ml-2 houmon-kango-from-date"/>
-    <span class="ml-4">終了日</span>
-    <input type="date" class="form-control ml-2 houmon-kango-upto-date"/>
-</div>
-
-<div class="form-inline mt-2">
-    <span>発行日</span>
-    <input type="date" class="form-control ml-2 houmon-kango-issue-date"/>
-</div>
-
-<div class="form-inline mt-2">
-    <span>送付先</span>
-    <input type="text" class="form-control ml-2 houmon-kango-recipient"/>
-</div>
-
-<div class="mt-2">
-    <button type="button" class="btn btn-secondary"
-            id="houmon-kango-select-patient">患者選択
-    </button>
-    <button type="button" class="btn btn-secondary ml-2"
-            id="houmon-kango-end-patient">患者終了
-    </button>
-</div>
-<div id="houmon-kango-patient" class="my-4"></div>
-
-<div class="form">
-    <textarea class="form-control houmon-kango-data" rows="10"></textarea>
-</div>
-
-<form class="form-inline mt-2 houmon-kango-create-shijisho-form"
-      enctype="application/x-www-form-urlencoded"
-      target="_blank" action="javascript:void(0)" method="post">
-    <button type="button"
-            class="btn btn-primary houmon-kango-create-shijisho">指示書作成
-    </button>
-    <button type="button"
-            class="btn btn-secondary ml-2 houmon-kango-save-history">保存
-    </button>
-    <a type="link" href="javascript:void(0)"
-       class="btn btn-link form-control ml-2 houmon-kango-list-param"
-       target="_blank">属性一覧</a>
-    <input type="text" name="data" formenctype="text/plain" class="d-none"/>
-</form>
-
-<div class="houmon-kango-history mt-3">
-    <h5>履歴</h5>
-    <table class="table">
-        <thead>
-        <tr>
-            <th>送付先</th>
-            <th>開始日</th>
-            <th>終了日</th>
-            <th>操作</th>
-        </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</div>
+<div id="houmon-kango-wrapper" class="pane"></div>
 
 <script>
-    async function initHoumonKango() {
+
+    async function initHoumonKango(){
+        let {HoumonKango} = await import("./houmon-kango/houmon-kango.js");
+
+        let clinicInfo = await rest.getClinicInfo();
+        let comp = new HoumonKango(rest, integration, clinicInfo);
+        comp.prependTo($("#houmon-kango-wrapper").html(""));
+    }
+
+    async function initHoumonKango_save() {
         let chooser = await import("./js/choose-patient.js");
         let displayer = await import("./js/disp-patient.js");
         let {Data} = await import("./houmon-kango/data.js");

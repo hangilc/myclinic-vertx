@@ -33,8 +33,12 @@ export class HistoryItem extends Component {
         this.trigger("copy");
     }
 
-    async doDelete(){
+    onDelete(cb){
+        this.on("delete", () => cb());
+    }
 
+    async doDelete(){
+        this.trigger("delete");
     }
 }
 

@@ -162,8 +162,9 @@ export class HoumonKango extends Component {
         if( this.record ){
             let tbody = this.historyElement.find("tbody").html("");
             for(let h of this.record.history){
-                let item = new HistoryItem(h);
+                let item = new HistoryItem(h, this.integration);
                 item.onCopy(() => this.copyHistoryData(h.data));
+                item.onDelete(() => this.deleteHistoryData(h.stamp));
                 item.appendTo(tbody);
             }
         }
@@ -175,6 +176,17 @@ export class HoumonKango extends Component {
         this.setData(data);
         this.fromDateElement.change();
         this.uptoDateElement.change();
+    }
+
+    async deleteHistoryData(stamp){
+        if( !confirm("この履歴を本当に削除していいですか？") ){
+            return;
+        }
+        let record = Object.assign({}, this.record);
+        record.history = record.history.filter(rec => rec.stamp !== stamp);
+        await this.integration.saveHoumonKangoRecord(record);
+        this.record = await this.integration.getHoumonKangoRecord(this.getPatientId());
+        this.updateHistory();
     }
 
 

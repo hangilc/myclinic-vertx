@@ -882,6 +882,10 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
         String month = date.substring(0, 7);
         Path shohousenDir = Path.of(dir, month);
+        if( !Files.exists(shohousenDir) ){
+            ctx.response().end("null");
+            return;
+        }
         Pattern pat = Pattern.compile(String.format("^[a-zA-Z]+-%s-.+\\.pdf$", textIdPara));
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(shohousenDir)) {
             for (Path path : stream) {
@@ -891,10 +895,10 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     return;
                 }
             }
+            ctx.response().end("null");
         } catch (IOException e) {
             ctx.fail(e);
         }
-        ctx.response().end("null");
     }
 
     private void sendFax(RoutingContext ctx) {
@@ -971,7 +975,15 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         String month = date.toString().substring(0, 7);
         String file = String.format("%s-%d-%d-%s-stamped.pdf", nameRomaji,
                 textId, patientId, date.toString().replace("-", ""));
-        return Path.of(dir, month, file).toString();
+        Path parent = Path.of(dir, month);
+        if( !Files.exists(parent) ){
+            try {
+                Files.createDirectories(parent);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return parent.resolve(file).toString();
     }
 
     private boolean isNotRomaji(String s) {

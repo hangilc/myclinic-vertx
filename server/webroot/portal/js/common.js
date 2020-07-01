@@ -578,6 +578,14 @@ class Rest extends Client {
     async getReferList(){
         return await this.get("/get-refer-list");
     }
+
+    async moveAppFile(src, dst){
+        return await this.get("/move-app-file", {src, dst});
+    }
+
+    async deleteAppFile(file){
+        return await this.get("/delete-app-file", {file});
+    }
 }
 
 class Integration extends Client {

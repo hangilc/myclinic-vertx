@@ -2,6 +2,7 @@ import {Component, parseElement} from "./component.js";
 import {PatientSelectDialog} from "./patient-select-dialog.js"
 import * as kanjidate from "../js/kanjidate.js";
 import {PatientDispCard} from "./patient-disp-card.js";
+import {PdfItem} from "./pdf-item.js";
 
 // language=HTML
 let template = `
@@ -38,17 +39,21 @@ let template = `
         <textarea class="form-control x-data" rows="10"></textarea>
     </div>
     
+    <div class="x-pdf-list d-none my-3 p-2 border rounded">
+        <h5>一時 PDF ファイル</h5>
+        <div class="x-pdf-list-content"></div>
+    </div>
+    
     <div class="form-inline mt-2 x-create-shijisho-form">
         <button type="button"
                 class="btn btn-primary x-create-shijisho">指示書作成
         </button>
         <button type="button"
-                class="btn btn-secondary ml-2 x-save-history">保存
+                class="btn btn-secondary ml-2 x-save-history">データ保存
         </button>
         <a href="/integration/houmon-kango/list-params"
            class="btn btn-link form-control ml-2"
            target="_blank">属性一覧</a>
-<!--        <input type="text" name="data" formenctype="text/plain" class="d-none"/>-->
     </div>
     
     <div class="houmon-kango-history mt-3">
@@ -85,6 +90,8 @@ export class HoumonKango extends Component {
         this.createShijihoElement = map.createShijisho;
         this.createShijishoForm = map.createShijishoForm;
         this.selectPatientElement = map.selectPatient;
+        this.pdfListElement = map.pdfList;
+        this.pdfListContentElement = map.pdfListContent;
         this.init();
     }
 
@@ -99,10 +106,20 @@ export class HoumonKango extends Component {
         this.createShijihoElement.on("click", event => this.doCreateShijisho());
     }
 
+    addPdfItem(pdfItem){
+        pdfItem.appendTo(this.pdfListContentElement);
+        this.pdfListElement.removeClass("d-none");
+    }
+
     async doCreateShijisho(){
         let data = this.getData();
-        let result = await this.integration.createShijisho(data);
-        window.open("/portal/tmp/" + result, "_blank");
+        let url = await this.integration.createShijisho(data);
+        let item = new PdfItem(url, this.getPatientId(), this.rest);
+        this.addPdfItem(item);
+    }
+
+    getPatientId(){
+        return this.patient ? this.patient.patientId : 0;
     }
 
     async doSelectPatient(){

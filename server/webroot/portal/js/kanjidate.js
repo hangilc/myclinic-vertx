@@ -176,3 +176,18 @@ export function endOfLastMonth(){
     let m = moment().date(1).add(-1, "days");
     return momentToSqldate(m);
 }
+
+function padZero2(num){
+    return ("" + num).padStart(2, "0");
+}
+
+export function getTimestamp(){
+    let data = sqldatetimeToData(nowAsSqldatetime());
+    let year = "" + data.year;
+    let month = padZero2(data.month);
+    let day = padZero2(data.day);
+    let hour = padZero2(data.hour);
+    let minute = padZero2(data.minute);
+    let second = padZero2(data.second);
+    return `${year}${month}${day}${hour}${minute}${second}`;
+}

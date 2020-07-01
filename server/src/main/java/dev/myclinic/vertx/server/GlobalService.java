@@ -47,8 +47,11 @@ public class GlobalService {
         throw new RuntimeException("Invalid app directory id: " + id);
     }
 
-    public void ensureAppDirectory(String id) {
+    public void ensureAppDirectory(String id, String... subs) {
         Path dir = getAppDirectory(id);
+        if( subs.length > 0 ){
+            dir = Path.of(dir.toString(), subs);
+        }
         if (!Files.exists(dir)) {
             try {
                 Files.createDirectories(dir);
@@ -62,24 +65,43 @@ public class GlobalService {
         Path dir = getAppDirectory(dirId);
         try {
             Path path = Files.createTempFile(dir, prefix, suffix);
-            return dirId + ":" + path.getFileName().toString();
+            return dirId + "/" + path.getFileName().toString();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public Path fileIdToPath(String fileId) {
-        int index = fileId.lastIndexOf(":");
+        if( !fileId.startsWith("/") ){
+            throw new RuntimeException("fileId should start with '/'");
+        }
+        int index = fileId.indexOf("/", 1);
+        if( index <= 0 ){
+            throw new RuntimeException("Cannot find file part in fileId: " + fileId);
+        }
         Path dir = getAppDirectory(fileId.substring(0, index));
         String file = fileId.substring(index + 1);
         return dir.resolve(file);
     }
 
-    public void moveFile(String srcId, String dstId) {
+    public void moveAppFile(String srcId, String dstId) {
         Path srcPath = fileIdToPath(srcId);
         Path dstPath = fileIdToPath(dstId);
         try {
+            Path parent = dstPath.getParent();
+            if( !Files.exists(parent) ){
+                Files.createDirectories(parent);
+            }
             Files.move(srcPath, dstPath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteAppFile(String file){
+        Path path = fileIdToPath(file);
+        try {
+            Files.delete(path);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

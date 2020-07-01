@@ -157,7 +157,7 @@ public class Main {
         return new FileBasedAppConfig(configDir, vertx);
     }
 
-    private static Handler<RoutingContext> errorHandler = ctx -> {
+    private static final Handler<RoutingContext> errorHandler = ctx -> {
         Throwable th = ctx.failure();
         th.printStackTrace();
         int statusCode = ctx.statusCode();

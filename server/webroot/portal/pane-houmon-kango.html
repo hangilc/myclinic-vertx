@@ -1,4 +1,3 @@
-<!-- TODO: add reset button -->
 <div id="houmon-kango-wrapper" class="pane"></div>
 
 <script>
@@ -7,8 +6,14 @@
         let {HoumonKango} = await import("./houmon-kango/houmon-kango.js");
 
         let clinicInfo = await rest.getClinicInfo();
-        let comp = new HoumonKango(rest, integration, clinicInfo);
-        comp.prependTo($("#houmon-kango-wrapper").html(""));
+
+        function init(){
+            let comp = new HoumonKango(rest, integration, clinicInfo);
+            comp.onEndPatient(() => init());
+            comp.prependTo($("#houmon-kango-wrapper").html(""));
+        }
+
+        init();
     }
 
     async function initHoumonKango_save() {

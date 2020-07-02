@@ -93,6 +93,7 @@ export class HoumonKango extends Component {
         this.saveDataElement = map.saveData;
         this.historyElement = map.history;
         this.setClickHandler(map.saveData, () => this.doSaveData());
+        this.setClickHandler(map.endPatient, () => this.doEndPatient());
         this.init();
     }
 
@@ -105,6 +106,14 @@ export class HoumonKango extends Component {
         this.setData(clinicInfoToData(this.clinicInfo));
         this.issueDateElement.val(kanjidate.todayAsSqldate()).trigger("change");
         this.createShijihoElement.on("click", event => this.doCreateShijisho());
+    }
+
+    onEndPatient(cb){
+        this.on("end-patient", () => cb());
+    }
+
+    doEndPatient(){
+        this.trigger("end-patient");
     }
 
     async doSaveData(){

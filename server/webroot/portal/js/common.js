@@ -586,6 +586,10 @@ class Rest extends Client {
     async deleteAppFile(file){
         return await this.get("/delete-app-file", {file});
     }
+
+    async searchPrescExample(text){
+        return await this.get("/search-presc-example-full-by-name", {text});
+    }
 }
 
 class Integration extends Client {

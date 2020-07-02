@@ -17,6 +17,7 @@
                 <a href="javascript:void(0)" class="x-prev dropdown-item mx-2">以前の診察</a>
             </div>
         </div>
+        <a href="javascript:void(0)" class="ml-2" id="practice-registered-drug-link">登録薬剤</a>
         <a href="javascript:void(0)" class="ml-2" id="practice-search-text-globally">全文検索</a>
     </div>
 </div>
@@ -1061,6 +1062,7 @@
         let {PracticeState} = await import("./practice/practice-state.js");
         let {PatientSearchDialog} = await import("./practice/patient-search-dialog.js");
         let {VisitMeisaiDialog} = await import("./practice/visit-meisai-dialog.js");
+        let {RegisteredDrugDialog} = await import("./practice/registered-drug-dialog/registered-drug-dialog.js")
 
         let practiceState = new PracticeState(rest);
 
@@ -1141,6 +1143,12 @@
                 return dialog;
             }
         }
+
+        $("#practice-registered-drug-link").on("click", async event => {
+            let dialog = new RegisteredDrugDialog(rest);
+            let result = await dialog.open();
+            console.log("result", result);
+        });
 
         (function () {
             let searchTextGloballyDialogFactory = new SearchTextGloballyDialogFactory();

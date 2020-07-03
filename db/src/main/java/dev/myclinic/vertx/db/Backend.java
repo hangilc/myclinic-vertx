@@ -555,6 +555,7 @@ public class Backend {
             if (wq.waitState != WqueueWaitState.WaitExam.getCode()) {
                 throw new RuntimeException("診察の状態が診察待ちでないため、削除できません。");
             }
+            deleteWqueue(visitId);
             deleteVisit(visitId);
         }
     }

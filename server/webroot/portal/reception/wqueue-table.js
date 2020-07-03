@@ -11,9 +11,10 @@ export class WqueueTable extends Component {
         this.cashierButtonTemplateHtml = map.cashierButtonTemplate.html();
     }
 
-    init(cashierDialogFactory){
+    init(cashierDialogFactory, broadcaster){
         super.init();
         this.cashierDialogFactory = cashierDialogFactory;
+        this.broadcaster = broadcaster;
         return this;
     }
 
@@ -47,11 +48,22 @@ export class WqueueTable extends Component {
             btn.on("click", event => this.doCashier(wqueue.visitId));
             m.manip.prepend(btn);
         }
+        m.menu.delete.on("click", event => this.doDelete(wqueueFull));
         return e;
     }
 
     onChanged(cb){
         this.on("changed", event => cb());
+    }
+
+    async doDelete(wqueueFull){
+        let patient = wqueueFull.patient;
+        if( !confirm(`この受付（${patient.lastName}${patient.firstName}）を削除していいですか？`) ){
+            return;
+        }
+        let visitId = wqueueFull.wqueue.visitId;
+        await this.rest.deleteVisitFromReception(visitId);
+        this.broadcaster.broadcast("visit-deleted", visitId);
     }
 
     async doCashier(visitId){

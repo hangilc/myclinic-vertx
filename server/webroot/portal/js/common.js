@@ -211,6 +211,10 @@ class Rest extends Client {
         });
     }
 
+    async deleteVisitFromReception(visitId){
+        return await this.get("/delete-visit-from-reception", {"visit-id": visitId});
+    }
+
     async getPatient(patientId){
         return await this.get("/get-patient", {"patient-id": patientId});
     }

@@ -883,6 +883,7 @@
         let broadcaster = new Broadcaster();
 
         broadcaster.listen("visit-created", visitId => refreshWqueueTable());
+        broadcaster.listen("visit-deleted", visitId => refreshWqueueTable());
 
         class PatientAndHokenWidgetFactory {
             create(patient, currentHokenList, patientEditWidgetFactory, shahokokuhoNewWidgetFactory,
@@ -1101,7 +1102,7 @@
                 let ele = $("#reception-wqueue-table");
                 let map = parseElement(ele);
                 let comp = new WqueueTable(ele, map, rest);
-                comp.init(this.cashierDialogFactory);
+                comp.init(this.cashierDialogFactory, broadcaster);
                 comp.set();
                 return comp;
             }

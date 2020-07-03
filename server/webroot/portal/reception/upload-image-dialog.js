@@ -78,7 +78,7 @@ export class UploadImageDialog extends Dialog {
     constructor(patientId){
         super();
         this.patientId = patientId;
-        this.setDialogTitle("画像保存);
+        this.setDialogTitle("画像保存");
         let body = this.body = new Body();
         this.appendToBody(body.ele);
         let footer = new Footer();

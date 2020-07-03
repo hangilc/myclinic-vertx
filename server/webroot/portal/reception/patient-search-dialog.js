@@ -12,8 +12,9 @@ export class PatientSearchDialog extends Dialog {
         this.registerElement = map.register;
     }
 
-    init(){
+    init(broadcaster){
         super.init();
+        this.broadcaster = broadcaster;
         this.search.init();
         this.search.onSelected(patient => this.doSelected(patient));
         this.disp.init();
@@ -41,6 +42,10 @@ export class PatientSearchDialog extends Dialog {
         this.disp.set(patient);
     }
 
+    getPatientId(){
+        return this.patient ? this.patient.patientId : 0;
+    }
+
     async doRecent(){
         let result = await this.rest.listRecentlyRegisteredPatients(20);
         this.search.setSearchResult(result);
@@ -60,8 +65,17 @@ export class PatientSearchDialog extends Dialog {
         });
     }
 
-    doRegister(){
-        alert("not implemented");
+    async doRegister(){
+        let patientId = this.getPatientId();
+        if( patientId > 0 ){
+            let visitId = await this.rest.startVisit(patientId);
+            this.broadcaster.broadcast("visit-created", visitId);
+            this.close({
+                action: "visit-created",
+                visitId: visitId
+            });
+            alert("診療が受け付けられました。");
+        }
     }
 
 }

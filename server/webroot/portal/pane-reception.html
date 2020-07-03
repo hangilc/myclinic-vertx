@@ -59,11 +59,9 @@
     </template>
 </table>
 
+<!-- TODO: add refresh -->
 <div id="reception-bottom-commands" class="form-inline">
     <button type="button" class="btn btn-secondary x-refresh">更新</button>
-    <button type="button" class="btn btn-secondary ml-2 x-cashier">会計</button>
-    <button type="button" class="btn btn-link ml-2 x-deselection">選択解除</button>
-    <button type="button" class="btn btn-link ml-2 x-delete">削除</button>
 </div>
 
 <template id="reception-patient-search-dialog-template">
@@ -113,12 +111,8 @@
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <button type="button" class="btn btn-secondary btn-block x-edit"
-                            >編集
-                            </button>
-                            <button type="button" class="btn btn-secondary x-register btn-block"
-                            >診療受付
-                            </button>
+                            <button type="button" class="btn btn-success x-register btn-block">診療受付</button>
+                            <button type="button" class="btn btn-secondary btn-block x-edit">編集</button>
                         </div>
                     </div>
 
@@ -884,8 +878,12 @@
         let {HokenHelper} = await import("./reception/hoken-helper.js");
         let {WqueueTable} = await import("./reception/wqueue-table.js");
         let {CashierDialog} = await import("./reception/cashier-dialog.js");
+        let {Broadcaster} = await import("./reception/broadcaster.js");
 
         let receptionWorkarea = $("#reception-workarea");
+        let broadcaster = new Broadcaster();
+
+        broadcaster.listen("visit-created", visitId => console.log("visit-id", visitId));
 
         class PatientAndHokenWidgetFactory {
             create(patient, currentHokenList, patientEditWidgetFactory, shahokokuhoNewWidgetFactory,
@@ -900,7 +898,8 @@
                 widget.init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory,
                     kouhiNewWidgetFactory, shahokokuhoDispWidgetFactory,
                     koukikoureiDispWidgetFactory, roujinDispWidgetFactory, kouhiDispWidgetFactory,
-                    shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory, kouhiEditWidgetFactory);
+                    shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory, kouhiEditWidgetFactory,
+                    broadcaster);
                 widget.set(patient, currentHokenList);
                 return widget;
             }
@@ -1064,7 +1063,7 @@
                 let ele = $(html);
                 let map = parseElement(ele);
                 let dialog = new PatientSearchDialog(ele, map, rest);
-                dialog.init();
+                dialog.init(broadcaster);
                 dialog.set();
                 let result = await dialog.open();
                 if (result && result.action === "edit") {

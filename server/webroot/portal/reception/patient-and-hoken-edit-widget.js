@@ -40,7 +40,8 @@ export class PatientAndHokenEditWidget extends Widget {
     init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory,
          kouhiNewWidgetFactory, shahokokuhoDispWidgetFactory,
          koukikoureiDispWidgetFactory, roujinDispWidgetFactory,kouhiDispWidgetFactory,
-         shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory, kouhiEditWidgetFactory){
+         shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory, kouhiEditWidgetFactory,
+         broadcaster){
         super.init();
         this.patientEditWidgetFactory = patientEditWidgetFactory;
         this.shahokokuhoNewWidgetFactory = shahokokuhoNewWidgetFactory;
@@ -53,12 +54,12 @@ export class PatientAndHokenEditWidget extends Widget {
         this.shahokokuhoEditWidgetFactory = shahokokuhoEditWidgetFactory;
         this.koukikoureiEditWidgetFactory = koukikoureiEditWidgetFactory;
         this.kouhiEditWidgetFactory = kouhiEditWidgetFactory;
+        this.broadcaster = broadcaster;
         this.disp.init();
         setupDispConverters(this.disp);
         this.currentOnlyElement.on("change", event =>
             this.doCurrentOnlyChanged(this.currentOnlyElement.is(":checked")));
-        // TODO: implement register patient for exam
-        this.registerElement.on("click", event => alert("Not implemented"));
+        this.registerElement.on("click", event => this.doRegisterForExam());
         this.uploadImageElement.on("click", event => this.doUploadImage());
         this.closeElement.on("click", event => this.close());
         this.editBasicElement.on("click", event => this.doEditBasic());
@@ -96,6 +97,15 @@ export class PatientAndHokenEditWidget extends Widget {
         } else {
             let hokenList = await helper.fetchAllHoken(this.patient.patientId);
             this.setHokenList(hokenList);
+        }
+    }
+
+    async doRegisterForExam(){
+        let patientId = this.getPatientId();
+        if( patientId > 0 ){
+            let visitId = await this.rest.startVisit(patientId);
+            this.broadcaster.broadcast("visit-created", visitId);
+            alert("診療が受け付けられました。");
         }
     }
 

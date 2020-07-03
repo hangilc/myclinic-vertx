@@ -44,6 +44,7 @@
     <a href="javascript:void(0)" class="x-register-current  ml-2">診察登録</a>
     <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>
     <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>
+    <a href="javascript:void(0)" class="x-upload-image ml-2">画像保存</a>
 </div>
 
 <div id="practice-nav-upper"></div>
@@ -1063,6 +1064,7 @@
         let {PatientSearchDialog} = await import("./practice/patient-search-dialog.js");
         let {VisitMeisaiDialog} = await import("./practice/visit-meisai-dialog.js");
         let {RegisteredDrugDialog} = await import("./practice/registered-drug-dialog/registered-drug-dialog.js")
+        let {UploadImageDialog} = await import("./practice/upload-image-dialog.js");
 
         let practiceState = new PracticeState(rest);
 
@@ -1317,7 +1319,14 @@
             });
 
             map.refer.on("click", event => {
-                console.log("refer");
+                console.log("use side bar menu to access refer program");
+            });
+
+            map.uploadImage.on("click", async event => {
+                let patientId = practiceState.getPatientId();
+                if( patientId > 0 ){
+                    await (new UploadImageDialog(patientId)).open();
+                }
             });
 
         })();

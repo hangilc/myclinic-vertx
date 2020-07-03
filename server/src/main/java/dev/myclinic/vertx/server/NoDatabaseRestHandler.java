@@ -311,6 +311,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("delete-refer", this::deleteRefer);
         noDatabaseFuncMap.put("move-app-file", this::moveAppFile);
         noDatabaseFuncMap.put("delete-app-file", this::deleteAppFile);
+        noDatabaseFuncMap.put("save-patient-image", this::savePatientImage);
     }
 
     private void deleteAppFile(RoutingContext ctx) {
@@ -736,6 +737,44 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             ctx.response().end("true");
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void savePatientImage(RoutingContext ctx){
+        try {
+            String patientIdParam = ctx.request().getParam("patient-id");
+            if( patientIdParam == null || patientIdParam.isEmpty() ){
+                throw new RuntimeException("Missing parameter: patient-id");
+            }
+            int patientId = Integer.parseInt(patientIdParam);
+            Set<FileUpload> fileUploads = ctx.fileUploads();
+            Path patientDir = GlobalService.getInstance().getAppDirectory("/paper-scan")
+                    .resolve(String.format("%d", patientId));
+            if( !Files.exists(patientDir) ){
+                Files.createDirectories(patientDir);
+            }
+            vertx.executeBlocking(promise -> {
+                try {
+                    for (FileUpload f : fileUploads) {
+                        String filename = f.fileName();
+                        String uploaded = f.uploadedFileName();
+                        Path dst = patientDir.resolve(filename);
+                        Files.move(Path.of(uploaded), dst);
+                    }
+                    promise.complete();
+
+                } catch (Exception e) {
+                    promise.fail(e);
+                }
+            }, ar -> {
+                if (ar.succeeded()) {
+                    ctx.response().end("true");
+                } else {
+                    ctx.fail(ar.cause());
+                }
+            });
+        } catch(Exception e){
+            ctx.fail(e);
         }
     }
 

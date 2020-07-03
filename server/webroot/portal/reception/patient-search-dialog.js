@@ -74,7 +74,6 @@ export class PatientSearchDialog extends Dialog {
                 action: "visit-created",
                 visitId: visitId
             });
-            alert("診療が受け付けられました。");
         }
     }
 

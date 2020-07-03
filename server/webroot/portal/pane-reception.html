@@ -59,7 +59,6 @@
     </template>
 </table>
 
-<!-- TODO: add refresh -->
 <div id="reception-bottom-commands" class="form-inline">
     <button type="button" class="btn btn-secondary x-refresh">更新</button>
 </div>
@@ -883,7 +882,7 @@
         let receptionWorkarea = $("#reception-workarea");
         let broadcaster = new Broadcaster();
 
-        broadcaster.listen("visit-created", visitId => console.log("visit-id", visitId));
+        broadcaster.listen("visit-created", visitId => refreshWqueueTable());
 
         class PatientAndHokenWidgetFactory {
             create(patient, currentHokenList, patientEditWidgetFactory, shahokokuhoNewWidgetFactory,
@@ -1117,5 +1116,9 @@
         }
 
         $("#reception-main-commands").on("pane_shown", event => refreshWqueueTable());
+
+        $("#reception-bottom-commands .x-refresh").on("click", event => {
+            refreshWqueueTable();
+        });
     }
 </script>

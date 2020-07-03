@@ -7,6 +7,7 @@ let template = `
 `;
 
 export class Disp extends Component {
+
     constructor(){
         super($(template));
         this.index = 1;

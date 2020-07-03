@@ -4,6 +4,7 @@ import {parseElement} from "../js/parse-element.js";
 import {compareBy} from "../js/general-util.js";
 import * as kanjidate from "../js/kanjidate.js";
 import {HokenHelper} from "./hoken-helper.js";
+import {UploadImageDialog} from "./upload-image-dialog.js";
 
 let tableRowHtml = `
 <tr>
@@ -25,6 +26,8 @@ export class PatientAndHokenEditWidget extends Widget {
         this.disp = new PatientDisp(map.disp_, map.disp, rest);
         this.hokenListElement = map.hokenList;
         this.currentOnlyElement = map.currentOnly;
+        this.registerElement = map.register;
+        this.uploadImageElement = map.uploadImage;
         this.closeElement = map.close;
         this.editBasicElement = map.editBasic;
         this.workareaElement = map.workarea;
@@ -54,6 +57,9 @@ export class PatientAndHokenEditWidget extends Widget {
         setupDispConverters(this.disp);
         this.currentOnlyElement.on("change", event =>
             this.doCurrentOnlyChanged(this.currentOnlyElement.is(":checked")));
+        // TODO: implement register patient for exam
+        this.registerElement.on("click", event => alert("Not implemented"));
+        this.uploadImageElement.on("click", event => this.doUploadImage());
         this.closeElement.on("click", event => this.close());
         this.editBasicElement.on("click", event => this.doEditBasic());
         this.newShahokokuhoElement.on("click", event => this.doNewShahokokuho());
@@ -78,6 +84,10 @@ export class PatientAndHokenEditWidget extends Widget {
         return this.currentOnlyElement.is(":checked");
     }
 
+    getPatientId(){
+        return this.patient ? this.patient.patientId : 0;
+    }
+
     async reloadHoken(){
         let helper = new HokenHelper(this.rest);
         if( this.isCurrentOnly() ){
@@ -86,6 +96,13 @@ export class PatientAndHokenEditWidget extends Widget {
         } else {
             let hokenList = await helper.fetchAllHoken(this.patient.patientId);
             this.setHokenList(hokenList);
+        }
+    }
+
+    async doUploadImage(){
+        let patientId = this.getPatientId();
+        if( patientId > 0 ){
+            await (new UploadImageDialog(patientId)).open();
         }
     }
 

@@ -1,9 +1,9 @@
-<!-- TODO: add reset button -->
 <h3>主治医意見書</h3>
 
 <div>
     <button type="button" class="btn btn-secondary" id="shujii-select-patient-button">患者選択</button>
     <button type="button" class="btn btn-secondary ml-2" id="shujii-save-button">保存</button>
+    <button type="button" class="btn btn-secondary ml-2" id="shujii-end-patient-button">患者終了</button>
     <a href="../json/shujii-criteria" target="_blank" class="ml-2">判定基準</a>
 </div>
 
@@ -87,7 +87,7 @@
 
 <script>
 
-    async function initShujii() {
+    async function initShujii(reloadFunc) {
         let {parseElement} = await import("./js/parse-element.js");
         let {PatientSelectDialog} = await import("./shujii/patient-select-dialog.js");
         let {Nav} = await import("./shujii/nav.js");
@@ -239,6 +239,13 @@
                 let text = textarea.val();
                 await rest.saveShujiiMasterText(name, currentPatient.patientId, text);
             }
+        });
+
+        $("#shujii-end-patient-button").on("click", event => {
+            if( !confirm("この患者を終了していいですか？") ){
+                return;
+            }
+            reloadFunc();
         });
 
         $("#shujii-print-button").on("click", async event => {

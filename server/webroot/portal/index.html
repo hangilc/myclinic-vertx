@@ -112,6 +112,22 @@
                     });
                 }
             }
+
+            async reload(){
+                if( this.link.hasClass("disabled") ){
+                    return;
+                }
+                if( currentPane === this ){
+                    this.disableLinks();
+                    this.ele = null;
+                    paneWrapper.load(this.url, async () => {
+                        currentPane = this;
+                        await this.initPane();
+                        this.onPaneLoaded();
+                        this.enableLinks();
+                    });
+                }
+            }
         }
 
         class PracticePane extends Pane {
@@ -176,7 +192,7 @@
 
             async initPane(){
                 await super.initPane();
-                await initShujii();
+                await initShujii(() => this.reload());
             }
         }
 

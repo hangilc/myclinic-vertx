@@ -25,6 +25,9 @@ import static dev.myclinic.vertx.db.Query.Projector;
 import static dev.myclinic.vertx.db.SqlTranslator.TableInfo;
 import static java.util.stream.Collectors.*;
 
+
+
+
 public class Backend {
     private final static Logger logger = LoggerFactory.getLogger(dev.myclinic.vertx.db.Backend.class);
     private final TableSet ts;

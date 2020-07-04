@@ -312,6 +312,12 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("move-app-file", this::moveAppFile);
         noDatabaseFuncMap.put("delete-app-file", this::deleteAppFile);
         noDatabaseFuncMap.put("save-patient-image", this::savePatientImage);
+        noDatabaseFuncMap.put("view-drawer", this::viewDrawer);
+    }
+
+    private void viewDrawer(RoutingContext ctx) {
+        ctx.response().putHeader("content-type", "text/html; charset=utf-8");
+        ctx.response().end("VIEW DRAWER");
     }
 
     private void deleteAppFile(RoutingContext ctx) {

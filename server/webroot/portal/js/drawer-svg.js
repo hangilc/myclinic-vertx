@@ -129,7 +129,7 @@ export function drawerToSvg(ops, options){
                 svg.appendChild(draw_chars(op[1], op[2], op[3]));
                 break;
             default:
-                throw new Error("unknown drawer op:", op);
+                throw new Error("unknown drawer op: " + op);
         }
     }
     return svg;	

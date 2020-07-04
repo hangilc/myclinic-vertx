@@ -77,6 +77,7 @@ public class JacksonOpSerializer extends StdSerializer<Op> {
                 gen.writeNumber(opCreatePen.getG());
                 gen.writeNumber(opCreatePen.getB());
                 gen.writeNumber(opCreatePen.getWidth());
+                gen.writeNumber(opCreatePen.getPenStyle());
                 break;
             }
             case SetPen: {

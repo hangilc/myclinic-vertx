@@ -79,7 +79,11 @@ public class JacksonOpDeserializer extends StdDeserializer<Op> {
                 int g = node.get(3).asInt();
                 int b = node.get(4).asInt();
                 double width = node.get(5).asDouble();
-                return new OpCreatePen(name, r, g, b, width);
+                int penStyle = OpCreatePen.PS_SOLID;
+                if( node.has(6) ){
+                    penStyle = node.get(6).asInt();
+                }
+                return new OpCreatePen(name, r, g, b, width, penStyle);
             }
             case SetPen: {
                 String name = node.get(1).asText();

@@ -26,6 +26,7 @@ public interface MyGdi32 extends StdCallLibrary, WinUser, WinNT {
     Pointer SetTextColor(HDC hdc, int rgb);
     int SetBkMode(HDC hdc, int mode);
     HPEN CreatePen(int style, int width, int rgb);
+    HPEN ExtCreatePen(int penStyle, int width, LOGBRUSH brush, int cStyle, DWORD[] pStyle);
     boolean Ellipse(HDC hdc, int left, int top, int right, int bottom);
     HANDLE GetStockObject(int fnObject);
 }

@@ -125,8 +125,7 @@ public class DrawerCompiler {
 
     }
 
-    // TODO: adjust penStyle
-    private void opCreatePen(String name, int red, int green, int blue, double width, int penStyle){
+    private void opCreatePen(String name, int red, int green, int blue, double width, List<Double> penStyle){
         ops.add(new OpCreatePen(name, red, green, blue, width * scale, penStyle));
     }
 
@@ -570,7 +569,7 @@ public class DrawerCompiler {
 //    }
 
     public void createPen(String name, int red, int green, int blue, double width) {
-        opCreatePen(name, red, green, blue, width, OpCreatePen.PS_SOLID);
+        opCreatePen(name, red, green, blue, width, Collections.emptyList());
     }
 
     public void createPen(String name, int red, int green, int blue) {

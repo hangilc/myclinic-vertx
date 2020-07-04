@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import java.io.IOException;
+import java.util.List;
 
 public class JacksonOpSerializer extends StdSerializer<Op> {
 
@@ -77,7 +78,8 @@ public class JacksonOpSerializer extends StdSerializer<Op> {
                 gen.writeNumber(opCreatePen.getG());
                 gen.writeNumber(opCreatePen.getB());
                 gen.writeNumber(opCreatePen.getWidth());
-                gen.writeNumber(opCreatePen.getPenStyle());
+                double[] penStyle = opCreatePen.getPenStyle().stream().mapToDouble(d -> d).toArray();
+                gen.writeArray(penStyle, 0, penStyle.length);
                 break;
             }
             case SetPen: {

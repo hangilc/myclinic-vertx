@@ -40,7 +40,7 @@ class OpCompiler {
 
     }
 
-    public void createPen(String name, int red, int green, int blue, double width, int penStyle){
+    public void createPen(String name, int red, int green, int blue, double width, List<Double> penStyle){
         ops.add(new OpCreatePen(name, red, green, blue, width, penStyle));
     }
 

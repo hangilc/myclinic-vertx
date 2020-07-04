@@ -436,6 +436,7 @@ public class PrinterConsts {
     public static final int PS_JOIN_MITER       = 0x00002000;
     public static final int PS_JOIN_MASK        = 0x0000F000;
 
+
     public static final int PS_COSMETIC         = 0x00000000;
     public static final int PS_GEOMETRIC        = 0x00010000;
     public static final int PS_TYPE_MASK        = 0x000F0000;
@@ -447,5 +448,17 @@ public class PrinterConsts {
     public static final int LTGRAY_BRUSH		= 1;
     public static final int NULL_BRUSH			= 5;
     public static final int WHITE_BRUSH			= 0;
+
+    public static final int BS_SOLID            = 0;
+    public static final int BS_NULL             = 1;
+    public static final int BS_HOLLOW           = BS_NULL;
+    public static final int BS_HATCHED          = 2;
+    public static final int BS_PATTERN          = 3;
+    public static final int BS_INDEXED          = 4;
+    public static final int BS_DIBPATTERN       = 5;
+    public static final int BS_DIBPATTERNPT     = 6;
+    public static final int BS_PATTERN8X8       = 7;
+    public static final int BS_DIBPATTERN8X8    = 8;
+    public static final int BS_MONOPATTERN      = 9;
 
 }

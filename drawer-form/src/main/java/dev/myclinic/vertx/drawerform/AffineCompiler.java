@@ -61,7 +61,7 @@ class AffineCompiler extends OpCompiler {
     }
 
     @Override
-    public void createPen(String name, int red, int green, int blue, double width, int penStyle){
+    public void createPen(String name, int red, int green, int blue, double width, List<Double> penStyle){
         super.createPen(name, red, green, blue, width * scaleY, penStyle);
     }
 

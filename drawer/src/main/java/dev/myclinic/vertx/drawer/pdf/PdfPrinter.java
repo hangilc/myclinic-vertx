@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ public class PdfPrinter {
     private BaseColor textColor = new BaseColor(0, 0, 0);
     private BaseColor strokeColor = new BaseColor(0, 0, 0);
     private float strokeWidth = 1;
-    private int strokeStyle = OpCreatePen.PS_SOLID;
+    private List<Double> strokeStyle = Collections.emptyList();
     private double shrinkMargin = 0;
 
     public PdfPrinter() {
@@ -110,9 +111,9 @@ public class PdfPrinter {
     private static class StrokeData {
         public BaseColor color;
         public float width;
-        public int style;
+        public List<Double> style;
 
-        public StrokeData(BaseColor color, float width, int style) {
+        public StrokeData(BaseColor color, float width, List<Double> style) {
             this.color = color;
             this.width = width;
             this.style = style;

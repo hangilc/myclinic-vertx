@@ -36,7 +36,7 @@ public class FormCompiler extends AffineCompiler {
     }
 
     public void createPen(String name, int red, int green, int blue, double width){
-        createPen(name, red, green, blue, width, OpCreatePen.PS_SOLID);
+        createPen(name, red, green, blue, width, Collections.emptyList());
     }
 
     public double getCurrentFontSize(){

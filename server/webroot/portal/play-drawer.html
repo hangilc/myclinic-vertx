@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <script src="js/jquery.min.js"></script>
     <link rel="stylesheet" href="css/bootstrap.min.css">
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
     <title>Play Drawer</title>
     <script type="module">
         import {drawerToSvg} from "./js/drawer-svg.js";
@@ -14,21 +16,19 @@
     <div class="row m-3">
         <div class="col-lg-5">
             <textarea class="form-control x-ops" rows="20">
-[
-["create_pen", "solid", 0, 0, 0, 0.5, []],
-["create_pen", "dash", 0, 0, 0, 0.5, [2, 1]],
-["set_pen", "solid"],
-["move_to", 10, 10],
-["line_to", 80, 10],
-["set_pen", "dash"],
-["move_to", 10, 20],
-["line_to", 80, 20]
-]
             </textarea>
             <div class="mt-2">
                 <button type="button" class="btn btn-primary x-view-button">表示</button>
                 <button type="button" class="btn btn-secondary ml-2 x-print-button">印刷</button>
                 <button type="button" class="btn btn-secondary ml-2 x-view-pdf-button">PDF表示</button>
+                <div class="dropdown d-inline">
+                    <button type="button" class="btn btn-link x-example dropdown-toggle"
+                        data-toggle="dropdown">例</button>
+                    <div class="dropdown-menu">
+                        <a href="javascript:void(0)" class="dropdown-item x-example-broken-line">破線</a>
+                        <a href="javascript:void(0)" class="dropdown-item x-example-circle">円</a>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-lg-7">
@@ -74,20 +74,28 @@
         $(".x-pdf-form").submit();
     })
 
-    // $("button").on("click", event => {
-    //     let data = {};
-    //     $.ajax({
-    //         type: "POST",
-    //         url: "../json/view-drawer",
-    //         data: data,
-    //         success: function(html){
-    //             let w = window.open("about:blank", "_blank");
-    //             w.document.open();
-    //             w.document.write(html);
-    //             w.document.close();
-    //         }
-    //     })
-    // });
+    let ex_broken_line = `[
+["create_pen", "solid", 0, 0, 0, 0.5, []],
+["create_pen", "dash", 0, 0, 0, 0.5, [2, 1]],
+["set_pen", "solid"],
+["move_to", 10, 10],
+["line_to", 80, 10],
+["set_pen", "dash"],
+["move_to", 10, 20],
+["line_to", 80, 20]
+]
+`;
+    let ex_circle = `[
+    ["create_pen", "regular", 0, 0, 0, 0.2, []],
+    ["set_pen", "regular"],
+    ["circle", 40, 40, 20]
+]
+`;
+
+    $(".x-example-broken-line").on("click", event => $("textarea.x-ops").val(ex_broken_line));
+    $(".x-example-circle").on("click", event => $("textarea.x-ops").val(ex_circle));
+
+    $(".x-example-broken-line").click();
 
 </script>
 </body>

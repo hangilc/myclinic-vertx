@@ -4,6 +4,7 @@ export function drawerToSvg(ops, options){
     let ns = "http://www.w3.org/2000/svg";
     let pen_color = "rgb(0,0,0)";
     let pen_width = "1px";
+    let pen_style = [];
     let pen_dict = {};
     let font_name, font_size, font_weight, font_italic;
     let font_dict = {};
@@ -29,21 +30,28 @@ export function drawerToSvg(ops, options){
     	e.setAttributeNS(null, "y1", curr_y);
     	e.setAttributeNS(null, "x2", x);
     	e.setAttributeNS(null, "y2", y);
-    	e.setAttributeNS(null, "style", "stroke:" + pen_color + ";stroke-width:" + pen_width);
+    	//e.setAttributeNS(null, "style", "stroke:" + pen_color + ";stroke-width:" + pen_width);
+        e.setAttributeNS(null, "stroke", pen_color);
+        e.setAttributeNS(null, "stroke-width", pen_width);
+        if( pen_style.length > 0 ){
+            e.setAttributeNS(null, "stroke-dasharray", pen_style);
+        }
         curr_x = x;
         curr_y = y;
         return e;
     }
 
-    function create_pen(name, r, g, b, width){
+    function create_pen(name, r, g, b, width, penstyle){
         let color = "rgb(" + r + "," + g + "," + b + ")";
-        pen_dict[name] = {width: width + "px", color: color};
+        penstyle = penstyle.join(" ");
+        pen_dict[name] = {width: width + "px", color: color, penstyle: penstyle};
     }
 
     function set_pen(name){
         let pen = pen_dict[name];
         pen_color = pen.color;
         pen_width = pen.width;
+        pen_style = pen.penstyle;
     }
 
     function mmToPixel(dpi, mm){
@@ -84,7 +92,7 @@ export function drawerToSvg(ops, options){
             //'dominant-baseline': "text-after-edge",
             "dy": "1em"
         };
-        for(var key in attrs){
+        for(let key in attrs){
         	e.setAttributeNS(null, key, attrs[key]);
         }
         if( typeof xs === "number" || xs instanceof Number ){
@@ -111,7 +119,7 @@ export function drawerToSvg(ops, options){
                 svg.appendChild(draw_line_to(op[1], op[2]));
                 break;
             case "create_pen":
-                create_pen(op[1], op[2], op[3], op[4], op[5]);
+                create_pen(op[1], op[2], op[3], op[4], op[5], op[6]);
                 break;
             case "set_pen":
                 set_pen(op[1]);
@@ -128,6 +136,7 @@ export function drawerToSvg(ops, options){
             case "draw_chars":
                 svg.appendChild(draw_chars(op[1], op[2], op[3]));
                 break;
+                // TODO: circle
             default:
                 throw new Error("unknown drawer op: " + op);
         }

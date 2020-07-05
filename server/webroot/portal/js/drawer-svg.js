@@ -109,6 +109,20 @@ export function drawerToSvg(ops, options){
         return e;
     }
 
+    function draw_circle(cx, cy, r){
+        let e = document.createElementNS(ns, "circle");
+        e.setAttributeNS(null, "cx", cx);
+        e.setAttributeNS(null, "cy", cy);
+        e.setAttributeNS(null, "r", r);
+        e.setAttributeNS(null, "style", "fill: none");
+        e.setAttributeNS(null, "stroke", pen_color);
+        e.setAttributeNS(null, "stroke-width", pen_width);
+        if( pen_style.length > 0 ){
+            e.setAttributeNS(null, "stroke-dasharray", pen_style);
+        }
+        return e;
+    }
+
     for(i=0,n=ops.length;i<n;i++){
         op = ops[i];
         switch(op[0]){
@@ -136,7 +150,9 @@ export function drawerToSvg(ops, options){
             case "draw_chars":
                 svg.appendChild(draw_chars(op[1], op[2], op[3]));
                 break;
-                // TODO: circle
+            case "circle":
+                svg.appendChild(draw_circle(op[1], op[2], op[3]));
+                break;
             default:
                 throw new Error("unknown drawer op: " + op);
         }

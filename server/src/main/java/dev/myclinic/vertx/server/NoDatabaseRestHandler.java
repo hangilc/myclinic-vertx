@@ -284,6 +284,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("calc-futan-wari", this::calcFutanWari);
         noDatabaseFuncMap.put("print-drawer", this::printDrawer);
         noDatabaseFuncMap.put("save-drawer-as-pdf", this::saveDrawerAsPdf);
+        noDatabaseFuncMap.put("view-drawer-as-pdf", this::viewDrawerAsPdf);
         noDatabaseFuncMap.put("save-shohousen-pdf", this::saveShohousenPdf);
         noDatabaseFuncMap.put("get-shohousen-save-pdf-path", this::getShohousenSavePdfPath);
         noDatabaseFuncMap.put("convert-to-romaji", this::convertToRomaji);
@@ -322,7 +323,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private void deleteAppFile(RoutingContext ctx) {
         String file = ctx.request().getParam("file");
-        if( file == null || file.isEmpty() ){
+        if (file == null || file.isEmpty()) {
             throw new RuntimeException("Missing parameter: file");
         }
         vertx.executeBlocking(promise -> {
@@ -344,10 +345,10 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private void moveAppFile(RoutingContext ctx) {
         String src = ctx.request().getParam("src");
         String dst = ctx.request().getParam("dst");
-        if( src == null || src.isEmpty() ){
+        if (src == null || src.isEmpty()) {
             throw new RuntimeException("Missing parameter: src");
         }
-        if( dst == null || dst.isEmpty() ){
+        if (dst == null || dst.isEmpty()) {
             throw new RuntimeException("Missing parameter: dst");
         }
         vertx.executeBlocking(promise -> {
@@ -369,16 +370,16 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private void deleteRefer(RoutingContext ctx) {
         String patientIdParam = ctx.request().getParam("patient-id");
         String file = ctx.request().getParam("file");
-        if( patientIdParam == null ){
+        if (patientIdParam == null) {
             throw new RuntimeException("Missing parameter: patient-id");
         }
         int patientId = Integer.parseInt(patientIdParam);
-        if( file == null || file.isEmpty() ){
+        if (file == null || file.isEmpty()) {
             throw new RuntimeException("Missing parameter: file");
         }
         Path dir = getReferDir(patientId);
         Path path = dir.resolve(file);
-        if( !Files.exists(path) ){
+        if (!Files.exists(path)) {
             throw new RuntimeException("No such file: " + path.toString());
         }
         vertx.<String>executeBlocking(promise -> {
@@ -400,11 +401,11 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private void getRefer(RoutingContext ctx) {
         String patientIdParam = ctx.request().getParam("patient-id");
         String file = ctx.request().getParam("file");
-        if( patientIdParam == null ){
+        if (patientIdParam == null) {
             throw new RuntimeException("Missing parameter: patient-id");
         }
         int patientId = Integer.parseInt(patientIdParam);
-        if( file == null || file.isEmpty() ){
+        if (file == null || file.isEmpty()) {
             throw new RuntimeException("Missing parameter: file");
         }
         Path dir = getReferDir(patientId);
@@ -475,7 +476,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 }
                 int patientId = Integer.parseInt(patientIdParam);
                 Path referDir = getReferDir(patientId);
-                if( Files.exists(referDir) ){
+                if (Files.exists(referDir)) {
                     List<String> list = Files.list(referDir)
                             .map(path -> {
                                 String filename = path.getFileName().toString();
@@ -746,17 +747,17 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void savePatientImage(RoutingContext ctx){
+    private void savePatientImage(RoutingContext ctx) {
         try {
             String patientIdParam = ctx.request().getParam("patient-id");
-            if( patientIdParam == null || patientIdParam.isEmpty() ){
+            if (patientIdParam == null || patientIdParam.isEmpty()) {
                 throw new RuntimeException("Missing parameter: patient-id");
             }
             int patientId = Integer.parseInt(patientIdParam);
             Set<FileUpload> fileUploads = ctx.fileUploads();
             Path patientDir = GlobalService.getInstance().getAppDirectory("/paper-scan")
                     .resolve(String.format("%d", patientId));
-            if( !Files.exists(patientDir) ){
+            if (!Files.exists(patientDir)) {
                 Files.createDirectories(patientDir);
             }
             vertx.executeBlocking(promise -> {
@@ -779,7 +780,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     ctx.fail(ar.cause());
                 }
             });
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
@@ -975,7 +976,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
         String month = date.substring(0, 7);
         Path shohousenDir = Path.of(dir, month);
-        if( !Files.exists(shohousenDir) ){
+        if (!Files.exists(shohousenDir)) {
             ctx.response().end("null");
             return;
         }
@@ -1069,7 +1070,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         String file = String.format("%s-%d-%d-%s-stamped.pdf", nameRomaji,
                 textId, patientId, date.toString().replace("-", ""));
         Path parent = Path.of(dir, month);
-        if( !Files.exists(parent) ){
+        if (!Files.exists(parent)) {
             try {
                 Files.createDirectories(parent);
             } catch (IOException e) {
@@ -1173,6 +1174,34 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 promise.complete("true");
             } catch (Exception e) {
                 ctx.fail(e);
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
+    }
+
+    private void viewDrawerAsPdf(RoutingContext ctx) {
+        String paperSizeParam = ctx.request().getParam("paper");
+        if (paperSizeParam == null) {
+            paperSizeParam = "A4";
+        }
+        PaperSize paperSize = resolvePaperSize(paperSizeParam);
+        vertx.<Buffer>executeBlocking(promise -> {
+            try {
+                List<List<Op>> pages = mapper.readValue(ctx.request().getParam("pages"),
+                        new TypeReference<>(){});
+                ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+                PdfPrinter printer = new PdfPrinter(paperSize);
+                printer.print(pages, outStream);
+                byte[] pdfBytes = outStream.toByteArray();
+                ctx.response().putHeader("content-type", "application/pdf");
+                promise.complete(Buffer.buffer(pdfBytes));
+            } catch (Exception e) {
+                promise.fail(e);
             }
         }, ar -> {
             if (ar.succeeded()) {

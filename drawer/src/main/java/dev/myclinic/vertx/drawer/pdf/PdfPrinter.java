@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,13 +28,8 @@ public class PdfPrinter {
     private final double paperWidth;
     private final double paperHeight;
     private boolean inText;
-    private BaseFont textFont;
-    private float textSize;
-    private float ascendor;
-    private BaseColor textColor = new BaseColor(0, 0, 0);
-    private BaseColor strokeColor = new BaseColor(0, 0, 0);
-    private float strokeWidth = 1;
-    private List<Double> strokeStyle = Collections.emptyList();
+    private TextContext textContext = new TextContext();
+    private GraphicContext graphicContext = new GraphicContext();
     private double shrinkMargin = 0;
 
     public PdfPrinter() {
@@ -60,64 +54,11 @@ public class PdfPrinter {
         return inch * 72.0;
     }
 
-    private static class FontResourceData {
-        public String location;
-        public String encoding;
-
-        public FontResourceData(String location, String encoding) {
-            this.location = location;
-            this.encoding = encoding;
-        }
-    }
-
-    private static final Map<String, FontResourceData> fontResourceMap = new HashMap<>();
-
-    static {
-        FontResourceData mincho = new FontResourceData("C:\\Windows\\Fonts\\msmincho.ttc,0", "Identity-H");
-        fontResourceMap.put("MS Mincho", mincho);
-        FontResourceData gothic = new FontResourceData("C:\\Windows\\Fonts\\msgothic.ttc,0", "Identity-H");
-        fontResourceMap.put("MS Gothic", gothic);
-    }
-
     private float getAscendorRate(String fontProgram) throws IOException {
-        FontProgram fp = FontProgramFactory.createFont("C:\\Windows\\Fonts\\msmincho.ttc,0");
+        //FontProgram fp = FontProgramFactory.createFont("C:\\Windows\\Fonts\\msmincho.ttc,0");
+        FontProgram fp = FontProgramFactory.createFont(fontProgram);
         FontMetrics fm = fp.getFontMetrics();
         return (float)(fm.getTypoAscender() / 1000.0);
-    }
-
-    private static class BaseFontData {
-        public BaseFont baseFont;
-        public float ascendorRate;
-
-        public BaseFontData(BaseFont baseFont, float ascendorRate) {
-            this.baseFont = baseFont;
-            this.ascendorRate = ascendorRate;
-        }
-    }
-
-    private static class DrawerFont {
-        public BaseFont font;
-        public float size;
-        public float ascendor;
-
-        public DrawerFont(BaseFont font, float size, float ascendor) {
-            this.font = font;
-            this.size = size;
-            this.ascendor = ascendor;
-        }
-
-    }
-
-    private static class StrokeData {
-        public BaseColor color;
-        public float width;
-        public List<Double> style;
-
-        public StrokeData(BaseColor color, float width, List<Double> style) {
-            this.color = color;
-            this.width = width;
-            this.style = style;
-        }
     }
 
     private float getX(double milliX) {
@@ -136,19 +77,43 @@ public class PdfPrinter {
         cb.concatCTM(scale, 0, 0, scale, uMargin, uMargin);
     }
 
+    private void beginTextMode(PdfContentByte cb){
+        cb.beginText();
+        cb.setFontAndSize(textContext.textFont, textContext.textSize);
+        cb.setColorFill(textContext.textColor);
+    }
+
+    private void endTextMode(PdfContentByte cb){
+        cb.endText();
+    }
+
+    private void beginGraphicMode(PdfContentByte cb){
+        cb.setColorStroke(graphicContext.strokeColor);
+        cb.setLineWidth(graphicContext.strokeWidth);
+        float[] strokeStyle = graphicContext.strokeStyle;
+        if( strokeStyle == null || strokeStyle.length == 0 ){
+            cb.setLineDash(0);
+        } else {
+            cb.setLineDash(strokeStyle, 0);
+        }
+    }
+
+    private void endGraphicMode(PdfContentByte cb){
+        cb.stroke();
+    }
+
     private void textMode(PdfContentByte cb){
         if( !inText ){
-            cb.stroke();
-            cb.beginText();
-            cb.setFontAndSize(textFont, textSize);
-            cb.setColorFill(textColor);
+            endGraphicMode(cb);
+            beginTextMode(cb);
             inText = true;
         }
     }
 
     private void graphicMode(PdfContentByte cb){
         if( inText ){
-            cb.endText();
+            endTextMode(cb);
+            beginGraphicMode(cb);
             inText = false;
         }
     }
@@ -186,7 +151,7 @@ public class PdfPrinter {
                         if (!drawerFontMap.containsKey(name)) {
                             String fontName = opCreateFont.getFontName();
                             if (!fontMap.containsKey(fontName)) {
-                                FontResourceData fr = fontResourceMap.getOrDefault(fontName, null);
+                                FontResourceData fr = FontResourceData.fontResourceMap.getOrDefault(fontName, null);
                                 if (fr == null) {
                                     throw new RuntimeException("Cannot find font: " + fontName);
                                 }
@@ -208,12 +173,12 @@ public class PdfPrinter {
                         if (dfont == null) {
                             throw new RuntimeException("Unknown font: " + name);
                         }
-                        textFont = dfont.font;
-                        textSize = dfont.size;
-                        ascendor = dfont.ascendor;
-                        if (inText) {
-                            cb.setFontAndSize(dfont.font, dfont.size);
-                        }
+                        textMode(cb);
+                        endTextMode(cb);
+                        textContext.textFont = dfont.font;
+                        textContext.textSize = dfont.size;
+                        textContext.ascendor = dfont.ascendor;
+                        beginTextMode(cb);
                         break;
                     }
                     case DrawChars: {
@@ -226,7 +191,7 @@ public class PdfPrinter {
                             String text = chars.substring(j, j+1);
                             double x = j < xs.size() ? xs.get(j) : xs.get(xs.size() - 1);
                             double y = j < ys.size() ? ys.get(j) : ys.get(ys.size() - 1);
-                            cb.setTextMatrix(getX(x), getY(y) - ascendor);
+                            cb.setTextMatrix(getX(x), getY(y) - textContext.ascendor);
                             cb.showText(text);
                         }
                         break;
@@ -238,10 +203,10 @@ public class PdfPrinter {
                                 opSetTextColor.getG(),
                                 opSetTextColor.getB()
                         );
-                        this.textColor = baseColor;
-                        if( inText ){
-                            cb.setColorFill(baseColor);
-                        }
+                        textMode(cb);
+                        endTextMode(cb);
+                        textContext.textColor = baseColor;
+                        beginTextMode(cb);
                         break;
                     }
                     case CreatePen: {
@@ -251,7 +216,15 @@ public class PdfPrinter {
                             BaseColor color = new BaseColor(opCreatePen.getR(), opCreatePen.getG(),
                                     opCreatePen.getB());
                             float width = (float)milliToPoint(opCreatePen.getWidth());
-                            StrokeData data = new StrokeData(color, width, opCreatePen.getPenStyle());
+                            float[] pstyle = null;
+                            List<Double> penStyle = opCreatePen.getPenStyle();
+                            if( penStyle.size() > 0 ){
+                                pstyle = new float[penStyle.size()];
+                                for(int j=0;j<penStyle.size();j++){
+                                    pstyle[j] = (float)milliToPoint(penStyle.get(j));
+                                }
+                            }
+                            StrokeData data = new StrokeData(color, width, pstyle);
                             strokeMap.put(name, data);
                         }
                         break;
@@ -263,13 +236,12 @@ public class PdfPrinter {
                         if( data == null ){
                             throw new RuntimeException("Cannot find pen: " + name);
                         }
-                        strokeColor = data.color;
-                        strokeWidth = data.width;
-                        strokeStyle = data.style;
-                        if( !inText ){
-                            cb.setColorStroke(strokeColor);
-                            cb.setLineWidth(strokeWidth);
-                        }
+                        graphicMode(cb);
+                        endGraphicMode(cb);
+                        graphicContext.strokeColor = data.color;
+                        graphicContext.strokeWidth = data.width;
+                        graphicContext.strokeStyle = data.style;
+                        beginGraphicMode(cb);
                         break;
                     }
                     case MoveTo: {
@@ -305,10 +277,10 @@ public class PdfPrinter {
                 }
             }
             if (inText) {
-                cb.endText();
+                endTextMode(cb);
                 inText = false;
             } else {
-                cb.stroke();
+                endGraphicMode(cb);
             }
             if( callback != null ){
                 callback.proc(cb, pages.size(), () -> graphicMode(cb), () -> textMode(cb));

@@ -28,11 +28,17 @@
             <div class="mt-2">
                 <button type="button" class="btn btn-primary x-view-button">表示</button>
                 <button type="button" class="btn btn-secondary ml-2 x-print-button">印刷</button>
+                <button type="button" class="btn btn-secondary ml-2 x-view-pdf-button">PDF表示</button>
             </div>
         </div>
         <div class="col-lg-7">
             <div id="viewer" class="p-1 m-0"></div>
         </div>
+        <form class="d-none x-pdf-form" method="POST" action="../json/view-drawer-as-pdf"
+            target="_blank">
+            <input type="text" name="paper"/>
+            <input type="text" name="pages"/>
+        </form>
     </div>
 <script>
 
@@ -61,7 +67,12 @@
         });
     });
 
-
+    $(".x-view-pdf-button").on("click", event => {
+        let pages = [JSON.parse($("textarea.x-ops").val())];
+        $(".x-pdf-form input[name=paper]").val("A4");
+        $(".x-pdf-form input[name=pages]").val(JSON.stringify(pages))
+        $(".x-pdf-form").submit();
+    })
 
     // $("button").on("click", event => {
     //     let data = {};

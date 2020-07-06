@@ -489,7 +489,11 @@ public class Backend {
     public void suspendExam(int visitId) {
         VisitDTO visit = getVisit(visitId);
         if (visit != null) {
-            setWqueueState(visitId, WqueueWaitState.WaitReExam);
+            WqueueDTO wq = getWqueue(visit.visitId);
+            if( wq != null ){
+                wq.waitState = WqueueWaitState.WaitReExam.getCode();
+                updateWqueue(wq);
+            }
         }
     }
 

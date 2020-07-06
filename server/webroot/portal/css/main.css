@@ -3,6 +3,14 @@ a:hover {text-decoration: none;}
 .sidebar { background-color:#eee; }
 .sidebar a.active { font-weight: bold; }
 
-.practice-title { background-color: #eee; font-weight: bold; padding: 3px 6px; }
-.practice-title.current-visit { background-color: #ff9; }
-.practice-title.temp-visit { background-color: #9ff; }
+.practice .practice-title { background-color: #eee; font-weight: bold; padding: 3px 6px; }
+.practice .practice-record.current-visit .practice-title { background-color: #ff9; }
+.practice .practice-record.current-visit .record-left-commands {
+    border-left: 4px solid orange;
+    padding-left: 8px;
+}
+.practice .practice-record.current-visit .record-text {
+    border-left: 4px solid orange;
+    padding-left: 8px;
+}
+.practice .practice-record.temp-visit .practice-title { background-color: #9ff; }

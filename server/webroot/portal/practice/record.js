@@ -254,15 +254,19 @@ export class Record extends Component {
     }
 
     markAsCurrent() {
-        this.titleComponent.markAsCurrent();
+        this.ele.addClass("current-visit");
+        //this.titleComponent.markAsCurrent();
     }
 
     markAsTemp() {
-        this.titleComponent.markAsTemp();
+        this.ele.addClass("temp-visit");
+        console.log("ele", this.ele);
+        //this.titleComponent.markAsTemp();
     }
 
     clearMark() {
-        this.titleComponent.clearMark();
+        this.ele.removeClass("temp-visit");
+        //this.titleComponent.clearMark();
     }
 
     onDelete(cb) {

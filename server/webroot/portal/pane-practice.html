@@ -1,63 +1,65 @@
 <!--suppress ALL -->
-<!-- TODO: add color to texts of current visit -->
-<div class="row" id="practice-top">
-    <h3 class="col-xl-2">診察</h3>
-    <div class="col-xl-10 form-inline">
-        <div class="dropdown" id="practice-select-patient-menu">
-            <button class="btn btn-secondary dropdown-toggle" type="button"
-                    data-toggle="dropdown" aria-haspopup="true"
-                    aria-expanded="false">
-                患者選択
-            </button>
-            <div class="dropdown-menu x-menu" aria-labelledby="dropdownMenuButton">
-                <a href="javascript:void(0)" class="x-wqueue dropdown-item mx-2">受付患者選択</a>
-                <a href="javascript:void(0)" class="x-search dropdown-item mx-2">患者検索</a>
-                <a href="javascript:void(0)" class="x-recent dropdown-item mx-2">最近の診察</a>
-                <a href="javascript:void(0)" class="x-today dropdown-item mx-2">本日の診察</a>
-                <a href="javascript:void(0)" class="x-prev dropdown-item mx-2">以前の診察</a>
+<div class="pane practice">
+    <div class="row" id="practice-top">
+        <h3 class="col-xl-2">診察</h3>
+        <div class="col-xl-10 form-inline">
+            <div class="dropdown" id="practice-select-patient-menu">
+                <button class="btn btn-secondary dropdown-toggle" type="button"
+                        data-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                    患者選択
+                </button>
+                <div class="dropdown-menu x-menu" aria-labelledby="dropdownMenuButton">
+                    <a href="javascript:void(0)" class="x-wqueue dropdown-item mx-2">受付患者選択</a>
+                    <a href="javascript:void(0)" class="x-search dropdown-item mx-2">患者検索</a>
+                    <a href="javascript:void(0)" class="x-recent dropdown-item mx-2">最近の診察</a>
+                    <a href="javascript:void(0)" class="x-today dropdown-item mx-2">本日の診察</a>
+                    <a href="javascript:void(0)" class="x-prev dropdown-item mx-2">以前の診察</a>
+                </div>
             </div>
+            <a href="javascript:void(0)" class="ml-2" id="practice-registered-drug-link">登録薬剤</a>
+            <a href="javascript:void(0)" class="ml-2" id="practice-search-text-globally">全文検索</a>
         </div>
-        <a href="javascript:void(0)" class="ml-2" id="practice-registered-drug-link">登録薬剤</a>
-        <a href="javascript:void(0)" class="ml-2" id="practice-search-text-globally">全文検索</a>
     </div>
-</div>
 
-<div id="practice-patient-info" class="d-none mx-2 my-2">
-    [<span class="x-patient-id"></span>]
-    <span class="x-last-name"></span><span class="x-first-name"></span>
-    (<span class="x-last-name-yomi"></span><span class="x-first-name-yomi"></span>)
-    <span class="x-birthday"></span>生
-    (<span class="x-age"></span>才)
-    <span class="x-sex"></span>性
-    <a href="javascript:void(0)" class="x-detail-link">詳細</a>
-    <div class="x-detail d-none row">
-        <div class="col-sm-3">住所</div>
-        <div class="x-address col-sm-9"></div>
-        <div class="col-sm-3">電話番号</div>
-        <div class="x-phone col-sm-9"></div>
+    <div id="practice-patient-info" class="d-none mx-2 my-2">
+        [<span class="x-patient-id"></span>]
+        <span class="x-last-name"></span><span class="x-first-name"></span>
+        (<span class="x-last-name-yomi"></span><span class="x-first-name-yomi"></span>)
+        <span class="x-birthday"></span>生
+        (<span class="x-age"></span>才)
+        <span class="x-sex"></span>性
+        <a href="javascript:void(0)" class="x-detail-link">詳細</a>
+        <div class="x-detail d-none row">
+            <div class="col-sm-3">住所</div>
+            <div class="x-address col-sm-9"></div>
+            <div class="col-sm-3">電話番号</div>
+            <div class="x-phone col-sm-9"></div>
+        </div>
     </div>
-</div>
 
-<div id="practice-patient-manip" class="d-none mx-2 form-inline">
-    <button class="x-cashier btn btn-secondary">会計</button>
-    <button class="x-end  ml-2 btn btn-secondary">患者終了</button>
-    <a href="javascript:void(0)" class="x-register-current  ml-2">診察登録</a>
-    <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>
-    <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>
-    <a href="javascript:void(0)" class="x-upload-image ml-2">画像保存</a>
-</div>
-
-<div id="practice-nav-upper"></div>
-
-<div class="row">
-    <div id="practice-record-wrapper" class="col-xl-9"></div>
-    <div id="practice-right-bar" class="col-xl-3">
-        <div id="practice-disease-wrapper"></div>
-        <div id="practice-general-workarea"></div>
+    <div id="practice-patient-manip" class="d-none mx-2 form-inline">
+        <button class="x-cashier btn btn-secondary">会計</button>
+        <button class="x-end  ml-2 btn btn-secondary">患者終了</button>
+        <a href="javascript:void(0)" class="x-register-current  ml-2">診察登録</a>
+        <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>
+        <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>
+        <a href="javascript:void(0)" class="x-upload-image ml-2">画像保存</a>
     </div>
-</div>
 
-<div id="practice-nav-lower"></div>
+    <div id="practice-nav-upper"></div>
+
+    <div class="row">
+        <div id="practice-record-wrapper" class="col-xl-9"></div>
+        <div id="practice-right-bar" class="col-xl-3">
+            <div id="practice-disease-wrapper"></div>
+            <div id="practice-general-workarea"></div>
+        </div>
+    </div>
+
+    <div id="practice-nav-lower"></div>
+
+</div>
 
 <template id="practice-record-template">
     <div class="practice-record">
@@ -65,7 +67,7 @@
         <div class="row">
             <div class="x-left_ col-sm-6 rp-1">
                 <div class="x-text-wrapper"></div>
-                <div class="x-command-wrapper">
+                <div class="x-command-wrapper record-left-commands mt-2">
                     <a href="javascript:void(0)" class="x-enter-text">［文章入力］</a>
                     <a href="javascript:void(0)" class="x-send-shohousen-fax">処方箋FAX</a>
                 </div>
@@ -78,7 +80,8 @@
                     <a href="javascript:void(0)" class="x-shinryou-menu">［診療行為］</a>
                     <div class="dropdown">
                         <button type="button" class="btn btn-link dropdown-toggle"
-                            data-toggle="dropdown">その他</button>
+                                data-toggle="dropdown">その他
+                        </button>
                         <div class="dropdown-menu x-shinryou-aux-menu_">
                             <a href="javascript:void(0)" class="x-search-enter dropdown-item">検索入力</a>
                             <a href="javascript:void(0)" class="x-copy-all dropdown-item">全部コピー</a>
@@ -574,11 +577,11 @@
 </template>
 
 <template id="practice-text-template">
-    <div class="my-1"></div>
+    <div class="my-1 record-text"></div>
 </template>
 
 <template id="practice-text-disp-template">
-    <div class="my-1 record-text"></div>
+    <div class="my-1"></div>
 </template>
 
 <template id="practice-enter-text-template">
@@ -1069,7 +1072,7 @@
         let practiceState = new PracticeState(rest);
 
         class CurrentVisitManager {
-            resolveCopyTarget(){
+            resolveCopyTarget() {
                 return practiceState.getVisitId() || practiceState.getTempVisitId();
             }
         }
@@ -1085,7 +1088,7 @@
         }
 
         class PatientSearchDialogFactory {
-            create(){
+            create() {
                 let html = $("template#practice-patient-search-dialog-template").html();
                 let ele = $(html);
                 let map = parseElement(ele);
@@ -1185,7 +1188,7 @@
 
             setPatient(patient) {
                 this.display.setPatient(patient);
-                if( patient ){
+                if (patient) {
                     this.ele.removeClass("d-none");
                 } else {
                     this.ele.addClass("d-none");
@@ -1303,8 +1306,8 @@
             });
 
             map.registerCurrent.on("click", async event => {
-                if( practiceState.getVisitId() === 0 && practiceState.getPatientId() > 0 &&
-                        confirm("この患者を診察登録しますか？") ){
+                if (practiceState.getVisitId() === 0 && practiceState.getPatientId() > 0 &&
+                    confirm("この患者を診察登録しますか？")) {
                     let patientId = practiceState.getPatientId();
                     practiceState.endPatient();
                     let visitId = await rest.startVisit(patientId);
@@ -1324,7 +1327,7 @@
 
             map.uploadImage.on("click", async event => {
                 let patientId = practiceState.getPatientId();
-                if( patientId > 0 ){
+                if (patientId > 0) {
                     await (new UploadImageDialog(patientId)).open();
                 }
             });
@@ -1332,7 +1335,7 @@
         })();
 
         class VisitMeisaiDialogFactory {
-            create(meisai){
+            create(meisai) {
                 let html = $("template#practice-visit-meisai-dialog-template").html();
                 let ele = $(html);
                 let map = parseElement(ele);
@@ -1354,12 +1357,7 @@
                 let ele = $(this.html);
                 let map = parseElement(ele);
                 let comp = new Title(ele, map, rest);
-                comp.init(visit, "current-visit", "temp-visit", this.visitMeisaiDialogFactory);
-                if (visit.visitId === practiceState.getVisitId()) {
-                    comp.markAsCurrent();
-                } else if (visit.visitId === practiceState.getTempVisitId()) {
-                    comp.markAsTemp();
-                }
+                comp.init(visit, this.visitMeisaiDialogFactory);
                 return comp;
             }
         }
@@ -1451,7 +1449,7 @@
         }
 
         class HokenSelectDialogFactory {
-            create(hokenEx, visitId, current){
+            create(hokenEx, visitId, current) {
                 let html = $("template#practice-hoken-select-dialog-template").html();
                 let ele = $(html);
                 let map = parseElement(ele);
@@ -1463,7 +1461,7 @@
         }
 
         class HokenDispFactory {
-            create(hokenRep){
+            create(hokenRep) {
                 let html = "<div></div>";
                 let ele = $(html);
                 let map = parseElement(ele);
@@ -1610,7 +1608,7 @@
         }
 
         class ChargeModifyFactory {
-            create(meisai, charge){
+            create(meisai, charge) {
                 let html = $("template#practice-charge-modify-template").html();
                 let ele = $(html);
                 let map = parseElement(ele);
@@ -1682,8 +1680,8 @@
                 });
                 record.onShinryouCopied((targetVisitId, shinryouFulls) => {
                     let targetRec = findRecord(targetVisitId);
-                    if( targetRec ){
-                        for(let shinryouFull of shinryouFulls){
+                    if (targetRec) {
+                        for (let shinryouFull of shinryouFulls) {
                             targetRec.addShinryou(shinryouFull);
                         }
                     }
@@ -1870,7 +1868,7 @@
         })();
 
         practiceState.onPatientIdChanged(async patientId => {
-            if( patientId === 0 ){
+            if (patientId === 0) {
                 diseaseArea.set(0, null);
             } else {
                 let cur = await rest.listCurrentDisease(patientId);
@@ -1915,10 +1913,10 @@
             return result;
         })();
 
-        function setNavs(page, total){
+        function setNavs(page, total) {
             navs.forEach(nav => {
                 nav.set(page, total);
-                if( total > 1 ){
+                if (total > 1) {
                     nav.show();
                 } else {
                     nav.hide();
@@ -1929,8 +1927,15 @@
         function setRecords(visitFulls) {
             let recordWrapperElement = $("#practice-record-wrapper");
             recordWrapperElement.html("");
+            let currentVisitId = practiceState.getVisitId();
+            let tempVisitId = practiceState.getTempVisitId();
             for (let visitFull of visitFulls) {
                 let record = recordFactory.create(visitFull, visitFull.hokenRep);
+                if( visitFull.visit.visitId === currentVisitId ){
+                    record.markAsCurrent();
+                } else if( visitFull.visit.visitId === tempVisitId ){
+                    record.markAsTemp();
+                }
                 record.onTextCopied((event, copiedText) => {
                     let targetRec = findRecord(copiedText.visitId);
                     if (targetRec) {
@@ -1944,7 +1949,7 @@
         async function fetchRecords(patientId, page) {
             if (patientId > 0 && page >= 1) {
                 let visitPage = await rest.listVisit(patientId, page - 1);
-                for(let visit of visitPage.visits){
+                for (let visit of visitPage.visits) {
                     visit.hokenRep = await rest.hokenRep(visit.hoken);
                 }
                 return visitPage;

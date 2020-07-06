@@ -8,11 +8,9 @@ export class Title extends Component {
         ele.attr("data-component", 3);
     }
 
-    async init(visit, classCurrentVisit, classTempVisit, visitMeisaiDialogFactory) {
+    async init(visit, visitMeisaiDialogFactory) {
         this.visit = visit;
         this.textElement.text(this.rep(visit.visitedAt));
-        this.classCurrentVisit = classCurrentVisit;
-        this.classTempVisit = classTempVisit;
         this.visitMeisaiDialogFactory = visitMeisaiDialogFactory;
         this.menu.delete.on("click",  event => this.doDelete());
         this.menu.tempVisit.on("click", event => this.doTempVisit());
@@ -22,21 +20,6 @@ export class Title extends Component {
 
     getVisitId(){
         return this.visit.visitId;
-    }
-
-    clearMark(){
-        this.ele.removeClass(this.classTempVisit);
-        this.ele.removeClass(this.classCurrentVisit);
-    }
-
-    markAsCurrent(){
-        this.clearMark();
-        this.ele.addClass(this.classCurrentVisit);
-    }
-
-    markAsTemp(){
-        this.clearMark();
-        this.ele.addClass(this.classTempVisit);
     }
 
     onDelete(cb){

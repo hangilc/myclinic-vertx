@@ -79,8 +79,10 @@ public class PdfPrinter {
 
     private void beginTextMode(PdfContentByte cb){
         cb.beginText();
-        cb.setFontAndSize(textContext.textFont, textContext.textSize);
-        cb.setColorFill(textContext.textColor);
+        if( textContext.isInitialized() ){
+            cb.setFontAndSize(textContext.getTextFont(), textContext.getTextSize());
+            cb.setColorFill(textContext.getTextColor());
+        }
     }
 
     private void endTextMode(PdfContentByte cb){
@@ -88,13 +90,15 @@ public class PdfPrinter {
     }
 
     private void beginGraphicMode(PdfContentByte cb){
-        cb.setColorStroke(graphicContext.strokeColor);
-        cb.setLineWidth(graphicContext.strokeWidth);
-        float[] strokeStyle = graphicContext.strokeStyle;
-        if( strokeStyle == null || strokeStyle.length == 0 ){
-            cb.setLineDash(0);
-        } else {
-            cb.setLineDash(strokeStyle, 0);
+        if( graphicContext.isInitialized() ){
+            cb.setColorStroke(graphicContext.getStrokeColor());
+            cb.setLineWidth(graphicContext.getStrokeWidth());
+            float[] strokeStyle = graphicContext.getStrokeStyle();
+            if( strokeStyle == null || strokeStyle.length == 0 ){
+                cb.setLineDash(0);
+            } else {
+                cb.setLineDash(strokeStyle, 0);
+            }
         }
     }
 
@@ -175,9 +179,10 @@ public class PdfPrinter {
                         }
                         textMode(cb);
                         endTextMode(cb);
-                        textContext.textFont = dfont.font;
-                        textContext.textSize = dfont.size;
-                        textContext.ascendor = dfont.ascendor;
+                        textContext.setTextFont(dfont.font);
+                        textContext.setTextSize(dfont.size);
+                        textContext.setAscendor(dfont.ascendor);
+                        textContext.setInitialized(true);
                         beginTextMode(cb);
                         break;
                     }
@@ -191,7 +196,7 @@ public class PdfPrinter {
                             String text = chars.substring(j, j+1);
                             double x = j < xs.size() ? xs.get(j) : xs.get(xs.size() - 1);
                             double y = j < ys.size() ? ys.get(j) : ys.get(ys.size() - 1);
-                            cb.setTextMatrix(getX(x), getY(y) - textContext.ascendor);
+                            cb.setTextMatrix(getX(x), getY(y) - textContext.getAscendor());
                             cb.showText(text);
                         }
                         break;
@@ -205,7 +210,7 @@ public class PdfPrinter {
                         );
                         textMode(cb);
                         endTextMode(cb);
-                        textContext.textColor = baseColor;
+                        textContext.setTextColor(baseColor);
                         beginTextMode(cb);
                         break;
                     }
@@ -238,9 +243,10 @@ public class PdfPrinter {
                         }
                         graphicMode(cb);
                         endGraphicMode(cb);
-                        graphicContext.strokeColor = data.color;
-                        graphicContext.strokeWidth = data.width;
-                        graphicContext.strokeStyle = data.style;
+                        graphicContext.setStrokeColor(data.color);
+                        graphicContext.setStrokeWidth(data.width);
+                        graphicContext.setStrokeStyle(data.style);
+                        graphicContext.setInitialized(true);
                         beginGraphicMode(cb);
                         break;
                     }

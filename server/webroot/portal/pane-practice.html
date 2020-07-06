@@ -1,4 +1,6 @@
 <!--suppress ALL -->
+<!-- TODO: add color to texts of current visit -->
+<!-- TODO: handle case in which suspend/end patient when other program already ended patient -->
 <div class="row" id="practice-top">
     <h3 class="col-xl-2">診察</h3>
     <div class="col-xl-10 form-inline">
@@ -1709,7 +1711,7 @@
 
             map.wqueue.on("click", async event => {
                 let result = await selectWqueueDialog.open();
-                if (result.mode === "selected") {
+                if (result && result.mode === "selected") {
                     let wqueueFull = result.data;
                     let visitId = wqueueFull.visit.visitId;
                     let patientId = wqueueFull.patient.patientId;
@@ -1722,11 +1724,11 @@
                 let dialog = patientSearchDialogFactory.create();
                 let result = await dialog.open();
                 console.log("result", result);
-                if (result.mode === "enter") {
+                if (result && result.mode === "enter") {
                     let patientId = result.patient.patientId;
                     await clearState();
                     practiceState.startPatient(patientId);
-                } else if (result.mode === "register-enter") {
+                } else if (result && result.mode === "register-enter") {
                     let visitId = result.visitId;
                     let patientId = result.patient.patientId;
                     await clearState();

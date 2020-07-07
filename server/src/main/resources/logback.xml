@@ -5,7 +5,7 @@
         </encoder>
     </appender>
 
-    <timestamp key="byDay" datePattern="yyyy-MM-dd Z+0900"/>
+    <timestamp key="byDay" datePattern="yyyy-MM-dd Z"/>
 
     <appender name="FAX-FILE" class="ch.qos.logback.core.FileAppender">
         <file>${user.home}/myclinic-fax-logs/log-${byDay}.log</file>

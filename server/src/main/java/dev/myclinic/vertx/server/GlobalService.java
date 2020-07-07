@@ -88,6 +88,8 @@ public class GlobalService {
         Path srcPath = fileIdToPath(srcId);
         Path dstPath = fileIdToPath(dstId);
         try {
+            System.out.println("moveAppFile src: " + srcPath.toString());
+            System.out.println("moveAppFile dst: " + dstPath.toString());
             Path parent = dstPath.getParent();
             if( !Files.exists(parent) ){
                 Files.createDirectories(parent);

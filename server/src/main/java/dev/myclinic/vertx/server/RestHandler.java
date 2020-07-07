@@ -156,7 +156,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void convertToHoken(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        VisitDTO visit = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        VisitDTO visit = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -240,7 +240,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate at = LocalDate.parse(params.get("at"));
-        List<List<String>> args = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        List<List<String>> args = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -276,7 +276,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterShinryouAttr(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        ShinryouAttrDTO attr = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        ShinryouAttrDTO attr = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -336,7 +336,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterConductFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        ConductEnterRequestDTO arg = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        ConductEnterRequestDTO arg = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -385,7 +385,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterShouki(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        ShoukiDTO shouki = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        ShoukiDTO shouki = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -397,7 +397,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void deleteKoukikourei(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        KoukikoureiDTO koukikourei = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        KoukikoureiDTO koukikourei = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -456,7 +456,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void updateHoken(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        VisitDTO hoken = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        VisitDTO hoken = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -531,7 +531,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterConductKizai(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        ConductKizaiDTO conductKizai = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        ConductKizaiDTO conductKizai = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -544,7 +544,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void batchEnterDrugs(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<DrugDTO> drugs = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        List<DrugDTO> drugs = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -626,7 +626,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterDisease(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        DiseaseNewDTO diseaseNew = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        DiseaseNewDTO diseaseNew = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -651,7 +651,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterConductShinryou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        ConductShinryouDTO conductShinryou = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        ConductShinryouDTO conductShinryou = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -664,7 +664,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterKouhi(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        KouhiDTO kouhi = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        KouhiDTO kouhi = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -687,7 +687,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void finishCashier(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        PaymentDTO payment = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        PaymentDTO payment = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -699,7 +699,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterDrugAttr(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        DrugAttrDTO attr = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        DrugAttrDTO attr = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -711,7 +711,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        DrugDTO drug = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        DrugDTO drug = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -735,7 +735,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void updatePatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        PatientDTO patient = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        PatientDTO patient = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -783,7 +783,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void updateDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        DrugDTO drug = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        DrugDTO drug = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -828,7 +828,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void deleteKouhi(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        KouhiDTO kouhi = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        KouhiDTO kouhi = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -840,7 +840,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterHotline(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        HotlineDTO hotline = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        HotlineDTO hotline = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -899,7 +899,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterKoukikourei(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        KoukikoureiDTO koukikourei = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        KoukikoureiDTO koukikourei = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -925,7 +925,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void updateShinryou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        ShinryouDTO shinryou = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        ShinryouDTO shinryou = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1034,7 +1034,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void updateKoukikourei(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        KoukikoureiDTO koukikourei = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        KoukikoureiDTO koukikourei = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1046,7 +1046,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void deleteRoujin(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        RoujinDTO roujin = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        RoujinDTO roujin = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1104,7 +1104,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void updateShouki(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        ShoukiDTO shouki = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        ShoukiDTO shouki = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1140,7 +1140,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterShinryou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        ShinryouDTO shinryou = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        ShinryouDTO shinryou = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1166,7 +1166,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterPharmaDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        PharmaDrugDTO pharmaDrug = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        PharmaDrugDTO pharmaDrug = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1229,7 +1229,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void deleteShahokokuho(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        ShahokokuhoDTO shahokokuho = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        ShahokokuhoDTO shahokokuho = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1415,7 +1415,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void modifyDisease(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        DiseaseModifyDTO diseaseModify = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        DiseaseModifyDTO diseaseModify = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1476,7 +1476,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void batchUpdateDiseaseEndReason(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<DiseaseModifyEndReasonDTO> args = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        List<DiseaseModifyEndReasonDTO> args = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1514,7 +1514,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void updateKouhi(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        KouhiDTO kouhi = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        KouhiDTO kouhi = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1563,7 +1563,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void updateText(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        TextDTO text = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        TextDTO text = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1634,7 +1634,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterConductDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        ConductDrugDTO conductDrug = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        ConductDrugDTO conductDrug = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1658,7 +1658,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterPrescExample(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        PrescExampleDTO prescExample = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        PrescExampleDTO prescExample = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1743,7 +1743,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void updatePharmaDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        PharmaDrugDTO pharmaDrug = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        PharmaDrugDTO pharmaDrug = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1829,7 +1829,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate at = LocalDate.parse(params.get("at"));
-        List<List<String>> args = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        List<List<String>> args = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1852,7 +1852,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterShahokokuho(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        ShahokokuhoDTO shahokokuho = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        ShahokokuhoDTO shahokokuho = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1865,7 +1865,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void updatePrescExample(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        PrescExampleDTO prescExample = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        PrescExampleDTO prescExample = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1889,7 +1889,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterPatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        PatientDTO patient = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        PatientDTO patient = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1915,7 +1915,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void updateShahokokuho(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        ShahokokuhoDTO shahokokuho = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        ShahokokuhoDTO shahokokuho = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1927,7 +1927,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void enterText(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        TextDTO text = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        TextDTO text = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -2321,7 +2321,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
-        List<ShinryouDTO> srcList = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        List<ShinryouDTO> srcList = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -2429,7 +2429,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate at = LocalDate.parse(params.get("at"));
-        List<List<String>> args = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        List<List<String>> args = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -2518,7 +2518,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate at = LocalDate.parse(params.get("at"));
-        List<List<String>> args = _convertParam(ctx.getBodyAsString(), new TypeReference<>() {
+        List<List<String>> args = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);

@@ -1378,7 +1378,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private void hokenRep(RoutingContext ctx) {
         try {
-            HokenDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), HokenDTO.class);
+            HokenDTO hoken = mapper.readValue(ctx.getBody().getBytes(), HokenDTO.class);
             String rep = mapper.writeValueAsString(HokenUtil.hokenRep(hoken));
             ctx.response().end(rep);
         } catch (Exception e) {
@@ -1388,7 +1388,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private void shahokokuhoRep(RoutingContext ctx) {
         try {
-            ShahokokuhoDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), ShahokokuhoDTO.class);
+            ShahokokuhoDTO hoken = mapper.readValue(ctx.getBody().getBytes(), ShahokokuhoDTO.class);
             String rep = mapper.writeValueAsString(ShahokokuhoUtil.rep(hoken));
             ctx.response().end(rep);
         } catch (Exception e) {
@@ -1398,7 +1398,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private void koukikoureiRep(RoutingContext ctx) {
         try {
-            KoukikoureiDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), KoukikoureiDTO.class);
+            KoukikoureiDTO hoken = mapper.readValue(ctx.getBody().getBytes(), KoukikoureiDTO.class);
             String rep = mapper.writeValueAsString(KoukikoureiUtil.rep(hoken));
             ctx.response().end(rep);
         } catch (Exception e) {
@@ -1408,7 +1408,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private void roujinRep(RoutingContext ctx) {
         try {
-            RoujinDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), RoujinDTO.class);
+            RoujinDTO hoken = mapper.readValue(ctx.getBody().getBytes(), RoujinDTO.class);
             String rep = mapper.writeValueAsString(RoujinUtil.rep(hoken));
             ctx.response().end(rep);
         } catch (Exception e) {
@@ -1418,7 +1418,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private void kouhiRep(RoutingContext ctx) {
         try {
-            KouhiDTO hoken = mapper.readValue(ctx.getBodyAsString().getBytes(), KouhiDTO.class);
+            KouhiDTO hoken = mapper.readValue(ctx.getBody().getBytes(), KouhiDTO.class);
             String rep = mapper.writeValueAsString(KouhiUtil.rep(hoken));
             ctx.response().end(rep);
         } catch (Exception e) {

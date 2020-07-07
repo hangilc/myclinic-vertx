@@ -5,6 +5,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.mastermap.MasterMap;
 
+import java.io.IOException;
+
 class RestHandlerBase {
 
     protected final ObjectMapper mapper;
@@ -23,8 +25,12 @@ class RestHandlerBase {
         }
     }
 
-    protected <T> T _convertParam(String src, TypeReference<T> typeRef) throws JsonProcessingException {
-        return mapper.readValue(src, typeRef);
+//    protected <T> T _convertParam(String src, TypeReference<T> typeRef) throws JsonProcessingException {
+//        return mapper.readValue(src, typeRef);
+//    }
+
+    protected <T> T _convertParam(byte[] bytes, TypeReference<T> typeRef) throws IOException {
+        return mapper.readValue(bytes, typeRef);
     }
 
 }

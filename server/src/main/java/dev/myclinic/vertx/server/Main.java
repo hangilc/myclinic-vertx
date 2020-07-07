@@ -22,6 +22,8 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.StaticHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.io.UnsupportedEncodingException;
@@ -33,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
-
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static final ObjectMapper mapper;
 
     static {

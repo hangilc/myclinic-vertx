@@ -5,10 +5,21 @@
         </encoder>
     </appender>
 
-    <timestamp key="byDay" datePattern="yyyy-MM-dd Z"/>
+<!--    <timestamp key="byDay" datePattern="yyyy-MM-dd Z"/>-->
 
-    <appender name="FAX-FILE" class="ch.qos.logback.core.FileAppender">
-        <file>${user.home}/myclinic-fax-logs/log-${byDay}.log</file>
+<!--    <appender name="FAX-FILE" class="ch.qos.logback.core.FileAppender">-->
+<!--        <file>${user.home}/myclinic-fax-logs/log-${byDay}.log</file>-->
+<!--        <append>true</append>-->
+<!--        <immediateFlush>true</immediateFlush>-->
+<!--        <encoder>-->
+<!--            <pattern>%d{HH:mm:ss.SSS} %-5level %msg%n</pattern>-->
+<!--        </encoder>-->
+<!--    </appender>-->
+
+    <appender name="FAX-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${user.home}/myclinic-fax-logs/log-%d{yyyy-MMdd,Asia/Tokyo}.log</fileNamePattern>
+        </rollingPolicy>
         <append>true</append>
         <immediateFlush>true</immediateFlush>
         <encoder>

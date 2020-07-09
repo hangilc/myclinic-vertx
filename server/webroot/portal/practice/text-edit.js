@@ -1,4 +1,5 @@
 import {Component} from "./component.js";;
+import {formatPresc} from "../js/format-presc.js";
 
 export class TextEdit extends Component {
     constructor(ele, map, rest) {
@@ -8,8 +9,10 @@ export class TextEdit extends Component {
         this.cancelElement = map.cancel;
         this.copyMemoElement = map.copyMemo;
         this.deleteElement = map.delete;
+        this.shohousenMenuElement = map.shohousenMenu;
         this.shohousenElement = map.shohousen;
         this.shohousenFaxElement = map.shohousenFax;
+        this.formatPrescElement = map.formatPresc;
         this.copyElement = map.copy;
     }
 
@@ -24,7 +27,11 @@ export class TextEdit extends Component {
         this.deleteElement.on("click", event => this.doDelete());
         this.shohousenElement.on("click", event => this.doShohousen());
         this.shohousenFaxElement.on("click", event => this.doShohousenFax());
+        this.formatPrescElement.on("click", event => this.doFormatPresc());
         this.copyElement.on("click", event => this.doCopy());
+        if( text.content.startsWith("院外処方") ){
+            this.shohousenMenuElement.removeClass("d-none").addClass("d-inline");
+        }
     }
 
     initFocus(){
@@ -44,6 +51,12 @@ export class TextEdit extends Component {
         req.drugs = this.text.content;
         Object.assign(req, reqOpts);
         return await this.rest.shohousenDrawer(req);
+    }
+
+    async doFormatPresc(){
+        let src = this.textareaElement.val();
+        let dst = formatPresc(src);
+        this.textareaElement.val(dst);
     }
 
     async doShohousen() {

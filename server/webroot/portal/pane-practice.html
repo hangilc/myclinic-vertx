@@ -597,13 +597,20 @@
 <template id="practice-edit-text-template">
     <div class="mt-2">
         <textarea class="form-control x-textarea" rows="6"></textarea>
-        <div class="form-inline">
+        <div class="form-inline mt-2">
             <a href="javascript:void(0)" class="x-enter">入力</a>
             <a href="javascript:void(0)" class="x-cancel ml-2">キャンセル</a>
             <a href="javascript:void(0)" class="x-copy-memo ml-2">引継ぎコピー</a>
             <a href="javascript:void(0)" class="x-delete ml-2">削除</a>
-            <a href="javascript:void(0)" class="x-shohousen ml-2">処方箋発行</a>
-            <a href="javascript:void(0)" class="x-shohousen-fax ml-2">処方箋FAX</a>
+            <div class="dropbox x-shohousen-menu d-none">
+                <button type="button" class="btn btn-link dropdown-toggle"
+                        data-toggle="dropdown">処方箋</button>
+                <div class="dropdown-menu">
+                    <a href="javascript:void(0)" class="x-shohousen dropdown-item">処方箋発行</a>
+                    <a href="javascript:void(0)" class="x-shohousen-fax dropdown-item">処方箋FAX</a>
+                    <a href="javascript:void(0)" class="x-format-presc dropdown-item">処方箋整形</a>
+                </div>
+            </div>
             <a href="javascript:void(0)" class="x-copy ml-2">コピー</a>
         </div>
     </div>

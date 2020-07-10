@@ -1,43 +1,71 @@
 import * as JpUtil from "./jp-util.js";
 
-class NaifukuFirstLine {
-    constructor(name, amount) {
-        this.name = name;
-        this.amount = amount;
-    }
-
-    format(indexPart){
-        let gap = 21 - indexPart.length - this.name.length;
-        let spc = gap > 0 ? "　".repeat(gap) : "　";
-        return `${indexPart}${this.name}${spc}${this.amount}`;
-    }
-}
-
-class OtherFirstLine {
-    constructor(s) {
-        this.s = s;
-    }
-
-    format(indexPart) {
-        return `${indexPart}${this.s}`;
-    }
-}
-
 class Item {
-    constructor(firstLine) {
-        this.firstLine = firstLine;
+    constructor() {
         this.lines = [];
     }
 
-    addLine(line){
+    addLine(line) {
         this.lines.push(line);
     }
 
-    formatAsLines(indexPart){
-        let lines = [this.firstLine.format(indexPart)];
-        lines = lines.concat(this.lines);
-        return lines;
+    formatAsLines(indexPart) {
+        let result = [];
+        let lines = this.lines.slice();
+        let pre = "　".repeat(indexPart.length);
+        let tabPos = 21;
+        let lineMax = 31;
+
+        function isRightSize(str){
+            let s = str.replace(/\s+$/, "");
+            return s.length <= lineMax;
+        }
+
+        let iterMax = 20;
+        while (lines.length > 0) {
+            if( --iterMax <= 0 ){
+                throw "Too many iteration";
+            }
+            let line = lines.shift();
+            line = line.replace(/^\s+/, "");
+            let lead = result.length === 0 ? indexPart : pre;
+            let m = /^(.*?)(\S+)(錠|カプセル|ｇ|g)$/.exec(line);
+            if (m) {
+                let a = JpUtil.toZenkaku(m[1].trim());
+                let gap = tabPos - lead.length - a.length;
+                if( gap > 0 ){
+                    let b = "　".repeat(gap);
+                    let ll = `${lead}${a}${b}${m[2]}${m[3]}`;
+                    if (isRightSize(ll)) {
+                        result.push(ll);
+                        continue;
+                    }
+                }
+            } else if ((m = /^(.*?)(\S+)(日分(（実日数）)?|回分)$/.exec(line)) != null) {
+                let a = JpUtil.toZenkaku(m[1].trim());
+                let gap = tabPos - lead.length - a.length;
+                if( gap > 0 ){
+                    let b = "　".repeat(gap);
+                    let ll = `${lead}${a}${b}${m[2]}${m[3]}`;
+                    if (isRightSize(ll)) {
+                        result.push(ll);
+                        continue;
+                    }
+                }
+            }
+            let ll = `${lead}${line}`;
+            if (!isRightSize(ll)) {
+                let a = ll.substring(0, lineMax);
+                let b = ll.substring(lineMax);
+                result.push(a);
+                lines.unshift(b);
+                continue;
+            }
+            result.push(ll);
+        }
+        return result;
     }
+
 }
 
 class Presc {
@@ -47,28 +75,28 @@ class Presc {
         this.controls = [];
     }
 
-    addPrefix(text){
+    addPrefix(text) {
         this.prefix.push(text);
     }
 
-    addItem(item){
+    addItem(item) {
         this.items.push(item);
     }
 
-    addControl(text){
+    addControl(text) {
         this.controls.push(text);
     }
 
-    hasControl(){
+    hasControl() {
         return this.controls.length > 0;
     }
 
-    format(){
+    format() {
         let lines = [];
         lines = lines.concat(this.prefix);
-        for(let index = 1; index <= this.items.length; index++){
+        for (let index = 1; index <= this.items.length; index++) {
             let indexPart = JpUtil.toZenkaku(`${index}）`);
-            lines = lines.concat(this.items[index-1].formatAsLines(indexPart));
+            lines = lines.concat(this.items[index - 1].formatAsLines(indexPart));
         }
         lines = lines.concat(this.controls);
         return lines.join("\n");
@@ -76,34 +104,27 @@ class Presc {
 }
 
 let patIndex = /^([１２３４５６７８９０0-9]+)[）)]\s*(.*)/;
-let patNaifuku = /(\S+)\s+(.+(錠|カプセル|ｇ|g))/;
 
-function parsePresc(src){
-    if( !src ){
+function parsePresc(src) {
+    if (!src) {
         src = "";
     }
     let result = new Presc();
     let curItem = null;
-    for(let line of splitToLines(src)){
+    for (let line of splitToLines(src)) {
         let m = patIndex.exec(line);
-        if( m ){
-            let firstLineSrc = m[2];
-            let mm = patNaifuku.exec(firstLineSrc);
-            let firstLine = null;
-            if( mm ){
-                firstLine = new NaifukuFirstLine(mm[1], mm[2]);
-            } else {
-                firstLine = new OtherFirstLine(firstLineSrc);
-            }
-            if( curItem ){
+        if (m) {
+            let s = m[2];
+            if (curItem) {
                 result.addItem(curItem);
             }
-            curItem = new Item(firstLine);
+            curItem = new Item();
+            curItem.addLine(s);
         } else {
-            if( line.startsWith("@") || result.hasControl() ) {
+            if (line.startsWith("@") || result.hasControl()) {
                 result.addControl(line);
             } else {
-                if( !curItem ){
+                if (!curItem) {
                     result.addPrefix(line);
                 } else {
                     curItem.addLine(line);
@@ -111,22 +132,17 @@ function parsePresc(src){
             }
         }
     }
-    if( curItem ){
+    if (curItem) {
         result.addItem(curItem);
     }
     return result;
 }
 
-function splitToLines(text){
+function splitToLines(text) {
     return text.split(/\r\n|\n|\r/g);
 }
 
-function indexRepToIndex(indexRep){
-    return parseInt(JpUtil.toAscii(indexRep));
-}
-
-export function formatPresc(src){
+export function formatPresc(src) {
     let presc = parsePresc(src);
     return presc.format();
 }
-

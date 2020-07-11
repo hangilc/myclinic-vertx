@@ -13,6 +13,7 @@ export class TextEdit extends Component {
         this.shohousenElement = map.shohousen;
         this.shohousenFaxElement = map.shohousenFax;
         this.formatPrescElement = map.formatPresc;
+        this.previewCurrentElement = map.previewCurrent;
         this.copyElement = map.copy;
     }
 
@@ -25,11 +26,12 @@ export class TextEdit extends Component {
         this.cancelElement.on("click", event => this.ele.trigger("cancel"));
         this.copyMemoElement.on("click", event => this.doCopyMemo());
         this.deleteElement.on("click", event => this.doDelete());
-        this.shohousenElement.on("click", event => this.doShohousen());
-        this.shohousenFaxElement.on("click", event => this.doShohousenFax());
-        this.formatPrescElement.on("click", event => this.doFormatPresc());
         this.copyElement.on("click", event => this.doCopy());
         if( text.content.startsWith("院外処方") ){
+            this.shohousenElement.on("click", event => this.doShohousen());
+            this.shohousenFaxElement.on("click", event => this.doShohousenFax());
+            this.formatPrescElement.on("click", event => this.doFormatPresc());
+            this.previewCurrentElement.on("click", event => this.doPreviewCurrent());
             this.shohousenMenuElement.removeClass("d-none").addClass("d-inline");
         }
     }
@@ -38,7 +40,7 @@ export class TextEdit extends Component {
         this.textareaElement.focus();
     }
 
-    async createShohousenOps(reqOpts) {
+    async createShohousenOps(content, reqOpts) {
         let visit = await this.rest.getVisit(this.text.visitId);
         let visitDate = visit.visitedAt.substring(0, 10);
         let req = {};
@@ -48,9 +50,15 @@ export class TextEdit extends Component {
         let rcptAge = await this.rest.calcRcptAge(req.patient.birthday, visitDate);
         req.futanWari = await this.rest.calcFutanWari(req.hoken, rcptAge);
         req.issueDate = visitDate;
-        req.drugs = this.text.content;
+        req.drugs = content;
         Object.assign(req, reqOpts);
         return await this.rest.shohousenDrawer(req);
+    }
+
+    async doPreviewCurrent(){
+        let ops = await this.createShohousenOps(this.textareaElement.val());
+        let dialog = this.shohousenPreviewFactory.create(ops);
+        await dialog.open();
     }
 
     async doFormatPresc(){
@@ -60,7 +68,7 @@ export class TextEdit extends Component {
     }
 
     async doShohousen() {
-        let ops = await this.createShohousenOps();
+        let ops = await this.createShohousenOps(this.text.content);
         let dialog = this.shohousenPreviewFactory.create(ops);
         await dialog.open();
         this.ele.trigger("cancel");

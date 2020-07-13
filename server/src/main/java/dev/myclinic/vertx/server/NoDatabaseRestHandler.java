@@ -1306,15 +1306,6 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             byte[] bytes = ctx.getBody().getBytes();
             ShohousenRequest req = mapper.readValue(bytes, ShohousenRequest.class);
             ShohousenData data = convertToShohousenData(req);
-            {
-                List<String> ss = data.drugLines;
-                for(int i=0;i<ss.size();i++){
-                    String s = ss.get(i);
-                    for(int j=0;j<s.length();j++){
-                        System.out.printf("%c %d\n", s.charAt(j), s.codePointAt(j));
-                    }
-                }
-            }
             ShohousenDrawer drawer = new ShohousenDrawer();
             if (req.color != null) {
                 DrawerColor defaultColor = DrawerColor.resolve(req.color);

@@ -47,7 +47,7 @@ describe("presc", function(){
         chai.expect(textDisp.ele.html()).to.equal(modified);
     });
 
-    it("should set textarea appropriately", function(){
+    it("should set textarea appropriately for presc", function(){
         let ele = $(textEditTemplate);
         let textEdit = new TextEdit(ele, parseElement(ele), null);
         let content = "院外処方\nＲｐ）\nabc　　　def";
@@ -56,7 +56,64 @@ describe("presc", function(){
         let val = textEdit.textareaElement.val();
         let expected = "院外処方\nＲｐ）\nabc   def";
         chai.expect(val).to.equal(expected);
+    });
 
-    })
+    it("should set textarea appropriately for regular text", function(){
+        let ele = $(textEditTemplate);
+        let textEdit = new TextEdit(ele, parseElement(ele), null);
+        let content = "Ｒｐ）\nabc　　　def";
+        let text = {content};
+        textEdit.init(text);
+        let val = textEdit.textareaElement.val();
+        let expected = "Ｒｐ）\nabc　　　def";
+        chai.expect(val).to.equal(expected);
+    });
+
+    it("should save for presc", async function(){
+        let ele = $(textEditTemplate);
+        let enteredContent;
+        let rest = {
+            updateText: async text => {
+                enteredContent = text.content;
+                return true;
+            },
+            getText: async textId => {
+                return null;
+        }
+        }
+        let textEdit = new TextEdit(ele, parseElement(ele), rest);
+        let text = {content: "", textId: 2, visitId: 1};
+        textEdit.init(text);
+        let content = "院外処方\nＲｐ）\nabc   def";
+        textEdit.textareaElement.val(content);
+        let val = textEdit.textareaElement.val();
+        await textEdit.doEnter();
+        let expected = "院外処方\nＲｐ）\nabc　　　def";
+        chai.expect(enteredContent).to.equal(expected);
+    });
+
+    it("should save for regular content", async function(){
+        let ele = $(textEditTemplate);
+        let enteredContent;
+        let rest = {
+            updateText: async text => {
+                enteredContent = text.content;
+                return true;
+            },
+            getText: async textId => {
+                return null;
+        }
+        }
+        let textEdit = new TextEdit(ele, parseElement(ele), rest);
+        let text = {content: "", textId: 2, visitId: 1};
+        textEdit.init(text);
+        let content = "Ｒｐ）\nabc   def　　　ghi";
+        textEdit.textareaElement.val(content);
+        let val = textEdit.textareaElement.val();
+        await textEdit.doEnter();
+        chai.expect(enteredContent).to.equal(content);
+    });
+
+
 
 });

@@ -23,7 +23,7 @@ export class TextEdit extends Component {
         this.text = text;
         this.currentVisitManager = currentVisitManager;
         this.shohousenPreviewFactory = shohousenPreviewDialogFactory;
-        this.textareaElement.val(this.contentFromData(text));
+        this.textareaElement.val(this.contentFromData(text.content));
         this.enterElement.on("click", event => this.doEnter());
         this.cancelElement.on("click", event => this.ele.trigger("cancel"));
         this.copyMemoElement.on("click", event => this.doCopyMemo());
@@ -42,8 +42,7 @@ export class TextEdit extends Component {
         this.textareaElement.focus();
     }
 
-    contentFromData(text) {
-        let content = text.content;
+    contentFromData(content) {
         if (content.startsWith("院外処方")) {
             return content.replace(/\u{3000}/ug, " "); // replace zenkaku space to ascii space
         } else {
@@ -51,9 +50,13 @@ export class TextEdit extends Component {
         }
     }
 
-    // asContentOfData(content){
-    //     return content.replace(/ /ug, "　"); // replace ascii space to zenkaku space
-    // }
+    asContentOfData(content){
+        if (content.startsWith("院外処方")) {
+            return content.replace(/ /ug, "　"); // replace ascii space to zenkaku space
+        } else {
+            return content;
+        }
+    }
 
     async createShohousenOps(content, reqOpts) {
         let visit = await this.rest.getVisit(this.text.visitId);
@@ -71,14 +74,19 @@ export class TextEdit extends Component {
     }
 
     async doPreviewCurrent() {
-        let ops = await this.createShohousenOps(this.textareaElement.val());
+        let content = this.textareaElement.val();
+        content = this.asContentOfData(content);
+        let ops = await this.createShohousenOps(content);
         let dialog = this.shohousenPreviewFactory.create(ops);
         await dialog.open();
     }
 
     async doFormatPresc() {
         let src = this.textareaElement.val();
+        src = src.replace(/\s*$/, "");
+        src = this.asContentOfData(src);
         let dst = formatPresc(src);
+        dst = this.contentFromData(dst);
         this.textareaElement.val(dst);
     }
 
@@ -97,7 +105,9 @@ export class TextEdit extends Component {
             let savePath = await this.rest.getShohousenSavePdfPath(name, this.text.textId,
                 patient.patientId, visit.visitedAt.substring(0, 10));
             let stampInfo = await this.rest.shohousenGrayStampInfo();
-            let ops = await this.createShohousenOps({color: "black"});
+            let content = this.text.content;
+            content = this.asContentOfData(content);
+            let ops = await this.createShohousenOps(content, {color: "black"});
             await this.rest.saveDrawerAsPdf([ops], "A5", savePath, {stamp: stampInfo});
             this.ele.trigger("cancel");
         }
@@ -150,6 +160,7 @@ export class TextEdit extends Component {
 
     async doEnter() {
         let content = this.textareaElement.val();
+        content = this.asContentOfData(content);
         let text = Object.assign({}, this.text, {content: content});
         await this.rest.updateText(text);
         let updatedText = await this.rest.getText(text.textId);

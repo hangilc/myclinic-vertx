@@ -80,6 +80,16 @@ export function drawerToSvg(ops, options){
         text_color = "rgb(" + r + "," + g + "," + b + ")";
     }
 
+    function encodeText(text){
+        text = text.replace(/ /g, "&nbsp;");
+        text = text.replace(/&/g, "&amp;");
+        text = text.replace(/>/g, "&gt;");
+        text = text.replace(/</g, "&lt;");
+        text = text.replace(/"/g, "&quot;");
+        text = text.replace(/'/g, "&#039;");
+        return text;
+    }
+
     function draw_chars(chars, xs, ys){
         let e = document.createElementNS(ns, "text");
         let attrs = {
@@ -105,7 +115,8 @@ export function drawerToSvg(ops, options){
         } else {
         	e.setAttributeNS(null, "y", ys.join(","));
         }
-        e.appendChild(document.createTextNode(chars));
+        chars = chars.replace(/ /g, "&nbsp;");
+        $(e).html(chars);
         return e;
     }
 

@@ -10,6 +10,10 @@ export class TextDisp extends Component {
     }
 
     set(text){
-        this.ele.html(text.content.replace(/\r\n|\n|\r/g, "<br/>\n"));
+        let content = text.content;
+        if( content.startsWith("院外処方") ){
+            content = content.replace(/　/g, " "); // replace zenkaku space to ascii space
+        }
+        this.ele.html(content.replace(/\r\n|\n|\r/g, "<br/>\n"));
     }
 }

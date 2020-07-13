@@ -1,5 +1,7 @@
-import {Component} from "./component.js";;
+import {Component} from "./component.js";
 import {formatPresc} from "../js/format-presc.js";
+
+;
 
 export class TextEdit extends Component {
     constructor(ele, map, rest) {
@@ -21,13 +23,13 @@ export class TextEdit extends Component {
         this.text = text;
         this.currentVisitManager = currentVisitManager;
         this.shohousenPreviewFactory = shohousenPreviewDialogFactory;
-        this.textareaElement.val(text.content);
+        this.textareaElement.val(this.contentFromData(text));
         this.enterElement.on("click", event => this.doEnter());
         this.cancelElement.on("click", event => this.ele.trigger("cancel"));
         this.copyMemoElement.on("click", event => this.doCopyMemo());
         this.deleteElement.on("click", event => this.doDelete());
         this.copyElement.on("click", event => this.doCopy());
-        if( text.content.startsWith("院外処方") ){
+        if (text.content.startsWith("院外処方")) {
             this.shohousenElement.on("click", event => this.doShohousen());
             this.shohousenFaxElement.on("click", event => this.doShohousenFax());
             this.formatPrescElement.on("click", event => this.doFormatPresc());
@@ -36,9 +38,22 @@ export class TextEdit extends Component {
         }
     }
 
-    initFocus(){
+    initFocus() {
         this.textareaElement.focus();
     }
+
+    contentFromData(text) {
+        let content = text.content;
+        if (content.startsWith("院外処方")) {
+            return content.replace(/\u{3000}/ug, " "); // replace zenkaku space to ascii space
+        } else {
+            return content;
+        }
+    }
+
+    // asContentOfData(content){
+    //     return content.replace(/ /ug, "　"); // replace ascii space to zenkaku space
+    // }
 
     async createShohousenOps(content, reqOpts) {
         let visit = await this.rest.getVisit(this.text.visitId);
@@ -55,13 +70,13 @@ export class TextEdit extends Component {
         return await this.rest.shohousenDrawer(req);
     }
 
-    async doPreviewCurrent(){
+    async doPreviewCurrent() {
         let ops = await this.createShohousenOps(this.textareaElement.val());
         let dialog = this.shohousenPreviewFactory.create(ops);
         await dialog.open();
     }
 
-    async doFormatPresc(){
+    async doFormatPresc() {
         let src = this.textareaElement.val();
         let dst = formatPresc(src);
         this.textareaElement.val(dst);
@@ -88,7 +103,7 @@ export class TextEdit extends Component {
         }
     }
 
-    onCopied(cb){
+    onCopied(cb) {
         this.on("copied", (event, text) => cb(event, text));
     }
 
@@ -110,7 +125,7 @@ export class TextEdit extends Component {
         this.trigger("copied", copied);
     }
 
-    async doCopyMemo(){
+    async doCopyMemo() {
         let targetVisitId = this.currentVisitManager.resolveCopyTarget();
         if (targetVisitId === 0) {
             alert("コピー先が設定されていません。");
@@ -121,7 +136,7 @@ export class TextEdit extends Component {
             return;
         }
         let memo = extractMemo(this.text.content);
-        if( memo ){
+        if (memo) {
             let t = {
                 textId: 0,
                 visitId: targetVisitId,
@@ -164,11 +179,11 @@ export class TextEdit extends Component {
 
 let lineTermPattern = /\r\n|\n|\r/;
 
-function extractMemo(content){
+function extractMemo(content) {
     let lines = content.split(lineTermPattern);
     let memo = [];
-    for(let line of lines){
-        if( line.startsWith("●") || line.startsWith("★") ){
+    for (let line of lines) {
+        if (line.startsWith("●") || line.startsWith("★")) {
             memo.push(line);
         } else {
             break;

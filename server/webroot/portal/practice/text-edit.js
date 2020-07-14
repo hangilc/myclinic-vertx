@@ -26,7 +26,10 @@ export class TextEdit extends Component {
         this.textareaElement.val(this.contentFromData(text.content));
         this.enterElement.on("click", event => this.doEnter());
         this.cancelElement.on("click", event => this.ele.trigger("cancel"));
-        this.copyMemoElement.on("click", event => this.doCopyMemo());
+        if( hasMemo(text.content) ){
+            this.copyMemoElement.on("click", event => this.doCopyMemo());
+            this.copyMemoElement.removeClass("d-none");
+        }
         this.deleteElement.on("click", event => this.doDelete());
         this.copyElement.on("click", event => this.doCopy());
         if (text.content.startsWith("院外処方")) {
@@ -201,4 +204,8 @@ function extractMemo(content) {
         }
     }
     return memo.join("\n");
+}
+
+export function hasMemo(content){
+    return content && (content.startsWith("●") || content.startsWith("★") );
 }

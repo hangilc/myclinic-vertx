@@ -185,6 +185,7 @@ export class HoumonKango extends Component {
         this.setData(data);
         this.fromDateElement.change();
         this.uptoDateElement.change();
+        this.issueDateElement.change();
     }
 
     async deleteHistoryData(stamp){

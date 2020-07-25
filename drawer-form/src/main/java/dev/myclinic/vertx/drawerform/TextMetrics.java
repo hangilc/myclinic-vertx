@@ -1,6 +1,7 @@
 package dev.myclinic.vertx.drawerform;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
@@ -51,6 +52,9 @@ class TextMetrics {
     }
 
     List<String> breakLine(String line, double fontSize, double lineWidth){
+        if( line.isEmpty() ){
+            return Collections.singletonList(line);
+        }
         List<String> lines = new ArrayList<>();
         List<Integer> curCodePoints = new ArrayList<>();
         double curWidth = 0;

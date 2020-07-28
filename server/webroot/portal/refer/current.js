@@ -122,11 +122,15 @@ export class Current extends Component {
         if( patient ){
             let data = await this.compileData();
             let file = await this.rest.saveRefer(data, patient.patientId);
-            console.log(file);
+            await this.refreshPrev();
         }
     }
 
     async doDeleted(){
+        await this.refreshPrev();
+    }
+
+    async refreshPrev(){
         let patient = this.patient;
         if( patient ){
             let prevs = await this.rest.listRefer(patient.patientId);

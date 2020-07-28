@@ -1193,7 +1193,8 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         vertx.<Buffer>executeBlocking(promise -> {
             try {
                 List<List<Op>> pages = mapper.readValue(ctx.request().getParam("pages"),
-                        new TypeReference<>(){});
+                        new TypeReference<>() {
+                        });
                 ByteArrayOutputStream outStream = new ByteArrayOutputStream();
                 PdfPrinter printer = new PdfPrinter(paperSize);
                 printer.print(pages, outStream);

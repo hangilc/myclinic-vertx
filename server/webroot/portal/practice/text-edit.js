@@ -1,7 +1,6 @@
 import {Component} from "./component.js";
 import {formatPresc} from "../js/format-presc.js";
-
-;
+import {RegisteredDrugDialog} from "./registered-drug-dialog/registered-drug-dialog.js";
 
 export class TextEdit extends Component {
     constructor(ele, map, rest) {
@@ -14,6 +13,7 @@ export class TextEdit extends Component {
         this.shohousenMenuElement = map.shohousenMenu;
         this.shohousenElement = map.shohousen;
         this.shohousenFaxElement = map.shohousenFax;
+        this.registeredPrescElement = map.registeredPresc;
         this.formatPrescElement = map.formatPresc;
         this.previewCurrentElement = map.previewCurrent;
         this.copyElement = map.copy;
@@ -35,6 +35,7 @@ export class TextEdit extends Component {
         if (text.content.startsWith("院外処方")) {
             this.shohousenElement.on("click", event => this.doShohousen());
             this.shohousenFaxElement.on("click", event => this.doShohousenFax());
+            this.registeredPrescElement.on("click", event => this.doRegisteredPresc());
             this.formatPrescElement.on("click", event => this.doFormatPresc());
             this.previewCurrentElement.on("click", event => this.doPreviewCurrent());
             this.shohousenMenuElement.removeClass("d-none").addClass("d-inline");
@@ -114,6 +115,13 @@ export class TextEdit extends Component {
             await this.rest.saveDrawerAsPdf([ops], "A5", savePath, {stamp: stampInfo});
             this.ele.trigger("cancel");
         }
+    }
+
+    async doRegisteredPresc(){
+        let visit = await this.rest.getVisit(this.text.visitId);
+        let at = visit.visitedAt.substring(0, 10);
+        let dialog = new RegisteredDrugDialog(this.rest, at);
+        await dialog.open();
     }
 
     onCopied(cb) {

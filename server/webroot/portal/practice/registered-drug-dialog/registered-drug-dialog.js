@@ -2,6 +2,7 @@ import {Dialog} from "../dialog2.js";
 import {parseElement} from "../../js/parse-element.js";
 import {Search} from "./search.js";
 import {Disp} from "./disp.js";
+import * as kanjidate from "../../js/kanjidate.js";
 
 let bodyTemplate = `
     <div class="x-ele">
@@ -17,9 +18,10 @@ let commandsTemplate = `
 `;
 
 export class RegisteredDrugDialog extends Dialog {
-    constructor(rest) {
+    constructor(rest, at) {
         super();
         this.rest = rest;
+        this.at = at || kanjidate.todayAsSqldate();
         this.setDialogTitle("登録薬剤");
         let bodyMap = parseElement($(bodyTemplate));
         this.disp = (new Disp()).appendTo(bodyMap.dispWrapper);
@@ -32,7 +34,9 @@ export class RegisteredDrugDialog extends Dialog {
         this.appendToFooter(commandsElement);
     }
 
-    doSelected(exampleFull){
+    async doSelected(exampleFull){
+        let master = await this.rest.resolveIyakuhinMaster(exampleFull.prescExample.iyakuhincode, this.at);
+        exampleFull = Object.assign({}, exampleFull, {master: master});
         this.disp.add(exampleFull);
         this.disp.show();
     }

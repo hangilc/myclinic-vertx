@@ -594,6 +594,11 @@ class Rest extends Client {
     async searchPrescExample(text){
         return await this.get("/search-presc-example-full-by-name", {text});
     }
+
+    async resolveIyakuhinMaster(iyakuhincode, at){
+        return await this.get("/resolve-iyakuhin-master", {iyakuhincode, at});
+    }
+
 }
 
 class Integration extends Client {

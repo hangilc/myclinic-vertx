@@ -14,6 +14,7 @@ export class Current extends Component {
         this.nameElement = map.name;
         this.printElement = map.print;
         this.saveElement = map.save;
+        this.referTitleControls = map.referTitleControls;
         this.referHospitalElement = map.referHospital;
         this.referDoctorElement = map.referDoctor;
         this.patientNameElement = map.patientName;
@@ -79,8 +80,13 @@ export class Current extends Component {
         return this.contentElement.val();
     }
 
+    getReferTitleInput(){
+        return this.referTitleControls.find("input[type=radio][name=refer-title]:checked").val();
+    }
+
     async compileData(){
         let data = { };
+        data.title = this.getReferTitleInput();
         if( this.patient ){
             let patient = this.patient;
             data.patientName = `患者： ${patient.lastName}${patient.firstName} 様`;

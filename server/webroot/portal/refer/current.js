@@ -1,6 +1,7 @@
 import {Component} from "./component.js";
 import * as kanjidate from "../js/kanjidate.js";
 import {Prev} from "./prev.js";
+import {SavedPdfWorkarea} from "./saved-pdf-workarea.js";
 
 let suggestTemplate = `
     <a href="javascript:void(0)" class="dropdown-item"></a>
@@ -12,6 +13,8 @@ export class Current extends Component {
         this.prev = new Prev(map.prev_, map.prev, rest);
         this.patientIdElement = map.patientId;
         this.nameElement = map.name;
+        this.savedPdfWorkareaWrapper = map.savedPdfWorkareaWrapper;
+        this.createElement = map.create;
         this.printElement = map.print;
         this.saveElement = map.save;
         this.referTitleControls = map.referTitleControls;
@@ -29,6 +32,7 @@ export class Current extends Component {
         super.init();
         this.prev.init();
         this.initSuggest(referList);
+        this.createElement.on("click", event => this.doCreate());
         this.printElement.on("click", event => this.doPrint());
         this.saveElement.on("click", event => this.doSave());
         this.prev.onCopy(data => this.doCopy(data));
@@ -115,6 +119,15 @@ export class Current extends Component {
         data.clinicName = clinicInfo.name;
         data.doctorName = clinicInfo.doctorName;
         return data;
+    }
+
+    async doCreate(){
+        let data = await this.compileData();
+        let ops = await this.rest.referDrawer(data);
+        let savePath = await this.rest.createTempFileName("refer-", ".pdf");
+        await this.rest.saveDrawerAsPdf([ops], "A4", savePath, null);
+        let workarea = new SavedPdfWorkarea(this.rest, savePath);
+        this.savedPdfWorkareaWrapper.append(workarea.ele);
     }
 
     async doPrint(){

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.appconfig.types.ShohousenGrayStampInfo;
+import dev.myclinic.vertx.appconfig.types.StampInfo;
 import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
 import dev.myclinic.vertx.mastermap.MasterChronoMap;
 import dev.myclinic.vertx.mastermap.MasterMap;
@@ -21,7 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 public class FileBasedAppConfig implements AppConfig {
 
@@ -158,6 +161,27 @@ public class FileBasedAppConfig implements AppConfig {
             File pathFile = new File(configDir, info.path);
             info.path = pathFile.getAbsolutePath();
             return info;
+        } catch(Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public StampInfo getReferStampInfo() {
+        try {
+            File file = new File(configDir, "stamp-info.yml");
+            Map<String, StampInfo> map = yamlMapper.readValue(file,
+                    new TypeReference<>(){});
+            String name = "refer";
+            StampInfo stampInfo = map.get(name);
+            if( stampInfo == null ){
+                throw new RuntimeException("Cannot find stamp info for " + name + ".");
+            }
+            Path path = Path.of(stampInfo.imageFile);
+            if( !path.isAbsolute() ){
+                stampInfo.imageFile = Path.of(configDir).resolve(path).toAbsolutePath().toString();
+            }
+            return stampInfo;
         } catch(Exception e){
             throw new RuntimeException(e);
         }

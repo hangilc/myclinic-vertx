@@ -181,6 +181,7 @@
         <module>romaji</module>
         <module>drawer-form</module>
         <module>pdf-stamp</module>
+        <module>pdf</module>
     </modules>
 
 </project>

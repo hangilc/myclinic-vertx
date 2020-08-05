@@ -14,3 +14,11 @@ a:hover {text-decoration: none;}
     padding-left: 8px;
 }
 .practice .practice-record.temp-visit .practice-title { background-color: #9ff; }
+
+.workarea {
+    border: 1px solid #ccc;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    border-radius: 0.5em;
+    padding: 1em;
+}

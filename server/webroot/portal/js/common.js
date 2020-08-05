@@ -599,6 +599,28 @@ class Rest extends Client {
         return await this.get("/resolve-iyakuhin-master", {iyakuhincode, at});
     }
 
+    async createTempFileName(prefix, suffix){
+        return await this.get("/create-temp-file-name", {prefix, suffix});
+    }
+
+    async deleteFile(file){
+        return await this.get("/delete-file", {file});
+    }
+
+    async referStampInfo(){
+        return await this.get("/refer-stamp-info");
+    }
+
+    async putStampOnPdf(srcFile, imageFile, dstFile, opt){
+        return await this.post("/put-stamp-on-pdf", opt, {
+            params: {
+                "src-file": srcFile,
+                "image-file": imageFile,
+                "dst-file": dstFile
+            }
+        });
+    }
+
 }
 
 class Integration extends Client {

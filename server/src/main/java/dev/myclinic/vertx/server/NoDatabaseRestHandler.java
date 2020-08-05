@@ -20,6 +20,7 @@ import dev.myclinic.vertx.drawerform.shujiiform.ShujiiData;
 import dev.myclinic.vertx.drawerform.shujiiform.ShujiiForm;
 import dev.myclinic.vertx.dto.*;
 import dev.myclinic.vertx.mastermap.MasterMap;
+import dev.myclinic.vertx.pdf.Stamper;
 import dev.myclinic.vertx.romaji.Romaji;
 import dev.myclinic.vertx.shohousendrawer.ShohousenData;
 import dev.myclinic.vertx.shohousendrawer.ShohousenDrawer;
@@ -289,6 +290,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("get-shohousen-save-pdf-path", this::getShohousenSavePdfPath);
         noDatabaseFuncMap.put("convert-to-romaji", this::convertToRomaji);
         noDatabaseFuncMap.put("shohousen-gray-stamp-info", this::shohousenGrayStampInfo);
+        noDatabaseFuncMap.put("refer-stamp-info", this::referStampInfo);
         noDatabaseFuncMap.put("send-fax", this::sendFax);
         noDatabaseFuncMap.put("poll-fax", this::pollFax);
         noDatabaseFuncMap.put("probe-shohousen-fax-image", this::probeShohousenFaxImage);
@@ -314,6 +316,72 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("delete-app-file", this::deleteAppFile);
         noDatabaseFuncMap.put("save-patient-image", this::savePatientImage);
         noDatabaseFuncMap.put("view-drawer", this::viewDrawer);
+        noDatabaseFuncMap.put("create-temp-file-name", this::createTempFileName);
+        noDatabaseFuncMap.put("delete-file", this::deleteFile);
+        noDatabaseFuncMap.put("put-stamp-on-pdf", this::putStampOnPdf);
+    }
+
+    private void deleteFile(RoutingContext ctx) {
+        String file = ctx.request().getParam("file");
+        if( file == null ){
+            throw new RuntimeException("Missing parameter: file");
+        }
+        try {
+            Files.delete(Path.of(file));
+            ctx.response().end("true");
+        } catch(Exception e){
+            ctx.fail(e);
+        }
+    }
+
+    private void createTempFileName(RoutingContext ctx) {
+        String prefix = ctx.request().getParam("prefix");
+        if( prefix == null ){
+            prefix = "";
+        }
+        String suffix = ctx.request().getParam("suffix");
+        if( suffix == null ){
+            suffix = "";
+        }
+        String fileId = GlobalService.getInstance().createTempAppFilePath(
+                "/portal-tmp",
+                prefix,
+                suffix
+        );
+        Path path = GlobalService.getInstance().fileIdToPath(fileId);
+        ctx.response().end(jsonEncode(path.toAbsolutePath().toString()));
+    }
+
+    private void putStampOnPdf(RoutingContext ctx) {
+        String srcFile = ctx.request().getParam("src-file");
+        if( srcFile == null ){
+            throw new RuntimeException("Missing parameter: src-file");
+        }
+        String imageFile = ctx.request().getParam("image-file");
+        if( imageFile == null ){
+            throw new RuntimeException("Missing parameter: image-file");
+        }
+        String dstFile = ctx.request().getParam("dst-file");
+        if( dstFile == null ){
+            throw new RuntimeException("Missing parameter: dst-file");
+        }
+        vertx.<Void>executeBlocking(promise -> {
+            try {
+                Stamper.StamperOption opt = mapper.readValue(ctx.getBody().getBytes(),
+                        Stamper.StamperOption.class);
+                Stamper stamper = new Stamper();
+                stamper.putStamp(srcFile, imageFile, dstFile, opt);
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().end("true");
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
     }
 
     private void viewDrawer(RoutingContext ctx) {
@@ -1033,6 +1101,16 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private void shohousenGrayStampInfo(RoutingContext ctx) {
         try {
             var info = appConfig.getShohousenGrayStampInfo();
+            String rep = mapper.writeValueAsString(info);
+            ctx.response().end(rep);
+        } catch (Exception e) {
+            ctx.fail(e);
+        }
+    }
+
+    private void referStampInfo(RoutingContext ctx){
+        try {
+            var info = appConfig.getReferStampInfo();
             String rep = mapper.writeValueAsString(info);
             ctx.response().end(rep);
         } catch (Exception e) {

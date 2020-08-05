@@ -182,6 +182,7 @@
         <module>drawer-form</module>
         <module>pdf-stamp</module>
         <module>pdf</module>
+        <module>pdf-cat</module>
     </modules>
 
 </project>

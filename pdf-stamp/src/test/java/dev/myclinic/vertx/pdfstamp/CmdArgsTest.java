@@ -10,11 +10,11 @@ public class CmdArgsTest {
     public void testCmdArgs(){
         String[] args = new String[]{
                 "base.pdf",
-                "stamp.pdf"
+                "stamp.png"
         };
         CmdArgs cargs = CmdArgs.parse(args);
         assertEquals("base.pdf", cargs.lowerPdf);
-        assertEquals("stamp.pdf", cargs.upperPdf);
+        assertEquals("stamp.png", cargs.stampImage);
     }
 
 }

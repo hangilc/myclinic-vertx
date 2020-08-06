@@ -183,6 +183,7 @@
         <module>pdf-stamp</module>
         <module>pdf</module>
         <module>pdf-cat</module>
+        <module>pdf-text</module>
     </modules>
 
 </project>

@@ -1,0 +1,14 @@
+<h1>診断書作成</h1>
+
+<div id="medcert-wrapper"></div>
+
+<script>
+
+    async function initMedCertPane(){
+        let {MedCert} = await import("./medcert/medcert.js");
+
+        let medCert = new MedCert(rest);
+        $("#medcert-wrapper").append(medCert.ele);
+    }
+
+</script>

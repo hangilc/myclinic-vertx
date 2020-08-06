@@ -14,6 +14,8 @@ import dev.myclinic.vertx.drawer.printer.DrawerPrinter;
 import dev.myclinic.vertx.drawerform.Box;
 import dev.myclinic.vertx.drawerform.FormCompiler;
 import dev.myclinic.vertx.drawerform.Paper;
+import dev.myclinic.vertx.drawerform.medcert.MedCertData;
+import dev.myclinic.vertx.drawerform.medcert.MedCertForm;
 import dev.myclinic.vertx.drawerform.referform.ReferData;
 import dev.myclinic.vertx.drawerform.referform.ReferForm;
 import dev.myclinic.vertx.drawerform.shujiiform.ShujiiData;
@@ -322,6 +324,29 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("delete-file", this::deleteFile);
         noDatabaseFuncMap.put("copy-file", this::copyFile);
         noDatabaseFuncMap.put("put-stamp-on-pdf", this::putStampOnPdf);
+        noDatabaseFuncMap.put("render-medcert", this::renderMedCert);
+    }
+
+    private void renderMedCert(RoutingContext ctx) {
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                MedCertData data = mapper.readValue(ctx.getBody().getBytes(), MedCertData.class);
+                MedCertForm form = new MedCertForm();
+                List<Op> ops = form.render(data);
+                String savePath = doCreateTempFileName("medcert", ".pdf");
+                PdfPrinter pdfPrinter = new PdfPrinter(PaperSize.A4);
+                pdfPrinter.print(Collections.singletonList(ops), savePath);
+                promise.complete(jsonEncode(savePath));
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
     }
 
     private void deleteFile(RoutingContext ctx) {
@@ -370,6 +395,16 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         });
     }
 
+    private String doCreateTempFileName(String prefix, String suffix){
+        String fileId = GlobalService.getInstance().createTempAppFilePath(
+                "/portal-tmp",
+                prefix,
+                suffix
+        );
+        Path path = GlobalService.getInstance().fileIdToPath(fileId);
+        return path.toAbsolutePath().toString();
+    }
+
     private void createTempFileName(RoutingContext ctx) {
         String prefix = ctx.request().getParam("prefix");
         if( prefix == null ){
@@ -379,13 +414,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         if( suffix == null ){
             suffix = "";
         }
-        String fileId = GlobalService.getInstance().createTempAppFilePath(
-                "/portal-tmp",
-                prefix,
-                suffix
-        );
-        Path path = GlobalService.getInstance().fileIdToPath(fileId);
-        ctx.response().end(jsonEncode(path.toAbsolutePath().toString()));
+        ctx.response().end(doCreateTempFileName(prefix, suffix));
     }
 
     private void putStampOnPdf(RoutingContext ctx) {

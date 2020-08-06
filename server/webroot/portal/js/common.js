@@ -633,6 +633,10 @@ class Rest extends Client {
         });
     }
 
+    async renderMedCert(medCertData){
+        return await this.post("/render-medcert", medCertData);
+    }
+
 }
 
 class Integration extends Client {

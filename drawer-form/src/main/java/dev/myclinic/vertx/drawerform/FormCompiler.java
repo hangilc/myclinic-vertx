@@ -14,6 +14,8 @@ public class FormCompiler extends AffineCompiler {
     private final Map<String, Double> fontSizeMap = new HashMap<>();
     private final TextMetrics textMetrics = new TextMetrics();
 
+    public static final int Bold = DrawerConsts.FontWeightBold;
+
     public FormCompiler() {
 
     }
@@ -57,6 +59,20 @@ public class FormCompiler extends AffineCompiler {
 
     public Box textAt(String text, double x, double y, HAlign halign, VAlign valign){
         return textAt(text, x, y, halign, valign, null);
+    }
+
+    public static Function<List<Double>, List<Double>> spaceAdder(double space){
+        return mes -> {
+            List<Double> res = new ArrayList<>();
+            for(int i=0;i<mes.size();i++){
+                double m = mes.get(i);
+                if( i != mes.size() - 1 ){
+                    m += space;
+                }
+                res.add(m);
+            }
+            return res;
+        };
     }
 
     public Box textAt(String text, double x, double y, HAlign halign, VAlign valign,

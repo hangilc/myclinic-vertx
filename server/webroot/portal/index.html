@@ -38,6 +38,7 @@
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-send-fax-link">ファックス送信</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-printer-setting-link">印刷設定</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-refer-link">紹介状</a></li>
+                <li><a href="javascript:void(0)" class="scroll-link" id="index-medcert-link">診断書</a></li>
             </ul>
         </div>
 
@@ -229,6 +230,17 @@
             }
         }
 
+        class MedCertPane extends Pane {
+            constructor(){
+                super($("#index-medcert-link"), "pane-medcert.html");
+            }
+
+            async initPane(){
+                await super.initPane();
+                await initMedCertPane();
+            }
+        }
+
         let practice = new PracticePane();
         let cashier = new CashierPane();
         let reception = new ReceptionPane();
@@ -238,6 +250,7 @@
         let sendFax = new SendFaxPane();
         let refer = new ReferPane();
         let printerSetting = new PrinterSettingPane();
+        let medcert = new MedCertPane();
 
         practice.link.click();
     })();

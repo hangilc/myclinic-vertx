@@ -55,6 +55,10 @@ public class MedCertForm {
         c.textAt(data.clinicName, xx, y, HAlign.Left, VAlign.Center);
         y +=  9;
         c.textAt("医師", xx, y, HAlign.Left, VAlign.Center);
+        c.setFont("large");
+        c.textAt(data.doctorName, 132, y, HAlign.Left, VAlign.Center);
+        c.setFont("regular");
+        c.textAt("㊞", 170, y, HAlign.Center, VAlign.Center);
         return c.getOps();
     }
 

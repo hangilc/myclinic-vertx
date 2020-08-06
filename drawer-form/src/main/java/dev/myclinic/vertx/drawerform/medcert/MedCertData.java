@@ -12,4 +12,5 @@ public class MedCertData {
     public String phone = "Tel: 03-1234-5678";
     public String fax = "Fax: 03-4321-8765";
     public String clinicName = "内科診療所";
+    public String doctorName = "診療太郎";
 }

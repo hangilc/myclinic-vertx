@@ -607,6 +607,18 @@ class Rest extends Client {
         return await this.get("/delete-file", {file});
     }
 
+    async copyFile(src, dst, mkdir){  // mkdir (optional: boolean): whether create directories if necessary
+        let param = {src, dst};
+        if( mkdir ){
+            param.mkdir = true;
+        }
+        return await this.get("/copy-file", param);
+    }
+
+    async createReferImageSavePath(patientId, suffix){
+        return await this.get("/create-refer-image-save-path", {"patient-id": patientId, suffix});
+    }
+
     async referStampInfo(){
         return await this.get("/refer-stamp-info");
     }

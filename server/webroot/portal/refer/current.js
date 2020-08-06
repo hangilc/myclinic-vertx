@@ -122,12 +122,14 @@ export class Current extends Component {
     }
 
     async doCreate(){
-        let data = await this.compileData();
-        let ops = await this.rest.referDrawer(data);
-        let savePath = await this.rest.createTempFileName("refer-", ".pdf");
-        await this.rest.saveDrawerAsPdf([ops], "A4", savePath, null);
-        let workarea = new SavedPdfWorkarea(this.rest, savePath);
-        this.savedPdfWorkareaWrapper.append(workarea.ele);
+        if( this.patient ){
+            let data = await this.compileData();
+            let ops = await this.rest.referDrawer(data);
+            let savePath = await this.rest.createTempFileName("refer-", ".pdf");
+            await this.rest.saveDrawerAsPdf([ops], "A4", savePath, null);
+            let workarea = new SavedPdfWorkarea(this.rest, savePath, this.patient.patientId);
+            this.savedPdfWorkareaWrapper.append(workarea.ele);
+        }
     }
 
     async doPrint(){

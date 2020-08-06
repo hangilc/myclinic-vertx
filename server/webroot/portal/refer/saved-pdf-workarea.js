@@ -7,18 +7,22 @@ let tmpl = `
         <button type="button" class="x-stamp">捺印</button>
         <button type="button" class="x-save">保存</button>
         <button type="button" class="x-delete">削除</button>
+        <a href="javascript:void(0)" class="x-close">閉じる</a>
     </div>
 `;
 
 export class SavedPdfWorkarea {
-    constructor(rest, pdfPath){
+    constructor(rest, pdfPath, patientId){
         this.rest = rest;
         this.pdfPath = pdfPath;
+        this.patientId = patientId;
         this.ele = $(tmpl);
         let map = parseElement(this.ele);
         this.pathElement = map.path.text(truncatePath(pdfPath));
         map.display.on("click", event => this.doDisplay());
         map.stamp.on("click", event => this.doStamp());
+        map.save.on("click", event => this.doSave());
+        map.close.on("click", event => this.ele.remove());
     }
 
     doDisplay(){
@@ -37,7 +41,21 @@ export class SavedPdfWorkarea {
             yPos: stampInfo.yPos,
             stampCenterRelative: stampInfo.isImageCenterRelative
         });
+        let oldFile = this.pdfPath;
+        this.pdfPath = dstFile;
+        await this.rest.deleteFile(oldFile);
     }
+
+    async doSave(){
+        let savePath = await this.getReferSavePath();
+        await this.rest.copyFile(this.pdfPath, savePath, true);
+        alert("保存されました。" + savePath);
+    }
+
+    async getReferSavePath(){
+        return await this.rest.createReferImageSavePath(this.patientId, "pdf");
+    }
+
 }
 
 function truncatePath(path){

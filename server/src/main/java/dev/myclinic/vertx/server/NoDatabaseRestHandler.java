@@ -45,6 +45,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -312,12 +313,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("list-refer", this::listRefer);
         noDatabaseFuncMap.put("get-refer", this::getRefer);
         noDatabaseFuncMap.put("delete-refer", this::deleteRefer);
+        noDatabaseFuncMap.put("create-refer-image-save-path", this::createReferImageSavePath);
         noDatabaseFuncMap.put("move-app-file", this::moveAppFile);
         noDatabaseFuncMap.put("delete-app-file", this::deleteAppFile);
         noDatabaseFuncMap.put("save-patient-image", this::savePatientImage);
         noDatabaseFuncMap.put("view-drawer", this::viewDrawer);
         noDatabaseFuncMap.put("create-temp-file-name", this::createTempFileName);
         noDatabaseFuncMap.put("delete-file", this::deleteFile);
+        noDatabaseFuncMap.put("copy-file", this::copyFile);
         noDatabaseFuncMap.put("put-stamp-on-pdf", this::putStampOnPdf);
     }
 
@@ -332,6 +335,39 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         } catch(Exception e){
             ctx.fail(e);
         }
+    }
+
+    public void copyFile(RoutingContext ctx){
+        String src = ctx.request().getParam("src");
+        if( src == null ){
+            throw new RuntimeException("Missing parameter: src");
+        }
+        String dst = ctx.request().getParam("dst");
+        if( dst == null ){
+            throw new RuntimeException("Missing parameter: dst");
+        }
+        String mkdir = ctx.request().getParam("mkdir");
+        vertx.<Void>executeBlocking(promise -> {
+            try {
+                Path dstPath = Path.of(dst);
+                if( mkdir != null ){
+                    Path parent = dstPath.getParent();
+                    if( parent != null && !Files.exists(parent) ){
+                        Files.createDirectories(parent);
+                    }
+                }
+                Files.copy(Path.of(src), dstPath);
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().end("true");
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
     }
 
     private void createTempFileName(RoutingContext ctx) {
@@ -464,6 +500,28 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 ctx.fail(ar.cause());
             }
         });
+    }
+
+    private void createReferImageSavePath(RoutingContext ctx){
+        String patientId = ctx.request().getParam("patient-id");
+        if( patientId == null ){
+            throw new RuntimeException("Missing parameter: patient-id");
+        }
+        try {
+            Integer.parseInt(patientId);
+        } catch(NumberFormatException e){
+            throw new RuntimeException("Invalid patient-id: " + patientId);
+        }
+        String suffix = ctx.request().getParam("suffix");
+        if( suffix == null ){
+            throw new RuntimeException("Missing param: suffix");
+        }
+        Path paperScanDir = GlobalService.getInstance().getAppDirectory("/paper-scan");
+        String timestamp = DateTimeUtil.toPackedSqlDateTime(LocalDateTime.now());
+        String fileName = String.format("%s-refer-%s.%s", patientId, timestamp, suffix);
+        Path local = Path.of(patientId, fileName);
+        Path path = paperScanDir.resolve(local);
+        ctx.response().end(jsonEncode(path.toAbsolutePath().toString()));
     }
 
     private void getRefer(RoutingContext ctx) {

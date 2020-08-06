@@ -15,9 +15,10 @@ public class TextForm {
     public List<List<Op>> render(TextData data){
         Paper paper = Paper.A4;
         Box pageBox = new Box(0, 0, paper.getWidth(), paper.getHeight());
-        c.createFont("regular", "MS Mincho", 4.0);
+        Box contentBox = pageBox.inset(data.leftMargin, data.topMargin, data.rightMargin, data.bottomMargin);
+        c.createFont("regular", data.fontName, data.fontSize);
         c.setFont("regular");
-        c.paraIn(data.text, pageBox);
+        c.paraIn(data.text, contentBox, data.leading);
         return Collections.singletonList(c.getOps());
     }
 

@@ -83,7 +83,7 @@ public class FormCompiler extends AffineCompiler {
         return new Box(left, top, left + width, top + height);
     }
 
-    public Box paraIn(String text, Box box){
+    public Box paraIn(String text, Box box, double leading){
         double fontSize = getCurrentFontSize();
         List<String> lines = breakParagraphLine(text, fontSize, box.getWidth());
         List<List<Double>> mess = lines.stream().map(line -> textMetrics.measureChars(line, fontSize))
@@ -95,10 +95,17 @@ public class FormCompiler extends AffineCompiler {
             String line = lines.get(i);
             List<Double> mes = mess.get(i);
             textAt(line, left, y, HAlign.Left, VAlign.Top);
-            y += fontSize;
+            y += fontSize + leading;
         }
         double height = fontSize * lines.size();
+        if( lines.size() >= 2 ){
+            height += leading + (lines.size() - 1);
+        }
         return new Box(left, box.getTop(), left + width, box.getTop() + height);
+    }
+
+    public Box paraIn(String text, Box box){
+        return paraIn(text, box, 0);
     }
 
     private List<String> splitToLines(String text){

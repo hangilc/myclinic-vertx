@@ -14,12 +14,9 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        if( args.length > 0 && args[0].equals("-h") ){
-            usage();
-            System.exit(1);
-        }
-        String src = readInput(System.in);
-        TextData data = new TextData();
+        CmdArgs cmdArgs = CmdArgs.parse(args);
+        String src = readInput(System.in, cmdArgs.encoding);
+        TextData data = cmdArgs.data;
         data.text = src;
         Paper paper = Paper.A4;
         TextForm form = new TextForm();
@@ -29,9 +26,9 @@ public class Main {
         pdfPrinter.print(pages, System.out);
     }
 
-    static String readInput(InputStream fin) throws IOException {
+    static String readInput(InputStream fin, String encoding) throws IOException {
         byte[] bytes = fin.readAllBytes();
-        return new String(bytes, "UTf-8");
+        return new String(bytes, encoding);
     }
 
     static void usage(){

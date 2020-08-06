@@ -22,6 +22,7 @@ export class SavedPdfWorkarea {
         map.display.on("click", event => this.doDisplay());
         map.stamp.on("click", event => this.doStamp());
         map.save.on("click", event => this.doSave());
+        map.delete.on("click", event => this.doDelete());
         map.close.on("click", event => this.ele.remove());
     }
 
@@ -50,6 +51,11 @@ export class SavedPdfWorkarea {
         let savePath = await this.getReferSavePath();
         await this.rest.copyFile(this.pdfPath, savePath, true);
         alert("保存されました。" + savePath);
+    }
+
+    async doDelete(){
+        await this.rest.deleteFile(this.pdfPath);
+        this.ele.remove();
     }
 
     async getReferSavePath(){

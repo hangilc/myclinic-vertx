@@ -15,7 +15,6 @@ export class Current extends Component {
         this.nameElement = map.name;
         this.savedPdfWorkareaWrapper = map.savedPdfWorkareaWrapper;
         this.createElement = map.create;
-        this.printElement = map.print;
         this.saveElement = map.save;
         this.referTitleControls = map.referTitleControls;
         this.referHospitalElement = map.referHospital;
@@ -33,7 +32,6 @@ export class Current extends Component {
         this.prev.init();
         this.initSuggest(referList);
         this.createElement.on("click", event => this.doCreate());
-        this.printElement.on("click", event => this.doPrint());
         this.saveElement.on("click", event => this.doSave());
         this.prev.onCopy(data => this.doCopy(data));
         this.prev.onDeleted(() => this.doDeleted());
@@ -130,12 +128,6 @@ export class Current extends Component {
             let workarea = new SavedPdfWorkarea(this.rest, savePath, this.patient.patientId);
             this.savedPdfWorkareaWrapper.append(workarea.ele);
         }
-    }
-
-    async doPrint(){
-        let data = await this.compileData();
-        let ops = await this.rest.referDrawer(data);
-        await this.rest.printDrawer([ops]);
     }
 
     async doSave(){

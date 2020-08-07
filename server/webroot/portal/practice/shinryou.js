@@ -14,6 +14,7 @@ export class Shinryou extends Component {
             compEdit.onCancel(event => compDisp.replace(compEdit.ele));
             compEdit.onDeleted(event => this.ele.trigger("deleted"));
             compEdit.replace(compDisp.ele);
+            compEdit.onShinryouChanged(shinryouFull => compDisp.init(shinryouFull));
         });
         compDisp.appendTo(this.ele);
     }

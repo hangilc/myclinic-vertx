@@ -6,6 +6,26 @@ export class ShinryouDisp extends Component {
     }
 
     init(shinryouFull){
-        this.ele.text(shinryouFull.master.name);
+        this.shinryouFull = shinryouFull;
+        this.ele.text(this.composeDisp());
     }
+
+    composeDisp(){
+        let text = this.shinryouFull.master.name;
+        let tekiyou = this.getTekiyou();
+        if( tekiyou ){
+            text += `［適用：${tekiyou}］`;
+        }
+        return text;
+    }
+
+    getTekiyou(){
+        let sf = this.shinryouFull;
+        if( sf && sf.attr ){
+            return sf.attr.tekiyou;
+        } else {
+            return null;
+        }
+    }
+
 }

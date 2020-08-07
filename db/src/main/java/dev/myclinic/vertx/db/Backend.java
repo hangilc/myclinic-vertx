@@ -25,9 +25,6 @@ import static dev.myclinic.vertx.db.Query.Projector;
 import static dev.myclinic.vertx.db.SqlTranslator.TableInfo;
 import static java.util.stream.Collectors.*;
 
-
-
-
 public class Backend {
     private final static Logger logger = LoggerFactory.getLogger(dev.myclinic.vertx.db.Backend.class);
     private final TableSet ts;
@@ -1413,25 +1410,27 @@ public class Backend {
                         " where s.shinryouId = ? and s.visitId = v.visitId and s.shinryoucode = m.shinryoucode " +
                         " and " + ts.dialect.isValidAt("m.validFrom", "m.validUpto", "v.visitedAt"),
                 ts.shinryouTable, "s", ts.shinryouMasterTable, "m", ts.visitTable, "v");
-        return getQuery().get(sql,
+        ShinryouFullDTO shinryouFull = getQuery().get(sql,
                 biProjector(ts.shinryouTable, ts.shinryouMasterTable, ShinryouFullDTO::create),
                 shinryouId);
+        shinryouFull.attr = findShinryouAttr(shinryouId);
+        return shinryouFull;
     }
 
-    public ShinryouFullWithAttrDTO getShinryouFullWithAttr(int shinryouId) {
-        ShinryouFullWithAttrDTO result = new ShinryouFullWithAttrDTO();
-        result.shinryou = getShinryouFull(shinryouId);
-        result.attr = findShinryouAttr(shinryouId);
-        return result;
-    }
+//    public ShinryouFullWithAttrDTO getShinryouFullWithAttr(int shinryouId) {
+//        ShinryouFullWithAttrDTO result = new ShinryouFullWithAttrDTO();
+//        result.shinryou = getShinryouFull(shinryouId);
+//        result.attr = findShinryouAttr(shinryouId);
+//        return result;
+//    }
 
     public List<ShinryouFullDTO> listShinryouFullByIds(List<Integer> shinryouIds) {
         return shinryouIds.stream().map(this::getShinryouFull).collect(toList());
     }
 
-    public List<ShinryouFullWithAttrDTO> listShinryouFullWithAttrByIds(List<Integer> shinryouIds) {
-        return shinryouIds.stream().map(this::getShinryouFullWithAttr).collect(toList());
-    }
+//    public List<ShinryouFullWithAttrDTO> listShinryouFullWithAttrByIds(List<Integer> shinryouIds) {
+//        return shinryouIds.stream().map(this::getShinryouFullWithAttr).collect(toList());
+//    }
 
     public List<ShinryouDTO> listShinryou(int visitId) {
         String sql = xlate("select * from Shinryou where visitId = ? order by shinryouId",
@@ -1446,32 +1445,33 @@ public class Backend {
         );
     }
 
-    public List<ShinryouWithAttrDTO> listShinryouWithAttr(int visitId) {
-        String sql = xlate("select s.*, a.* from Shinryou s left join ShinryouAttr a " +
-                        " on s.shinryouId = a.shinryouId" +
-                        " where s.visitId = ? order by s.shinryoucode",
-                ts.shinryouTable, "s", ts.shinryouAttrTable, "a");
-        Projector<ShinryouAttrDTO> nullableShinryouAttrProjector = createNullableShinryouAttrProjector();
-        return getQuery().query(sql,
-                biProjector(ts.shinryouTable, nullableShinryouAttrProjector, ShinryouWithAttrDTO::create),
-                visitId);
-    }
+//    public List<ShinryouWithAttrDTO> listShinryouWithAttr(int visitId) {
+//        String sql = xlate("select s.*, a.* from Shinryou s left join ShinryouAttr a " +
+//                        " on s.shinryouId = a.shinryouId" +
+//                        " where s.visitId = ? order by s.shinryoucode",
+//                ts.shinryouTable, "s", ts.shinryouAttrTable, "a");
+//        Projector<ShinryouAttrDTO> nullableShinryouAttrProjector = createNullableShinryouAttrProjector();
+//        return getQuery().query(sql,
+//                biProjector(ts.shinryouTable, nullableShinryouAttrProjector, ShinryouWithAttrDTO::create),
+//                visitId);
+//    }
+
+//    public List<ShinryouFullDTO> listShinryouFull(int visitId) {
+//        String sql = xlate("select s.*, m.* from Shinryou s, ShinryouMaster m, Visit v " +
+//                        " where s.visitId = ? and s.visitId = v.visitId and s.shinryoucode = m.shinryoucode " +
+//                        " and " + ts.dialect.isValidAt("m.validFrom", "m.validUpto", "v.visitedAt") +
+//                        " order by s.shinryoucode",
+//                ts.shinryouTable, "s", ts.shinryouMasterTable, "m", ts.visitTable, "v");
+//        return getQuery().query(sql,
+//                biProjector(ts.shinryouTable, ts.shinryouMasterTable, ShinryouFullDTO::create),
+//                visitId);
+//    }
 
     public List<ShinryouFullDTO> listShinryouFull(int visitId) {
-        String sql = xlate("select s.*, m.* from Shinryou s, ShinryouMaster m, Visit v " +
-                        " where s.visitId = ? and s.visitId = v.visitId and s.shinryoucode = m.shinryoucode " +
-                        " and " + ts.dialect.isValidAt("m.validFrom", "m.validUpto", "v.visitedAt") +
-                        " order by s.shinryoucode",
-                ts.shinryouTable, "s", ts.shinryouMasterTable, "m", ts.visitTable, "v");
-        return getQuery().query(sql,
-                biProjector(ts.shinryouTable, ts.shinryouMasterTable, ShinryouFullDTO::create),
-                visitId);
-    }
-
-    public List<ShinryouFullWithAttrDTO> listShinryouFullWithAttr(int visitId) {
-        String sql = xlate("select s.*, m.*, a.* from Shinryou s, ShinryouMaster m, Visit v" +
-                        " left join ShinryouAttr a on s.shinryouId = a.shinryouId " +
-                        " where s.visitId = ? and s.visitId = v.visitId and s.shinryoucode = m.shinryoucode " +
+        String sql = xlate("select s.*, m.*, a.* from (Shinryou as s, ShinryouMaster as m, Visit as v) " +
+                        " left join ShinryouAttr as a on s.shinryouId = a.shinryouId " +
+                        " where " +
+                        " s.visitId = ? and s.visitId = v.visitId and s.shinryoucode = m.shinryoucode " +
                         " and " + ts.dialect.isValidAt("m.validFrom", "m.validUpto", "v.visitedAt") +
                         " order by s.shinryoucode",
                 ts.shinryouTable, "s", ts.shinryouMasterTable, "m", ts.visitTable, "v",
@@ -1480,9 +1480,25 @@ public class Backend {
         return getQuery().query(sql,
                 biProjector(biProjector(ts.shinryouTable, ts.shinryouMasterTable, ShinryouFullDTO::create),
                         nullableShinryouAttrProjector,
-                        ShinryouFullWithAttrDTO::create),
+                        (a, b) -> { a.attr = b; return a; }),
                 visitId);
     }
+
+//    public List<ShinryouFullWithAttrDTO> listShinryouFullWithAttr(int visitId) {
+//        String sql = xlate("select s.*, m.*, a.* from Shinryou s, ShinryouMaster m, Visit v" +
+//                        " left join ShinryouAttr a on s.shinryouId = a.shinryouId " +
+//                        " where s.visitId = ? and s.visitId = v.visitId and s.shinryoucode = m.shinryoucode " +
+//                        " and " + ts.dialect.isValidAt("m.validFrom", "m.validUpto", "v.visitedAt") +
+//                        " order by s.shinryoucode",
+//                ts.shinryouTable, "s", ts.shinryouMasterTable, "m", ts.visitTable, "v",
+//                ts.shinryouAttrTable, "a");
+//        Projector<ShinryouAttrDTO> nullableShinryouAttrProjector = createNullableShinryouAttrProjector();
+//        return getQuery().query(sql,
+//                biProjector(biProjector(ts.shinryouTable, ts.shinryouMasterTable, ShinryouFullDTO::create),
+//                        nullableShinryouAttrProjector,
+//                        ShinryouFullWithAttrDTO::create),
+//                visitId);
+//    }
 
     public int enterShinryouWithAttr(ShinryouWithAttrDTO shinryouWithAttr) {
         ShinryouDTO shinryou = shinryouWithAttr.shinryou;

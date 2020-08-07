@@ -637,6 +637,13 @@ class Rest extends Client {
         return await this.post("/render-medcert", medCertData);
     }
 
+    async setShinryouTekiyou(shinryouId, tekiyouText){
+        return await this.get("/set-shinryou-tekiyou", {
+            "shinryou-id": shinryouId,
+            "tekiyou": tekiyouText
+        });
+    }
+
 }
 
 class Integration extends Client {

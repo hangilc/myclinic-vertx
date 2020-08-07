@@ -114,14 +114,24 @@ public class Main {
         router.route("/integration/*").handler(BodyHandler.create());
         router.mountSubRouter("/integration", integrationRouter);
         router.route("/*").failureHandler(errorHandler);
-        Route portalRoute = router.route("/portal/*");
         boolean isDevMode = "dev".equals(System.getenv("VERTXWEB_ENVIRONMENT"));
-        portalRoute.handler(StaticHandler.create(isDevMode ? "server/webroot/portal" : "webroot/portal")
+
+        Route portalRoute = router.route("/portal/*");
+        portalRoute.handler(StaticHandler.create("server/webroot/portal")
                 .setDefaultContentEncoding("UTF-8").setFilesReadOnly(!isDevMode)
                 .setCachingEnabled(!isDevMode));
         router.route("/portal").handler(ctx -> ctx.response().setStatusCode(301)
                 .putHeader("Location", "/portal/index.html")
                 .end());
+
+        Route portal2Route = router.route("/portal2/*");
+        portal2Route.handler(StaticHandler.create("server/webroot/portal2")
+                .setDefaultContentEncoding("UTF-8").setFilesReadOnly(!isDevMode)
+                .setCachingEnabled(!isDevMode));
+        router.route("/portal2").handler(ctx -> ctx.response().setStatusCode(301)
+                .putHeader("Location", "/portal2/index.html")
+                .end());
+
         addStaticPath(router, "/portal-tmp", GlobalService.getInstance().getAppDirectory("/portal-tmp"));
         addStaticPath(router, "/paper-scan", GlobalService.getInstance().getAppDirectory("/paper-scan"));
         server.requestHandler(router);

@@ -79,3 +79,34 @@ a {
     z-index: 2;
 }
 
+.dropdown-links {
+    display: none;
+    position: absolute;
+    z-index: 2;
+    opacity: 1.0;
+    background-color: white;
+    padding: 1em;
+    border: 1px solid #ccc;
+}
+
+.dropdown-links a {
+    display: block;
+}
+
+.dropdown-links a + a {
+    margin-top: 0.5em;
+}
+
+.dropdown-backdrop {
+    display: block;
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    overflow-y: auto;
+    z-index: 1;
+}
+
+

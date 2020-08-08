@@ -22,3 +22,16 @@ a:hover {text-decoration: none;}
     border-radius: 0.5em;
     padding: 1em;
 }
+
+.modal-dialog-content {
+    position: absolute;
+    top: 2rem;
+    left: 50vw;
+    transform: translateX(-50%);
+    z-index: 2;
+    background-color: white;
+    height: 2000px;
+    margin-bottom: 2rem;
+    padding: 1rem;
+}
+

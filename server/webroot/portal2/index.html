@@ -7,27 +7,97 @@
     <script src="../portal/js/jquery.min.js"></script>
     <script src="../portal/js/common.js"></script>
 </head>
-<body>
+<body ontouchstart="">
 <h1 class="main-title">My Clinic : 診察</h1>
 <div class="main-container">
     <aside class="sidebar">
-        <ul>
-<!--            <li><a href="https://www.google.com">診察</a></li>-->
-<!--            <li><a href="#">会計</a></li>-->
-<!--            <li><a href="#">受付</a></li>-->
-<!--            <li><a href="#">ファックス済処方箋</a></li>-->
-        </ul>
+        <ul></ul>
     </aside>
     <div class="main">MAIN CONTENT</div>
+    <style>
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-links {
+            display: none;
+            position: absolute;
+            z-index: 2;
+            opacity: 1.0;
+            background-color: white;
+            padding: 1em;
+            border: 1px solid #ccc;
+        }
+
+        .dropdown-links a {
+            display: block;
+        }
+
+        .dropdown-links a + a {
+            margin-top: 0.5em;
+        }
+
+        .dropdown-backdrop {
+            display: block;
+            position: fixed;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0;
+            overflow-y: auto;
+            z-index: 1;
+        }
+
+        /*.dropdown:hover .dropdown-links {*/
+        /*    display: block;*/
+        /*}*/
+    </style>
+    <div>
+        <div class="dropdown">
+            <a href="javascript:void(0)" class="dropdown-button">患者選択▼</a>
+            <div class="dropdown-links">
+                <a href="https://www.google.com">Google</a>
+                <a href="https://www.yahoo.co.jp">Yahoo</a>
+                <a href="javascript:void(0)">Click</a>
+            </div>
+        </div>
+        <script>
+            let a = document.querySelector(".dropdown-button");
+            a.onclick = event => {
+                let content = document.querySelector(".dropdown-links");
+                let bd = document.createElement("div");
+                bd.classList.add("dropdown-backdrop");
+                bd.onclick = () => {
+                    content.style.display = "none";
+                    bd.remove();
+                };
+                document.body.append(bd);
+                content.style.display = "block";
+                content.onclick = event => {
+                    console.log("click");
+                };
+            };
+        </script>
+    </div>
 </div>
 <script>
-    (async function(){
+    (async function () {
         let {Index} = await import("./index/index.js");
         let rest = new Rest("../json");
         let sidebarUl = document.querySelector(".main-container .sidebar ul");
         let main = document.querySelector(".main-container .main");
         let index = new Index(rest, sidebarUl, main);
         await index.init();
+
+        // dropdown test;
+        let {createDropdown} = await import("./comp/dropdown.js");
+        let dd = createDropdown("DROPDOWN", {
+            "Google": () => alert("google"),
+            "Yahoo": () => alert("yahoo")
+        });
+        document.body.append(dd);
     })();
 </script>
 </body>

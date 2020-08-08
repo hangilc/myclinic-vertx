@@ -131,4 +131,15 @@ a {
     margin-top: 0;
 }
 
+.search-patient-dialog input {
+    font-size: 1rem;
+    padding: 0.2em;
+}
+
+.search-patient-dialog select {
+    width: 20em;
+    margin-top: 0.5em;
+    font-size: 1rem;
+}
+
 

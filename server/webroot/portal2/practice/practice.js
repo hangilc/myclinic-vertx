@@ -1,6 +1,7 @@
 import {parseElement} from "../js/parse-element.js";
 import {createDropdown} from "../comp/dropdown.js";
 import {openSelectWqueueDialog} from "./select-wqueue-dialog.js";
+import {openSearchPatientDialog} from "./search-patient-dialog.js";
 
 let tmpl = `
 <h2>診察</h2>
@@ -34,13 +35,15 @@ function setupChoosePatient(ele, ctx){
         {
             label: "受付患者選択",
             action: async () => {
-                let patient = await openSelectWqueueDialog(ctx.rest);
-                console.log("patient", patient);
+                let wqueueFull = await openSelectWqueueDialog(ctx.rest);
             }
         },
         {
             label: "患者検索",
-            action: () => {}
+            action: async () => {
+                let patient = await openSearchPatientDialog(ctx.rest);
+                console.log("patient", patient);
+            }
         },
         {
             label: "最近の診察",

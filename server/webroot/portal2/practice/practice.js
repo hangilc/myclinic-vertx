@@ -41,8 +41,8 @@ function setupChoosePatient(ele, ctx){
         {
             label: "患者検索",
             action: async () => {
-                let patient = await openSearchPatientDialog(ctx.rest);
-                console.log("patient", patient);
+                let result = await openSearchPatientDialog(ctx.rest);
+                console.log("result", result);
             }
         },
         {

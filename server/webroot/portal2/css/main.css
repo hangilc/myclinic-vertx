@@ -94,16 +94,14 @@ a {
     z-index: 2;
     opacity: 1.0;
     background-color: white;
-    padding: 1em;
+    padding: 0.8em;
     border: 1px solid #ccc;
 }
 
 .dropdown-links a {
     display: block;
-}
-
-.dropdown-links a + a {
-    margin-top: 0.5em;
+    margin:0;
+    padding:0;
 }
 
 .dropdown-backdrop {

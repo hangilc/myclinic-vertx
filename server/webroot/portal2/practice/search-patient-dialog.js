@@ -14,7 +14,8 @@ let html = `
     <select size="10" class="x-select"></select>
 </div>
 <div class="command-box">
-    <button class="x-enter">入力</button>
+    <button class="x-register">受付</button>
+    <button class="x-enter">選択</button>
     <button class="x-cancel">キャンセル</button>
 </div>
 `;
@@ -38,10 +39,16 @@ export async function openSearchPatientDialog(rest){
         }
     };
     return await modalOpen(ele, close => {
+        map.register.onclick = event => {
+            let opt = map.select.options[map.select.selectedIndex];
+            if( opt ){
+                close({mode: "register", patient: opt.data});
+            }
+        }
         map.enter.onclick = event => {
             let opt = map.select.options[map.select.selectedIndex];
             if( opt ){
-                close(opt);
+                close({mode: "open", patient: opt.data});
             }
         }
         map.cancel.onclick = event => close(null);

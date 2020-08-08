@@ -73,10 +73,19 @@ a {
     left: 50vw;
     transform: translateX(-50%);
     background-color: white;
-    height: 2000px;
     margin-bottom: 2rem;
     padding: 1rem;
     z-index: 2;
+}
+
+.modal-dialog-content h3 {
+    margin: 0 0 0.5em 0;
+    padding: 0;
+}
+
+.modal-dialog-content .command-box {
+    text-align: right;
+    margin-top: 0.5em;
 }
 
 .dropdown-links {
@@ -107,6 +116,19 @@ a {
     opacity: 0;
     overflow-y: auto;
     z-index: 1;
+}
+
+.select-wqueue-dialog select {
+    width: 20em;
+}
+
+.select-wqueue-dialog select option {
+    margin: 0.2em;
+    font-size: 1rem;
+}
+
+.select-wqueue-dialog select option + option {
+    margin-top: 0;
 }
 
 

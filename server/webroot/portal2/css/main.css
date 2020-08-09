@@ -140,4 +140,9 @@ a {
     font-size: 1rem;
 }
 
+.select-recent-visit-dialog select {
+    width: 20em;
+    font-size: 1rem;
+}
+
 

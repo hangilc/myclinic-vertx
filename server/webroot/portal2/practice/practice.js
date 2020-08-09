@@ -2,6 +2,7 @@ import {parseElement} from "../js/parse-element.js";
 import {createDropdown} from "../comp/dropdown.js";
 import {openSelectWqueueDialog} from "./select-wqueue-dialog.js";
 import {openSearchPatientDialog} from "./search-patient-dialog.js";
+import {openSelectRecentVisitDialog} from "./select-recent-visit-dialog.js";
 
 let tmpl = `
 <h2>診察</h2>
@@ -47,7 +48,10 @@ function setupChoosePatient(ele, ctx){
         },
         {
             label: "最近の診察",
-            action: () => {}
+            action: async () => {
+                let visitPatient = await openSelectRecentVisitDialog(ctx.rest);
+                console.log("visit-patient", visitPatient);
+            }
         },
         {
             label: "本日の診察",

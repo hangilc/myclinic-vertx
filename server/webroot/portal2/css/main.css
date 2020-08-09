@@ -143,4 +143,30 @@ a {
     margin-top: 0.5em;
 }
 
+.practice .patient-info .detail {
+    display: table;
+}
+
+.practice .patient-info .detail .table-row {
+    display: table-row;
+}
+
+.practice .patient-info .detail .table-row div {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.practice .patient-info .detail .table-row div.label::after {
+    content: "："
+}
+
+.practice .patient-info .detail .table-row div.label {
+    text-align: right;
+}
+
+.practice .patient-info .detail .table-row div.value {
+    padding-left: 0.5em;
+}
+
+
 

@@ -25,7 +25,6 @@ let html = `
 export function createPatientInfo(registerCallback) {
     let ele = document.createElement("div");
     ele.classList.add("patient-info");
-    ele.style.display = "none";
     ele.innerHTML = html;
     let map = parseElement(ele);
     map.detailLink.onclick = event => {

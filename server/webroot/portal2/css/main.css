@@ -12,6 +12,10 @@ a {
     text-decoration: none;
 }
 
+.hidden {
+    display: none;
+}
+
 .main-title {
     font-size: 2rem;
     background-color: #666;
@@ -141,6 +145,7 @@ a {
     width: 20em;
     font-size: 1rem;
     margin-top: 0.5em;
+    padding: 0.2em;
 }
 
 .practice .patient-info .detail {
@@ -166,6 +171,15 @@ a {
 
 .practice .patient-info .detail .table-row div.value {
     padding-left: 0.5em;
+}
+
+.practice .patient-manip button,
+.practice .patient-manip a {
+    vertical-align: middle;
+}
+
+a.hidden + .sep  {
+    display: none;
 }
 
 

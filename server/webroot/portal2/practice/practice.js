@@ -6,6 +6,7 @@ import {openSelectRecentVisitDialog} from "./select-recent-visit-dialog.js";
 import {openTodaysVisitDialog} from "./select-todays-visit-dialog.js";
 import {openPrevVisitDialog} from "./select-prev-visit-dialog.js";
 import {createPatientInfo} from "./patient-info.js";
+import {createPatientManip} from "./patient-manip.js";
 
 let tmpl = `
 <h2>診察</h2>
@@ -16,6 +17,7 @@ let tmpl = `
 </div>
 <div class="x-workarea">
     <div class="x-patient-info"></div>
+    <div class="x-patient-manip"></div>
 </div>
 `;
 
@@ -26,6 +28,7 @@ class Context {
         this.currentVisitId = 0;
         this.tempVisitId = 0;
         this.patientChangedCallbacks = [];
+        this.visitIdChangedCallbacks = [];
     }
 
     setPatient(patient){
@@ -40,9 +43,18 @@ export function createPractice(rest){
     ele.classList.add("practice");
     ele.innerHTML = tmpl;
     let map = parseElement(ele);
-    setupChoosePatient(map.choosePatient, ctx);
     let regPatientChanged = callback => ctx.patientChangedCallbacks.push(callback);
+    let regVisitIdChanged = callback => ctx.visitIdChangedCallbacks.push(callback);
+    regPatientChanged(patient => {
+        [map.patientInfo, map.patientManip].forEach(e => {
+            e.style.display = patient ? "block" : "none";
+        });
+    });
+    ctx.setPatient(null);
+    setupChoosePatient(map.choosePatient, ctx);
     map.patientInfo.append(createPatientInfo(regPatientChanged));
+    map.patientManip.append(createPatientManip(regPatientChanged, regVisitIdChanged));
+    ele.addEventListener("do-cashier", event => console.log("do-cashier"));
     return ele;
 }
 

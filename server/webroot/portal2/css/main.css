@@ -134,15 +134,13 @@ a {
     padding: 0.2em;
 }
 
-.search-patient-dialog select {
+.search-patient-dialog select,
+.select-recent-visit-dialog select,
+.select-todays-visit-dialog select,
+.select-prev-visit-dialog select {
     width: 20em;
+    font-size: 1rem;
     margin-top: 0.5em;
-    font-size: 1rem;
-}
-
-.select-recent-visit-dialog select {
-    width: 20em;
-    font-size: 1rem;
 }
 
 

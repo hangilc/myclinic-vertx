@@ -44,13 +44,13 @@ export function createPatientManip(registerPatientCallback, registerVisitIdCallb
         ctx.currentVisitId = visitId;
         ctx.adaptUI();
     });
-    map.cashier.onclick = event => {
-        let evt = new Event("do-cashier", {bubbles: true});
-        ele.dispatchEvent(evt);
-    };
-    map.endPatient.onclick = event => {
-        let evt = new Event("do-end-patient", {bubbles: true});
-        ele.dispatchEvent(evt);
-    };
+    map.cashier.onclick = event => dispatchEvent(ele, "do-cashier");
+    map.endPatient.onclick = event => dispatchEvent(ele, "do-end-patient");
     return ele;
+}
+
+function dispatchEvent(ele, name){
+    let evt = new Event(name, {bubbles: true});
+    ele.dispatchEvent(evt);
+
 }

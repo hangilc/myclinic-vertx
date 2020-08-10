@@ -3,27 +3,28 @@ import {populateTopMenu} from "./top-menu.js";
 import {createPatientInfo} from "./patient-info.js";
 import {createPatientManip} from "./patient-manip.js";
 import {populateRecordNav} from "./record-nav.js";
+import {createRecord} from "./record/record.js";
 
 let tmpl = `
 <h2>診察</h2>
 <div class="x-top-menu"> </div>
-<div class="x-workarea">
+<div>
     <div class="x-patient-info"></div>
     <div class="x-patient-manip"></div>
     <div class="x-upper-nav"></div>
-    <div class="x-records"></div>
+    <div class="x-records records"></div>
     <div class="x-lower-nav"></div>
 </div>
 `;
 
 class Context {
-    constructor(rest) {
+    constructor(rest, map) {
         this.rest = rest;
+        this.map = map;
         this.patient = null;
         this.currentVisitId = 0;
         this.tempVisitId = 0;
         this.patientChangedCallbacks = [];
-        this.visitsChangedCallbacks = [];
         this.pageChangedCallbacks = [];
     }
 
@@ -33,10 +34,6 @@ class Context {
 
     registerPageChangedCallback(cb) {
         this.pageChangedCallbacks.push(cb);
-    }
-
-    registerVisitsChangedCallback(cb) {
-        this.visitsChangedCallbacks.push(cb);
     }
 
     setPatient(patient) {
@@ -57,10 +54,6 @@ class Context {
         }
     }
 
-    setVisits(visits) {
-        this.visitsChangedCallbacks.forEach(cb => cb(visits));
-    }
-
     changePage(currentPage, totalPages) {
         this.pageChangedCallbacks.forEach(cb => cb(currentPage, totalPages));
     }
@@ -68,11 +61,11 @@ class Context {
 }
 
 export function createPractice(rest) {
-    let ctx = new Context(rest);
     let ele = document.createElement("div");
     ele.classList.add("practice");
     ele.innerHTML = tmpl;
     let map = parseElement(ele);
+    let ctx = new Context(rest, map);
     populateTopMenu(map.topMenu, rest);
     let onPatientChanged = cb => ctx.registerPatientChangedCallback(cb);
     let onPageChanged = cb => ctx.registerPageChangedCallback(cb);
@@ -116,7 +109,17 @@ async function doOpenPatient(detail, ctx) {
     ctx.setPatient(patient);
     ctx.setCurrentVisitId(visitId);
     let visitsPage = await ctx.rest.listVisit(patient.patientId, 0);
-    ctx.setVisits(visitsPage.visits);
+    let visits = visitsPage.visits;
+    setRecords(visits, ctx);
     ctx.changePage(visitsPage.page, visitsPage.totalPages);
+}
+
+function setRecords(visits, ctx){
+    let wrapper = ctx.map.records;
+    wrapper.innerHTML = "";
+    visits.forEach(vf => {
+        let rec = createRecord(vf, ctx.rest);
+        wrapper.append(rec);
+    })
 }
 

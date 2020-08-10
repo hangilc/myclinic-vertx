@@ -182,5 +182,15 @@ a.hidden + .sep  {
     display: none;
 }
 
+.practice .record .title {
+    background-color: #eee;
+    font-weight: bold;
+    padding: 0.2em 0.5em;
+}
+
+.practice .record .title .menu {
+    float: right;
+}
+
 
 

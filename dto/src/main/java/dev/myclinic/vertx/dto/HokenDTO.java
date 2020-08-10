@@ -7,6 +7,7 @@ public class HokenDTO {
 	public KouhiDTO kouhi1;
 	public KouhiDTO kouhi2;
 	public KouhiDTO kouhi3;
+	public String rep;
 
 	public static dev.myclinic.vertx.dto.HokenDTO copy(dev.myclinic.vertx.dto.HokenDTO src){
 		dev.myclinic.vertx.dto.HokenDTO dst = new dev.myclinic.vertx.dto.HokenDTO();

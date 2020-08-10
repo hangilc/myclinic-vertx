@@ -1545,7 +1545,8 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private void hokenRep(RoutingContext ctx) {
         try {
             HokenDTO hoken = mapper.readValue(ctx.getBody().getBytes(), HokenDTO.class);
-            String rep = mapper.writeValueAsString(HokenUtil.hokenRep(hoken));
+            HokenUtil.fillHokenRep(hoken);
+            String rep = mapper.writeValueAsString(hoken.rep);
             ctx.response().end(rep);
         } catch (Exception e) {
             ctx.fail(e);

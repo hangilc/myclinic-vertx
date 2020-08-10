@@ -161,6 +161,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         HokenDTO _value = backend.convertToHoken(visit);
+        HokenUtil.fillHokenRep(_value);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
@@ -316,6 +317,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         VisitFull2PageDTO _value = backend.listVisitFull2(patientId, page);
+        _value.visits.forEach(v -> HokenUtil.fillHokenRep(v.hoken));
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
@@ -775,6 +777,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         HokenDTO _value = backend.listAvailableHoken(patientId, at);
+        HokenUtil.fillHokenRep(_value);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
@@ -1506,6 +1509,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         HokenDTO _value = backend.getHoken(visitId);
+        HokenUtil.fillHokenRep(_value);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
@@ -2490,6 +2494,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         PatientDTO patientDTO = backend.getPatient(visit.patientId);
         if (patientDTO.birthday != null) {
             HokenDTO hokenDTO = backend.getHokenForVisit(visit);
+            HokenUtil.fillHokenRep(hokenDTO);
             meisaiDTO.hoken = hokenDTO;
             LocalDate birthdayDate = DateTimeUtil.parseSqlDate(patientDTO.birthday);
             int rcptAge = HokenUtil.calcRcptAge(birthdayDate.getYear(), birthdayDate.getMonth().getValue(),

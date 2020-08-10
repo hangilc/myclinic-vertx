@@ -36,7 +36,7 @@ public class HokenUtil {
         return String.join("・", terms);
     }
 
-    public static String hokenRep(HokenDTO hoken) {
+    public static void fillHokenRep(HokenDTO hoken) {
         Integer shahokokuhoHokenshaBangou = null;
         Integer shahokokuhoKoureiFutanWari = null;
         Integer koukikoureiFutanWari = null;
@@ -63,7 +63,7 @@ public class HokenUtil {
         if (hoken.kouhi3 != null) {
             kouhi3FutanshaBangou = hoken.kouhi3.futansha;
         }
-        return hokenRep(shahokokuhoHokenshaBangou, shahokokuhoKoureiFutanWari, koukikoureiFutanWari,
+        hoken.rep = hokenRep(shahokokuhoHokenshaBangou, shahokokuhoKoureiFutanWari, koukikoureiFutanWari,
                 roujinFutanWari, kouhi1FutanshaBangou, kouhi2FutanshaBangou, kouhi3FutanshaBangou);
     }
 

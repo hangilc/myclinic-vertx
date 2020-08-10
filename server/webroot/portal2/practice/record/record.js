@@ -5,6 +5,7 @@ import {populateTextCommands} from "./text-commands.js";
 import {populateHoken} from "./hoken.js";
 import {populateDrugs} from "./drugs.js";
 import {populateShinryouCommands} from "./shinryou-commands.js";
+import {populateShinryouList} from "./shinryou-list.js";
 
 let html = `
 <div class="x-title title"></div>
@@ -36,6 +37,7 @@ export function createRecord(visitFull, rest){
     populateHoken(map.hoken, visitFull.hoken);
     populateDrugs(map.drugs, visitFull.drugs);
     populateShinryouCommands(map.shinryouCommands);
+    populateShinryouList(map.shinryouList, visitFull.shinryouList);
     return ele;
 }
 

@@ -42,13 +42,13 @@ export async function openSearchPatientDialog(rest){
         map.register.onclick = event => {
             let opt = map.select.options[map.select.selectedIndex];
             if( opt ){
-                close({mode: "register", patient: opt.data});
+                close({register: true, patient: opt.data});
             }
         }
         map.enter.onclick = event => {
             let opt = map.select.options[map.select.selectedIndex];
             if( opt ){
-                close({mode: "open", patient: opt.data});
+                close({patient: opt.data});
             }
         }
         map.cancel.onclick = event => close(null);

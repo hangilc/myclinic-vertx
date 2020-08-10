@@ -1,109 +1,122 @@
 import {parseElement} from "../js/parse-element.js";
-import {createDropdown} from "../comp/dropdown.js";
-import {openSelectWqueueDialog} from "./select-wqueue-dialog.js";
-import {openSearchPatientDialog} from "./search-patient-dialog.js";
-import {openSelectRecentVisitDialog} from "./select-recent-visit-dialog.js";
-import {openTodaysVisitDialog} from "./select-todays-visit-dialog.js";
-import {openPrevVisitDialog} from "./select-prev-visit-dialog.js";
+import {populateTopMenu} from "./top-menu.js";
 import {createPatientInfo} from "./patient-info.js";
 import {createPatientManip} from "./patient-manip.js";
+import {populateRecordNav} from "./record-nav.js";
 
 let tmpl = `
 <h2>診察</h2>
-<div>
-    <a href="javascript:void(0)" class="x-choose-patient">患者選択▼</a> |
-    <a href="javascript:void(0)" class="x-registered-drug">登録薬剤</a> |
-    <a href="javascript:void(0)" class="x-search-whole-text">全文検索</a>
-</div>
+<div class="x-top-menu"> </div>
 <div class="x-workarea">
     <div class="x-patient-info"></div>
     <div class="x-patient-manip"></div>
+    <div class="x-upper-nav"></div>
+    <div class="x-records"></div>
+    <div class="x-lower-nav"></div>
 </div>
 `;
 
 class Context {
-    constructor(rest){
+    constructor(rest) {
         this.rest = rest;
         this.patient = null;
         this.currentVisitId = 0;
         this.tempVisitId = 0;
         this.patientChangedCallbacks = [];
-        this.visitIdChangedCallbacks = [];
+        this.visitsChangedCallbacks = [];
+        this.pageChangedCallbacks = [];
     }
 
-    setPatient(patient){
-        this.patient = patient;
-        this.patientChangedCallbacks.forEach(cb => cb(patient));
+    registerPatientChangedCallback(cb) {
+        this.patientChangedCallbacks.push(cb);
     }
+
+    registerPageChangedCallback(cb) {
+        this.pageChangedCallbacks.push(cb);
+    }
+
+    registerVisitsChangedCallback(cb) {
+        this.visitsChangedCallbacks.push(cb);
+    }
+
+    setPatient(patient) {
+        this.patient = patient;
+        this.patientChangedCallbacks.forEach(cb => cb(patient, this.currentVisitId));
+    }
+
+    setCurrentVisitId(currentVisitId) {
+        this.currentVisitId = currentVisitId;
+        this.tempVisitId = 0;
+    }
+
+    setTempVisitId(tempVisitId) {
+        if (this.currentVisitId === 0) {
+            this.tempVisitId = tempVisitId;
+        } else {
+            console.log("cannot set temp visit id (current visit-id is not zero)");
+        }
+    }
+
+    setVisits(visits) {
+        this.visitsChangedCallbacks.forEach(cb => cb(visits));
+    }
+
+    changePage(currentPage, totalPages) {
+        this.pageChangedCallbacks.forEach(cb => cb(currentPage, totalPages));
+    }
+
 }
 
-export function createPractice(rest){
+export function createPractice(rest) {
     let ctx = new Context(rest);
     let ele = document.createElement("div");
     ele.classList.add("practice");
     ele.innerHTML = tmpl;
     let map = parseElement(ele);
-    let regPatientChanged = callback => ctx.patientChangedCallbacks.push(callback);
-    let regVisitIdChanged = callback => ctx.visitIdChangedCallbacks.push(callback);
-    regPatientChanged(patient => {
+    populateTopMenu(map.topMenu, rest);
+    let onPatientChanged = cb => ctx.registerPatientChangedCallback(cb);
+    let onPageChanged = cb => ctx.registerPageChangedCallback(cb);
+    onPatientChanged(patient => {
         [map.patientInfo, map.patientManip].forEach(e => {
             e.style.display = patient ? "block" : "none";
         });
     });
     ctx.setPatient(null);
-    setupChoosePatient(map.choosePatient, ctx);
-    map.patientInfo.append(createPatientInfo(regPatientChanged));
-    map.patientManip.append(createPatientManip(regPatientChanged, regVisitIdChanged));
+    map.patientInfo.append(createPatientInfo(onPatientChanged));
+    map.patientManip.append(createPatientManip(onPatientChanged));
+    populateRecordNav(map.upperNav, onPageChanged);
+    populateRecordNav(map.lowerNav, onPageChanged);
+    ele.addEventListener("open-patient", event => doOpenPatient(event.detail, ctx));
     ele.addEventListener("do-cashier", event => console.log("do-cashier"));
     return ele;
 }
 
-function setupChoosePatient(ele, ctx){
-    createDropdown(ele, [
-        {
-            label: "受付患者選択",
-            action: async () => {
-                let wqueueFull = await openSelectWqueueDialog(ctx.rest);
-                if( wqueueFull ){
-                    ctx.setPatient(wqueueFull.patient);
-                }
-            }
-        },
-        {
-            label: "患者検索",
-            action: async () => {
-                let result = await openSearchPatientDialog(ctx.rest);
-                if( result ){
-                    ctx.setPatient(result.patient);
-                }
-            }
-        },
-        {
-            label: "最近の診察",
-            action: async () => {
-                let visitPatient = await openSelectRecentVisitDialog(ctx.rest);
-                if( visitPatient ){
-                    ctx.setPatient(visitPatient.patient);
-                }
-            }
-        },
-        {
-            label: "本日の診察",
-            action: async () => {
-                let visitPatient = await openTodaysVisitDialog(ctx.rest);
-                if( visitPatient ){
-                    ctx.setPatient(visitPatient.patient);
-                }
-            }
-        },
-        {
-            label: "以前の診察",
-            action: async () => {
-                let visitPatient = await openPrevVisitDialog(ctx.rest);
-                if( visitPatient ){
-                    ctx.setPatient(visitPatient.patient);
-                }
-            }
+async function closePatient(ctx) {
+    if (ctx.patient) {
+        if (ctx.currentVisitId > 0) {
+            await ctx.rest.suspendExam(ctx.currentVisitId);
         }
-    ]);
+        ctx.setCurrentVisitId(0);
+        ctx.setPatient(null);
+        ctx.changePage(0, 0);
+    }
 }
+
+async function doOpenPatient(detail, ctx) {
+    let patient = detail.patient;
+    let visitId = detail.visitId;
+    let register = detail.registerForExam;
+    if (visitId !== 0) {
+        throw new Error("not supported (visitId > 0)");
+    }
+    if (register) {
+        throw new Error("not supported (register)");
+    }
+    await closePatient(ctx);
+    ctx.setPatient(patient);
+    ctx.setCurrentVisitId(visitId);
+    let visitsPage = await ctx.rest.listVisit(patient.patientId, 0);
+    ctx.setVisits(visitsPage.visits);
+    ctx.changePage(visitsPage.page, visitsPage.totalPages);
+}
+

@@ -13,14 +13,14 @@ class Context {
     constructor(map) {
         this.map = map;
         this.patientId = 0;
-        this.currentVisitId = 0;
+        this.visitId = 0;
     }
 
     adaptUI(){
         let map = this.map;
         [map.cashier, map.registerExam].forEach(
             e => {
-                if( this.currentVisitId === 0 ){
+                if( this.visitId === 0 ){
                     e.classList.add("hidden");
                 } else {
                     e.classList.remove("hidden");
@@ -30,19 +30,22 @@ class Context {
     }
 }
 
-export function createPatientManip(registerPatientCallback, registerVisitIdCallback){
+export function createPatientManip(onPatientChanged){
     let ele = document.createElement("div");
-    ele.classList.add("patient-manip");
+    ele.classList.add("patient-manip", "hidden");
     ele.innerHTML = html;
     let map = parseElement(ele);
     let ctx = new Context(map);
     ctx.adaptUI();
-    registerPatientCallback(patient => {
-        ctx.patientId = patient.patientId;
-    });
-    registerVisitIdCallback(visitId => {
-        ctx.currentVisitId = visitId;
-        ctx.adaptUI();
+    onPatientChanged((patient, currentVisitId) => {
+        if( patient ){
+            ctx.patientId = patient.patientId;
+            ctx.visitId = currentVisitId;
+            ele.classList.remove("hidden");
+            ctx.adaptUI();
+        } else {
+            ele.classList.add("hidden");
+        }
     });
     map.cashier.onclick = event => dispatchEvent(ele, "do-cashier");
     map.endPatient.onclick = event => dispatchEvent(ele, "do-end-patient");

@@ -1,5 +1,5 @@
 import {parseElement} from "../../js/parse-element.js";
-import {getYoubi} from "../../js/datetime-util.js";
+import {getYoubi, sqldatetimeToDate} from "../../js/datetime-util.js";
 
 let html = `
 <span class="x-label label"></span>
@@ -13,7 +13,7 @@ export function populateTitle(ele, visitedAt, visitId){
 }
 
 function createLabel(visitedAt){
-    let d = new Date(visitedAt);
+    let d = sqldatetimeToDate(visitedAt);
     let month = ("" + (d.getMonth()+1)).padStart(2, "0");
     let day = ("" + d.getDate()).padStart(2, "0");
     let youbi = getYoubi(d);

@@ -6,6 +6,8 @@ import {populateHoken} from "./hoken.js";
 import {populateDrugs} from "./drugs.js";
 import {populateShinryouCommands} from "./shinryou-commands.js";
 import {populateShinryouList} from "./shinryou-list.js";
+import {populateConductCommands} from "./conduct-commands.js";
+import {populateConducts} from "./conducts.js";
 
 let html = `
 <div class="x-title title"></div>
@@ -18,6 +20,8 @@ let html = `
     <div class="x-drugs"></div>
     <div class="x-shinryou-commands"></div>
     <div class="x-shinryou-list"></div>
+    <div class="x-conduct-commands"></div>
+    <div class="x-conducts"></div>
 </div>
 `;
 
@@ -38,6 +42,8 @@ export function createRecord(visitFull, rest){
     populateDrugs(map.drugs, visitFull.drugs);
     populateShinryouCommands(map.shinryouCommands);
     populateShinryouList(map.shinryouList, visitFull.shinryouList);
+    populateConductCommands(map.conductCommands);
+    populateConducts(map.conducts, visitFull.conducts);
     return ele;
 }
 

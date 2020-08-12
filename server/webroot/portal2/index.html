@@ -19,11 +19,35 @@
     (async function () {
         let {Index} = await import("./index/index.js");
         let rest = new Rest("../json");
+
+        // for dev fax
+        devFax(rest);
+
         let sidebarUl = document.querySelector(".main-container .sidebar ul");
         let main = document.querySelector(".main-container .main");
         let index = new Index(rest, sidebarUl, main);
         await index.init();
     })();
+
+    function devFax(rest){
+        rest.sendFax = async (faxNumber, pdfFile) => {
+            let r = Math.random() * 1000000;
+            return Math.floor(r);
+        };
+        rest.pollFax = async faxSid => {
+            let r = Math.random();
+            if( r < 0.1 ){
+                return "busy";
+            }
+            if( r < 0.2 ){
+                return "no answer";
+            }
+            if( r < 0.3 ){
+                return "delivered";
+            }
+            return "sending";
+        };
+    }
 </script>
 </body>
 </html>

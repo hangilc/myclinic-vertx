@@ -1,4 +1,5 @@
 import {parseElement} from "../../js/parse-element.js";
+import * as F from "../functions.js";
 
 let html = `
 <div>
@@ -23,8 +24,7 @@ export function createSendFax(pdfFile, faxNumber, pharmaName, rest){
     map.pharmaName.innerText = pharmaName;
     map.view.onclick = event => doView(pdfFile, rest);
     map.send.onclick = async event => {
-        //let faxSid = await rest.sendFax(this.faxNumber, this.pdfFile);
-        let faxSid = 0;
+        let faxSid = await F.sendFax(faxNumber, pdfFile, rest);
         ele.dispatchEvent(new CustomEvent("fax-started", {
             bubbles: true,
             detail: {faxSid, pdfFile, faxNumber, pharmaName}

@@ -25,10 +25,29 @@ export function createDropdown(button, linkSpecs) { // linkSpecs: [{label, actio
         document.body.append(backdrop);
         document.body.append(links);
         let r = getElementRect(button);
-        console.log("button.rect", button.getBoundingClientRect());
-        popUp(links, r);
+        switch(selectPosition()){
+            case "down":
+            default: {
+                if( canPopDown(links, button) ){
+                    popDown(links, r);
+                } else {
+                    popUp(links, r);
+                }
+                break;
+            }
+        }
         links.style.visibility = "visible";
     };
+}
+
+function selectPosition(){
+    return "down";
+}
+
+function canPopDown(links, button){
+    let rLinks = links.getBoundingClientRect();
+    let rButton = button.getBoundingClientRect();
+    return rButton.bottom + rLinks.height < window.innerHeight;
 }
 
 function popDown(links, r){

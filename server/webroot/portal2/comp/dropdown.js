@@ -5,7 +5,7 @@ export function createDropdown(button, linkSpecs) { // linkSpecs: [{label, actio
     let backdrop = document.createElement("div");
     backdrop.classList.add("dropdown-backdrop");
     backdrop.onclick = () => {
-        links.style.display = "none";
+        links.style.visibility = "hidden";
         backdrop.remove();
     };
     for (let spec of linkSpecs) {
@@ -15,7 +15,7 @@ export function createDropdown(button, linkSpecs) { // linkSpecs: [{label, actio
         link.innerText = key;
         link.href = "javascript:void(0)";
         link.onclick = event => {
-            links.style.display = "none";
+            links.style.visibility = "hidden";
             backdrop.remove();
             act();
         };
@@ -23,10 +23,43 @@ export function createDropdown(button, linkSpecs) { // linkSpecs: [{label, actio
     }
     button.onclick = event => {
         document.body.append(backdrop);
-        let r = button.getBoundingClientRect();
-        links.style.left = `${r.left}px`;
-        links.style.top = `${r.bottom}px`;
         document.body.append(links);
-        links.style.display = "block";
+        let r = getElementRect(button);
+        console.log("button.rect", button.getBoundingClientRect());
+        popUp(links, r);
+        links.style.visibility = "visible";
+    };
+}
+
+function popDown(links, r){
+    links.style.left = `${r.left}px`;
+    links.style.top = `${r.bottom}px`;
+}
+
+function popUp(links, r){
+    links.style.left = `${r.left}px`;
+    let h = links.getBoundingClientRect().height;
+    links.style.top = `${r.top - h}px`;
+    console.log("body.rect", document.body.getBoundingClientRect());
+}
+
+function getElementRect(ele){ // relative to body content (margin excluded)
+    let ofs = getBodyOffsets();
+    let br = ele.getBoundingClientRect();
+    let sx = window.pageXOffset;
+    let sy = window.pageYOffset;
+    return {
+        left: br.left + sx - ofs.left,
+        right: br.right + sx - ofs.left,
+        top: br.top + sy - ofs.top,
+        bottom: br.bottom + sy - ofs.top
+    }
+}
+
+function getBodyOffsets(){
+    let style = window.getComputedStyle(document.body);
+    return {
+        left: parseInt(style.marginLeft),
+        top: parseInt(style.marginTop)
     };
 }

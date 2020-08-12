@@ -6,6 +6,7 @@
 body {
     margin: 1em 2em;
     font-family: Arial, Helvetica, sans-serif;
+    position: relative;
 }
 
 a {
@@ -99,7 +100,8 @@ textarea {
 }
 
 .dropdown-links {
-    display: none;
+    /*display: none;*/
+    visibility: hidden;
     position: absolute;
     z-index: 2;
     opacity: 1.0;

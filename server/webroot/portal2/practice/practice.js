@@ -4,16 +4,20 @@ import {createPatientInfo} from "./patient-info.js";
 import {createPatientManip} from "./patient-manip.js";
 import {populateRecordNav} from "./record-nav.js";
 import {createRecord} from "./record/record.js";
+import {createFaxProgress} from "./fax-progress.js";
 
 let tmpl = `
 <h2>診察</h2>
 <div class="x-top-menu"> </div>
-<div>
-    <div class="x-patient-info"></div>
-    <div class="x-patient-manip"></div>
-    <div class="x-upper-nav"></div>
-    <div class="x-records records"></div>
-    <div class="x-lower-nav"></div>
+<div class="main">
+    <div class="center">
+        <div class="x-patient-info"></div>
+        <div class="x-patient-manip"></div>
+        <div class="x-upper-nav"></div>
+        <div class="x-records records"></div>
+        <div class="x-lower-nav"></div>
+    </div>
+    <div class="right x-main-right"></div>
 </div>
 `;
 
@@ -103,7 +107,30 @@ export function createPractice(rest) {
         let page = event.detail;
         await ctx.gotoPage(page);
     });
+    ele.addEventListener("do-end-patient", async event => await doEndPatient(ctx));
+    ele.addEventListener("fax-started", event => {
+        event.stopPropagation();
+        let data = event.detail;
+        let patient = ctx.patient;
+        let patientName = `${patient.lastName}${patient.firstName}`;
+        console.log(data);
+        let progress = createFaxProgress(patientName, data.faxSid, data.pdfFile, data.faxNumber,
+            data.pharmaName, ctx.rest);
+        map.mainRight.append(progress);
+    });
     return ele;
+}
+
+async function doEndPatient(ctx){
+    if( ctx.patient ){
+        if( ctx.currentVisitId > 0 ){
+            await this.rest.suspendExam(ctx.currentVisitId);
+        }
+        ctx.setPatient(null);
+        ctx.setCurrentVisitId(0);
+        ctx.changePage(0, 0);
+        ctx.setRecords([]);
+    }
 }
 
 async function closePatient(ctx) {

@@ -9,6 +9,7 @@ import {populateShinryouList} from "./shinryou-list.js";
 import {populateConductCommands} from "./conduct-commands.js";
 import {populateConducts} from "./conducts.js";
 import {createTextEnter} from "./text-enter.js";
+import {createSendFax} from "./send-fax.js";
 
 let html = `
 <div class="x-title title"></div>
@@ -49,8 +50,91 @@ export function createRecord(visitFull, rest){
     ele.addEventListener("text-entered", event => {
         event.stopPropagation();
         map.texts.append(createText(event.detail, rest));
-    })
+    });
+    ele.addEventListener("do-shohousen-fax",
+        async event => await doShohousenFax(visit.visitId, visit.visitedAt, map.texts, rest));
     return ele;
+}
+
+async function doShohousenFax(visitId, visitedAt, wrapper, rest){
+    let texts = await rest.listText(visitId);
+    let shohousen;
+    let pharmaData;
+    for(let text of texts){
+        let content = text.content;
+        if( isShohousen(content) ){
+            if( shohousen ){
+                alert("処方箋が複数あります。");
+                return;
+            }
+            shohousen = text;
+            continue;
+        }
+        let match = checkPharmacyText(content);
+        if( match ){
+            if( pharmaData ){
+                alert("薬局情報が複数あります。");
+                return;
+            }
+            pharmaData = match;
+        }
+    }
+    if( !shohousen ){
+        alert("処方箋がみつかりません。");
+        return;
+    }
+    if( !pharmaData ){
+        alert("薬局情報がみつかりません。");
+        return;
+    }
+    let textId = shohousen.textId;
+    let date = visitedAt.substring(0, 10);
+    let pdfFilePath = await rest.probeShohousenFaxImage(textId, date);
+    if( !pdfFilePath ){
+        if( !confirm("送信用の処方箋イメージを作成しますか？") ){
+            return;
+        }
+        pdfFilePath = await saveShohousenFaxImage(shohousen, {color: "black"}, rest);
+    }
+    let sendFax = createSendFax(pdfFilePath, pharmaData.faxNumber, pharmaData.pharmaName, rest);
+    sendFax.addEventListener("cancel", event => {
+        event.stopPropagation();
+        sendFax.remove();
+    });
+    sendFax.addEventListener("fax-started", event => sendFax.remove());
+    wrapper.append(sendFax);
+}
+
+async function saveShohousenFaxImage(text, reqOpts, rest){
+    let visit = await rest.getVisit(text.visitId);
+    let visitDate = visit.visitedAt.substring(0, 10);
+    let req = {};
+    req.clinicInfo = await rest.getClinicInfo();
+    req.hoken = await rest.getHoken(text.visitId);
+    req.patient = await rest.getPatient(visit.patientId);
+    let rcptAge = await rest.calcRcptAge(req.patient.birthday, visitDate);
+    req.futanWari = await rest.calcFutanWari(req.hoken, rcptAge);
+    req.issueDate = visitDate;
+    req.drugs = text.content;
+    Object.assign(req, reqOpts);
+    return await rest.saveShohousenPdf(req, text.textId);
+}
+
+function isShohousen(content){
+    return content.startsWith("院外処方");
+}
+
+function checkPharmacyText(content){
+    let regex = /(.+)にファックス（(\+\d+)）で送付/;
+    let matches = regex.exec(content);
+    if( matches ){
+        return {
+            pharmaName: matches[1],
+            faxNumber: matches[2]
+        };
+    } else {
+        return null;
+    }
 }
 
 function doEnterText(wrapper, visitId, rest){

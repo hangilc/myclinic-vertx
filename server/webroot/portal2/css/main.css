@@ -19,6 +19,14 @@ textarea {
     padding: 0.2em;
 }
 
+div {
+    word-break: break-all;
+}
+
+span {
+    overflow-wrap: break-word;
+}
+
 .hidden {
     display: none;
 }
@@ -51,12 +59,12 @@ textarea {
     text-decoration: none;
 }
 
-.main {
+body > .main-container > .main {
     grid-column: 3;
     width: 100%;
 }
 
-.main h2 {
+body > .main-container > .main h2 {
     margin-top: 0;
     margin-bottom: 0;
 }
@@ -128,6 +136,12 @@ textarea {
     z-index: 1;
 }
 
+.command-box {
+    margin-top: 0.5em;
+    vertical-align: middle;
+    text-align: right;
+}
+
 .select-wqueue-dialog select {
     width: 20em;
 }
@@ -154,6 +168,24 @@ textarea {
     font-size: 1rem;
     margin-top: 0.5em;
     padding: 0.2em;
+}
+
+.practice > .main {
+    display: grid;
+    grid-template-columns: 1fr 16em;
+}
+
+.practice > .main > .center {
+    grid-column: 1;
+}
+
+.practice > .main > .right {
+    grid-column: 2;
+    padding-left: 1em;
+}
+
+.practice > .main > .right > * + * {
+    margin-top: 1em;
 }
 
 .practice .patient-info .detail {
@@ -236,6 +268,21 @@ a.hidden + .sep  {
 .practice .record .text-edit textarea,
 .practice .record .text-enter textarea {
     height: 10em;
+}
+
+.practice .record .send-fax {
+    margin: 1em 0;
+}
+
+.practice .record .send-fax,
+.practice .fax-progress {
+    border: 1px solid #ccc;
+    border-radius: 0.5em;
+    padding: 1em;
+}
+
+.practice .fax-progress .title {
+    margin-bottom: 0.5em;
 }
 
 

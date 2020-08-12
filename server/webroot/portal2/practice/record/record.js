@@ -8,6 +8,7 @@ import {populateShinryouCommands} from "./shinryou-commands.js";
 import {populateShinryouList} from "./shinryou-list.js";
 import {populateConductCommands} from "./conduct-commands.js";
 import {populateConducts} from "./conducts.js";
+import {createTextEnter} from "./text-enter.js";
 
 let html = `
 <div class="x-title title"></div>
@@ -44,6 +45,21 @@ export function createRecord(visitFull, rest){
     populateShinryouList(map.shinryouList, visitFull.shinryouList);
     populateConductCommands(map.conductCommands);
     populateConducts(map.conducts, visitFull.conducts);
+    ele.addEventListener("do-enter-text", event => doEnterText(map.texts, visit.visitId, rest));
+    ele.addEventListener("text-entered", event => {
+        event.stopPropagation();
+        map.texts.append(createText(event.detail, rest));
+    })
     return ele;
+}
+
+function doEnterText(wrapper, visitId, rest){
+    let e = createTextEnter(visitId, rest);
+    e.addEventListener("text-entered", event => e.remove());
+    e.addEventListener("cancel", event => {
+        event.stopPropagation();
+        e.remove();
+    });
+    wrapper.append(e);
 }
 

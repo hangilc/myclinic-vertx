@@ -233,7 +233,8 @@ a.hidden + .sep  {
     border-left: 1px solid #ccc;
 }
 
-.practice .record .text-edit textarea {
+.practice .record .text-edit textarea,
+.practice .record .text-enter textarea {
     height: 10em;
 }
 

@@ -58,6 +58,23 @@ class Context {
         this.pageChangedCallbacks.forEach(cb => cb(currentPage, totalPages));
     }
 
+    async gotoPage(page){
+        if( this.patient ){
+            let visitPage = await this.rest.listVisit(this.patient.patientId, page);
+            this.setRecords(visitPage.visits);
+            this.changePage(visitPage.page, visitPage.totalPages);
+        }
+    }
+
+    setRecords(visits){
+        let wrapper = this.map.records;
+        wrapper.innerHTML = "";
+        visits.forEach(vf => {
+            let rec = createRecord(vf, this.rest);
+            wrapper.append(rec);
+        })
+    }
+
 }
 
 export function createPractice(rest) {
@@ -81,6 +98,11 @@ export function createPractice(rest) {
     populateRecordNav(map.lowerNav, onPageChanged);
     ele.addEventListener("open-patient", event => doOpenPatient(event.detail, ctx));
     ele.addEventListener("do-cashier", event => console.log("do-cashier"));
+    ele.addEventListener("goto-page", async event => {
+        event.stopPropagation();
+        let page = event.detail;
+        await ctx.gotoPage(page);
+    });
     return ele;
 }
 
@@ -110,16 +132,7 @@ async function doOpenPatient(detail, ctx) {
     ctx.setCurrentVisitId(visitId);
     let visitsPage = await ctx.rest.listVisit(patient.patientId, 0);
     let visits = visitsPage.visits;
-    setRecords(visits, ctx);
+    ctx.setRecords(visits, ctx);
     ctx.changePage(visitsPage.page, visitsPage.totalPages);
-}
-
-function setRecords(visits, ctx){
-    let wrapper = ctx.map.records;
-    wrapper.innerHTML = "";
-    visits.forEach(vf => {
-        let rec = createRecord(vf, ctx.rest);
-        wrapper.append(rec);
-    })
 }
 

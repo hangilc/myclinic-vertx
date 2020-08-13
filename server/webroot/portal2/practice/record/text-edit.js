@@ -45,7 +45,8 @@ export function createTextEdit(text, rest) {
         {srcText: text, onSuccess: () => ele.remove()}));
     map.delete.onclick = event => doDelete(text.textId, ele, rest);
     // map.shohousen.onclick = event => ele.dispatchEvent(new Event("do-shohousen", {bubbles: true}));
-    // map.copy.onclick = event => ele.dispatchEvent(new Event("do-copy", {bubbles: true}));
+    map.copy.onclick = event => ele.dispatchEvent(F.event("do-text-copy",
+        {srcText: text, onSuccess: () => ele.remove()}));
     return ele;
 }
 

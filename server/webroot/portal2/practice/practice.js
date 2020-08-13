@@ -142,6 +142,12 @@ export function createPractice(rest) {
         let onSuccess = event.detail.onSuccess;
         await doTextCopyMemo(text, onSuccess, ele, ctx);
     });
+    ele.addEventListener("do-text-copy", async event => {
+        event.stopPropagation();
+        let text = event.detail.srcText;
+        let onSuccess = event.detail.onSuccess;
+        await doTextCopy(text, onSuccess, ele, ctx);
+    });
     ele.addEventListener("set-temp-visit-id", event => doSetTempVisitId(event.detail, ele, ctx));
     return ele;
 }
@@ -171,20 +177,49 @@ function doSetTempVisitId(visitId, practiceElement, ctx){
     markTempVisit(practiceElement, visitId);
 }
 
-async function doTextCopyMemo(text, onSuccess, practiceElement, ctx){
-    let memo = F.extractTextMemo(text.content);
+function findCopyTarget(srcVisitId, what, ctx){
     let targetVisitId = ctx.getCopyTarget();
     if( !targetVisitId ){
-        alert("文章のコピー先がみつかりません。");
+        alert(`${what}のコピー先がみつかりません。`);
+        return 0;
+    }
+    if( targetVisitId === srcVisitId ){
+        alert(`同じ診察に${what}をコピーすることはできません。`);
+        return 0;
+    }
+    return targetVisitId;
+}
+
+async function doTextCopyMemo(text, onSuccess, practiceElement, ctx){
+    let targetVisitId = findCopyTarget(text.visitId, "文章", ctx);
+    if( !(targetVisitId > 0) ){
         return;
     }
-    if( targetVisitId === text.visitId ){
-        alert("同じ診察に文章をコピーすることはできません。");
+    let memo = F.extractTextMemo(text.content);
+    if( !memo ){
         return;
     }
     let textId = await ctx.rest.enterText({
         visitId: targetVisitId,
         content: memo
+    });
+    let q = `.record[data-visit-id='${targetVisitId}'] .texts`;
+    let targetWrapper = practiceElement.querySelector(q);
+    if( targetWrapper ){
+        let newText = await ctx.rest.getText(textId);
+        targetWrapper.append(createText(newText, ctx.rest));
+    }
+    onSuccess();
+}
+
+async function doTextCopy(text, onSuccess, practiceElement, ctx){
+    let targetVisitId = findCopyTarget(text.visitId, "文章", ctx);
+    if( !(targetVisitId > 0) ){
+        return;
+    }
+    let textId = await ctx.rest.enterText({
+        visitId: targetVisitId,
+        content: text.content
     });
     let q = `.record[data-visit-id='${targetVisitId}'] .texts`;
     let targetWrapper = practiceElement.querySelector(q);

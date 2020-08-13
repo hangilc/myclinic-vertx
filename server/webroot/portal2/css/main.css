@@ -279,9 +279,17 @@ a.hidden + .sep  {
     border-left: 1px solid #ccc;
 }
 
+.practice .record .text + .text {
+    margin-top: 0.5em;
+}
+
 .practice .record .text-edit textarea,
 .practice .record .text-enter textarea {
     height: 10em;
+}
+
+.practice .record .record-left-commands {
+    margin-top: 0.5em;
 }
 
 .practice .record .send-fax {

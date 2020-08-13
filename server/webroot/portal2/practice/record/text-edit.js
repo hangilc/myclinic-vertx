@@ -27,7 +27,7 @@ export function createTextEdit(text, rest) {
     if (!hasShohousen(text.content)) {
         map.shohousen.classList.add("hidden");
     } else {
-        setupShohousenDropdown(map.shohousen, text, rest);
+        setupShohousenDropdown(map.shohousen, text, ele, rest);
     }
     map.textarea.value = text.content;
     map.enter.onclick = async event => {
@@ -66,13 +66,14 @@ function hasShohousen(content) {
     return content.startsWith("院外処方");
 }
 
-function setupShohousenDropdown(link, text, rest) {
+function setupShohousenDropdown(link, text, ele, rest) {
     createDropdown(link, [
         {
             label: "処方箋発行",
             action: async () => {
                 let ops = await F.createShohousenOps(text.content, text.visitId, rest);
-                await openShohousenPreviewDialog(ops);
+                await openShohousenPreviewDialog(ops, rest);
+                ele.dispatchEvent(F.event("do-edit-cancel"));
             }
         },
         {

@@ -77,6 +77,12 @@ class Context {
         wrapper.innerHTML = "";
         visits.forEach(vf => {
             let rec = createRecord(vf, this.rest);
+            let visitId = vf.visit.visitId;
+            if( visitId === this.currentVisitId ){
+                rec.classList.add("current-visit");
+            } else if( visitId === this.tempVisitId ){
+                rec.classList.add("temp-visit");
+            }
             wrapper.append(rec);
         })
     }
@@ -209,13 +215,10 @@ async function doOpenPatient(detail, ctx) {
     let patient = detail.patient;
     let visitId = detail.visitId;
     let register = detail.registerForExam;
-    if (visitId !== 0) {
-        throw new Error("not supported (visitId > 0)");
-    }
-    if (register) {
-        throw new Error("not supported (register)");
-    }
     await closePatient(ctx);
+    if (register && visitId > 0) {
+        await ctx.rest.startExam(visitId);
+    }
     ctx.setPatient(patient);
     ctx.setCurrentVisitId(visitId);
     let visitsPage = await ctx.rest.listVisit(patient.patientId, 0);

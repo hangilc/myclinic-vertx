@@ -6,6 +6,7 @@ let html = `
 `;
 
 export function populateTextCommands(ele){
+    ele.classList.add("record-left-commands");
     ele.innerHTML = html;
     let map = parseElement(ele);
     map.enter.onclick = event => {

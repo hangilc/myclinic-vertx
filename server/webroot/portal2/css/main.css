@@ -250,6 +250,16 @@ a.hidden + .sep  {
     float: right;
 }
 
+.practice .record.current-visit .text,
+.practice .record.current-visit .record-left-commands {
+    border-left: 4px solid orange;
+    padding-left: 8px;
+}
+
+.practice .record.current-visit .title {
+    background-color: #ff9;
+}
+
 .practice .record.temp-visit .title {
     background-color: #9ff;
 }

@@ -1,6 +1,7 @@
 import {parseElement} from "../../js/parse-element.js";
 import {createDropdown} from "../../comp/dropdown.js";
 import * as F from "../functions.js";
+import {openShohousenPreviewDialog} from "./shohousen-preview-dialog.js";
 
 let html = `
 <textarea class="x-textarea"></textarea>
@@ -26,7 +27,7 @@ export function createTextEdit(text, rest) {
     if (!hasShohousen(text.content)) {
         map.shohousen.classList.add("hidden");
     } else {
-        setupShohousenDropdown(map.shohousen);
+        setupShohousenDropdown(map.shohousen, text, rest);
     }
     map.textarea.value = text.content;
     map.enter.onclick = async event => {
@@ -44,7 +45,6 @@ export function createTextEdit(text, rest) {
     map.copyMemo.onclick = event => ele.dispatchEvent(F.event("do-text-copy-memo",
         {srcText: text, onSuccess: () => ele.remove()}));
     map.delete.onclick = event => doDelete(text.textId, ele, rest);
-    // map.shohousen.onclick = event => ele.dispatchEvent(new Event("do-shohousen", {bubbles: true}));
     map.copy.onclick = event => ele.dispatchEvent(F.event("do-text-copy",
         {srcText: text, onSuccess: () => ele.remove()}));
     return ele;
@@ -66,11 +66,13 @@ function hasShohousen(content) {
     return content.startsWith("院外処方");
 }
 
-function setupShohousenDropdown(link) {
+function setupShohousenDropdown(link, text, rest) {
     createDropdown(link, [
         {
             label: "処方箋発行",
-            action: () => {
+            action: async () => {
+                let ops = await F.createShohousenOps(text.content, text.visitId, rest);
+                await openShohousenPreviewDialog(ops);
             }
         },
         {

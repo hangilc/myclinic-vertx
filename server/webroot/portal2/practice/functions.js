@@ -59,3 +59,21 @@ export function showHide(e, pShow){
     }
 }
 
+export async function createShohousenOps(content, visitId, rest, color=null) { // example -- color: "black"
+    let visit = await rest.getVisit(visitId);
+    let visitDate = visit.visitedAt.substring(0, 10);
+    let req = {};
+    req.clinicInfo = await rest.getClinicInfo();
+    req.hoken = await rest.getHoken(visitId);
+    req.patient = await rest.getPatient(visit.patientId);
+    let rcptAge = await rest.calcRcptAge(req.patient.birthday, visitDate);
+    req.futanWari = await rest.calcFutanWari(req.hoken, rcptAge);
+    req.issueDate = visitDate;
+    req.drugs = content;
+    if( color ){
+        req.color = color;
+    }
+    return await rest.shohousenDrawer(req);
+}
+
+

@@ -9,6 +9,10 @@ export function createText(text, rest){
     ele.addEventListener("do-edit", event => {
         event.stopPropagation();
         let edit = createTextEdit(text, rest);
+        edit.addEventListener("text-deleted", event => {
+            event.stopPropagation();
+            ele.remove();
+        });
         disp.remove();
         ele.append(edit);
     });

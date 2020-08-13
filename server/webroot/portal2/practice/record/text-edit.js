@@ -41,10 +41,18 @@ export function createTextEdit(text, rest) {
     };
     map.cancel.onclick = event => ele.dispatchEvent(new Event("do-edit-cancel", {bubbles: true}));
     map.copyMemo.onclick = event => ele.dispatchEvent(new Event("do-copy-memo", {bubbles: true}));
-    map.delete.onclick = event => ele.dispatchEvent(new Event("do-delete", {bubbles: true}));
-    map.delete.shohousen = event => ele.dispatchEvent(new Event("do-shohousen", {bubbles: true}));
-    map.delete.copy = event => ele.dispatchEvent(new Event("do-copy", {bubbles: true}));
+    map.delete.onclick = event => doDelete(text.textId, ele, rest);
+    // map.shohousen.onclick = event => ele.dispatchEvent(new Event("do-shohousen", {bubbles: true}));
+    // map.copy.onclick = event => ele.dispatchEvent(new Event("do-copy", {bubbles: true}));
     return ele;
+}
+
+async function doDelete(textId, ele, rest){
+    if( !confirm("この文章を削除していいですか？") ){
+        return;
+    }
+    await rest.deleteText(textId);
+    ele.dispatchEvent(new CustomEvent("text-deleted", {bubbles: true, detail: textId}));
 }
 
 function hasMemo(content) {

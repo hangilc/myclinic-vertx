@@ -1165,7 +1165,6 @@
         $("#practice-registered-drug-link").on("click", async event => {
             let dialog = new RegisteredDrugDialog(rest);
             let result = await dialog.open();
-            console.log("result", result);
         });
 
         (function () {
@@ -1335,7 +1334,6 @@
             });
 
             map.refer.on("click", event => {
-                console.log("use side bar menu to access refer program");
             });
 
             map.uploadImage.on("click", async event => {
@@ -1733,7 +1731,6 @@
             map.search.on("click", async event => {
                 let dialog = patientSearchDialogFactory.create();
                 let result = await dialog.open();
-                console.log("result", result);
                 if (result && result.mode === "enter") {
                     let patientId = result.patient.patientId;
                     await clearState();

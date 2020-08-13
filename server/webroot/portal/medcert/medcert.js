@@ -31,14 +31,12 @@ export class MedCert {
 
     async doCreate(){
         let data = await this.collectData();
-        console.log(this.ele.find("textarea"));
         let savePath = this.rest.renderMedCert(data);
         alert(savePath);
     }
 
     async collectData(){
         let clinicInfo = await this.rest.getClinicInfo();
-        console.log(clinicInfo);
         return {
             patientName: this.inputValue("shimei"),
             birthDate: this.inputValue("birth-date"),

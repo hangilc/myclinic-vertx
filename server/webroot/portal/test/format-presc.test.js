@@ -27,8 +27,6 @@ describe("parsePresc", function () {
             "　　分３　毎食後　　　　　　　　　　　　　３０日分\n" +
             "２）インサイドパップ１０ｃｍｘ１４ｃｍ　１０枚\n" +
             "　　１日２回患部に貼付";
-        console.log(ok);
-        console.log(fmt.formatPresc(src));
         chai.expect(fmt.formatPresc(src)).to.equal(ok);
     });
     it("should handle prefix", function () {
@@ -134,8 +132,6 @@ describe("parsePresc", function () {
                    -　　　　　　　　　　　　　　　　　　　　　８日分（実日数）`;
         src = skipPre(src);
         dst = skipPre(dst);
-        console.log(dst);
-        console.log(fmt.formatPresc(src));
         chai.expect(fmt.formatPresc(src)).to.equal(dst);
     });
 

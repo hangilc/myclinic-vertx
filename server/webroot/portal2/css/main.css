@@ -250,6 +250,10 @@ a.hidden + .sep  {
     float: right;
 }
 
+.practice .record.temp-visit .title {
+    background-color: #9ff;
+}
+
 .practice .record .left {
     grid-row: 2;
     grid-column: 1;

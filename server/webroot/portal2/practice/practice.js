@@ -5,6 +5,8 @@ import {createPatientManip} from "./patient-manip.js";
 import {populateRecordNav} from "./record-nav.js";
 import {createRecord} from "./record/record.js";
 import {createFaxProgress} from "./fax-progress.js";
+import * as F from "./functions.js";
+import {createText} from "./record/text.js";
 
 let tmpl = `
 <h2>診察</h2>
@@ -79,6 +81,10 @@ class Context {
         })
     }
 
+    getCopyTarget(){
+        return this.currentVisitId || this.tempVisitId;
+    }
+
 }
 
 export function createPractice(rest) {
@@ -113,12 +119,67 @@ export function createPractice(rest) {
         let data = event.detail;
         let patient = ctx.patient;
         let patientName = `${patient.lastName}${patient.firstName}`;
-        console.log(data);
         let progress = createFaxProgress(patientName, data.faxSid, data.pdfFile, data.faxNumber,
             data.pharmaName, ctx.rest);
         map.mainRight.append(progress);
     });
+    ele.addEventListener("do-text-copy-memo", async event => {
+        event.stopPropagation();
+        let text = event.detail.srcText;
+        let onSuccess = event.detail.onSuccess;
+        await doTextCopyMemo(text, onSuccess, ele, ctx);
+    });
+    ele.addEventListener("set-temp-visit-id", event => doSetTempVisitId(event.detail, ele, ctx));
     return ele;
+}
+
+function findRecordByVisitId(practiceElement, visitId){
+    let q = `.record[data-visit-id='${visitId}']`;
+    return practiceElement.querySelector(q);
+}
+
+function markTempVisit(practiceElement, visitId){
+    let e = practiceElement.querySelector(".record.temp-visit");
+    if( e ) {
+        e.classList.remove("temp-visit");
+    }
+    let r = findRecordByVisitId(practiceElement, visitId);
+    if( r ){
+        r.classList.add("temp-visit");
+    }
+}
+
+function doSetTempVisitId(visitId, practiceElement, ctx){
+    if( ctx.currentVisitId ){
+        alert("現在診察中なので、暫定診察を設定できません。");
+        return;
+    }
+    ctx.setTempVisitId(visitId);
+    markTempVisit(practiceElement, visitId);
+}
+
+async function doTextCopyMemo(text, onSuccess, practiceElement, ctx){
+    let memo = F.extractTextMemo(text.content);
+    let targetVisitId = ctx.getCopyTarget();
+    if( !targetVisitId ){
+        alert("文章のコピー先がみつかりません。");
+        return;
+    }
+    if( targetVisitId === text.visitId ){
+        alert("同じ診察に文章をコピーすることはできません。");
+        return;
+    }
+    let textId = await ctx.rest.enterText({
+        visitId: targetVisitId,
+        content: memo
+    });
+    let q = `.record[data-visit-id='${targetVisitId}'] .texts`;
+    let targetWrapper = practiceElement.querySelector(q);
+    if( targetWrapper ){
+        let newText = await ctx.rest.getText(textId);
+        targetWrapper.append(createText(newText, ctx.rest));
+    }
+    onSuccess();
 }
 
 async function doEndPatient(ctx){

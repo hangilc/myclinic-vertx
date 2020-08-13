@@ -19,7 +19,6 @@ export class HokenSelectDialog extends Dialog {
     }
 
     set(hokenEx, current){
-        console.log("hoken", hokenEx, current);
         super.set();
         if( hokenEx.shahokokuho ){
             let shahokokuho = hokenEx.shahokokuho;

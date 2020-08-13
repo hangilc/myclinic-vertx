@@ -24,35 +24,45 @@ function setupChoosePatient(ele, rest){
             label: "受付患者選択",
             action: async () => {
                 let wqueueFull = await openSelectWqueueDialog(rest);
-                dispatchEvent(ele, wqueueFull.patient, wqueueFull.visit.visitId);
+                if( wqueueFull ) {
+                    dispatchEvent(ele, wqueueFull.patient, wqueueFull.visit.visitId);
+                }
             }
         },
         {
             label: "患者検索",
             action: async () => {
                 let result = await openSearchPatientDialog(rest);
-                dispatchEvent(ele, result.patinet, 0, result.register);
+                if( result ) {
+                    dispatchEvent(ele, result.patinet, 0, result.register);
+                }
             }
         },
         {
             label: "最近の診察",
             action: async () => {
                 let visitPatient = await openSelectRecentVisitDialog(rest);
-                dispatchEvent(ele, visitPatient.patient, 0);
+                if( visitPatient ) {
+                    dispatchEvent(ele, visitPatient.patient, 0);
+                }
             }
         },
         {
             label: "本日の診察",
             action: async () => {
                 let visitPatient = await openTodaysVisitDialog(rest);
-                dispatchEvent(ele, visitPatient.patient, 0);
+                if( visitPatient ) {
+                    dispatchEvent(ele, visitPatient.patient, 0);
+                }
             }
         },
         {
             label: "以前の診察",
             action: async () => {
                 let visitPatient = await openPrevVisitDialog(rest);
-                dispatchEvent(ele, visitPatient.patient, 0);
+                if( visitPatient ) {
+                    dispatchEvent(ele, visitPatient.patient, 0);
+                }
             }
         }
     ]);

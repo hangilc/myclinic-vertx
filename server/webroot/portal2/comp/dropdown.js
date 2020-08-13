@@ -59,7 +59,6 @@ function popUp(links, r){
     links.style.left = `${r.left}px`;
     let h = links.getBoundingClientRect().height;
     links.style.top = `${r.top - h}px`;
-    console.log("body.rect", document.body.getBoundingClientRect());
 }
 
 function getElementRect(ele){ // relative to body content (margin excluded)

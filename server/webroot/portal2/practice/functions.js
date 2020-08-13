@@ -3,7 +3,6 @@ export async function sendFax(faxNumber, pdfFile, rest){
 }
 
 export async function pollFax(faxSid, addMessage, doneCallback, rest){
-    console.log("faxSid", faxSid);
     let status = await rest.pollFax(faxSid);
     addMessage(status);
     if (status === "sending" || status === "processing" || status === "queued") {
@@ -22,3 +21,25 @@ export function reStartPollFax(faxSid, addMessage, doneCallback, rest){
     addMessage("restarted");
     setTimeout(() => pollFax(faxSid, addMessage, doneCallback, rest), 1000);
 }
+
+export function event(name, detail){
+    if( detail ){
+        return new CustomEvent(name, {bubbles: true, detail});
+    } else {
+        return new Event(name, {bubbles: true});
+    }
+}
+
+export function extractTextMemo(content) {
+    let lines = content.split(/\r\n|\n|\r/);
+    let memo = [];
+    for (let line of lines) {
+        if (line.startsWith("●") || line.startsWith("★")) {
+            memo.push(line);
+        } else {
+            break;
+        }
+    }
+    return memo.join("\n");
+}
+

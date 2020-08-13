@@ -1,5 +1,6 @@
 import {parseElement} from "../../js/parse-element.js";
 import {createDropdown} from "../../comp/dropdown.js";
+import * as F from "../functions.js";
 
 let html = `
 <textarea class="x-textarea"></textarea>
@@ -40,7 +41,8 @@ export function createTextEdit(text, rest) {
         ));
     };
     map.cancel.onclick = event => ele.dispatchEvent(new Event("do-edit-cancel", {bubbles: true}));
-    map.copyMemo.onclick = event => ele.dispatchEvent(new Event("do-copy-memo", {bubbles: true}));
+    map.copyMemo.onclick = event => ele.dispatchEvent(F.event("do-text-copy-memo",
+        {srcText: text, onSuccess: () => ele.remove()}));
     map.delete.onclick = event => doDelete(text.textId, ele, rest);
     // map.shohousen.onclick = event => ele.dispatchEvent(new Event("do-shohousen", {bubbles: true}));
     // map.copy.onclick = event => ele.dispatchEvent(new Event("do-copy", {bubbles: true}));

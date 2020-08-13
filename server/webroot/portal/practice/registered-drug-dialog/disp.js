@@ -14,7 +14,6 @@ export class Disp extends Component {
     }
 
     add(exampleFull){
-        console.log("add", exampleFull);
         let drug = exampleFull.prescExample;
         let master = exampleFull.master;
         let s = getLines(drug, master, this.index++);

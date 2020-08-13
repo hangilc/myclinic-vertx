@@ -51,7 +51,6 @@ export class Title extends Component {
 
     async doMeisai(){
         let meisai = await this.rest.getMeisai(this.getVisitId());
-        console.log(meisai);
         let dialog = this.visitMeisaiDialogFactory.create(meisai);
         await dialog.open();
     }

@@ -33,8 +33,6 @@ class Body extends Component {
         this.tagElement = map.tag;
         map.tagExamples.find("a").on("click", event => {
             let tag = $(event.target).data("tag");
-            console.log("tag", tag);
-            console.log("this", $(this));
             if( tag ){
                 map.tag.val(tag);
             }

@@ -87,7 +87,6 @@ export class DiseaseSearch extends Component {
         let text = this.searchTextElement.val();
         let date = this.date;
         let searchKind = this.getSearchKind();
-        console.log("searchKind", searchKind);
         if( searchKind === "byoumei" ){
             let result = await this.rest.searchByoumeiMaster(text, date);
             this.selectElement.html("");

@@ -260,7 +260,6 @@ export class Record extends Component {
 
     markAsTemp() {
         this.ele.addClass("temp-visit");
-        console.log("ele", this.ele);
         //this.titleComponent.markAsTemp();
     }
 

@@ -10,11 +10,12 @@ import {populateConductCommands} from "./conduct-commands.js";
 import {populateConducts} from "./conducts.js";
 import {createTextEnter} from "./text-enter.js";
 import {createSendFax} from "./send-fax.js";
+import * as F from "../functions.js";
 
 let html = `
 <div class="x-title title"></div>
 <div class="x-left left">
-    <div class="x-texts"></div>
+    <div class="x-texts texts"></div>
     <div class="x-text-commands"></div>
 </div>
 <div class="x-right right">
@@ -30,6 +31,7 @@ let html = `
 export function createRecord(visitFull, rest){
     let visit = visitFull.visit;
     let ele = document.createElement("div");
+    ele.dataset.visitId = visitFull.visit.visitId;
     ele.classList.add("record");
     ele.innerHTML = html;
     let map = parseElement(ele);

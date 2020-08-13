@@ -1,18 +1,14 @@
 import {drawerToSvg} from "./drawer-svg.js";
 
-export function createDrawerPreview(ops, scale=1.0){
-    let width = 148;
-    let height = 210;
-    let vbWidth = width;
-    let vbHeight = height;
-    if( scale !== 1.0 ){
-        vbWidth /= scale;
-        vbHeight /= scale;
-    }
+// paperWidth (mm), paperHeight (mm)
+// A5: 148 210
+// A4: 210 297
+// B5: 182 257
+export function createDrawerPreview(ops, paperWidth, paperHeight, scale=1.0){
     let options = {
-        width: `${width}mm`,
-        height: `${height}mm`,
-        viewBox: `0 0 ${vbWidth} ${vbHeight}`
+        width: `${paperWidth * scale}mm`,
+        height: `${paperHeight * scale}mm`,
+        viewBox: `0 0 ${paperWidth} ${paperHeight}`
     }
     return drawerToSvg(ops, options);
 }

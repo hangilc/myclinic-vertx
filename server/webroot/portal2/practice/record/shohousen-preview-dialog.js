@@ -14,7 +14,7 @@ export async function openShohousenPreviewDialog(ops){
     let ele = document.createElement("div");
     ele.innerHTML = html;
     let map = parseElement(ele);
-    map.disp.append(createDrawerPreview(ops, 1.0));
+    map.disp.append(createDrawerPreview(ops, 148, 210, 1.2));
     return await modalOpen(ele, close => {
         map.close.onclick = event => close();
     });

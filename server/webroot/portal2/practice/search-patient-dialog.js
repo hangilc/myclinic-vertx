@@ -68,9 +68,3 @@ function makePatientLabel(patient){
     return `(${patientIdRep}) ${patient.lastName}${patient.firstName} (${birthday}生)`;
 }
 
-function formatBirthday(birthday){
-    let rep = kanjidate.sqldateToKanji(birthday);
-    let age = kanjidate.calcAge(birthday);
-    return `${rep}（${age}才）`;
-}
-

@@ -78,7 +78,11 @@ function setupShohousenDropdown(link, text, ele, rest) {
         },
         {
             label: "処方箋FAX",
-            action: () => {
+            action: async () => {
+                if (confirm("この処方箋をPDFとして保存しますか？")) {
+                    await F.createShohousenFax(text, rest);
+                    ele.dispatchEvent(F.event("do-edit-cancel"));
+                }
             }
         }, {
             label: "登録薬剤",

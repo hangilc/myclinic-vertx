@@ -32,6 +32,7 @@ class Context {
         this.tempVisitId = 0;
         this.patientChangedCallbacks = [];
         this.pageChangedCallbacks = [];
+        this.visitIdChangedCallbacks = [];
     }
 
     registerPatientChangedCallback(cb) {
@@ -42,14 +43,19 @@ class Context {
         this.pageChangedCallbacks.push(cb);
     }
 
+    registerVisitIdChangedCallback(cb){
+        this.visitIdChangedCallbacks.push(cb);
+    }
+
     setPatient(patient) {
         this.patient = patient;
-        this.patientChangedCallbacks.forEach(cb => cb(patient, this.currentVisitId));
+        this.patientChangedCallbacks.forEach(cb => cb(patient));
     }
 
     setCurrentVisitId(currentVisitId) {
         this.currentVisitId = currentVisitId;
         this.tempVisitId = 0;
+        this.visitIdChangedCallbacks.forEach(cb => cb(this.currentVisitId));
     }
 
     setTempVisitId(tempVisitId) {
@@ -102,6 +108,7 @@ export function createPractice(rest) {
     populateTopMenu(map.topMenu, rest);
     let onPatientChanged = cb => ctx.registerPatientChangedCallback(cb);
     let onPageChanged = cb => ctx.registerPageChangedCallback(cb);
+    let onVisitIdChanged = cb => ctx.registerVisitIdChangedCallback(cb);
     onPatientChanged(patient => {
         [map.patientInfo, map.patientManip].forEach(e => {
             e.style.display = patient ? "block" : "none";
@@ -109,7 +116,7 @@ export function createPractice(rest) {
     });
     ctx.setPatient(null);
     map.patientInfo.append(createPatientInfo(onPatientChanged));
-    map.patientManip.append(createPatientManip(onPatientChanged));
+    map.patientManip.append(createPatientManip(onPatientChanged, onVisitIdChanged));
     populateRecordNav(map.upperNav, onPageChanged);
     populateRecordNav(map.lowerNav, onPageChanged);
     ele.addEventListener("open-patient", event => doOpenPatient(event.detail, ctx));
@@ -191,7 +198,7 @@ async function doTextCopyMemo(text, onSuccess, practiceElement, ctx){
 async function doEndPatient(ctx){
     if( ctx.patient ){
         if( ctx.currentVisitId > 0 ){
-            await this.rest.suspendExam(ctx.currentVisitId);
+            await ctx.rest.suspendExam(ctx.currentVisitId);
         }
         ctx.setPatient(null);
         ctx.setCurrentVisitId(0);

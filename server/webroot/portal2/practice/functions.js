@@ -43,3 +43,19 @@ export function extractTextMemo(content) {
     return memo.join("\n");
 }
 
+export function hide(e){
+    e.classList.add("hidden");
+}
+
+export function show(e){
+    e.classList.remove("hidden");
+}
+
+export function showHide(e, pShow){
+    if( pShow ){
+        show(e);
+    } else {
+        hide(e);
+    }
+}
+

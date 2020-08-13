@@ -1,4 +1,5 @@
 import {parseElement} from "../js/parse-element.js";
+import * as F from "./functions.js";
 
 let html = `
 <button class="x-cashier">会計</button>
@@ -18,34 +19,31 @@ class Context {
 
     adaptUI(){
         let map = this.map;
-        [map.cashier, map.registerExam].forEach(
-            e => {
-                if( this.visitId === 0 ){
-                    e.classList.add("hidden");
-                } else {
-                    e.classList.remove("hidden");
-                }
-            }
-        );
+        let hasVisit = this.visitId !== 0;
+        F.showHide(map.cashier, hasVisit);
+        F.showHide(map.registerExam, !hasVisit);
     }
 }
 
-export function createPatientManip(onPatientChanged){
+export function createPatientManip(onPatientChanged, onVisitIdChanged){
     let ele = document.createElement("div");
     ele.classList.add("patient-manip", "hidden");
     ele.innerHTML = html;
     let map = parseElement(ele);
     let ctx = new Context(map);
     ctx.adaptUI();
-    onPatientChanged((patient, currentVisitId) => {
+    onPatientChanged((patient) => {
         if( patient ){
             ctx.patientId = patient.patientId;
-            ctx.visitId = currentVisitId;
-            ele.classList.remove("hidden");
             ctx.adaptUI();
+            F.show(ele);
         } else {
-            ele.classList.add("hidden");
+            F.hide(ele);
         }
+    });
+    onVisitIdChanged(currentVisitId => {
+        ctx.visitId = currentVisitId;
+        ctx.adaptUI();
     });
     map.cashier.onclick = event => dispatchEvent(ele, "do-cashier");
     map.endPatient.onclick = event => dispatchEvent(ele, "do-end-patient");

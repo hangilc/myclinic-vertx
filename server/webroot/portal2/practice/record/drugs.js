@@ -11,6 +11,14 @@ export function populateDrugs(ele, drugFulls){
     }
 }
 
+export function addDrugs(ele, drugFulls){
+    let n = ele.querySelectorAll(".drug").length;
+    for(let df of drugFulls){
+        n += 1;
+        ele.append(createDrugDisp(n, df));
+    }
+}
+
 function createRp(){
     let e = document.createElement("div");
     e.innerText = "Ｒｐ）";
@@ -21,6 +29,7 @@ function createDrugDisp(index, drugFull){
     let i = toZenkaku("" + index) + "）";
     let rep = drugRep(drugFull);
     let e = document.createElement("div");
+    e.classList.add("drug");
     e.innerText = i + rep;
     return e;
 }

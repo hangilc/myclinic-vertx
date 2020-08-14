@@ -3,11 +3,11 @@ import {populateTitle} from "./title.js";
 import {createText} from "./text.js";
 import {populateTextCommands} from "./text-commands.js";
 import {populateHoken} from "./hoken.js";
-import {populateDrugs} from "./drugs.js";
+import {populateDrugs, addDrugs} from "./drugs.js";
 import {populateShinryouCommands} from "./shinryou-commands.js";
 import {populateShinryouList, addShinryouList} from "./shinryou-list.js";
 import {populateConductCommands} from "./conduct-commands.js";
-import {populateConducts} from "./conducts.js";
+import {populateConducts, addConducts} from "./conducts.js";
 import {createTextEnter} from "./text-enter.js";
 import {createSendFax} from "./send-fax.js";
 import {createShinryouAddRegular} from "./shinryou-add-regular.js";
@@ -72,6 +72,8 @@ export function createRecord(visitFull, rest){
         w.addEventListener("batch-entered", event => {
             let data = event.detail;
             addShinryouList(map.shinryouList, data.shinryouFulls);
+            addDrugs(map.drugs, data.drugFulls);
+            addConducts(map.conducts, data.conductFulls);
             w.remove();
         });
         map.shinryouWorkarea.append(w);

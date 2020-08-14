@@ -1,14 +1,41 @@
+import {createShinryou} from "./shinryou.js";
+import * as F from "../functions.js";
 
 export function populateShinryouList(ele, shinryouList){
-    for(let i=0;i<shinryouList.length;i++){
-        let sf = shinryouList[i];
-        let e = createShinryouDisp(sf);
+    shinryouList.forEach(sf => {
+        let e = createShinryou(sf);
         ele.append(e);
+    });
+}
+
+export function addShinryouList(ele, shinryouList){
+    let srcList = Array.from(shinryouList);
+    if( srcList.length === 0 ){
+        return;
+    }
+    srcList.sort((a, b) => a.shinryou.shinryoucode - b.shinryou.shinryoucode);
+    let curList = F.removeChildren(ele);
+    while( curList.length > 0 || srcList.length > 0 ){
+        let cur = curList[0];
+        let src = srcList[0];
+        if( isBefore(cur, src) ){
+            ele.append(cur);
+            curList.shift();
+        } else {
+            ele.append(createShinryou(src));
+            srcList.shift();
+        }
     }
 }
 
-function createShinryouDisp(shinryouFull){
-    let e = document.createElement("div");
-    e.innerText = shinryouFull.master.name;
-    return e;
+function isBefore(cur, src){
+    if( cur ){
+        if( src ){
+            return cur.dataset.shinryoucode <= src.shinryou.shinryoucode;
+        } else {
+            return true;
+        }
+    } else {
+        return false;
+    }
 }

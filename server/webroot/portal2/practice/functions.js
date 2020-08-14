@@ -112,4 +112,17 @@ export async function extendKouhiRep(kouhi, rest){
     kouhi.rep = await rest.kouhiRep(kouhi);
 }
 
+export function removeChildren(node){
+    let result = [];
+    while( node.firstChild ){
+        result.push(node.firstChild);
+        node.firstChild.remove();
+    }
+    return result;
+}
+
+export function addChildren(node, children){
+    children.forEach(ch => node.append(ch));
+}
+
 

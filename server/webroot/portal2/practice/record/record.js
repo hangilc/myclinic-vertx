@@ -5,7 +5,7 @@ import {populateTextCommands} from "./text-commands.js";
 import {populateHoken} from "./hoken.js";
 import {populateDrugs} from "./drugs.js";
 import {populateShinryouCommands} from "./shinryou-commands.js";
-import {populateShinryouList} from "./shinryou-list.js";
+import {populateShinryouList, addShinryouList} from "./shinryou-list.js";
 import {populateConductCommands} from "./conduct-commands.js";
 import {populateConducts} from "./conducts.js";
 import {createTextEnter} from "./text-enter.js";
@@ -64,11 +64,16 @@ export function createRecord(visitFull, rest){
         populateHoken(map.hoken, hoken, visit, rest);
     });
     ele.addEventListener("add-regular-shinryou", event => {
-        let w = createShinryouAddRegular();
+        let w = createShinryouAddRegular(visit.visitId, rest);
         w.addEventListener("cancel", event => {
             event.stopPropagation();
             w.remove();
-        })
+        });
+        w.addEventListener("batch-entered", event => {
+            let data = event.detail;
+            addShinryouList(map.shinryouList, data.shinryouFulls);
+            w.remove();
+        });
         map.shinryouWorkarea.append(w);
     });
     return ele;

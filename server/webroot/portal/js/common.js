@@ -322,6 +322,9 @@ class Rest extends Client {
     }
 
     async listShinryouFullByIds(shinryouIds){
+        if( shinryouIds.length === 0 ){
+            return [];
+        }
         return await this.get("/list-shinryou-full-by-ids", {"shinryou-id": shinryouIds});
     }
 
@@ -342,10 +345,16 @@ class Rest extends Client {
     }
 
     async listDrugFullByIds(drugIds){
+        if( drugIds.length === 0 ){
+            return [];
+        }
         return await this.get("/list-drug-full-by-drug-ids", {"drug-id": drugIds});
     }
 
     async listConductFullByIds(conductIds){
+        if( conductIds.length === 0 ){
+            return [];
+        }
         return await this.get("/list-conduct-full-by-ids", {"conduct-id": conductIds});
     }
 

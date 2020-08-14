@@ -21,6 +21,7 @@ let leftItems = [
     "再診",
     "外来管理加算",
     "特定疾患管理",
+    "-",
     "尿便検査判断料",
     "血液検査判断料",
     "生化Ⅰ判断料",
@@ -33,10 +34,12 @@ let leftItems = [
 let rightItems = [
     "尿一般",
     "便潜血",
+    "-",
     "処方箋料",
     "特定疾患処方管理加算２（処方箋料）",
     "一般名処方加算２（処方箋料）",
     "一般名処方加算１（処方箋料）",
+    "-",
     "処方料",
     "処方料７",
     "手帳記載加算",
@@ -74,23 +77,48 @@ function createItemsBox(){
     return e;
 }
 
+function createSep(){
+    let e = document.createElement("div");
+    e.classList.add("sep-row");
+    return e;
+}
+
 function createCheck(label){
+    if( label === "-" ){
+        return createSep();
+    }
     let e = document.createElement("div");
     e.classList.add("shinryou-item");
     let chk = document.createElement("input");
     chk.type = "checkbox";
+    chk.value = label;
     let spn = document.createElement("span");
+    spn.classList.add("checkbox-label");
     spn.innerText = label;
+    spn.onclick = event => chk.click();
     e.append(chk, spn);
     return e;
 }
 
-export function createShinryouAddRegular(){
+function collectChecked(wrapper){
+    return Array.from(wrapper.querySelectorAll("input[type=checkbox]:checked"))
+        .map(chk => chk.value);
+}
+
+export function createShinryouAddRegular(visitId, rest){
     let ele = document.createElement("div");
     ele.classList.add("workarea", "shinryou-add-regular");
     ele.innerHTML = html;
     let map = parseElement(ele);
     map.content.append(createItemsBox());
+    map.enter.onclick = async event => {
+        let names = collectChecked(map.content);
+        let entered = await rest.batchEnterShinryouByNames(names, visitId);
+        let shinryouFulls = await rest.listShinryouFullByIds(entered.shinryouIds);
+        let drugFulls = await rest.listDrugFullByIds(entered.drugIds);
+        let conductFulls = await rest.listConductFullByIds(entered.conductIds);
+        ele.dispatchEvent(F.event("batch-entered", {shinryouFulls, drugFulls, conductFulls}));
+    };
     map.cancel.onclick = event => ele.dispatchEvent(F.event("cancel"));
     return ele;
 }

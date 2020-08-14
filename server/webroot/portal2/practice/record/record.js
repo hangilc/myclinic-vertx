@@ -55,6 +55,12 @@ export function createRecord(visitFull, rest){
     });
     ele.addEventListener("do-shohousen-fax",
         async event => await doShohousenFax(visit.visitId, visit.visitedAt, map.texts, rest));
+    ele.addEventListener("hoken-updated", event => {
+        event.stopPropagation();
+        let hoken = event.detail;
+        map.hoken.innerHTML = "";
+        populateHoken(map.hoken, hoken, visit, rest);
+    });
     return ele;
 }
 

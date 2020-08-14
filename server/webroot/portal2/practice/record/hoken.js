@@ -9,6 +9,11 @@ export function populateHoken(ele, hoken, visit, rest){
         let avails = await rest.listAvailableAllHoken(visit.patientId, visit.visitedAt.substring(0, 10));
         await extendRep(avails, rest);
         let edit = createHokenEdit(hoken, visit.visitId, avails, rest);
+        edit.addEventListener("cancel", event => {
+            event.stopPropagation();
+            edit.remove();
+            ele.append(disp);
+        });
         disp.remove();
         ele.append(edit);
     }

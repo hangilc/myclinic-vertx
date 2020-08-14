@@ -429,6 +429,10 @@ class Rest extends Client {
         return await this.get("/list-available-hoken", {"patient-id": patientId, at: date});
     }
 
+    async listAvailableAllHoken(patientId, date){
+        return await this.get("/list-available-all-hoken", {"patient-id": patientId, at: date});
+    }
+
     async listAllHoken(patientId){
         let result = await this.get("/list-hoken", {"patient-id": patientId});
         return {

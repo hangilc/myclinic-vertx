@@ -42,7 +42,7 @@ export function createRecord(visitFull, rest){
         map.texts.append(t);
     }
     populateTextCommands(map.textCommands);
-    populateHoken(map.hoken, visitFull.hoken);
+    populateHoken(map.hoken, visitFull.hoken, visit, rest);
     populateDrugs(map.drugs, visitFull.drugs);
     populateShinryouCommands(map.shinryouCommands);
     populateShinryouList(map.shinryouList, visitFull.shinryouList);

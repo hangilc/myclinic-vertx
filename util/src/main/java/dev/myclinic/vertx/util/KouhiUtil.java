@@ -22,7 +22,7 @@ public class KouhiUtil {
 		else if ((futanshaBangou / 1000000) == 88)
 			return "マル乳";
 		else
-			return "公費負担";
+			return String.format("公費負担（%d）", futanshaBangou);
 	}
 
 }

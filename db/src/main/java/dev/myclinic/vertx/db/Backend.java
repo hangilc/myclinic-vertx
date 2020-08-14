@@ -832,19 +832,19 @@ public class Backend {
 
     public HokenListDTO listHoken(int patientId) {
         HokenListDTO result = new HokenListDTO();
-        result.shahokokuhoListDTO = listShahokokuho(patientId);
-        result.koukikoureiListDTO = listKoukikourei(patientId);
-        result.roujinListDTO = listRoujin(patientId);
-        result.kouhiListDTO = listKouhi(patientId);
+        result.shahokokuhoList = listShahokokuho(patientId);
+        result.koukikoureiList = listKoukikourei(patientId);
+        result.roujinList = listRoujin(patientId);
+        result.kouhiList = listKouhi(patientId);
         return result;
     }
 
     public HokenListDTO listAvailableAllHoken(int patientId, LocalDate at) {
         HokenListDTO hokenListDTO = new HokenListDTO();
-        hokenListDTO.shahokokuhoListDTO = findAvailableShahokokuho(patientId, at);
-        hokenListDTO.koukikoureiListDTO = findAvailableKoukikourei(patientId, at);
-        hokenListDTO.roujinListDTO = findAvailableRoujin(patientId, at);
-        hokenListDTO.kouhiListDTO = findAvailableKouhi(patientId, at);
+        hokenListDTO.shahokokuhoList = findAvailableShahokokuho(patientId, at);
+        hokenListDTO.koukikoureiList = findAvailableKoukikourei(patientId, at);
+        hokenListDTO.roujinList = findAvailableRoujin(patientId, at);
+        hokenListDTO.kouhiList = findAvailableKouhi(patientId, at);
         return hokenListDTO;
     }
 

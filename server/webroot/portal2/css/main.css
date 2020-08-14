@@ -73,6 +73,19 @@ body > .main-container > .main h2 {
     display: none;
 }
 
+.workarea {
+    border: 1px solid #ccc;
+    border-radius: 0.5em;
+    padding: 0.5em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+.workarea h3 {
+    margin-top: 0;
+    padding: 0;
+}
+
 .modal-dialog-backdrop {
     display: block;
     position: fixed;

@@ -96,4 +96,20 @@ export async function createShohousenFax(text, rest) {
     }
 }
 
+export async function extendShahokokuhoRep(shahokokuho, rest){
+    shahokokuho.rep = await rest.shahokokuhoRep(shahokokuho);
+}
+
+export async function extendKoukikoureiRep(koukikourei, rest){
+    koukikourei.rep = await rest.koukikoureiRep(koukikourei);
+}
+
+export async function extendRoujinRep(roujin, rest){
+    roujin.rep = await rest.roujinRep(roujin);
+}
+
+export async function extendKouhiRep(kouhi, rest){
+    kouhi.rep = await rest.kouhiRep(kouhi);
+}
+
 

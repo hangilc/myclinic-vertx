@@ -783,6 +783,19 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end(result);
     }
 
+    private void listAvailableAllHoken(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        int patientId = Integer.parseInt(params.get("patient-id"));
+        LocalDate at = LocalDate.parse(params.get("at"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        HokenListDTO _value = backend.listAvailableAllHoken(patientId, at);
+        conn.commit();
+        String result = mapper.writeValueAsString(_value);
+        req.response().end(result);
+    }
+
     private void updateDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
@@ -2058,6 +2071,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("delete-text", this::deleteText);
         funcMap.put("modify-charge", this::modifyCharge);
         funcMap.put("list-available-hoken", this::listAvailableHoken);
+        funcMap.put("list-available-all-hoken", this::listAvailableAllHoken);
         funcMap.put("update-drug", this::updateDrug);
         funcMap.put("get-find-label", this::findGazouLabel);
         funcMap.put("delete-conduct-shinryou", this::deleteConductShinryou);

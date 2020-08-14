@@ -3,18 +3,18 @@ package dev.myclinic.vertx.dto;
 import java.util.List;
 
 public class HokenListDTO {
-	public List<ShahokokuhoDTO> shahokokuhoListDTO;
-	public List<KoukikoureiDTO> koukikoureiListDTO;
-	public List<RoujinDTO> roujinListDTO;
-	public List<KouhiDTO> kouhiListDTO;
+	public List<ShahokokuhoDTO> shahokokuhoList;
+	public List<KoukikoureiDTO> koukikoureiList;
+	public List<RoujinDTO> roujinList;
+	public List<KouhiDTO> kouhiList;
 
 	@Override
 	public String toString() {
 		return "HokenListDTO{" +
-				"shahokokuhoListDTO=" + shahokokuhoListDTO +
-				", koukikoureiListDTO=" + koukikoureiListDTO +
-				", roujinListDTO=" + roujinListDTO +
-				", kouhiListDTO=" + kouhiListDTO +
+				"shahokokuhoList=" + shahokokuhoList +
+				", koukikoureiList=" + koukikoureiList +
+				", roujinList=" + roujinList +
+				", kouhiList=" + kouhiList +
 				'}';
 	}
 }

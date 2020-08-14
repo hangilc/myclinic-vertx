@@ -320,5 +320,33 @@ a.hidden + .sep  {
     margin-bottom: 0.5em;
 }
 
+.practice .record .shinryou-add-regular .items-container {
+    display: grid;
+    grid-template-columns: 50% 50%;
+}
+
+.practice .record .shinryou-add-regular .left-items {
+    grid-column: 1 / 2;
+    padding-right: 1em;
+}
+
+.practice .record .shinryou-add-regular .right-items {
+    grid-column: 2 / 3;
+}
+
+.practice .record .shinryou-add-regular .right-items input[type=checkbox],
+.practice .record .shinryou-add-regular .right-items input[type=checkbox] {
+    margin-left: -1em;
+    padding-left: 1em;
+}
+
+.practice .record .shinryou-add-regular .bottom-items {
+    grid-column: 1 / 3;
+}
+
+.practice .record .shinryou-add-regular .bottom-items .shinryou-item + .shinryou-item {
+    margin-left: 0.5em;
+}
+
 
 

@@ -10,6 +10,7 @@ import {populateConductCommands} from "./conduct-commands.js";
 import {populateConducts} from "./conducts.js";
 import {createTextEnter} from "./text-enter.js";
 import {createSendFax} from "./send-fax.js";
+import {createShinryouAddRegular} from "./shinryou-add-regular.js";
 import * as F from "../functions.js";
 
 let html = `
@@ -22,6 +23,7 @@ let html = `
     <div class="x-hoken"></div>
     <div class="x-drugs"></div>
     <div class="x-shinryou-commands"></div>
+    <div class="x-shinryou-workarea"></div>
     <div class="x-shinryou-list"></div>
     <div class="x-conduct-commands"></div>
     <div class="x-conducts"></div>
@@ -60,6 +62,14 @@ export function createRecord(visitFull, rest){
         let hoken = event.detail;
         map.hoken.innerHTML = "";
         populateHoken(map.hoken, hoken, visit, rest);
+    });
+    ele.addEventListener("add-regular-shinryou", event => {
+        let w = createShinryouAddRegular();
+        w.addEventListener("cancel", event => {
+            event.stopPropagation();
+            w.remove();
+        })
+        map.shinryouWorkarea.append(w);
     });
     return ele;
 }

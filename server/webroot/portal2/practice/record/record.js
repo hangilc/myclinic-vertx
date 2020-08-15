@@ -77,7 +77,6 @@ export function createRecord(visitFull, rest){
         addShinryouList(map.shinryouList, data.shinryouFulls || []);
         addDrugs(map.drugs, data.drugFulls || []);
         addConducts(map.conducts, data.conductFulls || []);
-        w.remove();
     });
     return ele;
 }

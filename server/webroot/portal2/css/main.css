@@ -13,6 +13,21 @@ a {
     text-decoration: none;
 }
 
+input {
+    font-size: 1rem;
+    padding: 0.2em;
+    margin: 0.5em 0;
+}
+
+select {
+    width: 100%;
+    padding: 0 0.5em;
+}
+
+option {
+    font-size: 1rem;
+}
+
 textarea {
     width: calc(100% - 1em);
     font-size: 1rem;
@@ -90,7 +105,7 @@ body > .main-container > .main h2 {
 }
 
 .workarea h3 {
-    margin-top: 0;
+    margin: 0;
     padding: 0;
 }
 
@@ -179,11 +194,6 @@ body > .main-container > .main h2 {
 
 .select-wqueue-dialog select option + option {
     margin-top: 0;
-}
-
-.search-patient-dialog input {
-    font-size: 1rem;
-    padding: 0.2em;
 }
 
 .search-patient-dialog select,

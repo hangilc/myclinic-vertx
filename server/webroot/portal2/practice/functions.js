@@ -125,4 +125,10 @@ export function addChildren(node, children){
     children.forEach(ch => node.append(ch));
 }
 
+export function createOption(label, data){
+    let opt = document.createElement("option");
+    opt.innerText = label;
+    opt.data = data;
+    return opt;
+}
 

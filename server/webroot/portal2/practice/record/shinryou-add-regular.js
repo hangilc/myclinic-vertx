@@ -118,6 +118,7 @@ export function createShinryouAddRegular(visitId, rest){
         let drugFulls = await rest.listDrugFullByIds(entered.drugIds);
         let conductFulls = await rest.listConductFullByIds(entered.conductIds);
         ele.dispatchEvent(F.event("batch-entered", {shinryouFulls, drugFulls, conductFulls}));
+        ele.remove();
     };
     map.cancel.onclick = event => ele.dispatchEvent(F.event("cancel"));
     return ele;

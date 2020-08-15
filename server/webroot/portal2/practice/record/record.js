@@ -46,7 +46,8 @@ export function createRecord(visitFull, rest){
     populateTextCommands(map.textCommands);
     populateHoken(map.hoken, visitFull.hoken, visit, rest);
     populateDrugs(map.drugs, visitFull.drugs);
-    populateShinryouCommands(map.shinryouCommands);
+    populateShinryouCommands(map.shinryouCommands, map.shinryouWorkarea, visit.visitId,
+        visit.visitedAt, rest);
     populateShinryouList(map.shinryouList, visitFull.shinryouList);
     populateConductCommands(map.conductCommands);
     populateConducts(map.conducts, visitFull.conducts);
@@ -69,14 +70,14 @@ export function createRecord(visitFull, rest){
             event.stopPropagation();
             w.remove();
         });
-        w.addEventListener("batch-entered", event => {
-            let data = event.detail;
-            addShinryouList(map.shinryouList, data.shinryouFulls);
-            addDrugs(map.drugs, data.drugFulls);
-            addConducts(map.conducts, data.conductFulls);
-            w.remove();
-        });
         map.shinryouWorkarea.append(w);
+    });
+    ele.addEventListener("batch-entered", event => {
+        let data = event.detail;
+        addShinryouList(map.shinryouList, data.shinryouFulls || []);
+        addDrugs(map.drugs, data.drugFulls || []);
+        addConducts(map.conducts, data.conductFulls || []);
+        w.remove();
     });
     return ele;
 }

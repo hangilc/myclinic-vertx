@@ -141,8 +141,13 @@ body > .main-container > .main h2 {
 
 .dropdown-links a {
     display: block;
-    margin:0;
-    padding:0;
+    margin: 0;
+    padding-left: 0.4em;
+    padding-right: 0.4em;
+}
+
+.dropdown-links a:hover {
+    background-color: #eee;
 }
 
 .dropdown-backdrop {
@@ -354,6 +359,10 @@ a.hidden + .sep  {
 
 .practice .record .shinryou-add-regular .bottom-items .shinryou-item + .shinryou-item {
     margin-left: 0.5em;
+}
+
+.practice .record .shinryou-search.workarea .search-result select {
+    width: 100%;
 }
 
 

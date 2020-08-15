@@ -149,6 +149,10 @@ export function createPractice(rest) {
         await doTextCopy(text, onSuccess, ele, ctx);
     });
     ele.addEventListener("set-temp-visit-id", event => doSetTempVisitId(event.detail, ele, ctx));
+    ele.addEventListener("copy-all-shinryou", async event => {
+        let visitId = event.detail;
+        await doCopyAllShinryou(visitId, ctx);
+    });
     return ele;
 }
 
@@ -188,6 +192,25 @@ function findCopyTarget(srcVisitId, what, ctx){
         return 0;
     }
     return targetVisitId;
+}
+
+function findRecordElement(visitId){
+    let q = `.practice .record[data-visit-id='${visitId}']`;
+    return document.querySelector(q);
+}
+
+async function doCopyAllShinryou(srcVisitId, ctx){
+    let targetVisitId = findCopyTarget(srcVisitId, "診療行為", ctx);
+    if( !targetVisitId ){
+        return;
+    }
+    let shinryouList = await ctx.rest.listShinryou(srcVisitId);
+    let shinryouIds = await ctx.rest.batchCopyShinryou(targetVisitId, shinryouList);
+    let entered = await ctx.rest.listShinryouFullByIds(shinryouIds);
+    let rec = findRecordElement(targetVisitId);
+    if( rec ){
+        rec.dispatchEvent(F.event("batch-entered", {shinryouFulls: entered}));
+    }
 }
 
 async function doTextCopyMemo(text, onSuccess, practiceElement, ctx){

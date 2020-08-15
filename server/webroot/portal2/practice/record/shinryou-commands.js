@@ -2,7 +2,6 @@ import {parseElement} from "../../js/parse-element.js";
 import {createDropdown} from "../../comp/dropdown.js";
 import {createShinryouSearch} from "./shinryou-search.js";
 import * as F from "../functions.js";
-import {createShinryou} from "./shinryou.js";
 
 let html = `
 <a href="javascript:void(0)" class="x-add-regular">診療行為</a> | 
@@ -28,7 +27,7 @@ function setupDropdown(button, workareaWrapper, visitId, visitedAt, rest){
         },
         {
             label: "全部コピー",
-            action: () => {}
+            action: () => workareaWrapper.dispatchEvent(F.event("copy-all-shinryou", visitId))
         },
     ]);
 }

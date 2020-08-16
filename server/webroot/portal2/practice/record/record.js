@@ -48,7 +48,7 @@ export function createRecord(visitFull, rest){
     populateDrugs(map.drugs, visitFull.drugs);
     populateShinryouCommands(map.shinryouCommands, map.shinryouWorkarea, visit.visitId,
         visit.visitedAt, rest);
-    populateShinryouList(map.shinryouList, visitFull.shinryouList);
+    populateShinryouList(map.shinryouList, visitFull.shinryouList, rest);
     populateConductCommands(map.conductCommands);
     populateConducts(map.conducts, visitFull.conducts);
     ele.addEventListener("do-enter-text", event => doEnterText(map.texts, visit.visitId, rest));
@@ -74,7 +74,7 @@ export function createRecord(visitFull, rest){
     });
     ele.addEventListener("batch-entered", event => {
         let data = event.detail;
-        addShinryouList(map.shinryouList, data.shinryouFulls || []);
+        addShinryouList(map.shinryouList, data.shinryouFulls || [], rest);
         addDrugs(map.drugs, data.drugFulls || []);
         addConducts(map.conducts, data.conductFulls || []);
     });

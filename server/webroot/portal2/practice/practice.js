@@ -153,6 +153,7 @@ export function createPractice(rest) {
         let visitId = event.detail;
         await doCopyAllShinryou(visitId, ctx);
     });
+    ele.addEventListener("shinryou-deleted", event => doShinryouDeleted(event.detail));
     return ele;
 }
 
@@ -210,6 +211,13 @@ async function doCopyAllShinryou(srcVisitId, ctx){
     let rec = findRecordElement(targetVisitId);
     if( rec ){
         rec.dispatchEvent(F.event("batch-entered", {shinryouFulls: entered}));
+    }
+}
+
+function doShinryouDeleted(shinryouId){
+    let e = document.querySelector(`.practice .shinryou[data-shinryou-id='${shinryouId}']`);
+    if( e ){
+        e.remove();
     }
 }
 

@@ -1,14 +1,14 @@
 import {createShinryou} from "./shinryou.js";
 import * as F from "../functions.js";
 
-export function populateShinryouList(ele, shinryouList){
+export function populateShinryouList(ele, shinryouList, rest){
     shinryouList.forEach(sf => {
-        let e = createShinryou(sf);
+        let e = createShinryou(sf, rest);
         ele.append(e);
     });
 }
 
-export function addShinryouList(ele, shinryouList){
+export function addShinryouList(ele, shinryouList, rest){
     let srcList = Array.from(shinryouList);
     if( srcList.length === 0 ){
         return;
@@ -22,7 +22,7 @@ export function addShinryouList(ele, shinryouList){
             ele.append(cur);
             curList.shift();
         } else {
-            ele.append(createShinryou(src));
+            ele.append(createShinryou(src, rest));
             srcList.shift();
         }
     }

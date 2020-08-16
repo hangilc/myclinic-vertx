@@ -132,3 +132,22 @@ export function createOption(label, data){
     return opt;
 }
 
+export function getShinryouTekiyou(shinryouFull){
+    return (shinryouFull && shinryouFull.attr) ? shinryouFull.attr.tekiyou : "";
+}
+
+export function createShinryouLabel(masterName, tekiyou){
+    if( tekiyou ){
+        return `${masterName} ［摘要：${tekiyou}］`;
+    } else {
+        return masterName;
+    }
+}
+
+export function setShinryouTekiyou(shinryouFull, tekiyou){
+    if( !shinryouFull.attr ){
+        shinryouFull.attr = {};
+    }
+    shinryouFull.attr.tekiyou = tekiyou;
+}
+

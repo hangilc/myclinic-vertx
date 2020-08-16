@@ -16,7 +16,7 @@ export function createShinryouEdit(shinryouFull, rest){
     ele.classList.add("workarea");
     ele.innerHTML = html;
     let map = parseElement(ele);
-    map.name.innerText = shinryouFull.master.name;
+    map.name.innerText = F.createShinryouLabel(shinryouFull.master.name, F.getShinryouTekiyou(shinryouFull));
     map.delete.onclick = async event => {
         if( !confirm("この診療行為を削除していいですか？") ){
             return;
@@ -25,6 +25,23 @@ export function createShinryouEdit(shinryouFull, rest){
         await rest.deleteShinryou(shinryouId);
         ele.dispatchEvent(F.event("shinryou-deleted", shinryouId));
     };
+    map.tekiyou.onclick = event => doTekiyou(F.getShinryouTekiyou(shinryouFull),
+        shinryouFull.shinryou.shinryouId, ele, rest);
     map.close.onclick = event => ele.dispatchEvent(F.event("close"));
+    ele.addEventListener("shinryou-tekiyou-changed", event => {
+        let tekiyou = event.detail.tekiyou;
+        map.name.innerText = F.createShinryouLabel(shinryouFull.master.name, tekiyou);
+    });
     return ele;
+}
+
+async function doTekiyou(tekiyou, shinryouId, ele, rest){
+    let result = prompt("診療行為の摘要", tekiyou);
+    if( result != null ){
+        await rest.setShinryouTekiyou(shinryouId, result);
+        ele.dispatchEvent(F.event("shinryou-tekiyou-changed", {
+            shinryouId: shinryouId,
+            tekiyou: result
+        }));
+    }
 }

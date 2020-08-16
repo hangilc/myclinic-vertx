@@ -1,6 +1,7 @@
+import * as F from "../functions.js";
 
-export function createShinryouDisp(name){
+export function createShinryouDisp(name, tekiyou){
     let ele = document.createElement("div");
-    ele.innerText = name;
+    ele.innerText = F.createShinryouLabel(name, tekiyou);
     return ele;
 }

@@ -657,6 +657,10 @@ class Rest extends Client {
         });
     }
 
+    async getMostRecentVisitOfPatient(patientId){
+        return await this.get("/get-most-recent-visit-of-patient", {"patient-id": patientId});
+    }
+
 }
 
 class Integration extends Client {

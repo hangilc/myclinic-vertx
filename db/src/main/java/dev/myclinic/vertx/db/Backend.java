@@ -562,6 +562,11 @@ public class Backend {
         }
     }
 
+    public VisitDTO getMostRecentVisitOfPatient(int patientId){
+        String sql = "select * from visit where patientId = ? order by visitId desc limit 1";
+        return getQuery().get(xlate(sql, ts.visitTable), ts.visitTable, patientId);
+    }
+
     // Charge /////////////////////////////////////////////////////////////////////////////
 
     void enterCharge(ChargeDTO charge) {

@@ -7,6 +7,7 @@ import {createRecord} from "./record/record.js";
 import {createFaxProgress} from "./fax-progress.js";
 import * as F from "./functions.js";
 import {createText} from "./record/text.js";
+import {initDiseaseArea} from "./record/disease.js";
 
 let tmpl = `
 <h2>診察</h2>
@@ -19,7 +20,10 @@ let tmpl = `
         <div class="x-records records"></div>
         <div class="x-lower-nav"></div>
     </div>
-    <div class="right x-main-right"></div>
+    <div class="right">
+        <div class="x-disease-area disease-area"></div>
+        <div class="x-main-right"></div>
+    </div>
 </div>
 `;
 
@@ -119,6 +123,7 @@ export function createPractice(rest) {
     map.patientManip.append(createPatientManip(onPatientChanged, onVisitIdChanged));
     populateRecordNav(map.upperNav, onPageChanged);
     populateRecordNav(map.lowerNav, onPageChanged);
+    initDiseaseArea(map.diseaseArea, onPatientChanged, rest);
     ele.addEventListener("open-patient", event => doOpenPatient(event.detail, ctx));
     ele.addEventListener("do-cashier", event => console.log("do-cashier"));
     ele.addEventListener("goto-page", async event => {

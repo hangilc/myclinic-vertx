@@ -2173,20 +2173,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("list-visit-patient-at", this::listVisitPatientAt);
         funcMap.put("list-shinryou", this::listShinryou);
         funcMap.put("batch-get-patient", this::batchGetPatient);
-    }
-
-    private void batchGetPatient(RoutingContext ctx, Connection conn) throws Exception {
-        List<Integer> patientIds = this.mapper.readValue(ctx.getBody().getBytes(),
-                new TypeReference<>(){});
-        List<PatientDTO> result = new ArrayList<>();
-        Query query = new Query(conn);
-        Backend backend = new Backend(ts, query);
-        for(int patientId: patientIds){
-            PatientDTO patient = backend.getPatient(patientId);
-            result.add(patient);
-        }
-        conn.commit();
-        ctx.response().end(jsonEncode(result));
+        funcMap.put("get-most-recent-visit-of-patient", this::getMostRecentVisitOfPatient);
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2207,6 +2194,33 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("resolve-kizai-master", this::resolveKizaiMaster);
         funcMap.put("resolve-shinryou-master-by-name", this::resolveShinryouMasterByName);
         funcMap.put("enter-xp", this::enterXp);
+    }
+
+    private void getMostRecentVisitOfPatient(RoutingContext ctx, Connection conn) throws Exception {
+        String patientIdParam = ctx.request().getParam("patient-id");
+        if( patientIdParam == null ){
+            throw new RuntimeException("Missing parameter: patient-id.");
+        }
+        int patientId = Integer.parseInt(patientIdParam);
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        VisitDTO result = backend.getMostRecentVisitOfPatient(patientId);
+        conn.commit();
+        ctx.response().end(jsonEncode(result));
+    }
+
+    private void batchGetPatient(RoutingContext ctx, Connection conn) throws Exception {
+        List<Integer> patientIds = this.mapper.readValue(ctx.getBody().getBytes(),
+                new TypeReference<>(){});
+        List<PatientDTO> result = new ArrayList<>();
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        for(int patientId: patientIds){
+            PatientDTO patient = backend.getPatient(patientId);
+            result.add(patient);
+        }
+        conn.commit();
+        ctx.response().end(jsonEncode(result));
     }
 
     private ConductShinryouDTO createConductShinryouReq(String name, LocalDate at) {

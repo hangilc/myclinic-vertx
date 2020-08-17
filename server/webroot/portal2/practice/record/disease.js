@@ -48,6 +48,7 @@ export function initDiseaseArea(ele, onPatientChanged, rest){
             map.workspace.innerHTML = "";
             map.workspace.append(createDiseaseAdd(diseaseFulls,
                 recent.visitedAt.substring(0, 10),
+                currentPatient.patientId,
                 rest));
         }
     }

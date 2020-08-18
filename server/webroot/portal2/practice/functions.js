@@ -151,3 +151,11 @@ export function setShinryouTekiyou(shinryouFull, tekiyou){
     shinryouFull.attr.tekiyou = tekiyou;
 }
 
+export function todayAsSqldate(){
+    let d = new Date();
+    let year = d.getFullYear();
+    let month = ("" + (d.getMonth()+1)).padStart(2, "0");
+    let day = ("" + d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+

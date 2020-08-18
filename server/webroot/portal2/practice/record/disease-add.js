@@ -20,7 +20,7 @@ let html = `
             <div>
                 <input type="text" class="x-search-text">
                 <button type="submit">検索</button>
-                <a href="javascript:void(0)">例</a>
+                <a href="javascript:void(0)" class="x-examples-link">例</a>
             </div>
             <div> 
                 <input type="radio" name="search-mode" value="name" checked>病名
@@ -32,7 +32,7 @@ let html = `
 </div>
 `;
 
-export function createDiseaseAdd(diseaseFulls, visitedAt, patientId, rest){
+export function createDiseaseAdd(diseaseFulls, visitedAt, patientId, examples, rest){
     let ele = document.createElement("div");
     ele.innerHTML = html;
     let byoumeiMaster = null;
@@ -48,20 +48,23 @@ export function createDiseaseAdd(diseaseFulls, visitedAt, patientId, rest){
         map.select.innerHTML = "";
         opts.forEach(opt => map.select.append(opt));
     };
-    map.select.onchange = event => {
+    map.examplesLink.onclick = event => doExamples(examples, map.select);
+    map.select.onchange = async event => {
         let opt = map.select.querySelector("option:checked");
         if( opt ){
-            if( opt.dataset.kind === "name" ){
+            let kind = opt.dataset.kind;
+            if( kind=== "name" ){
                 addByoumeiMaster(opt.data);
-            } else if( opt.dataset.kind === "adj" ){
+            } else if( kind=== "adj" ){
                 addAdjMaster(opt.data);
+            } else if( kind === "example" ){
+                await setByExample(opt.data);
             }
         }
     };
     map.enter.onclick = async event => {
         let req = composeReq(patientId, byoumeiMaster, getStartDate(), adjMasters);
         if( req ){
-            console.log("req", req);
             let diseaseId = await rest.enterDisease(req);
             let entered = await rest.getDisease(diseaseId);
             ele.dispatchEvent(F.event("disease-entered", entered));
@@ -86,12 +89,48 @@ export function createDiseaseAdd(diseaseFulls, visitedAt, patientId, rest){
         updateName();
     }
 
+    async function setByExample(example){
+        let exByoumeiMaster = null;
+        let exAdjMasters = [];
+        if( example.byoumei ){
+            let startDate = getStartDate() || F.todayAsSqldate();
+            let master = await rest.findByoumeiMasterByName(example.byoumei, startDate);
+            if( !master ){
+                alert(`傷病名（${byoumei}）を見つけられませんでした。`);
+                return;
+            }
+            exByoumeiMaster = master;
+        }
+        if( example.adjList ) {
+            for (let adj of example.adjList) {
+                let master = await rest.findShuushokugoMasterByName(adj);
+                if (!master) {
+                    alert(`修飾語（${adj}）を見つけられませんでした。`);
+                    return;
+                }
+                exAdjMasters.push(master);
+            }
+        }
+        byoumeiMaster = exByoumeiMaster;
+        adjMasters = exAdjMasters;
+        updateName();
+    }
+
     function getSearchMode(){
         return ele.querySelector("form input[type=radio][name=search-mode]:checked").value;
     }
 
     function getStartDate(){
         return map.startDate.value;
+    }
+}
+
+function doExamples(examples, select){
+    select.innerHTML = "";
+    for(let ex of examples){
+        let opt = F.createOption(ex.label || ex.byoumei, ex);
+        opt.dataset.kind = "example";
+        select.append(opt);
     }
 }
 

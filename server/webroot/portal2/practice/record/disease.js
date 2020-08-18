@@ -22,6 +22,7 @@ export function initDiseaseArea(ele, onPatientChanged, rest){
     let map = parseElement(ele);
     let diseaseFulls = [];
     let currentPatient = null;
+    let examples = null;
     onPatientChanged(async patient => {
         currentPatient = patient;
         if( patient ){
@@ -47,12 +48,16 @@ export function initDiseaseArea(ele, onPatientChanged, rest){
     }
 
     async function showAdd(){
+        if( examples == null ){
+            examples = await rest.listDiseaseExample();
+        }
         let recent = await rest.getMostRecentVisitOfPatient(currentPatient.patientId);
         if( recent ){
             map.workspace.innerHTML = "";
             map.workspace.append(createDiseaseAdd(diseaseFulls,
                 recent.visitedAt.substring(0, 10),
                 currentPatient.patientId,
+                examples,
                 rest));
         }
     }

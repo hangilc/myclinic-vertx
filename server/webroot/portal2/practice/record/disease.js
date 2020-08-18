@@ -1,6 +1,7 @@
 import {parseElement} from "../../js/parse-element.js";
 import {createDiseaseCurrent} from "./disease-current.js";
 import {createDiseaseAdd} from "./disease-add.js";
+import {createDiseaseEnd} from "./disease-end.js";
 import * as F from "../functions.js";
 
 let html = `
@@ -41,6 +42,9 @@ export function initDiseaseArea(ele, onPatientChanged, rest){
         let entered = event.detail;
         diseaseFulls.push(entered);
     });
+    ele.addEventListener("current-diseases-changed", event => {
+        diseaseFulls = event.detail;
+    });
 
     function showCurrent(){
         map.workspace.innerHTML = "";
@@ -63,8 +67,10 @@ export function initDiseaseArea(ele, onPatientChanged, rest){
     }
 
     function showEnd(){
-        map.workspace.innerHTML = "";
-
+        if( currentPatient ){
+            map.workspace.innerHTML = "";
+            map.workspace.append(createDiseaseEnd(diseaseFulls, currentPatient.patientId, rest));
+        }
     }
 
     function showEdit(){

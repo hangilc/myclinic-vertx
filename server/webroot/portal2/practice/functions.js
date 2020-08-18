@@ -159,3 +159,19 @@ export function todayAsSqldate(){
     return `${year}-${month}-${day}`;
 }
 
+export function createCheckbox(label, value, data=null){
+    let e = document.createElement("div");
+    let check = document.createElement("input");
+    check.type = "checkbox";
+    check.value = value;
+    if( data ){
+        check.data = data;
+    }
+    let sep = document.createTextNode(" ");
+    let span = document.createElement("span");
+    span.innerText = label;
+    span.onclick = event => check.click();
+    e.append(check, sep, span);
+    return e;
+}
+

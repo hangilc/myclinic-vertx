@@ -152,11 +152,19 @@ export function setShinryouTekiyou(shinryouFull, tekiyou){
 }
 
 export function todayAsSqldate(){
-    let d = new Date();
-    let year = d.getFullYear();
-    let month = ("" + (d.getMonth()+1)).padStart(2, "0");
-    let day = ("" + d.getDate()).padStart(2, "0");
+    return dateToSqldate(new Date());
+}
+
+export function dateToSqldate(date){
+    let year = date.getFullYear();
+    let month = ("" + (date.getMonth()+1)).padStart(2, "0");
+    let day = ("" + date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+}
+
+export function getLastDayOfMonth(date){
+    let d = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    return d.getDate();
 }
 
 export function createCheckbox(label, value, data=null){

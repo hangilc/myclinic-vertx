@@ -6,7 +6,17 @@ import * as consts from "../../../portal/js/consts.js";
 let html = `
 <div class="x-diseases"></div>
 <div>
-    <input type="date" class="x-end-date">
+    <div>
+        <input type="date" class="x-end-date">
+    </div>
+    <div> 
+        <a href="javascript:void(0)" class="x-move-day">日</a> |
+        <a href="javascript:void(0)" class="x-move-week">週</a> |
+        <a href="javascript:void(0)" class="x-move-month">月</a> |
+        <a href="javascript:void(0)" class="x-move-to-today">今日</a> |
+        <a href="javascript:void(0)" class="x-move-to-month-end">月末</a> |
+        <a href="javascript:void(0)" class="x-move-to-prev-month-end">先月末</a>
+    </div>
 </div>
 <div>
     <form onsubmit="return false;" class="x-end-reason-form"> 
@@ -25,6 +35,7 @@ export function createDiseaseEnd(diseaseFulls, patientId, rest) {
     ele.innerHTML = html;
     let map = parseElement(ele);
     updateDiseaseDisplay();
+    setupDateMovers(map);
     map.enter.onclick = async event => {
         let selected = listSelectedDiseases();
         let endDate = getEndDate();
@@ -113,3 +124,72 @@ function maxStartDate(checks) {
     });
     return date;
 }
+
+function moveDay(date, shiftKey){
+    let n = shiftKey ? -1 : 1;
+    date.setDate(date.getDate() + n);
+}
+
+function moveWeek(date, shiftKey){
+    let n = shiftKey ? -7 : 7;
+    date.setDate(date.getDate() + n);
+}
+
+function moveMonth(date, shiftKey){
+    let n = shiftKey ? -1 : 1;
+    let probe = new Date(date.getFullYear(), date.getMonth() + n, 1);
+    let probeLastDay = F.getLastDayOfMonth(probe);
+    let day = date.getDate();
+    let lastDay = F.getLastDayOfMonth(date);
+    if( day > probeLastDay || day === lastDay ){
+        day = probeLastDay;
+    }
+    date.setFullYear(probe.getFullYear());
+    date.setMonth(probe.getMonth());
+    date.setDate(day);
+}
+
+function moveToToday(date, shiftKey){
+
+}
+
+function moveToMonthEnd(date, shiftKey){
+
+}
+
+function moveToPrevMonthEnd(date, shiftKey){
+
+}
+
+function setupDateMovers(map){
+    setup(map.moveDay, moveDay);
+    setup(map.moveWeek, moveWeek);
+    setup(map.moveMonth, moveMonth);
+    setup(map.moveToToday, moveToToday);
+    setup(map.moveToMonthEnd, moveToMonthEnd);
+    setup(map.moveToPrevMonthEnd, moveToPrevMonthEnd);
+
+    function setup(ele, f){
+        ele.onclick = event => {
+            let d = getCurrent();
+            if( d ){
+                f(d, event.shiftKey);
+                setCurrent(d);
+            }
+        }
+    }
+
+    function setCurrent(date){
+        map.endDate.value = F.dateToSqldate(date);
+    }
+
+    function getCurrent(){
+        let val = map.endDate.value;
+        if( val ){
+            return new Date(val);
+        } else {
+            null;
+        }
+    }
+}
+

@@ -9,3 +9,4 @@ export function sqldatetimeToDate(sqldate){
     sqldate = sqldate.substring(0, 10) + "T" + sqldate.substring(11);
     return new Date(sqldate);
 }
+

@@ -36,6 +36,10 @@ export function initDiseaseArea(ele, onPatientChanged, rest){
     map.addLink.onclick = event => showAdd();
     map.endLink.onclick = event => showEnd();
     map.editLink.onclick = event => showEdit();
+    ele.addEventListener("disease-entered", event => {
+        let entered = event.detail;
+        diseaseFulls.push(entered);
+    });
 
     function showCurrent(){
         map.workspace.innerHTML = "";

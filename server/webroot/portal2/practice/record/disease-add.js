@@ -2,6 +2,7 @@ import {parseElement} from "../../js/parse-element.js";
 import * as F from "../functions.js";
 import * as DiseaseUtil from "../../js/disease-util.js";
 import * as C from "../../../portal/js/consts.js";
+import * as consts from "../../../portal/js/consts.js";
 
 let html = `
 <div>
@@ -10,7 +11,7 @@ let html = `
         開始日：<input type="date" class="x-start-date">
     </div>
     <div>
-        <button>入力</button>
+        <button class="x-enter">入力</button>
         <a href="javascript:void(0)" class="x-add-susp">の疑い</a> |
         <a href="javascript:void(0)" class="x-clear-adj">修飾語削除</a>
     </div>
@@ -57,6 +58,18 @@ export function createDiseaseAdd(diseaseFulls, visitedAt, patientId, rest){
             }
         }
     };
+    map.enter.onclick = async event => {
+        let req = composeReq(patientId, byoumeiMaster, getStartDate(), adjMasters);
+        if( req ){
+            console.log("req", req);
+            let diseaseId = await rest.enterDisease(req);
+            let entered = await rest.getDisease(diseaseId);
+            ele.dispatchEvent(F.event("disease-entered", entered));
+            byoumeiMaster = null;
+            adjMasters = [];
+            updateName();
+        }
+    };
     return ele;
 
     function updateName(){
@@ -76,6 +89,36 @@ export function createDiseaseAdd(diseaseFulls, visitedAt, patientId, rest){
     function getSearchMode(){
         return ele.querySelector("form input[type=radio][name=search-mode]:checked").value;
     }
+
+    function getStartDate(){
+        return map.startDate.value;
+    }
+}
+
+function composeReq(patientId, byoumeiMaster, startDate, adjMasters){
+    if( !(patientId > 0) ){
+        alert("No patientId");
+        return null;
+    }
+    if( !byoumeiMaster ){
+        alert("病名が指定されていません。");
+        return null;
+    }
+    if( !startDate ){
+        alert("開始日が指定されていません。");
+        return null;
+    }
+    let disease = {
+        patientId,
+        shoubyoumeicode: byoumeiMaster.shoubyoumeicode,
+        startDate,
+        endReason: consts.DiseaseEndReasonNotEnded,
+        endDate: "0000-00-00"
+    };
+    let adjList = adjMasters.map(m => {
+        return {shuushokugocode: m.shuushokugocode};
+    });
+    return {disease, adjList};
 }
 
 async function search(text, mode, at, rest){

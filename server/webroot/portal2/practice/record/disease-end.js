@@ -125,14 +125,17 @@ function maxStartDate(checks) {
     return date;
 }
 
-function moveDay(date, shiftKey){
-    let n = shiftKey ? -1 : 1;
-    date.setDate(date.getDate() + n);
+function moveDay(date, shiftKey, n=1){
+    if( shiftKey ){
+        n = -n;
+    }
+    let d = new Date(date.getTime());
+    d.setDate(d.getDate() + n);
+    return d;
 }
 
 function moveWeek(date, shiftKey){
-    let n = shiftKey ? -7 : 7;
-    date.setDate(date.getDate() + n);
+    return moveDay(date, shiftKey, 7);
 }
 
 function moveMonth(date, shiftKey){
@@ -144,21 +147,20 @@ function moveMonth(date, shiftKey){
     if( day > probeLastDay || day === lastDay ){
         day = probeLastDay;
     }
-    date.setFullYear(probe.getFullYear());
-    date.setMonth(probe.getMonth());
-    date.setDate(day);
+    return new Date(probe.getFullYear(), probe.getMonth(), day);
 }
 
 function moveToToday(date, shiftKey){
-
+    return new Date();
 }
 
 function moveToMonthEnd(date, shiftKey){
-
+    let day = F.getLastDayOfMonth(date);
+    return new Date(date.getFullYear(), date.getMonth(), day);
 }
 
 function moveToPrevMonthEnd(date, shiftKey){
-
+    return new Date(date.getFullYear(), date.getMonth(), 0);
 }
 
 function setupDateMovers(map){
@@ -173,8 +175,7 @@ function setupDateMovers(map){
         ele.onclick = event => {
             let d = getCurrent();
             if( d ){
-                f(d, event.shiftKey);
-                setCurrent(d);
+                setCurrent(f(d, event.shiftKey));
             }
         }
     }

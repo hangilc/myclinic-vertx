@@ -7,7 +7,7 @@ import {createRecord} from "./record/record.js";
 import {createFaxProgress} from "./fax-progress.js";
 import * as F from "./functions.js";
 import {createText} from "./record/text.js";
-import {initDiseaseArea} from "./record/disease.js";
+import {initDiseaseArea} from "./disease/disease.js";
 
 let tmpl = `
 <h2>診察</h2>

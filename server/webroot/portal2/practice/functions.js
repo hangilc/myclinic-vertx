@@ -183,3 +183,27 @@ export function createCheckbox(label, value, data=null){
     return e;
 }
 
+export function formatDate(date){
+    let year = date.getFullYear();
+    let month = date.getMonth()+1;
+    let day = date.getDate();
+    return `${year}年${month}月${day}日`;
+}
+
+export function formatDatePadded(date){
+    let year = date.getFullYear();
+    let month = ("" + (date.getMonth()+1)).padStart(2, "0");
+    let day = ("" + date.getDate()).padStart(2, "0");
+    return `${year}年${month}月${day}日`;
+}
+
+export function diseaseEndReasonToRep(endReason){
+    switch(endReason){
+        case "N": return "継続";
+        case "S": return "中止";
+        case "C": return "治癒";
+        case "D": return "死亡";
+        default: return "????";
+    }
+}
+

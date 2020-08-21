@@ -2,6 +2,8 @@ import {parseElement} from "../../js/parse-element.js";
 import {createDiseaseCurrent} from "./disease-current.js";
 import {createDiseaseAdd} from "./disease-add.js";
 import {createDiseaseEnd} from "./disease-end.js";
+import {createDiseaseSelect} from "./disease-select.js";
+import {createDiseaseEdit} from "./disease-edit.js";
 import * as F from "../functions.js";
 
 let html = `
@@ -37,7 +39,7 @@ export function initDiseaseArea(ele, onPatientChanged, rest){
     map.currentLink.onclick = event => showCurrent();
     map.addLink.onclick = event => showAdd();
     map.endLink.onclick = event => showEnd();
-    map.editLink.onclick = event => showEdit();
+    map.editLink.onclick = event => showSelect();
     ele.addEventListener("disease-entered", event => {
         let entered = event.detail;
         diseaseFulls.push(entered);
@@ -73,8 +75,18 @@ export function initDiseaseArea(ele, onPatientChanged, rest){
         }
     }
 
-    function showEdit(){
-        map.workspace.innerHTML = "";
+    async function showSelect(){
+        if( currentPatient ){
+            map.workspace.innerHTML = "";
+            let diseaseFulls = await rest.listDisease(currentPatient.patientId);
+            let e = createDiseaseSelect(diseaseFulls);
+            e.addEventListener("disease-selected", event => showEdit(event.detail));
+            map.workspace.append(e);
+        }
+    }
 
+    async function showEdit(diseaseFull){
+        map.workspace.innerHTML = "";
+        map.workspace.append(createDiseaseEdit(diseaseFull));
     }
 }

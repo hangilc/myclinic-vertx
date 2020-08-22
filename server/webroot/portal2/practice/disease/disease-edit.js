@@ -25,12 +25,12 @@ let html = `
     <a href="javascript:void(0)" class="x-delete-disease">削除</a>
 </div>
 <div>
-    <form onsubmit="return false;">
-        <input type="text">
+    <form onsubmit="return false;" class="x-search-form">
+        <input type="text" class="x-search-text">
         <button type="submit">検索</button>
         <a href="javascript:void(0)">例</a>
         <div>
-            <input type="radio" name="search-kind" value="byoumei"> 病名
+            <input type="radio" name="search-kind" value="byoumei" checked> 病名
             <input type="radio" name="search-kind" value="adj"> 修飾語
         </div>
     </form>
@@ -38,17 +38,78 @@ let html = `
 </div>
 `;
 
-export function createDiseaseEdit(diseaseFull){
+export function createDiseaseEdit(diseaseFull, rest){
     let ele = document.createElement("div");
     ele.innerHTML = html;
     let map = parseElement(ele);
-    setDisp(map, diseaseFull);
+    let byoumeiMaster = diseaseFull.master;
+    let adjMasters = diseaseFull.adjList.map(adj => adj.master);
+    updateName();
+    setDisp(map, diseaseFull.disease);
+    map.searchForm.onsubmit = async event => {
+        event.preventDefault();
+        let at = getStartDate();
+        if( !at ){
+            alert("検索のために、開始日の設定が必要です。");
+            return;
+        }
+        let text = getSearchText();
+        let searchKind = getSearchKind();
+        if( searchKind === "byoumei" ){
+            let masters = await rest.searchByoumeiMaster(text, at);
+            map.searchResult.innerHTML = "";
+            masters.forEach(m => {
+                let opt = F.createOption(m.name, m);
+                opt.dataset.kind = "byoumei";
+                map.searchResult.append(opt);
+            });
+        } else if( searchKind === "adj" ){
+            let masters = await rest.searchShuushokugoMaster(text, at);
+            map.searchResult.innerHTML = "";
+            masters.forEach(m => {
+                let opt = F.createOption(m.name, m);
+                opt.dataset.kind = "adj";
+                map.searchResult.append(opt);
+            });
+        }
+    };
+    map.searchResult.onchange = event => {
+        let opt = map.searchResult.querySelector("option:checked");
+        if( opt ){
+            let kind = opt.dataset.kind;
+            if( kind === "byoumei" ){
+                byoumeiMaster = opt.data;
+                updateName();
+            } else if( kind ==="adj" ){
+                adjMasters.push(opt.data);
+                updateName();
+            }
+        }
+    };
+    map.enter.onclick = event => {
+
+    };
     return ele;
+
+    function updateName(){
+        map.name.innerText = DiseaseUtil.diseaseRepByMasters(byoumeiMaster, adjMasters);
+    }
+
+    function getSearchText(){
+        return map.searchText.value;
+    }
+
+    function getSearchKind(){
+        return map.searchForm.querySelector("input[type=radio][name='search-kind']:checked").value;
+    }
+
+    function getStartDate(){
+        return map.startDate.value;
+    }
 }
 
-function setDisp(map, diseaseFull){
-    let d = diseaseFull.disease;
-    map.name.innerText = DiseaseUtil.diseaseRep(diseaseFull);
+function setDisp(map, disease){
+    let d = disease;
     map.startDate.value = d.startDate;
     if( d.endDate === "0000-00-00" ){
         map.endDate.value = "";

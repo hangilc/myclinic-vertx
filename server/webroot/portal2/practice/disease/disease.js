@@ -87,6 +87,6 @@ export function initDiseaseArea(ele, onPatientChanged, rest){
 
     async function showEdit(diseaseFull){
         map.workspace.innerHTML = "";
-        map.workspace.append(createDiseaseEdit(diseaseFull));
+        map.workspace.append(createDiseaseEdit(diseaseFull, rest));
     }
 }

@@ -93,6 +93,24 @@ export function createDiseaseEdit(diseaseFull, rest){
         let updated = await rest.getDisease(diseaseId);
         ele.dispatchEvent(F.event("disease-updated", updated));
     };
+    map.addSusp.onclick = event => {
+        adjMasters.push(F.getAdjMasterSusp());
+        updateName();
+    }
+    map.deleteAdj.onclick = event => {
+        adjMasters = [];
+        updateName();
+    };
+    map.clearEndDate.onclick = event => {
+        map.endDate.value = "";
+    };
+    map.deleteDisease.onclick = async event => {
+        if( confirm("この病名を削除していいですか？") ){
+            let diseaseId = diseaseFull.disease.diseaseId;
+            await rest.deleteDisease(diseaseId);
+            ele.dispatchEvent(F.event("disease-deleted", diseaseId));
+        }
+    };
     return ele;
 
     function updateName(){

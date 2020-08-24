@@ -53,6 +53,12 @@ export function initDiseaseArea(ele, onPatientChanged, rest){
             showCurrent();
         }
     });
+    ele.addEventListener("disease-deleted", async event => {
+        if( currentPatient ){
+            diseaseFulls = await rest.listCurrentDisease(currentPatient.patientId);
+            showCurrent();
+        }
+    });
 
     function showCurrent(){
         map.workspace.innerHTML = "";

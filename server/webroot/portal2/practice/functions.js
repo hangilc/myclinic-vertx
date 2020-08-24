@@ -230,3 +230,10 @@ export function composeModifyDiseaseReq(diseaseId, patientId, shoubyoumeicode, s
     };
 }
 
+export function getAdjMasterSusp(){
+    return {
+        shuushokugocode: 8002,
+        name: "の疑い"
+    };
+}
+

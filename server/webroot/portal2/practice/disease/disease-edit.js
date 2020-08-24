@@ -86,8 +86,12 @@ export function createDiseaseEdit(diseaseFull, rest){
             }
         }
     };
-    map.enter.onclick = event => {
-
+    map.enter.onclick = async event => {
+        await doEnter(diseaseFull.disease.diseaseId, diseaseFull.disease.patientId,
+            byoumeiMaster, adjMasters, map, rest);
+        let diseaseId = diseaseFull.disease.diseaseId;
+        let updated = await rest.getDisease(diseaseId);
+        ele.dispatchEvent(F.event("disease-updated", updated));
     };
     return ele;
 
@@ -106,6 +110,26 @@ export function createDiseaseEdit(diseaseFull, rest){
     function getStartDate(){
         return map.startDate.value;
     }
+}
+
+async function doEnter(diseaseId, patientId, byoumeiMaster, adjMasters, map, rest){
+    let req = F.composeModifyDiseaseReq(diseaseId, patientId, byoumeiMaster.shoubyoumeicode,
+        getStartDate(map), getEndReason(map), getEndDate(map),
+        adjMasters.map(m => m.shuushokugocode));
+    await rest.modifyDisease(req);
+}
+
+function getStartDate(map){
+    return map.startDate.value;
+}
+
+function getEndReason(map){
+    return map.endReasonSelect.value;
+}
+
+function getEndDate(map){
+    let d = map.endDate.value;
+    return d || "0000-00-00";
 }
 
 function setDisp(map, disease){

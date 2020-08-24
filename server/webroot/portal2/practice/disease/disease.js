@@ -47,6 +47,12 @@ export function initDiseaseArea(ele, onPatientChanged, rest){
     ele.addEventListener("current-diseases-changed", event => {
         diseaseFulls = event.detail;
     });
+    ele.addEventListener("disease-updated", async event => {
+        if( currentPatient ){
+            diseaseFulls = await rest.listCurrentDisease(currentPatient.patientId);
+            showCurrent();
+        }
+    });
 
     function showCurrent(){
         map.workspace.innerHTML = "";

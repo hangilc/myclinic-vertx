@@ -207,3 +207,26 @@ export function diseaseEndReasonToRep(endReason){
     }
 }
 
+function adjustDiseaseEndDate(disease){
+    if( disease.endReason === "N" ){
+        disease.endDate = "0000-00-00";
+    }
+}
+
+export function composeModifyDiseaseReq(diseaseId, patientId, shoubyoumeicode, startDate, endReason,
+                                        endDate, shuushokugocodes){
+    let disease = {
+        diseaseId,
+        patientId,
+        shoubyoumeicode,
+        startDate,
+        endReason,
+        endDate
+    };
+    adjustDiseaseEndDate(disease);
+    return {
+        disease,
+        shuushokugocodes
+    };
+}
+

@@ -2254,6 +2254,11 @@ public class Backend {
         if (prev == null) {
             throw new RuntimeException("Cannot find previous disease to update: " + disease);
         }
+        ByoumeiMasterDTO m = getByoumeiMaster(disease.shoubyoumeicode,
+                LocalDate.parse(disease.startDate));
+        if( m == null ){
+            throw new RuntimeException("Byoumei master is not effective at start date.");
+        }
         ts.diseaseTable.update(query, disease);
         practiceLogger.logDiseaseUpdated(prev, disease);
     }

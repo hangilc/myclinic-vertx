@@ -100,6 +100,17 @@ export function createDiseaseEdit(diseaseFull, rest){
             ele.dispatchEvent(F.event("disease-deleted", diseaseId));
         }
     };
+    map.startDate.onchange = async event => {
+        let at = getStartDate();
+        if( !at ){
+            return;
+        }
+        let err = await F.confirmDiseaseMasters(byoumeiMaster, adjMasters, at, rest);
+        if( err ){
+            alert(err);
+        }
+        console.log("err", err);
+    };
     return ele;
 
     function updateName(){

@@ -2653,6 +2653,14 @@ public class Backend {
         return getQuery().get(sql, ts.byoumeiMasterTable, name, atString, atString);
     }
 
+    public ByoumeiMasterDTO getByoumeiMaster(int shoubyoumeicode, LocalDate at){
+        String sql = xlate("select * from ByoumeiMaster where shoubyoumeicode = ? and " +
+                ts.dialect.isValidAt("validFrom", "validUpto", "?"),
+                ts.byoumeiMasterTable);
+        String atString = at.toString();
+        return getQuery().get(sql, ts.byoumeiMasterTable, shoubyoumeicode, atString, atString);
+    }
+
     // ShuushokugoMaster /////////////////////////////////////////////////////////////////
 
     public List<ShuushokugoMasterDTO> searchShuushokugoMaster(String text, LocalDate at) {
@@ -2666,6 +2674,12 @@ public class Backend {
         String sql = xlate("select * from ShuushokugoMaster where name = ?",
                 ts.shuushokugoMasterTable);
         return getQuery().get(sql, ts.shuushokugoMasterTable, name);
+    }
+
+    public ShuushokugoMasterDTO getShuushokugoMaster(int shuushokugocode, LocalDate at){
+        String sql = "select * from ShuushokugoMaster where shuushokugocode = ? ";
+        return getQuery().get(xlate(sql, ts.shuushokugoMasterTable), ts.shuushokugoMasterTable,
+                shuushokugocode);
     }
 
     // PrescExample //////////////////////////////////////////////////////////////////////

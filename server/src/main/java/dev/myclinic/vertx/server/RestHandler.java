@@ -2024,6 +2024,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("batch-delete-drugs", this::batchDeleteDrugs);
         funcMap.put("get-conduct-kizai-full", this::getConductKizaiFull);
         funcMap.put("find-byoumei-master-by-name", this::findByoumeiMasterByName);
+        funcMap.put("get-byoumei-master", this::getByoumeiMaster);
+        funcMap.put("get-shuushokugo-master", this::getShuushokugoMaster);
         funcMap.put("list-drug-full-by-drug-ids", this::listDrugFullByDrugIds);
         funcMap.put("list-wqueue-full", this::listWqueueFull);
         funcMap.put("get-shahokokuho", this::getShahokokuho);
@@ -2194,6 +2196,42 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("resolve-kizai-master", this::resolveKizaiMaster);
         funcMap.put("resolve-shinryou-master-by-name", this::resolveShinryouMasterByName);
         funcMap.put("enter-xp", this::enterXp);
+    }
+
+    private void getByoumeiMaster(RoutingContext ctx, Connection conn) throws Exception {
+        String shoubyoumeicodeParam = ctx.request().getParam("shoubyoumeicode");
+        String atParam = ctx.request().getParam("at");
+        if( shoubyoumeicodeParam == null ){
+            throw new RuntimeException("Missing param: shoubyoumeicode.");
+        }
+        if( atParam == null ){
+            throw new RuntimeException("Missing param: at.");
+        }
+        int shoubyoumeicode = Integer.parseInt(shoubyoumeicodeParam);
+        LocalDate at = LocalDate.parse(atParam);
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        ByoumeiMasterDTO result = backend.getByoumeiMaster(shoubyoumeicode, at);
+        conn.commit();
+        ctx.response().end(jsonEncode(result));
+    }
+
+    private void getShuushokugoMaster(RoutingContext ctx, Connection conn) throws Exception {
+        String shuushokugocodeParam = ctx.request().getParam("shuushokugocode");
+        String atParam = ctx.request().getParam("at");
+        if( shuushokugocodeParam == null ){
+            throw new RuntimeException("Missing param: shuushokugocode.");
+        }
+        if( atParam == null ){
+            throw new RuntimeException("Missing param: at.");
+        }
+        int shuushokugocode = Integer.parseInt(shuushokugocodeParam);
+        LocalDate at = LocalDate.parse(atParam);
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        ShuushokugoMasterDTO result = backend.getShuushokugoMaster(shuushokugocode, at);
+        conn.commit();
+        ctx.response().end(jsonEncode(result));
     }
 
     private void getMostRecentVisitOfPatient(RoutingContext ctx, Connection conn) throws Exception {

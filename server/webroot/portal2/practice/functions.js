@@ -326,3 +326,21 @@ export async function resolveMastersOfDiseaseExample(example, at, rest){
     };
 }
 
+export async function confirmDiseaseMasters(byoumeiMaster, adjMasters, at, rest){
+    if( byoumeiMaster ){
+        let m = await rest.getByoumeiMaster(byoumeiMaster.shoubyoumeicode, at);
+        if( !m ){
+            return `${byoumeiMaster.name}は${at}に有効でありません。`;
+        }
+    }
+    if( adjMasters ){
+        for(let adj of adjMasters){
+            let m = await rest.getShuushokugoMaster(adj.shuushokugocode, at);
+            if( !m ){
+                return `${adj.name}は${at}に有効でありません。`;
+            }
+        }
+    }
+    return null;
+}
+

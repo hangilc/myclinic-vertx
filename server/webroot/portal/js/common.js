@@ -406,6 +406,14 @@ class Rest extends Client {
         return await this.get("/find-shuushokugo-master-by-name", {name});
     }
 
+    async getByoumeiMaster(shoubyoumeicode, at){
+        return await this.get("/get-byoumei-master", {shoubyoumeicode, at});
+    }
+
+    async getShuushokugoMaster(shuushokugocode, at){
+        return await this.get("/get-shuushokugo-master", {shuushokugocode, at});
+    }
+
     async batchUpdateDiseaseEndReason(reqs){
         return await this.post("/batch-update-disease-end-reason", reqs);
     }

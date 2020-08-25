@@ -7,7 +7,7 @@ import {createDiseaseEdit} from "./disease-edit.js";
 import * as F from "../functions.js";
 
 let html = `
-<div>
+<div class="right-workarea">
     <h3>病名</h3>
     <div class="x-workspace"></div>
     <div class="disease-menu">

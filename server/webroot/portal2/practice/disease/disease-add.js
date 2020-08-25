@@ -32,7 +32,7 @@ let html = `
 </div>
 `;
 
-export function createDiseaseAdd(diseaseFulls, visitedAt, patientId, examples, rest){
+export function createDiseaseAdd(diseaseFulls, visitedAt, patientId, examples, rest) {
     let ele = document.createElement("div");
     ele.innerHTML = html;
     let byoumeiMaster = null;
@@ -40,7 +40,9 @@ export function createDiseaseAdd(diseaseFulls, visitedAt, patientId, examples, r
     let map = parseElement(ele);
     map.startDate.value = visitedAt;
     map.addSusp.onclick = event => addAdjMaster(C.suspMaster);
-    map.clearAdj.onclick = event => { adjMasters = [], updateName(); };
+    map.clearAdj.onclick = event => {
+        adjMasters = [], updateName();
+    };
     map.form.onsubmit = async event => {
         event.preventDefault();
         let text = map.searchText.value;
@@ -48,23 +50,17 @@ export function createDiseaseAdd(diseaseFulls, visitedAt, patientId, examples, r
         map.select.innerHTML = "";
         opts.forEach(opt => map.select.append(opt));
     };
-    map.examplesLink.onclick = event => doExamples(examples, map.select);
-    map.select.onchange = async event => {
-        let opt = map.select.querySelector("option:checked");
-        if( opt ){
-            let kind = opt.dataset.kind;
-            if( kind=== "name" ){
-                addByoumeiMaster(opt.data);
-            } else if( kind=== "adj" ){
-                addAdjMaster(opt.data);
-            } else if( kind === "example" ){
-                await setByExample(opt.data);
-            }
-        }
+    map.examplesLink.onclick = async event => {
+        await F.fillSelectWithDiseaseExampleOptions(map.select, rest);
     };
+    F.setupSearchDiseaseResultHandler(map.select,
+        byoumeiMaster => setByoumeiMaster(byoumeiMaster),
+        adjMaster => addAdjMaster(adjMaster),
+        async example => await setByExample(example)
+    );
     map.enter.onclick = async event => {
         let req = composeReq(patientId, byoumeiMaster, getStartDate(), adjMasters);
-        if( req ){
+        if (req) {
             let diseaseId = await rest.enterDisease(req);
             let entered = await rest.getDisease(diseaseId);
             ele.dispatchEvent(F.event("disease-entered", entered));
@@ -75,75 +71,47 @@ export function createDiseaseAdd(diseaseFulls, visitedAt, patientId, examples, r
     };
     return ele;
 
-    function updateName(){
+    function updateName() {
         map.diseaseName.innerText = DiseaseUtil.diseaseRepByMasters(byoumeiMaster, adjMasters);
     }
 
-    function addByoumeiMaster(master){
+    function setByoumeiMaster(master) {
         byoumeiMaster = master;
         updateName();
     }
 
-    function addAdjMaster(master){
+    function addAdjMaster(master) {
         adjMasters.push(master);
         updateName();
     }
 
-    async function setByExample(example){
-        let exByoumeiMaster = null;
-        let exAdjMasters = [];
-        if( example.byoumei ){
-            let startDate = getStartDate() || F.todayAsSqldate();
-            let master = await rest.findByoumeiMasterByName(example.byoumei, startDate);
-            if( !master ){
-                alert(`傷病名（${byoumei}）を見つけられませんでした。`);
-                return;
-            }
-            exByoumeiMaster = master;
-        }
-        if( example.adjList ) {
-            for (let adj of example.adjList) {
-                let master = await rest.findShuushokugoMasterByName(adj);
-                if (!master) {
-                    alert(`修飾語（${adj}）を見つけられませんでした。`);
-                    return;
-                }
-                exAdjMasters.push(master);
-            }
-        }
-        byoumeiMaster = exByoumeiMaster;
-        adjMasters = exAdjMasters;
+    async function setByExample(example) {
+        let at = getStartDate () || F.todayAsSqldate();
+        let result = await F.resolveMastersOfDiseaseExample(example, at, rest);
+        byoumeiMaster = result.byoumeiMaster;
+        adjMasters = result.adjMasters;
         updateName();
     }
 
-    function getSearchMode(){
+    function getSearchMode() {
         return ele.querySelector("form input[type=radio][name=search-mode]:checked").value;
     }
 
-    function getStartDate(){
+    function getStartDate() {
         return map.startDate.value;
     }
 }
 
-function doExamples(examples, select){
-    select.innerHTML = "";
-    for(let ex of examples){
-        let opt = F.createOption(ex.label || ex.byoumei, ex);
-        opt.dataset.kind = "example";
-        select.append(opt);
-    }
-}
-
-function composeReq(patientId, byoumeiMaster, startDate, adjMasters){
-    if( !(patientId > 0) ){
+function composeReq(patientId, byoumeiMaster, startDate, adjMasters) {
+    if (!(patientId > 0)) {
         alert("No patientId");
         return null;
     }
-    if( !byoumeiMaster ){
+    if (!byoumeiMaster) {
         alert("病名が指定されていません。");
         return null;
     }
-    if( !startDate ){
+    if (!startDate) {
         alert("開始日が指定されていません。");
         return null;
     }
@@ -160,15 +128,15 @@ function composeReq(patientId, byoumeiMaster, startDate, adjMasters){
     return {disease, adjList};
 }
 
-async function search(text, mode, at, rest){
-    if( mode === "name" ){
+async function search(text, mode, at, rest) {
+    if (mode === "name") {
         return await searchByoumei(text, at, rest);
-    } else if( mode === "adj" ){
+    } else if (mode === "adj") {
         return await searchAdj(text, at, rest);
     }
 }
 
-async function searchByoumei(text, at, rest){
+async function searchByoumei(text, at, rest) {
     let result = await rest.searchByoumeiMaster(text, at);
     return result.map(m => {
         let opt = F.createOption(m.name, m);
@@ -178,7 +146,7 @@ async function searchByoumei(text, at, rest){
     })
 }
 
-async function searchAdj(text, at, rest){
+async function searchAdj(text, at, rest) {
     let result = await rest.searchShuushokugoMaster(text, at);
     return result.map(m => {
         let opt = F.createOption(m.name, m);

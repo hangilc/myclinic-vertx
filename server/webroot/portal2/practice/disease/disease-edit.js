@@ -3,19 +3,16 @@ import * as F from "../functions.js";
 import * as DiseaseUtil from "../../../portal/js/disease-util.js";
 
 let html = `
-<div>
+<div class="show">
     <div>名前：<span class="x-name"></span></div>
-    <div><input type="date" class="x-start-date"></div>
-    <div>から</div>
-    <div><input type="date" class="x-end-date"></div>
-    <div>
-        <select class="x-end-reason-select">
-            <option value="N">継続</option>
-            <option value="C" checked>治癒</option>
-            <option value="S">中止</option>
-            <option value="D">死亡</option>
-        </select>
-    </div>
+    <div>開始日：<input type="date" class="x-start-date"></div>
+    <div>終了日：<input type="date" class="x-end-date"></div>
+    <form onsubmit="return false;" class="x-end-reason-form">
+            <input type="radio" name="end-reason" value="N">継続</input>
+            <input type="radio" name="end-reason" value="C">治癒</input>
+            <input type="radio" name="end-reason" value="S">中止</input>
+            <input type="radio" name="end-reason" value="D">死亡</input>
+    </form>
 </div>
 <div>
     <button class="x-enter">入力</button>
@@ -40,6 +37,7 @@ let html = `
 
 export function createDiseaseEdit(diseaseFull, rest){
     let ele = document.createElement("div");
+    ele.classList.add("disease-edit");
     ele.innerHTML = html;
     let map = parseElement(ele);
     let byoumeiMaster = diseaseFull.master;
@@ -109,7 +107,16 @@ export function createDiseaseEdit(diseaseFull, rest){
         if( err ){
             alert(err);
         }
-        console.log("err", err);
+    };
+    map.endDate.onchange = async event => {
+        let at = getEndDate();
+        if( !at ){
+            return;
+        }
+        let err = await F.confirmDiseaseMasters(byoumeiMaster, adjMasters, at, rest);
+        if( err ){
+            alert(err);
+        }
     };
     return ele;
 
@@ -142,7 +149,11 @@ function getStartDate(map){
 }
 
 function getEndReason(map){
-    return map.endReasonSelect.value;
+    return map.endReasonForm.querySelector("input[type='radio']:checked").value;
+}
+
+function setEndReason(map, endReason){
+    map.endReasonForm.querySelector(`input[type='radio'][value='${endReason}']`).checked = true;
 }
 
 function getEndDate(map){
@@ -158,5 +169,5 @@ function setDisp(map, disease){
     } else {
         map.endDate.value = d.endDate;
     }
-    map.endReasonSelect.value = d.endReason;
+    setEndReason(map, d.endReason);
 }

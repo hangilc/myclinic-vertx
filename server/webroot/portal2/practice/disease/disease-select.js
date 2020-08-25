@@ -3,22 +3,23 @@ import * as F from "../functions.js";
 import * as DiseaseUtil from "../../../portal/js/disease-util.js";
 
 let html = `
-<div>
+<div class="show">
     <div>名称：<span class="x-name"></span></div>
     <div>開始日：<span class="x-start-date"></span></div>
     <div>転機：<span class="x-end-reason"></span></div>
     <div>終了日：<span class="x-end-date"></span></div>
 </div>
-<div>
+<div class="command-wrapper">
     <button class="x-edit-button">編集</button>
 </div>
 <div>
-    <select class="x-select" size="16"></select>
+    <select class="x-select" size="10"></select>
 </div>
 `;
 
 export function createDiseaseSelect(diseaseFulls){
     let ele = document.createElement("div");
+    ele.classList.add("disease-select");
     ele.innerHTML = html;
     let map = parseElement(ele);
     let selected = null;

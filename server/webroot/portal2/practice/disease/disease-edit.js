@@ -28,7 +28,7 @@ let html = `
     <form onsubmit="return false;" class="x-search-form">
         <input type="text" class="x-search-text">
         <button type="submit">検索</button>
-        <a href="javascript:void(0)">例</a>
+        <a href="javascript:void(0)" class="x-examples-link">例</a>
         <div>
             <input type="radio" name="search-kind" value="byoumei" checked> 病名
             <input type="radio" name="search-kind" value="adj"> 修飾語
@@ -46,6 +46,9 @@ export function createDiseaseEdit(diseaseFull, rest){
     let adjMasters = diseaseFull.adjList.map(adj => adj.master);
     updateName();
     setDisp(map, diseaseFull.disease);
+    map.examplesLink.onclick = async event => {
+        await F.fillSelectWithDiseaseExampleOptions(map.searchResult, rest);
+    };
     map.searchForm.onsubmit = async event => {
         event.preventDefault();
         let at = getStartDate();
@@ -55,37 +58,23 @@ export function createDiseaseEdit(diseaseFull, rest){
         }
         let text = getSearchText();
         let searchKind = getSearchKind();
-        if( searchKind === "byoumei" ){
-            let masters = await rest.searchByoumeiMaster(text, at);
-            map.searchResult.innerHTML = "";
-            masters.forEach(m => {
-                let opt = F.createOption(m.name, m);
-                opt.dataset.kind = "byoumei";
-                map.searchResult.append(opt);
-            });
-        } else if( searchKind === "adj" ){
-            let masters = await rest.searchShuushokugoMaster(text, at);
-            map.searchResult.innerHTML = "";
-            masters.forEach(m => {
-                let opt = F.createOption(m.name, m);
-                opt.dataset.kind = "adj";
-                map.searchResult.append(opt);
-            });
-        }
+        await F.searchDisease(text, at, searchKind, map.searchResult, rest);
     };
-    map.searchResult.onchange = event => {
-        let opt = map.searchResult.querySelector("option:checked");
-        if( opt ){
-            let kind = opt.dataset.kind;
-            if( kind === "byoumei" ){
-                byoumeiMaster = opt.data;
-                updateName();
-            } else if( kind ==="adj" ){
-                adjMasters.push(opt.data);
-                updateName();
-            }
-        }
-    };
+    F.setupSearchDiseaseResultHandler(map.searchResult,
+        argByoumeiMaster => {
+            byoumeiMaster = argByoumeiMaster;
+            updateName();
+        },
+        argShuushokugoMaster => {
+            adjMasters.push(argShuushokugoMaster);
+            updateName();
+        },
+        async argExample => {
+            let ms = await F.resolveMastersOfDiseaseExample(argExample, getStartDate(), rest);
+            byoumeiMaster = ms.byoumeiMaster;
+            adjMasters = ms.adjMasters;
+            updateName();
+        });
     map.enter.onclick = async event => {
         await doEnter(diseaseFull.disease.diseaseId, diseaseFull.disease.patientId,
             byoumeiMaster, adjMasters, map, rest);

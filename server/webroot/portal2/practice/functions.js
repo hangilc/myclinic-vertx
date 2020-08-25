@@ -237,3 +237,92 @@ export function getAdjMasterSusp(){
     };
 }
 
+let diseaseExamplesCache = null;
+
+export async function getDiseaseExamples(rest){
+    if( !diseaseExamplesCache ){
+        diseaseExamplesCache = await rest.listDiseaseExample();
+    }
+    return diseaseExamplesCache;
+}
+
+export async function fillSelectWithDiseaseExampleOptions(selectElement, rest){
+    let examples = await getDiseaseExamples(rest);
+    selectElement.innerHTML = "";
+    for(let ex of examples){
+        let opt = createOption(ex.label || ex.byoumei, ex);
+        opt.dataset.kind = "example";
+        selectElement.append(opt);
+    }
+}
+
+export async function searchDisease(text, at, searchMode, selectElement, rest){
+    if( searchMode === "byoumei" ) {
+        let masters = await rest.searchByoumeiMaster(text, at);
+        selectElement.innerHTML = "";
+        masters.forEach(m => {
+            let opt = createOption(m.name, m);
+            opt.dataset.kind = "byoumei";
+            selectElement.append(opt);
+        });
+    } else if( searchMode === "adj" ){
+        let masters = await rest.searchShuushokugoMaster(text, at);
+        selectElement.innerHTML = "";
+        masters.forEach(m => {
+            let opt = createOption(m.name, m);
+            opt.dataset.kind = "adj";
+            selectElement.append(opt);
+        });
+    }
+}
+
+export function setupSearchDiseaseResultHandler(selectElement,
+                                                byoumeiHandler, shuushokugoHandler, exampleHandler){
+    selectElement.onchange = event => {
+        let opt = selectElement.querySelector("option:checked");
+        if( opt ){
+            let kind = opt.dataset.kind;
+            if( kind === "byoumei" ){
+                let shoubyoumeiMaster = opt.data;
+                byoumeiHandler(shoubyoumeiMaster);
+            } else if( kind ==="adj" ){
+                let shuushokugoMaster = opt.data;
+                shuushokugoHandler(shuushokugoMaster);
+            } else if( kind === "example" ){
+                let example = opt.data;
+                exampleHandler(example);
+            }
+        }
+    };
+}
+
+export async function resolveMastersOfDiseaseExample(example, at, rest){
+    let exByoumeiMaster = null;
+    let exAdjMasters = [];
+    if( !at ){
+        at = todayAsSqldate();
+    }
+    if( example.byoumei ){
+        let master = await rest.findByoumeiMasterByName(example.byoumei, at);
+        if( !master ){
+            alert(`傷病名（${example.byoumei}）を見つけられませんでした。`);
+            return;
+        }
+        exByoumeiMaster = master;
+    }
+    if( example.adjList ) {
+        for (let adj of example.adjList) {
+            let master = await rest.findShuushokugoMasterByName(adj);
+            if (!master) {
+                alert(`修飾語（${adj}）を見つけられませんでした。`);
+                return;
+            }
+            exAdjMasters.push(master);
+        }
+    }
+    return {
+        byoumeiMaster: exByoumeiMaster,
+        adjMasters: exAdjMasters
+    };
+}
+

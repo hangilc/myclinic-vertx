@@ -4,10 +4,12 @@ import * as DiseaseUtil from "../../../portal/js/disease-util.js";
 
 let html = `
 <div class="show">
-    <div>名称：<span class="x-name"></span></div>
-    <div>開始日：<span class="x-start-date"></span></div>
-    <div>転機：<span class="x-end-reason"></span></div>
-    <div>終了日：<span class="x-end-date"></span></div>
+    <div class="form-table"> 
+        <div><span>名称</span><span class="x-name"></span></div>
+        <div><span>開始日</span><span class="x-start-date"></span></div>
+        <div><span>転機</span><span class="x-end-reason"></span></div>
+        <div><span>終了日</span><span class="x-end-date"></span></div>
+    </div>
 </div>
 <div class="command-wrapper">
     <button class="x-edit-button">編集</button>

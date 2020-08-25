@@ -60,6 +60,30 @@ span {
     margin-top: 1em;
 }
 
+.form-table {
+    display: table;
+}
+
+.smaller {
+    font-size: 0.8em;
+}
+
+.form-table > div {
+    display: table-row;
+}
+
+.form-table > div > *:first-child {
+    text-align: right;
+}
+
+.form-table > div > *:first-child::after {
+    content: "：";
+}
+
+.form-table > div > * {
+    display: table-cell
+}
+
 span.checkbox-label {
     cursor: pointer;
 }

@@ -4,9 +4,11 @@ import * as DiseaseUtil from "../../../portal/js/disease-util.js";
 
 let html = `
 <div class="show">
-    <div>名前：<span class="x-name"></span></div>
-    <div>開始日：<input type="date" class="x-start-date"></div>
-    <div>終了日：<input type="date" class="x-end-date"></div>
+    <div class="form-table">
+        <div><span class="smaller">名前</span><span class="x-name"></span></div>
+        <div><span class="smaller">開始日</span><input type="date" class="x-start-date"></div>
+        <div><span class="smaller">終了日</span><input type="date" class="x-end-date"></div>
+    </div>
     <form onsubmit="return false;" class="x-end-reason-form">
             <input type="radio" name="end-reason" value="N">継続</input>
             <input type="radio" name="end-reason" value="C">治癒</input>

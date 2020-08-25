@@ -2,6 +2,7 @@ package dev.myclinic.vertx.db;
 
 import dev.myclinic.vertx.consts.DrugCategory;
 import dev.myclinic.vertx.consts.PharmaQueueState;
+import dev.myclinic.vertx.consts.Shuushokugo;
 import dev.myclinic.vertx.consts.WqueueWaitState;
 import dev.myclinic.vertx.db.annotation.ExcludeFromFrontend;
 import dev.myclinic.vertx.db.exception.CannotDeleteVisitSafelyException;
@@ -2221,6 +2222,11 @@ public class Backend {
     // Disease ////////////////////////////////////////////////////////////////////////////////////
 
     public int enterDisease(DiseaseDTO disease) {
+        ByoumeiMasterDTO m = getByoumeiMaster(disease.shoubyoumeicode,
+                LocalDate.parse(disease.startDate));
+        if( m == null ){
+            throw new RuntimeException("Disease master is not effective at start date.");
+        }
         ts.diseaseTable.insert(query, disease);
         practiceLogger.logDiseaseCreated(disease);
         return disease.diseaseId;
@@ -2230,9 +2236,10 @@ public class Backend {
         enterDisease(disease.disease);
         int diseaseId = disease.disease.diseaseId;
         if (disease.adjList != null) {
+            LocalDate at = LocalDate.parse(disease.disease.startDate);
             disease.adjList.forEach(adj -> {
                 adj.diseaseId = diseaseId;
-                enterDiseaseAdj(adj);
+                enterDiseaseAdj(adj, at);
             });
         }
         return diseaseId;
@@ -2338,10 +2345,20 @@ public class Backend {
 
     // DiseaseAdj ////////////////////////////////////////////////////////////////////////
 
-    public int enterDiseaseAdj(DiseaseAdjDTO adj) {
+    private int enterDiseaseAdj(DiseaseAdjDTO adj, LocalDate at) {
+        ShuushokugoMasterDTO m = getShuushokugoMaster(adj.shuushokugocode, at);
+        if( m == null ){
+            throw new RuntimeException("Shuushokugo master is not effective at start date.");
+        }
         ts.diseaseAdjTable.insert(query, adj);
         practiceLogger.logDiseaseAdjCreated(adj);
         return adj.diseaseAdjId;
+    }
+
+    public int enterDiseaseAdj(DiseaseAdjDTO adj) {
+        DiseaseDTO disease = getDisease(adj.diseaseId);
+        LocalDate at = LocalDate.parse(disease.startDate);
+        return enterDiseaseAdj(adj, at);
     }
 
     private DiseaseAdjDTO getDiseaseAdj(int diseaseAdjId) {
@@ -2637,6 +2654,9 @@ public class Backend {
     // ByoumeiMaster /////////////////////////////////////////////////////////////////////
 
     public List<ByoumeiMasterDTO> searchByoumeiMaster(String text, LocalDate at) {
+        if( text.isEmpty() ){
+            return Collections.emptyList();
+        }
         String sql = xlate("select * from ByoumeiMaster where name like ? " +
                         " and " + ts.dialect.isValidAt("validFrom", "validUpto", "?"),
                 ts.byoumeiMasterTable);

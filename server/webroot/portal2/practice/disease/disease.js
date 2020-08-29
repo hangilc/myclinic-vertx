@@ -58,6 +58,7 @@ export function initDiseaseArea(ele, onPatientChanged, rest){
             showCurrent();
         }
     });
+    ele.addEventListener("disease-clicked", event => showEdit(event.detail));
 
     function showCurrent(){
         map.workspace.innerHTML = "";

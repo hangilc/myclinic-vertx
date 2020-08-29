@@ -1,4 +1,5 @@
 import * as DiseaseUtil from "../../js/disease-util.js";
+import * as F from "../functions.js";
 
 export function createDiseaseCurrent(diseaseFulls){
     let ele = document.createElement("div");
@@ -9,6 +10,8 @@ export function createDiseaseCurrent(diseaseFulls){
 
 function createItem(diseaseFull){
     let e = document.createElement("div");
+    e.classList.add("disp");
     e.innerText = DiseaseUtil.diseaseFullRep(diseaseFull);
+    e.onclick = event => e.dispatchEvent(F.event("disease-clicked", diseaseFull));
     return e;
 }

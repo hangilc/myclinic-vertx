@@ -414,6 +414,10 @@ a.hidden + .sep  {
     margin-top: 0.5em;
 }
 
+.practice .disease-current .disp {
+    cursor: pointer;
+}
+
 .practice .disease-select .show,
 .practice .disease-edit .show{
     margin-bottom: 0.5em;

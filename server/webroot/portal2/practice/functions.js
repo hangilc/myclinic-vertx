@@ -344,3 +344,24 @@ export async function confirmDiseaseMasters(byoumeiMaster, adjMasters, at, rest)
     return null;
 }
 
+export function splitToLinesWithSep(text){
+    let result = [];
+    let re = /\r\n|\r|\n/g;
+    let i = 0;
+    let m;
+    while( m = re.exec(text) ){
+        let line = text.substring(i, m.index);
+        let sep = m[0];
+        result.push({line, sep});
+        i = m.index + sep.length;
+    }
+    if( i < text.length ){
+        result.push({line: text.substring(i), sep: ""});
+    }
+    return result;
+}
+
+export function mapLine(f, lines){
+    return splitToLinesWithSep(lines).map(x => f(x.line) + x.sep).join("");
+}
+

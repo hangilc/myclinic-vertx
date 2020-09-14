@@ -269,8 +269,7 @@ class Rest extends Client {
             "name": name,
             "text-id": textId,
             "patient-id": patientId,
-            "date": date,
-            "mkdir": true
+            "date": date
         });
     }
 

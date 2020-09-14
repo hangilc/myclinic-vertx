@@ -47,7 +47,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -397,11 +396,11 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private String doCreateTempFileName(String prefix, String suffix){
         String fileId = GlobalService.getInstance().createTempAppFilePath(
-                "/portal-tmp",
+                GlobalService.getInstance().portalTmpDirToken,
                 prefix,
                 suffix
         );
-        Path path = GlobalService.getInstance().fileIdToPath(fileId);
+        Path path = GlobalService.getInstance().resolveAppPath(fileId);
         return path.toAbsolutePath().toString();
     }
 
@@ -461,7 +460,8 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
         vertx.executeBlocking(promise -> {
             try {
-                GlobalService.getInstance().deleteAppFile(file);
+                Path path = GlobalService.getInstance().resolveAppPath(file);
+                Files.delete(path);
                 promise.complete();
             } catch (Exception e) {
                 promise.fail(e);
@@ -486,7 +486,9 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
         vertx.executeBlocking(promise -> {
             try {
-                GlobalService.getInstance().moveAppFile(src, dst);
+                Path srcPath = GlobalService.getInstance().resolveAppPath(src);
+                Path dstPath = GlobalService.getInstance().resolveAppPath(dst);
+                Files.move(srcPath, dstPath);
                 promise.complete();
             } catch (Exception e) {
                 promise.fail(e);
@@ -545,12 +547,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         if( suffix == null ){
             throw new RuntimeException("Missing param: suffix");
         }
-        Path paperScanDir = GlobalService.getInstance().getAppDirectory("/paper-scan");
         String timestamp = DateTimeUtil.toPackedSqlDateTime(LocalDateTime.now());
         String fileName = String.format("%s-refer-%s.%s", patientId, timestamp, suffix);
         Path local = Path.of(patientId, fileName);
-        Path path = paperScanDir.resolve(local);
-        ctx.response().end(jsonEncode(path.toAbsolutePath().toString()));
+        String result = GlobalService.getInstance().createAppPathToken(
+                GlobalService.getInstance().paperScanDirToken,
+                local.toString()
+        );
+        ctx.response().end(jsonEncode(result));
     }
 
     private void getRefer(RoutingContext ctx) {
@@ -910,8 +914,10 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             }
             int patientId = Integer.parseInt(patientIdParam);
             Set<FileUpload> fileUploads = ctx.fileUploads();
-            Path patientDir = GlobalService.getInstance().getAppDirectory("/paper-scan")
-                    .resolve(String.format("%d", patientId));
+            Path patientDir = GlobalService.getInstance().resolveAppPath(
+                    GlobalService.getInstance().paperScanDirToken + "/" +
+                            String.format("%d", patientId)
+            );
             if (!Files.exists(patientDir)) {
                 Files.createDirectories(patientDir);
             }
@@ -1111,26 +1117,25 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private void showPdf(RoutingContext ctx) {
-        String pdfFile = ctx.request().getParam("file");
-        if (pdfFile == null) {
+        String pdfFileToken = ctx.request().getParam("file");
+        if (pdfFileToken == null) {
             throw new RuntimeException("Missing parameter: file");
         }
-        if (!new File(pdfFile).exists()) {
+        Path pdfFile = GlobalService.getInstance().resolveAppPath(pdfFileToken);
+        if (!pdfFile.toFile().exists()) {
             throw new RuntimeException("No such file: " + pdfFile);
         }
         ctx.response().putHeader("content-type", "application/pdf");
-        ctx.response().sendFile(pdfFile);
+        ctx.response().sendFile(pdfFile.toString());
     }
 
     private void probeShohousenFaxImage(RoutingContext ctx) {
         String textIdPara = ctx.request().getParam("text-id");
         String date = ctx.request().getParam("date");
-        String dir = System.getenv("MYCLINIC_SHOHOUSEN_DIR");
-        if (dir == null) {
-            throw new RuntimeException("Cannot find env var: MYCLINIC_SHOHOUSEN_DIR");
-        }
+        String dirToken = GlobalService.getInstance().shohousenFaxDirToken;
         String month = date.substring(0, 7);
-        Path shohousenDir = Path.of(dir, month);
+        String shohousenDirToken = dirToken + File.separator + month;
+        Path shohousenDir = GlobalService.getInstance().resolveAppPath(shohousenDirToken);
         if (!Files.exists(shohousenDir)) {
             ctx.response().end("null");
             return;
@@ -1140,7 +1145,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             for (Path path : stream) {
                 String name = path.getFileName().toString();
                 if (pat.matcher(name).matches()) {
-                    ctx.response().end(jsonEncode(path.toFile().getAbsolutePath()));
+                    ctx.response().end(jsonEncode(shohousenDirToken + File.separator + name));
                     return;
                 }
             }
@@ -1152,13 +1157,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private void sendFax(RoutingContext ctx) {
         String faxNumber = ctx.request().getParam("fax-number"); // "+8133335..."
-        String pdfFile = ctx.request().getParam("pdf-file");
+        String pdfFileToken = ctx.request().getParam("pdf-file");
         if (faxNumber == null) {
             throw new RuntimeException("fax-number parameter is missing");
         }
-        if (pdfFile == null) {
+        if (pdfFileToken == null) {
             throw new RuntimeException("pdf-file parameter is missing");
         }
+        String pdfFile = GlobalService.getInstance().resolveAppPath(pdfFileToken).toString();
         vertx.<String>executeBlocking(promise -> {
             EventBus bus = vertx.eventBus();
             SendFax.send(faxNumber, pdfFile, msg -> {
@@ -1221,28 +1227,28 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private String composeShohousenSavePdfPath(String name, int textId, int patientId,
+    private String composeShohousenSavePdfTokenPath(String name, int textId, int patientId,
                                                LocalDate date) {
         String nameRomaji = name;
         if (isNotRomaji(nameRomaji)) {
             nameRomaji = Romaji.toRomaji(nameRomaji);
         }
-        String dir = System.getenv("MYCLINIC_SHOHOUSEN_DIR");
-        if (dir == null) {
-            throw new RuntimeException("Cannot find env var: MYCLINIC_SHOHOUSEN_DIR");
-        }
         String month = date.toString().substring(0, 7);
         String file = String.format("%s-%d-%d-%s-stamped.pdf", nameRomaji,
                 textId, patientId, date.toString().replace("-", ""));
-        Path parent = Path.of(dir, month);
-        if (!Files.exists(parent)) {
+        String parentToken = GlobalService.getInstance().createAppPathToken(
+                GlobalService.getInstance().shohousenFaxDirToken,
+                month
+        );
+        Path parentPath = GlobalService.getInstance().resolveAppPath(parentToken);
+        if( !Files.exists(parentPath) ){
             try {
-                Files.createDirectories(parent);
+                Files.createDirectories(parentPath);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
-        return parent.resolve(file).toString();
+        return parentToken + File.separator + file;
     }
 
     private boolean isNotRomaji(String s) {
@@ -1266,15 +1272,9 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         if (isNotRomaji(name)) {
             name = Romaji.toRomaji(name);
         }
-        String pdfPath = composeShohousenSavePdfPath(name, Integer.parseInt(textId),
+        String pdfTokenPath = composeShohousenSavePdfTokenPath(name, Integer.parseInt(textId),
                 Integer.parseInt(patientId), LocalDate.parse(date));
-        String mkdir = ctx.request().getParam("mkdir");
-        Path path = Path.of(pdfPath);
-        if ("true".equals(mkdir)) {
-            //noinspection ResultOfMethodCallIgnored
-            path.toFile().getParentFile().mkdirs();
-        }
-        ctx.response().end(jsonEncode(path.toString()));
+        ctx.response().end(jsonEncode(pdfTokenPath));
     }
 
     private PaperSize resolvePaperSize(String arg) {
@@ -1335,6 +1335,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             try {
                 byte[] bytes = ctx.getBody().getBytes();
                 SaveDrawerAsPdfRequest req = mapper.readValue(bytes, SaveDrawerAsPdfRequest.class);
+                req.savePath = GlobalService.getInstance().resolveAppPath(req.savePath).toString();
                 doSaveDrawerAsPdf(req);
                 promise.complete("true");
             } catch (Exception e) {
@@ -1511,7 +1512,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 drawer.init();
                 data.applyTo(drawer);
                 List<Op> ops = drawer.getOps();
-                String savePath = composeShohousenSavePdfPath(
+                String saveTokenPath = composeShohousenSavePdfTokenPath(
                         req.patient.lastNameYomi + req.patient.firstNameYomi,
                         textId,
                         req.patient.patientId,
@@ -1520,7 +1521,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 SaveDrawerAsPdfRequest saveReq = new SaveDrawerAsPdfRequest();
                 saveReq.pages = List.of(ops);
                 saveReq.paperSize = "A5";
-                saveReq.savePath = savePath;
+                saveReq.savePath = GlobalService.getInstance().resolveAppPath(saveTokenPath).toString();
                 ShohousenGrayStampInfo stampInfo = appConfig.getShohousenGrayStampInfo();
                 StampRequest stampReq = new StampRequest();
                 stampReq.path = stampInfo.path;
@@ -1529,7 +1530,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 stampReq.offsetY = stampInfo.offsetY;
                 saveReq.stamp = stampReq;
                 doSaveDrawerAsPdf(saveReq);
-                promise.complete(jsonEncode(savePath));
+                promise.complete(jsonEncode(saveTokenPath));
             } catch (Exception e) {
                 promise.fail(e);
             }

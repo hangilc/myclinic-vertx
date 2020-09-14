@@ -111,9 +111,8 @@ public class HoumonKangoHandler {
             Path jar = Path.of(springProjectDir.toFile().getAbsolutePath(), "drawer-printer",
                     "target", "drawer-printer-1.0.0-SNAPSHOT.jar");
             GlobalService gs = GlobalService.getInstance();
-            gs.ensureAppDirectory("/portal-tmp");
             String outFileId = gs.createTempAppFilePath("/portal-tmp", "houmon-kango", ".pdf");
-            Path outFile = gs.fileIdToPath(outFileId);
+            Path outFile = gs.resolveAppPath(outFileId);
             ExecRequest req2 = new ExecRequest();
             req2.command = List.of("java", "-jar", jar.toString(), "-e", "utf-8", "--pdf",
                     outFile.toString());

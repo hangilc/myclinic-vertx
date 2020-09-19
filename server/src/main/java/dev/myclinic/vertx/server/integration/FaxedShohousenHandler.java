@@ -3,6 +3,7 @@ package dev.myclinic.vertx.server.integration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.server.GlobalService;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
@@ -193,7 +194,10 @@ public class FaxedShohousenHandler {
     }
 
     private String getConfigDir() {
-        return System.getenv("MYCLINIC_CONFIG_DIR");
+        return GlobalService.getInstance().resolveAppPath(
+                GlobalService.getInstance().configDirToken
+        ).toString();
+//        return System.getenv("MYCLINIC_CONFIG_DIR");
     }
 
     private Optional<Integer> getOptionalIntParam(RoutingContext ctx, String name) {
@@ -783,31 +787,48 @@ public class FaxedShohousenHandler {
     }
 
     private Path getMyclinicApiProjectDir() {
-        String dir = System.getenv("MYCLINIC_API_PROJECT_DIR");
-        if (dir == null) {
-            throw new RuntimeException("env var not defined: " + "MYCLINIC_API_PROJECT_DIR");
-        }
-        return Path.of(dir);
+        return GlobalService.getInstance().resolveAppPath(
+                GlobalService.getInstance().myclinicApiProjectDirToken
+        );
+//        String dir = System.getenv("MYCLINIC_API_PROJECT_DIR");
+//        if (dir == null) {
+//            throw new RuntimeException("env var not defined: " + "MYCLINIC_API_PROJECT_DIR");
+//        }
+//        return Path.of(dir);
     }
 
     private Path getMyclinicSpringProjectDir() {
-        String dir = System.getenv("MYCLINIC_SPRING_PROJECT_DIR");
-        if (dir == null) {
-            throw new RuntimeException("env var not defined: " + "MYCLINIC_SPRING_PROJECT_DIR");
-        }
-        return Path.of(dir);
+        return GlobalService.getInstance().resolveAppPath(
+                GlobalService.getInstance().myclinicSpringProjectDirToken
+        );
+//        String dir = System.getenv("MYCLINIC_SPRING_PROJECT_DIR");
+//        if (dir == null) {
+//            throw new RuntimeException("env var not defined: " + "MYCLINIC_SPRING_PROJECT_DIR");
+//        }
+//        return Path.of(dir);
     }
 
     private Path getManagementRootDir() {
-        String dirStr = System.getenv("MYCLINIC_FAXED_SHOHOUSEN_DATA_DIR");
-        if (dirStr == null) {
-            throw new RuntimeException("env var is not defined: " + "MYCLINIC_FAXED_SHOHOUSEN_DATA_DIR");
+        Path path = GlobalService.getInstance().resolveAppPath(
+                GlobalService.getInstance().shohousenFaxManagementDirToken
+        );
+        if( !Files.exists(path) ){
+            try {
+                Files.createDirectories(path);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
-        Path dir = Path.of(dirStr);
-        if (!Files.isDirectory(dir)) {
-            throw new RuntimeException("is not directory: " + dir);
-        }
-        return dir;
+        return path;
+//        String dirStr = System.getenv("MYCLINIC_FAXED_SHOHOUSEN_DATA_DIR");
+//        if (dirStr == null) {
+//            throw new RuntimeException("env var is not defined: " + "MYCLINIC_FAXED_SHOHOUSEN_DATA_DIR");
+//        }
+//        Path dir = Path.of(dirStr);
+//        if (!Files.isDirectory(dir)) {
+//            throw new RuntimeException("is not directory: " + dir);
+//        }
+//        return dir;
     }
 
     private String readInputStream(InputStream is) {

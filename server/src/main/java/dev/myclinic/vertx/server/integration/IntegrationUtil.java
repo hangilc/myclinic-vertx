@@ -2,6 +2,7 @@ package dev.myclinic.vertx.server.integration;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.server.GlobalService;
 import io.vertx.ext.web.RoutingContext;
 
 import javax.imageio.IIOException;
@@ -15,15 +16,21 @@ import java.util.Map;
 class IntegrationUtil {
 
     public static String getConfigDir() {
-        return System.getenv("MYCLINIC_CONFIG_DIR");
+        return GlobalService.getInstance().resolveAppPath(
+                GlobalService.getInstance().configDirToken
+        ).toString();
+        //return System.getenv("MYCLINIC_CONFIG_DIR");
     }
 
     public static Path getMyclinicSpringProjectDir() {
-        String dir = System.getenv("MYCLINIC_SPRING_PROJECT_DIR");
-        if (dir == null) {
-            throw new RuntimeException("env var not defined: " + "MYCLINIC_SPRING_PROJECT_DIR");
-        }
-        return Path.of(dir);
+        return GlobalService.getInstance().resolveAppPath(
+                GlobalService.getInstance().myclinicSpringProjectDirToken
+        );
+//        String dir = System.getenv("MYCLINIC_SPRING_PROJECT_DIR");
+//        if (dir == null) {
+//            throw new RuntimeException("env var not defined: " + "MYCLINIC_SPRING_PROJECT_DIR");
+//        }
+//        return Path.of(dir);
     }
 
     public static int getIntParam(RoutingContext ctx, String name) {

@@ -18,6 +18,10 @@ public class GlobalService {
     public final String portalTmpDirToken = "[portal-tmp]";
     public final String paperScanDirToken = "[paper-scan]";
     public final String shohousenFaxDirToken = "[shohousen-fax]";
+    public final String shohousenFaxManagementDirToken = "[shohousen-fax-management]";
+    public final String myclinicApiProjectDirToken = "[myclinic-api-proj]";
+    public final String myclinicSpringProjectDirToken = "[myclinic-spring-proj]";
+    public final String configDirToken = "[config]";
 
     private final Map<String, String> appDirTokenMap = new HashMap<>();
 
@@ -25,6 +29,10 @@ public class GlobalService {
         addDirTokenFromEnv(portalTmpDirToken, "MYCLINIC_PORTAL_TMP_DIR");
         addDirTokenFromEnv(paperScanDirToken, "MYCLINIC_PAPER_SCAN_DIR");
         addDirTokenFromEnv(shohousenFaxDirToken, "MYCLINIC_SHOHOUSEN_DIR");
+        addDirTokenFromEnv(shohousenFaxManagementDirToken, "MYCLINIC_FAXED_SHOHOUSEN_DATA_DIR");
+        addDirTokenFromEnv(myclinicApiProjectDirToken, "MYCLINIC_API_PROJECT_DIR");
+        addDirTokenFromEnv(myclinicSpringProjectDirToken, "MYCLINIC_SPRING_PROJECT_DIR");
+        addDirTokenFromEnv(configDirToken, "MYCLINIC_CONFIG_DIR");
     }
 
     private void addDirTokenFromEnv(String token, String envVar) {
@@ -47,7 +55,7 @@ public class GlobalService {
     private String resolveDirToken(String token) {
         String path = appDirTokenMap.get(token);
         if (path == null) {
-            throw new RuntimeException("Invalid dir token");
+            throw new RuntimeException("Invalid dir token: " + token);
         }
         return path;
     }

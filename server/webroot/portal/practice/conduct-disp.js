@@ -1,6 +1,14 @@
 import {Component} from "./component.js";
 import * as consts from "../js/consts.js";
 
+function getGazouLabel(conductFull){
+    if( conductFull.gazouLabel ){
+        return conductFull.gazouLabel.label || "";
+    } else {
+        return "";
+    }
+}
+
 export class ConductDisp extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
@@ -13,7 +21,7 @@ export class ConductDisp extends Component {
 
     init(conductFull){
         this.kindElement.text(consts.conductKindToKanji(conductFull.conduct.kind));
-        this.gazouLabelElement.text(conductFull.gazouLabel.label || "");
+        this.gazouLabelElement.text(getGazouLabel(conductFull));
         conductFull.conductShinryouList.forEach(cs => {
             let e = $("<div>").text(this.conductShinryouRep(cs));
             this.shinryouElement.append(e);

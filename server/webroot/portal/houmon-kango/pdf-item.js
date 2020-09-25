@@ -71,7 +71,7 @@ export class PdfItem extends Component {
     }
 
     doPreview(){
-        let url = this.url;
+        let url = this.rest.url("show-pdf", { file: this.url });
         window.open(url, "_blank");
     }
 }

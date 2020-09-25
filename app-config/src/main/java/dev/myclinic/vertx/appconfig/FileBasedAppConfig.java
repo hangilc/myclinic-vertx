@@ -3,18 +3,18 @@ package dev.myclinic.vertx.appconfig;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import dev.myclinic.vertx.appconfig.types.ShohousenGrayStampInfo;
 import dev.myclinic.vertx.appconfig.types.StampInfo;
-import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
-import dev.myclinic.vertx.mastermap.MasterChronoMap;
-import dev.myclinic.vertx.mastermap.MasterMap;
-import dev.myclinic.vertx.mastermap.MasterNameMap;
 import dev.myclinic.vertx.dto.ClinicInfoDTO;
 import dev.myclinic.vertx.dto.DiseaseExampleDTO;
 import dev.myclinic.vertx.dto.PracticeConfigDTO;
 import dev.myclinic.vertx.dto.ReferItemDTO;
+import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
+import dev.myclinic.vertx.mastermap.MasterChronoMap;
+import dev.myclinic.vertx.mastermap.MasterMap;
+import dev.myclinic.vertx.mastermap.MasterNameMap;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -65,13 +65,15 @@ public class FileBasedAppConfig implements AppConfig {
     @Override
     public Future<ClinicInfoDTO> getClinicInfo() {
         File file = new File(configDir, "clinic-info.yml");
-        return fromYamlFile(file, new TypeReference<>(){});
+        return fromYamlFile(file, new TypeReference<>() {
+        });
     }
 
     @Override
     public Future<List<DiseaseExampleDTO>> listDiseaseExample() {
         File file = new File(configDir, "disease-example.yml");
-        return fromYamlFile(file, new TypeReference<>() {});
+        return fromYamlFile(file, new TypeReference<>() {
+        });
     }
 
     @Override
@@ -79,17 +81,17 @@ public class FileBasedAppConfig implements AppConfig {
         File file = new File(configDir, "app-config.yml");
         Promise<String> promise = Promise.promise();
         vertx.executeBlocking(
-            promise2 -> {
-                try {
-                    JsonNode node = yamlMapper.readTree(file);
-                    String value = node.get("paper-scan-directory").asText();
-                    promise2.complete(value);
-                } catch(Exception e){
-                    logger.error("Failed to get data from app-config.yml", e);
-                    promise2.fail(e);
-                }
-            },
-            promise
+                promise2 -> {
+                    try {
+                        JsonNode node = yamlMapper.readTree(file);
+                        String value = node.get("paper-scan-directory").asText();
+                        promise2.complete(value);
+                    } catch (Exception e) {
+                        logger.error("Failed to get data from app-config.yml", e);
+                        promise2.fail(e);
+                    }
+                },
+                promise
         );
         return promise.future();
     }
@@ -109,7 +111,8 @@ public class FileBasedAppConfig implements AppConfig {
     @Override
     public Future<List<ReferItemDTO>> getReferList() {
         File file = new File(configDir, "refer-list.yml");
-        return fromYamlFile(file, new TypeReference<>(){});
+        return fromYamlFile(file, new TypeReference<>() {
+        });
     }
 
     @Override
@@ -127,7 +130,8 @@ public class FileBasedAppConfig implements AppConfig {
     @Override
     public Future<PracticeConfigDTO> getPracticeConfig() {
         File file = new File(configDir, "practice-config.yml");
-        return fromYamlFile(file, new TypeReference<>(){});
+        return fromYamlFile(file, new TypeReference<>() {
+        });
     }
 
     @Override
@@ -138,7 +142,7 @@ public class FileBasedAppConfig implements AppConfig {
             MasterNameMap nameMap = MasterNameMap.fromFile(nameMapFile);
             MasterChronoMap chronoMap = MasterChronoMap.fromFile(chronoMapFile);
             return new MasterMap(nameMap, chronoMap);
-        } catch(Exception e){
+        } catch (Exception e) {
             throw new RuntimeException("Failed to read master map.", e);
         }
     }
@@ -148,7 +152,7 @@ public class FileBasedAppConfig implements AppConfig {
         File file = new File(configDir, "houkatsu-kensa.xml");
         try {
             return HoukatsuKensa.fromXmlFile(file);
-        } catch(Exception e){
+        } catch (Exception e) {
             throw new RuntimeException("Failed to read houkatsu-kensa from: " + file.toString());
         }
     }
@@ -161,7 +165,7 @@ public class FileBasedAppConfig implements AppConfig {
             File pathFile = new File(configDir, info.path);
             info.path = pathFile.getAbsolutePath();
             return info;
-        } catch(Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -171,35 +175,51 @@ public class FileBasedAppConfig implements AppConfig {
         try {
             File file = new File(configDir, "stamp-info.yml");
             Map<String, StampInfo> map = yamlMapper.readValue(file,
-                    new TypeReference<>(){});
+                    new TypeReference<>() {
+                    });
             String name = "refer";
             StampInfo stampInfo = map.get(name);
-            if( stampInfo == null ){
+            if (stampInfo == null) {
                 throw new RuntimeException("Cannot find stamp info for " + name + ".");
             }
             Path path = Path.of(stampInfo.imageFile);
-            if( !path.isAbsolute() ){
+            if (!path.isAbsolute()) {
                 stampInfo.imageFile = Path.of(configDir).resolve(path).toAbsolutePath().toString();
             }
             return stampInfo;
-        } catch(Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private <T> Future<T> fromYamlFile(File file, TypeReference<T> typeRef){
+    @Override
+    public StampInfo getStampInfo(String name) {
+        try {
+            File file = new File(configDir, String.format("stamp-data/%s.yml", name));
+            StampInfo stampInfo = yamlMapper.readValue(file, StampInfo.class);
+            Path path = Path.of(stampInfo.imageFile);
+            if (!path.isAbsolute()) {
+                stampInfo.imageFile = Path.of(configDir, "stamp-data").resolve(path).toAbsolutePath().toString();
+            }
+            return stampInfo;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private <T> Future<T> fromYamlFile(File file, TypeReference<T> typeRef) {
         Promise<T> promise = Promise.promise();
         vertx.executeBlocking(
-            promise2 -> {
-                try {
-                    T dto = yamlMapper.readValue(file, typeRef);
-                    promise2.complete(dto);
-                } catch(Exception ex){
-                    logger.error("Failed to read YAML file.", ex);
-                    promise2.fail(ex);
-                }
-            },
-            promise
+                promise2 -> {
+                    try {
+                        T dto = yamlMapper.readValue(file, typeRef);
+                        promise2.complete(dto);
+                    } catch (Exception ex) {
+                        logger.error("Failed to read YAML file.", ex);
+                        promise2.fail(ex);
+                    }
+                },
+                promise
         );
         return promise.future();
     }

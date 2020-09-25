@@ -15,7 +15,6 @@ import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
 import dev.myclinic.vertx.mastermap.MasterMap;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
@@ -26,10 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.io.UnsupportedEncodingException;
+import java.io.IOException;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,7 +91,7 @@ public class Main {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         CmdArgs cmdArgs = CmdArgs.parse(args);
         MysqlDataSourceConfig mysqlConfig = new MysqlDataSourceConfig();
         DataSource ds = MysqlDataSourceFactory.create(mysqlConfig);
@@ -131,9 +130,10 @@ public class Main {
         router.route("/portal2").handler(ctx -> ctx.response().setStatusCode(301)
                 .putHeader("Location", "/portal2/index.html")
                 .end());
-
-        addStaticPath(router, "/portal-tmp", GlobalService.getInstance().getAppDirectory("/portal-tmp"));
-        addStaticPath(router, "/paper-scan", GlobalService.getInstance().getAppDirectory("/paper-scan"));
+        ensureAppDir(GlobalService.getInstance().portalTmpDirToken);
+        ensureAppDir(GlobalService.getInstance().paperScanDirToken);
+        //addStaticPath(router, "/portal-tmp", GlobalService.getInstance().getAppDirectory("/portal-tmp"));
+        //addStaticPath(router, "/paper-scan", GlobalService.getInstance().getAppDirectory("/paper-scan"));
         server.requestHandler(router);
         server.webSocketHandler(ws -> {
             System.out.println("opened: " + ws.path());
@@ -143,6 +143,13 @@ public class Main {
         int port = cmdArgs.port;
         server.listen(port);
         System.out.println(String.format("server started at port %d", port));
+    }
+
+    private static void ensureAppDir(String dirToken) throws IOException {
+        Path path = GlobalService.getInstance().resolveAppPath(dirToken);
+        if( !Files.exists(path) ){
+            Files.createDirectories(path);
+        }
     }
 
     private static void addStaticPath(Router router, String url, Path root){

@@ -108,11 +108,14 @@ export class TextEdit extends Component {
             let name = await this.rest.convertToRomaji(patient.lastNameYomi + patient.firstNameYomi);
             let savePath = await this.rest.getShohousenSavePdfPath(name, this.text.textId,
                 patient.patientId, visit.visitedAt.substring(0, 10));
-            let stampInfo = await this.rest.shohousenGrayStampInfo();
+            //let stampInfo = await this.rest.shohousenGrayStampInfo();
             let content = this.text.content;
             content = this.asContentOfData(content);
             let ops = await this.createShohousenOps(content, {color: "black"});
-            await this.rest.saveDrawerAsPdf([ops], "A5", savePath, {stamp: stampInfo});
+            let tmpPath = await this.rest.createTempFileName("shohousen", ".pdf");
+            await this.rest.saveDrawerAsPdf([ops], "A5", tmpPath);
+            await this.rest.putStampOnPdf(tmpPath, "shohousen-gray", savePath);
+            await this.rest.deleteFile(tmpPath);
             this.ele.trigger("cancel");
         }
     }

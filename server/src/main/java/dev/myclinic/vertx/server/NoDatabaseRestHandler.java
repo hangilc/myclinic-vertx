@@ -292,8 +292,8 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("save-shohousen-pdf", this::saveShohousenPdf);
         noDatabaseFuncMap.put("get-shohousen-save-pdf-path", this::getShohousenSavePdfPath);
         noDatabaseFuncMap.put("convert-to-romaji", this::convertToRomaji);
-        noDatabaseFuncMap.put("shohousen-gray-stamp-info", this::shohousenGrayStampInfo);
-        noDatabaseFuncMap.put("refer-stamp-info", this::referStampInfo);
+        //noDatabaseFuncMap.put("shohousen-gray-stamp-info", this::shohousenGrayStampInfo);
+        //noDatabaseFuncMap.put("refer-stamp-info", this::referStampInfo);
         noDatabaseFuncMap.put("send-fax", this::sendFax);
         noDatabaseFuncMap.put("poll-fax", this::pollFax);
         noDatabaseFuncMap.put("probe-shohousen-fax-image", this::probeShohousenFaxImage);
@@ -1200,25 +1200,25 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         ctx.response().end(jsonEncode(status));
     }
 
-    private void shohousenGrayStampInfo(RoutingContext ctx) {
-        try {
-            var info = appConfig.getShohousenGrayStampInfo();
-            String rep = mapper.writeValueAsString(info);
-            ctx.response().end(rep);
-        } catch (Exception e) {
-            ctx.fail(e);
-        }
-    }
-
-    private void referStampInfo(RoutingContext ctx){
-        try {
-            var info = appConfig.getReferStampInfo();
-            String rep = mapper.writeValueAsString(info);
-            ctx.response().end(rep);
-        } catch (Exception e) {
-            ctx.fail(e);
-        }
-    }
+//    private void shohousenGrayStampInfo(RoutingContext ctx) {
+//        try {
+//            var info = appConfig.getShohousenGrayStampInfo();
+//            String rep = mapper.writeValueAsString(info);
+//            ctx.response().end(rep);
+//        } catch (Exception e) {
+//            ctx.fail(e);
+//        }
+//    }
+//
+//    private void referStampInfo(RoutingContext ctx){
+//        try {
+//            var info = appConfig.getReferStampInfo();
+//            String rep = mapper.writeValueAsString(info);
+//            ctx.response().end(rep);
+//        } catch (Exception e) {
+//            ctx.fail(e);
+//        }
+//    }
 
     private void convertToRomaji(RoutingContext ctx) {
         String text = ctx.request().getParam("text");
@@ -1531,13 +1531,13 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 saveReq.pages = List.of(ops);
                 saveReq.paperSize = "A5";
                 saveReq.savePath = GlobalService.getInstance().resolveAppPath(saveTokenPath).toString();
-                ShohousenGrayStampInfo stampInfo = appConfig.getShohousenGrayStampInfo();
-                StampRequest stampReq = new StampRequest();
-                stampReq.path = stampInfo.path;
-                stampReq.scale = stampInfo.scale;
-                stampReq.offsetX = stampInfo.offsetX;
-                stampReq.offsetY = stampInfo.offsetY;
-                saveReq.stamp = stampReq;
+                //ShohousenGrayStampInfo stampInfo = appConfig.getShohousenGrayStampInfo();
+//                StampRequest stampReq = new StampRequest();
+//                stampReq.path = stampInfo.path;
+//                stampReq.scale = stampInfo.scale;
+//                stampReq.offsetX = stampInfo.offsetX;
+//                stampReq.offsetY = stampInfo.offsetY;
+//                saveReq.stamp = stampReq;
                 doSaveDrawerAsPdf(saveReq);
                 promise.complete(jsonEncode(saveTokenPath));
             } catch (Exception e) {

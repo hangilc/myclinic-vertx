@@ -157,40 +157,40 @@ public class FileBasedAppConfig implements AppConfig {
         }
     }
 
-    @Override
-    public ShohousenGrayStampInfo getShohousenGrayStampInfo() {
-        try {
-            File file = new File(configDir, "shohousen-bw-stamp.json");
-            var info = mapper.readValue(file, ShohousenGrayStampInfo.class);
-            File pathFile = new File(configDir, info.path);
-            info.path = pathFile.getAbsolutePath();
-            return info;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    @Override
+//    public ShohousenGrayStampInfo getShohousenGrayStampInfo() {
+//        try {
+//            File file = new File(configDir, "shohousen-bw-stamp.json");
+//            var info = mapper.readValue(file, ShohousenGrayStampInfo.class);
+//            File pathFile = new File(configDir, info.path);
+//            info.path = pathFile.getAbsolutePath();
+//            return info;
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
-    @Override
-    public StampInfo getReferStampInfo() {
-        try {
-            File file = new File(configDir, "stamp-info.yml");
-            Map<String, StampInfo> map = yamlMapper.readValue(file,
-                    new TypeReference<>() {
-                    });
-            String name = "refer";
-            StampInfo stampInfo = map.get(name);
-            if (stampInfo == null) {
-                throw new RuntimeException("Cannot find stamp info for " + name + ".");
-            }
-            Path path = Path.of(stampInfo.imageFile);
-            if (!path.isAbsolute()) {
-                stampInfo.imageFile = Path.of(configDir).resolve(path).toAbsolutePath().toString();
-            }
-            return stampInfo;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    @Override
+//    public StampInfo getReferStampInfo() {
+//        try {
+//            File file = new File(configDir, "stamp-info.yml");
+//            Map<String, StampInfo> map = yamlMapper.readValue(file,
+//                    new TypeReference<>() {
+//                    });
+//            String name = "refer";
+//            StampInfo stampInfo = map.get(name);
+//            if (stampInfo == null) {
+//                throw new RuntimeException("Cannot find stamp info for " + name + ".");
+//            }
+//            Path path = Path.of(stampInfo.imageFile);
+//            if (!path.isAbsolute()) {
+//                stampInfo.imageFile = Path.of(configDir).resolve(path).toAbsolutePath().toString();
+//            }
+//            return stampInfo;
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
     @Override
     public StampInfo getStampInfo(String name) {

@@ -24,7 +24,7 @@ public interface AppConfig {
     Future<PracticeConfigDTO> getPracticeConfig();
     MasterMap getMasterMap();
     HoukatsuKensa getHoukatsuKensa();
-    ShohousenGrayStampInfo getShohousenGrayStampInfo();
-    StampInfo getReferStampInfo(); // deprecated
+    //ShohousenGrayStampInfo getShohousenGrayStampInfo();
+    //StampInfo getReferStampInfo(); // deprecated
     StampInfo getStampInfo(String name);
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itextpdf.text.Image;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.appconfig.types.ShohousenGrayStampInfo;
+import dev.myclinic.vertx.appconfig.types.StampInfo;
 import dev.myclinic.vertx.drawer.DrawerColor;
 import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.drawer.PaperSize;
@@ -353,8 +354,9 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         if( file == null ){
             throw new RuntimeException("Missing parameter: file");
         }
+        Path path = GlobalService.getInstance().resolveAppPath(file);
         try {
-            Files.delete(Path.of(file));
+            Files.delete(path);
             ctx.response().end("true");
         } catch(Exception e){
             ctx.fail(e);
@@ -366,21 +368,22 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         if( src == null ){
             throw new RuntimeException("Missing parameter: src");
         }
+        Path srcPath = GlobalService.getInstance().resolveAppPath(src);
         String dst = ctx.request().getParam("dst");
         if( dst == null ){
             throw new RuntimeException("Missing parameter: dst");
         }
+        Path dstPath = GlobalService.getInstance().resolveAppPath(dst);
         String mkdir = ctx.request().getParam("mkdir");
         vertx.<Void>executeBlocking(promise -> {
             try {
-                Path dstPath = Path.of(dst);
                 if( mkdir != null ){
                     Path parent = dstPath.getParent();
                     if( parent != null && !Files.exists(parent) ){
                         Files.createDirectories(parent);
                     }
                 }
-                Files.copy(Path.of(src), dstPath);
+                Files.copy(srcPath, dstPath);
                 promise.complete();
             } catch (Exception e) {
                 promise.fail(e);
@@ -400,8 +403,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 prefix,
                 suffix
         );
-        Path path = GlobalService.getInstance().resolveAppPath(fileId);
-        return path.toAbsolutePath().toString();
+        return fileId;
     }
 
     private void createTempFileName(RoutingContext ctx) {
@@ -413,7 +415,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         if( suffix == null ){
             suffix = "";
         }
-        ctx.response().end(doCreateTempFileName(prefix, suffix));
+        ctx.response().end(jsonEncode(doCreateTempFileName(prefix, suffix)));
     }
 
     private void putStampOnPdf(RoutingContext ctx) {
@@ -421,20 +423,27 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         if( srcFile == null ){
             throw new RuntimeException("Missing parameter: src-file");
         }
-        String imageFile = ctx.request().getParam("image-file");
-        if( imageFile == null ){
-            throw new RuntimeException("Missing parameter: image-file");
+        Path srcPath = GlobalService.getInstance().resolveAppPath(srcFile);
+        String stamp = ctx.request().getParam("stamp");
+        if( stamp == null ){
+            throw new RuntimeException("Missing parameter: stamp");
         }
         String dstFile = ctx.request().getParam("dst-file");
         if( dstFile == null ){
             throw new RuntimeException("Missing parameter: dst-file");
         }
+        Path dstPath = GlobalService.getInstance().resolveAppPath(dstFile);
         vertx.<Void>executeBlocking(promise -> {
             try {
-                Stamper.StamperOption opt = mapper.readValue(ctx.getBody().getBytes(),
-                        Stamper.StamperOption.class);
+                StampInfo stampInfo = appConfig.getStampInfo(stamp);
+                Stamper.StamperOption opt = new Stamper.StamperOption();
+                opt.xPos = stampInfo.xPos;
+                opt.yPos = stampInfo.yPos;
+                opt.scale = stampInfo.scale;
+                opt.stampCenterRelative = stampInfo.isImageCenterRelative;
                 Stamper stamper = new Stamper();
-                stamper.putStamp(srcFile, imageFile, dstFile, opt);
+                stamper.putStamp(srcPath.toString(), stampInfo.imageFile,
+                        dstPath.toString(), opt);
                 promise.complete();
             } catch (Exception e) {
                 promise.fail(e);
@@ -1324,7 +1333,8 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         try {
             printer.print(req.pages, outStream, callback);
             byte[] pdfBytes = outStream.toByteArray();
-            Files.write(Path.of(req.savePath), pdfBytes);
+            Path savePath = GlobalService.getInstance().resolveAppPath(req.savePath);
+            Files.write(savePath, pdfBytes);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -1335,7 +1345,6 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             try {
                 byte[] bytes = ctx.getBody().getBytes();
                 SaveDrawerAsPdfRequest req = mapper.readValue(bytes, SaveDrawerAsPdfRequest.class);
-                req.savePath = GlobalService.getInstance().resolveAppPath(req.savePath).toString();
                 doSaveDrawerAsPdf(req);
                 promise.complete("true");
             } catch (Exception e) {

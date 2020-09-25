@@ -83,6 +83,7 @@ public class GlobalService {
 
         static AppPath parse(String tokenPath) {
             if (tokenPath == null || !tokenPath.startsWith("[")) {
+                System.err.printf("Invalid appPath: %s\n", tokenPath);
                 throw new RuntimeException("Invalid token path");
             }
             int i = tokenPath.indexOf(']');

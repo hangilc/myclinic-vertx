@@ -643,13 +643,11 @@ class Rest extends Client {
         return await this.get("/refer-stamp-info");
     }
 
-    async putStampOnPdf(srcFile, imageFile, dstFile, opt){
-        return await this.post("/put-stamp-on-pdf", opt, {
-            params: {
+    async putStampOnPdf(srcFile, stamp, dstFile){
+        return await this.get("/put-stamp-on-pdf", {
                 "src-file": srcFile,
-                "image-file": imageFile,
+                "stamp": stamp,
                 "dst-file": dstFile
-            }
         });
     }
 

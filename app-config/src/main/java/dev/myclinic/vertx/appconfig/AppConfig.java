@@ -25,5 +25,6 @@ public interface AppConfig {
     MasterMap getMasterMap();
     HoukatsuKensa getHoukatsuKensa();
     ShohousenGrayStampInfo getShohousenGrayStampInfo();
-    StampInfo getReferStampInfo();
+    StampInfo getReferStampInfo(); // deprecated
+    StampInfo getStampInfo(String name);
 }

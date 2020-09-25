@@ -33,15 +33,8 @@ export class SavedPdfWorkarea {
 
     async doStamp(){
         let srcFile = this.pdfPath;
-        let stampInfo = await this.rest.referStampInfo();
-        let imageFile = stampInfo.imageFile;
         let dstFile = await this.rest.createTempFileName("refer-stamped-", ".pdf");
-        await this.rest.putStampOnPdf(srcFile, imageFile, dstFile, {
-            scale: stampInfo.scale,
-            xPos: stampInfo.xPos,
-            yPos: stampInfo.yPos,
-            stampCenterRelative: stampInfo.isImageCenterRelative
-        });
+        await this.rest.putStampOnPdf(srcFile, "refer-gray", dstFile);
         let oldFile = this.pdfPath;
         this.pdfPath = dstFile;
         await this.rest.deleteFile(oldFile);

@@ -84,7 +84,7 @@
                     this.currentItem = name;
                     this._setActive(name);
                     if( item.onReloaded ){
-                        item.onReloaded();
+                        item.onReloaded(info.savedElement);
                     }
                 } else {
                     let pane = document.createElement("div");
@@ -137,19 +137,19 @@
             await practice.initPractice();
             cb();
         },
-        onReloaded() {
-            console.log("reloaded practice");
+        onReloaded(pane) {
         }
     });
     menu.addItem("cashier", {
         link: document.getElementById("index-cashier-link"),
         async start(pane, cb) {
-            console.log("starting cashier");
-            pane.appendChild(document.createTextNode("Cashier"));
+            let cashier = await import("./cashier/cashier.js");
+            pane.innerHTML = cashier.getHtml();
+            await cashier.initCashier(pane);
             cb();
         },
-        onReloaded() {
-            console.log("reloaded cashier");
+        onReloaded(pane) {
+            pane.dispatchEvent(new Event("onreloaded"))
         }
     });
 

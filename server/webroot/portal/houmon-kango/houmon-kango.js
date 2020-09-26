@@ -332,7 +332,7 @@ export async function initHoumonKango(pane){
     function init(){
         let comp = new HoumonKango(rest, integration, clinicInfo);
         comp.onEndPatient(() => init());
-        comp.appendTo($(pane));
+        comp.appendTo($(pane).html(""));
     }
 
     init();

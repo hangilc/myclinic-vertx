@@ -1,5 +1,11 @@
 import {parseElement} from "../js/parse-element.js";
 
+let html = `
+<h2>診断書作成</h2>
+
+<div id="medcert-wrapper"></div>
+`;
+
 let tmpl = `
 <div>
     <div>
@@ -21,7 +27,11 @@ let tmpl = `
 </div>
 `;
 
-export class MedCert {
+export function getHtml() {
+    return html;
+}
+
+class MedCert {
     constructor(rest) {
         this.rest = rest;
         this.ele = $(tmpl);
@@ -29,13 +39,13 @@ export class MedCert {
         map.create.on("click", event => this.doCreate());
     }
 
-    async doCreate(){
+    async doCreate() {
         let data = await this.collectData();
         let savePath = this.rest.renderMedCert(data);
         alert(savePath);
     }
 
-    async collectData(){
+    async collectData() {
         let clinicInfo = await this.rest.getClinicInfo();
         return {
             patientName: this.inputValue("shimei"),
@@ -52,8 +62,13 @@ export class MedCert {
         };
     }
 
-    inputValue(name){
+    inputValue(name) {
         return this.ele.find("input[name=" + name + "]").val();
     }
 
+}
+
+export async function initMedcert() {
+    let medCert = new MedCert(rest);
+    $("#medcert-wrapper").append(medCert.ele);
 }

@@ -68,34 +68,47 @@
                 name: name,
                 link: item.link,
                 savedElement: null,
+                item: item
             };
             this.itemMap[name] = info;
             if( item.init ) {
                 item.init(this);
             }
-            item.link.onclick = async event => {
-                if( name === this.currentItem ){
-                    return;
+            item.link.onclick = async event => await this.simulateClick(name);
+        }
+
+        async simulateClick(name){
+            if( name === this.currentItem ){
+                return;
+            }
+            let info = this.itemMap[name];
+            let item = info.item;
+            this._saveCurrentItem();
+            this._clearNode(this.paneWrapper);
+            if( info.savedElement ){
+                this.paneWrapper.appendChild(info.savedElement);
+                this.currentItem = name;
+                this._setActive(name);
+                if( item.onReloaded ){
+                    item.onReloaded(info.savedElement);
                 }
-                this._saveCurrentItem();
+            } else {
+                let pane = document.createElement("div");
                 this._clearNode(this.paneWrapper);
-                if( info.savedElement ){
-                    this.paneWrapper.appendChild(info.savedElement);
+                this.paneWrapper.appendChild(pane);
+                await item.start(pane, () => {
                     this.currentItem = name;
                     this._setActive(name);
-                    if( item.onReloaded ){
-                        item.onReloaded(info.savedElement);
-                    }
-                } else {
-                    let pane = document.createElement("div");
-                    this._clearNode(this.paneWrapper);
-                    this.paneWrapper.appendChild(pane);
-                    await item.start(pane, () => {
-                        this.currentItem = name;
-                        this._setActive(name);
-                    });
-                }
-            };
+                }, async () => await this._restart(name));
+            }
+        }
+
+        async _restart(name){
+            this._saveCurrentItem();
+            let info = this.itemMap[name];
+            let item = info.item;
+            info.savedElement = null;
+            await this.simulateClick(name);
         }
 
         _setActive(name){
@@ -181,6 +194,66 @@
         async start(pane, cb) {
             let app = await import("./houmon-kango/houmon-kango.js");
             await app.initHoumonKango(pane);
+            cb();
+        },
+        onReloaded(pane) {
+            pane.dispatchEvent(new Event("onreloaded"))
+        }
+    });
+    menu.addItem("shujii", {
+        link: document.getElementById("index-shujii-link"),
+        async start(pane, cb, reload) {
+            let app = await import("./shujii/shujii.js");
+            pane.innerHTML = app.getHtml();
+            await app.initShujii(pane, reload);
+            cb();
+        },
+        onReloaded(pane) {
+            pane.dispatchEvent(new Event("onreloaded"))
+        }
+    });
+    menu.addItem("send-fax", {
+        link: document.getElementById("index-send-fax-link"),
+        async start(pane, cb, reload) {
+            let app = await import("./send-fax/send-fax.js");
+            pane.innerHTML = app.getHtml();
+            await app.initSendFax(pane, reload);
+            cb();
+        },
+        onReloaded(pane) {
+            pane.dispatchEvent(new Event("onreloaded"))
+        }
+    });
+    menu.addItem("printer-setting", {
+        link: document.getElementById("index-printer-setting-link"),
+        async start(pane, cb, reload) {
+            let app = await import("./printer-setting/printer-setting.js");
+            pane.innerHTML = app.getHtml();
+            await app.initPrinterSetting(pane, reload);
+            cb();
+        },
+        onReloaded(pane) {
+            pane.dispatchEvent(new Event("onreloaded"))
+        }
+    });
+    menu.addItem("refer", {
+        link: document.getElementById("index-refer-link"),
+        async start(pane, cb, reload) {
+            let app = await import("./refer/refer.js");
+            pane.innerHTML = app.getHtml();
+            await app.initRefer(pane, reload);
+            cb();
+        },
+        onReloaded(pane) {
+            pane.dispatchEvent(new Event("onreloaded"))
+        }
+    });
+    menu.addItem("medcert", {
+        link: document.getElementById("index-medcert-link"),
+        async start(pane, cb, reload) {
+            let app = await import("./medcert/medcert.js");
+            pane.innerHTML = app.getHtml();
+            await app.initMedcert(pane, reload);
             cb();
         },
         onReloaded(pane) {

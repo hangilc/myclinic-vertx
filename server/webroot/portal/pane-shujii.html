@@ -87,7 +87,7 @@
 
 <script>
 
-    async function initShujii(reloadFunc) {
+    async function initShujii(pane, reloadFunc) {
         let {parseElement} = await import("./js/parse-element.js");
         let {PatientSelectDialog} = await import("./shujii/patient-select-dialog.js");
         let {Nav} = await import("./shujii/nav.js");

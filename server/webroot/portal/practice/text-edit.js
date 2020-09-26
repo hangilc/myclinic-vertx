@@ -1,6 +1,7 @@
 import {Component} from "./component.js";
 import {formatPresc} from "../js/format-presc.js";
 import {RegisteredDrugDialog} from "./registered-drug-dialog/registered-drug-dialog.js";
+import {createShohousenPdfForFax} from "./funs.js";
 
 export class TextEdit extends Component {
     constructor(ele, map, rest) {
@@ -54,28 +55,28 @@ export class TextEdit extends Component {
         }
     }
 
-    asContentOfData(content){
-        if (content.startsWith("院外処方")) {
-            return content.replace(/ /ug, "　"); // replace ascii space to zenkaku space
-        } else {
-            return content;
-        }
-    }
+    // asContentOfData(content){
+    //     if (content.startsWith("院外処方")) {
+    //         return content.replace(/ /ug, "　"); // replace ascii space to zenkaku space
+    //     } else {
+    //         return content;
+    //     }
+    // }
 
-    async createShohousenOps(content, reqOpts) {
-        let visit = await this.rest.getVisit(this.text.visitId);
-        let visitDate = visit.visitedAt.substring(0, 10);
-        let req = {};
-        req.clinicInfo = await this.rest.getClinicInfo();
-        req.hoken = await this.rest.getHoken(this.text.visitId);
-        req.patient = await this.rest.getPatient(visit.patientId);
-        let rcptAge = await this.rest.calcRcptAge(req.patient.birthday, visitDate);
-        req.futanWari = await this.rest.calcFutanWari(req.hoken, rcptAge);
-        req.issueDate = visitDate;
-        req.drugs = content;
-        Object.assign(req, reqOpts);
-        return await this.rest.shohousenDrawer(req);
-    }
+    // async createShohousenOps(content, reqOpts) {
+    //     let visit = await this.rest.getVisit(this.text.visitId);
+    //     let visitDate = visit.visitedAt.substring(0, 10);
+    //     let req = {};
+    //     req.clinicInfo = await this.rest.getClinicInfo();
+    //     req.hoken = await this.rest.getHoken(this.text.visitId);
+    //     req.patient = await this.rest.getPatient(visit.patientId);
+    //     let rcptAge = await this.rest.calcRcptAge(req.patient.birthday, visitDate);
+    //     req.futanWari = await this.rest.calcFutanWari(req.hoken, rcptAge);
+    //     req.issueDate = visitDate;
+    //     req.drugs = content;
+    //     Object.assign(req, reqOpts);
+    //     return await this.rest.shohousenDrawer(req);
+    // }
 
     async doPreviewCurrent() {
         let content = this.textareaElement.val();
@@ -103,19 +104,20 @@ export class TextEdit extends Component {
 
     async doShohousenFax() {
         if (confirm("この処方箋をPDFとして保存しますか？")) {
-            let visit = await this.rest.getVisit(this.text.visitId);
-            let patient = await this.rest.getPatient(visit.patientId);
-            let name = await this.rest.convertToRomaji(patient.lastNameYomi + patient.firstNameYomi);
-            let savePath = await this.rest.getShohousenSavePdfPath(name, this.text.textId,
-                patient.patientId, visit.visitedAt.substring(0, 10));
-            //let stampInfo = await this.rest.shohousenGrayStampInfo();
-            let content = this.text.content;
-            content = this.asContentOfData(content);
-            let ops = await this.createShohousenOps(content, {color: "black"});
-            let tmpPath = await this.rest.createTempFileName("shohousen", ".pdf");
-            await this.rest.saveDrawerAsPdf([ops], "A5", tmpPath);
-            await this.rest.putStampOnPdf(tmpPath, "shohousen-gray", savePath);
-            await this.rest.deleteFile(tmpPath);
+            // let visit = await this.rest.getVisit(this.text.visitId);
+            // let patient = await this.rest.getPatient(visit.patientId);
+            // let name = await this.rest.convertToRomaji(patient.lastNameYomi + patient.firstNameYomi);
+            // let savePath = await this.rest.getShohousenSavePdfPath(name, this.text.textId,
+            //     patient.patientId, visit.visitedAt.substring(0, 10));
+            // //let stampInfo = await this.rest.shohousenGrayStampInfo();
+            // let content = this.text.content;
+            // content = this.asContentOfData(content);
+            // let ops = await this.createShohousenOps(content, {color: "black"});
+            // let tmpPath = await this.rest.createTempFileName("shohousen", ".pdf");
+            // await this.rest.saveDrawerAsPdf([ops], "A5", tmpPath);
+            // await this.rest.putStampOnPdf(tmpPath, "shohousen-gray", savePath);
+            // await this.rest.deleteFile(tmpPath);
+            await createShohousenPdfForFax(this.text, this.rest);
             this.ele.trigger("cancel");
         }
     }

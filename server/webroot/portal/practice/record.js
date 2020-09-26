@@ -1,5 +1,6 @@
 import {Component} from "./component.js";
 import {shinryouSearchEnterWidgetFactory} from "./shinryou-search-enter-widget/shinryou-search-enter-widget.js";
+import {createShohousenPdfForFax} from "./funs.js";
 
 export class Record extends Component {
     constructor(ele, map, rest) {
@@ -94,20 +95,20 @@ export class Record extends Component {
         return hokenComp;
     }
 
-    async saveShohousenFaxImage(text, reqOpts){
-        let visit = await this.rest.getVisit(text.visitId);
-        let visitDate = visit.visitedAt.substring(0, 10);
-        let req = {};
-        req.clinicInfo = await this.rest.getClinicInfo();
-        req.hoken = await this.rest.getHoken(text.visitId);
-        req.patient = await this.rest.getPatient(visit.patientId);
-        let rcptAge = await this.rest.calcRcptAge(req.patient.birthday, visitDate);
-        req.futanWari = await this.rest.calcFutanWari(req.hoken, rcptAge);
-        req.issueDate = visitDate;
-        req.drugs = text.content;
-        Object.assign(req, reqOpts);
-        return await this.rest.saveShohousenPdf(req, text.textId);
-    }
+    // async saveShohousenFaxImage(text, reqOpts){
+    //     // let visit = await this.rest.getVisit(text.visitId);
+    //     // let visitDate = visit.visitedAt.substring(0, 10);
+    //     // let req = {};
+    //     // req.clinicInfo = await this.rest.getClinicInfo();
+    //     // req.hoken = await this.rest.getHoken(text.visitId);
+    //     // req.patient = await this.rest.getPatient(visit.patientId);
+    //     // let rcptAge = await this.rest.calcRcptAge(req.patient.birthday, visitDate);
+    //     // req.futanWari = await this.rest.calcFutanWari(req.hoken, rcptAge);
+    //     // req.issueDate = visitDate;
+    //     // req.drugs = text.content;
+    //     // Object.assign(req, reqOpts);
+    //     // return await this.rest.saveShohousenPdf(req, text.textId);
+    // }
 
     onShinryouCopied(cb){
         this.on("shinryou-copied", (event, targetVisitId, shinryouList) => cb(targetVisitId, shinryouList));
@@ -165,8 +166,7 @@ export class Record extends Component {
             if( !confirm("送信用の処方箋イメージを作成しますか？") ){
                 return;
             }
-            pdfFilePath = await this.saveShohousenFaxImage(shohousenText.getText(),
-                {color: "black"});
+            pdfFilePath = await createShohousenPdfForFax(shohousenText.getText(), this.rest);
         }
         let compSendFax = this.sendFaxFactory.create(pdfFilePath, faxNumber);
         compSendFax.onSent((event, faxSid) => {

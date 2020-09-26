@@ -1530,7 +1530,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 SaveDrawerAsPdfRequest saveReq = new SaveDrawerAsPdfRequest();
                 saveReq.pages = List.of(ops);
                 saveReq.paperSize = "A5";
-                saveReq.savePath = GlobalService.getInstance().resolveAppPath(saveTokenPath).toString();
+                saveReq.savePath = saveTokenPath;
                 //ShohousenGrayStampInfo stampInfo = appConfig.getShohousenGrayStampInfo();
 //                StampRequest stampReq = new StampRequest();
 //                stampReq.path = stampInfo.path;

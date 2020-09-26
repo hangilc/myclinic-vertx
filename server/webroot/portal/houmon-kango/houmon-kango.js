@@ -71,7 +71,7 @@ let template = `
 </div>
 `;
 
-export class HoumonKango extends Component {
+class HoumonKango extends Component {
 
     constructor(rest, integration, clinicInfo){
         super($(template));
@@ -324,3 +324,17 @@ function clinicInfoToData(clinicInfo){
         "doctor-name": clinicInfo.doctorName
     };
 }
+
+export async function initHoumonKango(pane){
+
+    let clinicInfo = await rest.getClinicInfo();
+
+    function init(){
+        let comp = new HoumonKango(rest, integration, clinicInfo);
+        comp.onEndPatient(() => init());
+        comp.appendTo($(pane));
+    }
+
+    init();
+}
+

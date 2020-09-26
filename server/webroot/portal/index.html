@@ -33,7 +33,7 @@
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-practice-link">診察</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-cashier-link">会計</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-reception-link">受付</a></li>
-                <li><a href="javascript:void(0)" class="scroll-link" id="index-faxed-link">ファックス済処方箋</a></li>
+                <li><a href="javascript:void(0)" class="scroll-link" id="index-faxed-shohousen-link">ファックス済処方箋</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-houmon-kango-link">訪問看護</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-shujii-link">主治医意見書</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-send-fax-link">ファックス送信</a></li>
@@ -158,6 +158,29 @@
             let app = await import("./reception/reception.js");
             pane.innerHTML = app.getHtml();
             await app.initReception(pane);
+            cb();
+        },
+        onReloaded(pane) {
+            pane.dispatchEvent(new Event("onreloaded"))
+        }
+    });
+    menu.addItem("faxed-shohousen", {
+        link: document.getElementById("index-faxed-shohousen-link"),
+        async start(pane, cb) {
+            let app = await import("./faxed-shohousen/faxed-shohousen.js");
+            pane.innerHTML = app.getHtml();
+            await app.initFaxedShohousen(pane);
+            cb();
+        },
+        onReloaded(pane) {
+            pane.dispatchEvent(new Event("onreloaded"))
+        }
+    });
+    menu.addItem("houmon-kango", {
+        link: document.getElementById("index-houmon-kango-link"),
+        async start(pane, cb) {
+            let app = await import("./houmon-kango/houmon-kango.js");
+            await app.initHoumonKango(pane);
             cb();
         },
         onReloaded(pane) {

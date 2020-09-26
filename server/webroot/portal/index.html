@@ -152,6 +152,18 @@
             pane.dispatchEvent(new Event("onreloaded"))
         }
     });
+    menu.addItem("reception", {
+        link: document.getElementById("index-reception-link"),
+        async start(pane, cb) {
+            let app = await import("./reception/reception.js");
+            pane.innerHTML = app.getHtml();
+            await app.initReception(pane);
+            cb();
+        },
+        onReloaded(pane) {
+            pane.dispatchEvent(new Event("onreloaded"))
+        }
+    });
 
 
     let f = (function () {

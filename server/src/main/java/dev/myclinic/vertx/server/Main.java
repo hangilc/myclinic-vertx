@@ -53,6 +53,7 @@ public class Main {
 
     private static class CmdArgs {
         int port = 28080;
+        String webroot = null;
         List<String> args = new ArrayList<>();
 
         public static CmdArgs parse(String[] args) {
@@ -64,6 +65,10 @@ public class Main {
                 switch (arg) {
                     case "--port": {
                         cmdArgs.port = Integer.parseInt(args[++i]);
+                        break;
+                    }
+                    case "--webroot": {
+                        cmdArgs.webroot = args[++i];
                         break;
                     }
                     default: {
@@ -81,7 +86,22 @@ public class Main {
             for (; i < args.length; i++) {
                 cmdArgs.args.add(args[i]);
             }
+            if( cmdArgs.webroot == null ){
+                cmdArgs.webroot = findWebroot();
+            }
             return cmdArgs;
+        }
+
+        public static String findWebroot(){
+            List<String> lists = List.of("server/webroot", "webroot");
+            for(String s: lists){
+                if( Files.exists(Path.of(s)) ){
+                    return s;
+                }
+            }
+            System.err.println("Cannot find webroot.");
+            System.exit(1);
+            return null;
         }
 
         public static void usage() {
@@ -93,6 +113,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         CmdArgs cmdArgs = CmdArgs.parse(args);
+        String webroot = cmdArgs.webroot;
         MysqlDataSourceConfig mysqlConfig = new MysqlDataSourceConfig();
         DataSource ds = MysqlDataSourceFactory.create(mysqlConfig);
         TableSet ts = TableSet.create();
@@ -116,24 +137,22 @@ public class Main {
         boolean isDevMode = "dev".equals(System.getenv("VERTXWEB_ENVIRONMENT"));
 
         Route portalRoute = router.route("/portal/*");
-        portalRoute.handler(StaticHandler.create("server/webroot/portal")
+        portalRoute.handler(StaticHandler.create(webroot + "/portal")
                 .setDefaultContentEncoding("UTF-8").setFilesReadOnly(!isDevMode)
                 .setCachingEnabled(!isDevMode));
         router.route("/portal").handler(ctx -> ctx.response().setStatusCode(301)
                 .putHeader("Location", "/portal/index.html")
                 .end());
 
-        Route portal2Route = router.route("/portal2/*");
-        portal2Route.handler(StaticHandler.create("server/webroot/portal2")
-                .setDefaultContentEncoding("UTF-8").setFilesReadOnly(!isDevMode)
-                .setCachingEnabled(!isDevMode));
-        router.route("/portal2").handler(ctx -> ctx.response().setStatusCode(301)
-                .putHeader("Location", "/portal2/index.html")
-                .end());
+//        Route portal2Route = router.route("/portal2/*");
+//        portal2Route.handler(StaticHandler.create("server/webroot/portal2")
+//                .setDefaultContentEncoding("UTF-8").setFilesReadOnly(!isDevMode)
+//                .setCachingEnabled(!isDevMode));
+//        router.route("/portal2").handler(ctx -> ctx.response().setStatusCode(301)
+//                .putHeader("Location", "/portal2/index.html")
+//                .end());
         ensureAppDir(GlobalService.getInstance().portalTmpDirToken);
         ensureAppDir(GlobalService.getInstance().paperScanDirToken);
-        //addStaticPath(router, "/portal-tmp", GlobalService.getInstance().getAppDirectory("/portal-tmp"));
-        //addStaticPath(router, "/paper-scan", GlobalService.getInstance().getAppDirectory("/paper-scan"));
         server.requestHandler(router);
         server.webSocketHandler(ws -> {
             System.out.println("opened: " + ws.path());

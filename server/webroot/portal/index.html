@@ -12,6 +12,7 @@
     <script src="js/bootstrap.min.js"></script>
     <script type="module">
         import * as kanjidate from "./js/kanjidate.js";
+
         window.kanjidate = kanjidate;
     </script>
     <link rel="stylesheet" href="css/main.css">
@@ -54,52 +55,151 @@
 
     window.onerror = message => alert(message);
 
-    (function(){
+    class Menu {
+        constructor(paneWrapper) {
+            this._clearNode(paneWrapper);
+            this.paneWrapper = paneWrapper;
+            this.itemMap = {};
+            this.currentItem = null;
+        }
+
+        addItem(name, item) {
+            let info = {
+                name: name,
+                link: item.link,
+                savedElement: null,
+            };
+            this.itemMap[name] = info;
+            if( item.init ) {
+                item.init(this);
+            }
+            item.link.onclick = async event => {
+                if( name === this.currentItem ){
+                    return;
+                }
+                this._saveCurrentItem();
+                this._clearNode(this.paneWrapper);
+                if( info.savedElement ){
+                    this.paneWrapper.appendChild(info.savedElement);
+                    this.currentItem = name;
+                    this._setActive(name);
+                    if( item.onReloaded ){
+                        item.onReloaded();
+                    }
+                } else {
+                    let pane = document.createElement("div");
+                    this._clearNode(this.paneWrapper);
+                    this.paneWrapper.appendChild(pane);
+                    await item.start(pane, () => {
+                        this.currentItem = name;
+                        this._setActive(name);
+                    });
+                }
+            };
+        }
+
+        _setActive(name){
+            Object.keys(this.itemMap).forEach(key => {
+                let link = this.itemMap[key].link;
+                if( key === name ){
+                    link.classList.add("active");
+                } else {
+                    link.classList.remove("active");
+                }
+            });
+        }
+
+        _clearNode(node){
+            if( node ) {
+                while (node.firstChild) {
+                    node.removeChild(node.firstChild);
+                }
+            }
+        }
+
+        _saveCurrentItem() {
+            let c = this.currentItem;
+            if( c ) {
+                let info = this.itemMap[c];
+                info.savedElement = this.paneWrapper.firstElementChild;
+                this.paneWrapper.removeChild(info.savedElement);
+                this.currentItem = null;
+            }
+        }
+    }
+
+    let menu = new Menu(document.getElementById("index-pane-wrapper"));
+    menu.addItem("practice", {
+        link: document.getElementById("index-practice-link"),
+        async start(pane, cb) {
+            let practice = await import("./practice/practice.js");
+            pane.innerHTML = practice.getHtml();
+            await practice.initPractice();
+            cb();
+        },
+        onReloaded() {
+            console.log("reloaded practice");
+        }
+    });
+    menu.addItem("cashier", {
+        link: document.getElementById("index-cashier-link"),
+        async start(pane, cb) {
+            console.log("starting cashier");
+            pane.appendChild(document.createTextNode("Cashier"));
+            cb();
+        },
+        onReloaded() {
+            console.log("reloaded cashier");
+        }
+    });
+
+
+    let f = (function () {
         let paneWrapper = $("#index-pane-wrapper");
         let currentPane = null;
 
         class Pane {
-            constructor(link, url){
+            constructor(link, url) {
                 this.link = link;
                 this.url = url;
                 this.ele = null;
                 link.on("click", event => this.load());
             }
 
-            save(){
+            save() {
                 this.ele = paneWrapper.contents().detach();
             }
 
-            async initPane(){
+            async initPane() {
 
             }
 
-            onPaneLoaded(){
+            onPaneLoaded() {
                 paneWrapper.find(".pane").trigger("pane_shown");
                 $(".sidebar a.active").removeClass("active");
                 this.link.addClass("active");
             }
 
-            disableLinks(){
+            disableLinks() {
                 $(".sidebar a").addClass("disabled");
             }
 
-            enableLinks(){
+            enableLinks() {
                 $(".sidebar a").removeClass("disabled");
             }
 
-            async load(){
-                if( this.link.hasClass("disabled") ){
+            async load() {
+                if (this.link.hasClass("disabled")) {
                     return;
                 }
-                if( currentPane === this ){
+                if (currentPane === this) {
                     return;
                 }
                 this.disableLinks();
-                if( currentPane ){
+                if (currentPane) {
                     currentPane.save();
                 }
-                if( this.ele ){
+                if (this.ele) {
                     paneWrapper.append(this.ele);
                     currentPane = this;
                     this.onPaneLoaded();
@@ -114,11 +214,11 @@
                 }
             }
 
-            async reload(){
-                if( this.link.hasClass("disabled") ){
+            async reload() {
+                if (this.link.hasClass("disabled")) {
                     return;
                 }
-                if( currentPane === this ){
+                if (currentPane === this) {
                     this.disableLinks();
                     this.ele = null;
                     paneWrapper.load(this.url, async () => {
@@ -143,99 +243,99 @@
         }
 
         class CashierPane extends Pane {
-            constructor(){
+            constructor() {
                 super($("#index-cashier-link"), "pane-cashier.html");
             }
 
-            async initPane(){
+            async initPane() {
                 await super.initPane();
                 await initCashier();
             }
         }
 
         class FaxedShohousenPane extends Pane {
-            constructor(){
+            constructor() {
                 super($("#index-faxed-link"), "pane-faxed-shohousen.html");
             }
 
-            async initPane(){
+            async initPane() {
                 await super.initPane();
                 await initFaxedShohousen();
             }
         }
 
         class ReceptionPane extends Pane {
-            constructor(){
+            constructor() {
                 super($("#index-reception-link"), "pane-reception.html");
             }
 
-            async initPane(){
+            async initPane() {
                 await super.initPane();
                 await initReception();
             }
         }
 
         class HoumonKangoPane extends Pane {
-            constructor(){
+            constructor() {
                 super($("#index-houmon-kango-link"), "pane-houmon-kango.html");
             }
 
-            async initPane(){
+            async initPane() {
                 await super.initPane();
                 await initHoumonKango();
             }
         }
 
         class ShujiiPane extends Pane {
-            constructor(){
+            constructor() {
                 super($("#index-shujii-link"), "pane-shujii.html");
             }
 
-            async initPane(){
+            async initPane() {
                 await super.initPane();
                 await initShujii(() => this.reload());
             }
         }
 
         class SendFaxPane extends Pane {
-            constructor(){
+            constructor() {
                 super($("#index-send-fax-link"), "pane-send-fax.html");
             }
 
-            async initPane(){
+            async initPane() {
                 await super.initPane();
                 await initSendFax();
             }
         }
 
         class ReferPane extends Pane {
-            constructor(){
+            constructor() {
                 super($("#index-refer-link"), "pane-refer.html");
             }
 
-            async initPane(){
+            async initPane() {
                 await super.initPane();
                 await initRefer();
             }
         }
 
         class PrinterSettingPane extends Pane {
-            constructor(){
+            constructor() {
                 super($("#index-printer-setting-link"), "pane-printer-setting.html");
             }
 
-            async initPane(){
+            async initPane() {
                 await super.initPane();
                 await initPrinterSetting();
             }
         }
 
         class MedCertPane extends Pane {
-            constructor(){
+            constructor() {
                 super($("#index-medcert-link"), "pane-medcert.html");
             }
 
-            async initPane(){
+            async initPane() {
                 await super.initPane();
                 await initMedCertPane();
             }
@@ -253,7 +353,7 @@
         let medcert = new MedCertPane();
 
         practice.link.click();
-    })();
+    });
 
 </script>
 </body>

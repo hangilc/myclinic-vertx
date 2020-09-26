@@ -95,21 +95,6 @@ export class Record extends Component {
         return hokenComp;
     }
 
-    // async saveShohousenFaxImage(text, reqOpts){
-    //     // let visit = await this.rest.getVisit(text.visitId);
-    //     // let visitDate = visit.visitedAt.substring(0, 10);
-    //     // let req = {};
-    //     // req.clinicInfo = await this.rest.getClinicInfo();
-    //     // req.hoken = await this.rest.getHoken(text.visitId);
-    //     // req.patient = await this.rest.getPatient(visit.patientId);
-    //     // let rcptAge = await this.rest.calcRcptAge(req.patient.birthday, visitDate);
-    //     // req.futanWari = await this.rest.calcFutanWari(req.hoken, rcptAge);
-    //     // req.issueDate = visitDate;
-    //     // req.drugs = text.content;
-    //     // Object.assign(req, reqOpts);
-    //     // return await this.rest.saveShohousenPdf(req, text.textId);
-    // }
-
     onShinryouCopied(cb){
         this.on("shinryou-copied", (event, targetVisitId, shinryouList) => cb(targetVisitId, shinryouList));
     }

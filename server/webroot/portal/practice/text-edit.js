@@ -1,7 +1,12 @@
 import {Component} from "./component.js";
 import {formatPresc} from "../js/format-presc.js";
 import {RegisteredDrugDialog} from "./registered-drug-dialog/registered-drug-dialog.js";
-import {createShohousenPdfForFax} from "./funs.js";
+import {
+    createShohousenOps,
+    createShohousenPdfForFax,
+    shohousenTextContentDataToDisp,
+    shohousenTextContentDispToData
+} from "./funs.js";
 
 export class TextEdit extends Component {
     constructor(ele, map, rest) {
@@ -24,10 +29,10 @@ export class TextEdit extends Component {
         this.text = text;
         this.currentVisitManager = currentVisitManager;
         this.shohousenPreviewFactory = shohousenPreviewDialogFactory;
-        this.textareaElement.val(this.contentFromData(text.content));
+        this.textareaElement.val(shohousenTextContentDataToDisp(text.content));
         this.enterElement.on("click", event => this.doEnter());
         this.cancelElement.on("click", event => this.ele.trigger("cancel"));
-        if( hasMemo(text.content) ){
+        if (hasMemo(text.content)) {
             this.copyMemoElement.on("click", event => this.doCopyMemo());
             this.copyMemoElement.removeClass("d-none");
         }
@@ -47,41 +52,11 @@ export class TextEdit extends Component {
         this.textareaElement.focus();
     }
 
-    contentFromData(content) {
-        if (content.startsWith("院外処方")) {
-            return content.replace(/\u{3000}/ug, " "); // replace zenkaku space to ascii space
-        } else {
-            return content;
-        }
-    }
-
-    // asContentOfData(content){
-    //     if (content.startsWith("院外処方")) {
-    //         return content.replace(/ /ug, "　"); // replace ascii space to zenkaku space
-    //     } else {
-    //         return content;
-    //     }
-    // }
-
-    // async createShohousenOps(content, reqOpts) {
-    //     let visit = await this.rest.getVisit(this.text.visitId);
-    //     let visitDate = visit.visitedAt.substring(0, 10);
-    //     let req = {};
-    //     req.clinicInfo = await this.rest.getClinicInfo();
-    //     req.hoken = await this.rest.getHoken(this.text.visitId);
-    //     req.patient = await this.rest.getPatient(visit.patientId);
-    //     let rcptAge = await this.rest.calcRcptAge(req.patient.birthday, visitDate);
-    //     req.futanWari = await this.rest.calcFutanWari(req.hoken, rcptAge);
-    //     req.issueDate = visitDate;
-    //     req.drugs = content;
-    //     Object.assign(req, reqOpts);
-    //     return await this.rest.shohousenDrawer(req);
-    // }
-
     async doPreviewCurrent() {
         let content = this.textareaElement.val();
-        content = this.asContentOfData(content);
-        let ops = await this.createShohousenOps(content);
+        content = shohousenTextContentDispToData(content);
+        let tmpText = Object.assign({}, this.text, {content: content});
+        let ops = await createShohousenOps(tmpText, {}, this.rest);
         let dialog = this.shohousenPreviewFactory.create(ops);
         await dialog.open();
     }
@@ -89,14 +64,14 @@ export class TextEdit extends Component {
     async doFormatPresc() {
         let src = this.textareaElement.val();
         src = src.replace(/\s*$/, "");
-        src = this.asContentOfData(src);
+        src = shohousenTextContentDispToData(src);
         let dst = formatPresc(src);
-        dst = this.contentFromData(dst);
+        dst = shohousenTextContentDataToDisp(dst);
         this.textareaElement.val(dst);
     }
 
     async doShohousen() {
-        let ops = await this.createShohousenOps(this.text.content);
+        let ops = await createShohousenOps(this.text, {}, this.rest);
         let dialog = this.shohousenPreviewFactory.create(ops);
         await dialog.open();
         this.ele.trigger("cancel");
@@ -104,25 +79,12 @@ export class TextEdit extends Component {
 
     async doShohousenFax() {
         if (confirm("この処方箋をPDFとして保存しますか？")) {
-            // let visit = await this.rest.getVisit(this.text.visitId);
-            // let patient = await this.rest.getPatient(visit.patientId);
-            // let name = await this.rest.convertToRomaji(patient.lastNameYomi + patient.firstNameYomi);
-            // let savePath = await this.rest.getShohousenSavePdfPath(name, this.text.textId,
-            //     patient.patientId, visit.visitedAt.substring(0, 10));
-            // //let stampInfo = await this.rest.shohousenGrayStampInfo();
-            // let content = this.text.content;
-            // content = this.asContentOfData(content);
-            // let ops = await this.createShohousenOps(content, {color: "black"});
-            // let tmpPath = await this.rest.createTempFileName("shohousen", ".pdf");
-            // await this.rest.saveDrawerAsPdf([ops], "A5", tmpPath);
-            // await this.rest.putStampOnPdf(tmpPath, "shohousen-gray", savePath);
-            // await this.rest.deleteFile(tmpPath);
             await createShohousenPdfForFax(this.text, this.rest);
             this.ele.trigger("cancel");
         }
     }
 
-    async doRegisteredPresc(){
+    async doRegisteredPresc() {
         let visit = await this.rest.getVisit(this.text.visitId);
         let at = visit.visitedAt.substring(0, 10);
         let dialog = new RegisteredDrugDialog(this.rest, at);
@@ -219,6 +181,6 @@ function extractMemo(content) {
     return memo.join("\n");
 }
 
-export function hasMemo(content){
-    return content && (content.startsWith("●") || content.startsWith("★") );
+export function hasMemo(content) {
+    return content && (content.startsWith("●") || content.startsWith("★"));
 }

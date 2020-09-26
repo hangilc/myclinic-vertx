@@ -273,10 +273,10 @@ class Rest extends Client {
         });
     }
 
-    async saveShohousenPdf(shohousenRequest, textId){
-        return await this.post("/save-shohousen-pdf", shohousenRequest,
-            { params: {"text-id": textId} });
-    }
+    // async saveShohousenPdf(shohousenRequest, textId){
+    //     return await this.post("/save-shohousen-pdf", shohousenRequest,
+    //         { params: {"text-id": textId} });
+    // }
 
     async suspendExam(visitId){
         return await this.get("/suspend-exam", { "visit-id": visitId });

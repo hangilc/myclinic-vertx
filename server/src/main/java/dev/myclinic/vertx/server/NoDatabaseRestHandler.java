@@ -289,7 +289,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("print-drawer", this::printDrawer);
         noDatabaseFuncMap.put("save-drawer-as-pdf", this::saveDrawerAsPdf);
         noDatabaseFuncMap.put("view-drawer-as-pdf", this::viewDrawerAsPdf);
-        noDatabaseFuncMap.put("save-shohousen-pdf", this::saveShohousenPdf);
+        //noDatabaseFuncMap.put("save-shohousen-pdf", this::saveShohousenPdf);
         noDatabaseFuncMap.put("get-shohousen-save-pdf-path", this::getShohousenSavePdfPath);
         noDatabaseFuncMap.put("convert-to-romaji", this::convertToRomaji);
         //noDatabaseFuncMap.put("shohousen-gray-stamp-info", this::shohousenGrayStampInfo);
@@ -1496,61 +1496,61 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void saveShohousenPdf(RoutingContext ctx) {
-        vertx.<String>executeBlocking(promise -> {
-            try {
-                String textIdArg = ctx.request().getParam("text-id");
-                if (textIdArg == null) {
-                    throw new RuntimeException("text-id is missing");
-                }
-                int textId = Integer.parseInt(textIdArg);
-                byte[] bytes = ctx.getBody().getBytes();
-                ShohousenRequest req = mapper.readValue(bytes, ShohousenRequest.class);
-                if (req.patient == null) {
-                    throw new RuntimeException("patient info is missing");
-                }
-                if (req.issueDate == null) {
-                    throw new RuntimeException("issue date is missing");
-                }
-                ShohousenData data = convertToShohousenData(req);
-                ShohousenDrawer drawer = new ShohousenDrawer();
-                if (req.color != null) {
-                    DrawerColor defaultColor = DrawerColor.resolve(req.color);
-                    drawer.setDefaultColor(defaultColor);
-                }
-                drawer.init();
-                data.applyTo(drawer);
-                List<Op> ops = drawer.getOps();
-                String saveTokenPath = composeShohousenSavePdfTokenPath(
-                        req.patient.lastNameYomi + req.patient.firstNameYomi,
-                        textId,
-                        req.patient.patientId,
-                        LocalDate.parse(req.issueDate)
-                );
-                SaveDrawerAsPdfRequest saveReq = new SaveDrawerAsPdfRequest();
-                saveReq.pages = List.of(ops);
-                saveReq.paperSize = "A5";
-                saveReq.savePath = saveTokenPath;
-                //ShohousenGrayStampInfo stampInfo = appConfig.getShohousenGrayStampInfo();
-//                StampRequest stampReq = new StampRequest();
-//                stampReq.path = stampInfo.path;
-//                stampReq.scale = stampInfo.scale;
-//                stampReq.offsetX = stampInfo.offsetX;
-//                stampReq.offsetY = stampInfo.offsetY;
-//                saveReq.stamp = stampReq;
-                doSaveDrawerAsPdf(saveReq);
-                promise.complete(jsonEncode(saveTokenPath));
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        }, ar -> {
-            if (ar.succeeded()) {
-                ctx.response().end(ar.result());
-            } else {
-                ctx.fail(ar.cause());
-            }
-        });
-    }
+//    private void saveShohousenPdf(RoutingContext ctx) {
+//        vertx.<String>executeBlocking(promise -> {
+//            try {
+//                String textIdArg = ctx.request().getParam("text-id");
+//                if (textIdArg == null) {
+//                    throw new RuntimeException("text-id is missing");
+//                }
+//                int textId = Integer.parseInt(textIdArg);
+//                byte[] bytes = ctx.getBody().getBytes();
+//                ShohousenRequest req = mapper.readValue(bytes, ShohousenRequest.class);
+//                if (req.patient == null) {
+//                    throw new RuntimeException("patient info is missing");
+//                }
+//                if (req.issueDate == null) {
+//                    throw new RuntimeException("issue date is missing");
+//                }
+//                ShohousenData data = convertToShohousenData(req);
+//                ShohousenDrawer drawer = new ShohousenDrawer();
+//                if (req.color != null) {
+//                    DrawerColor defaultColor = DrawerColor.resolve(req.color);
+//                    drawer.setDefaultColor(defaultColor);
+//                }
+//                drawer.init();
+//                data.applyTo(drawer);
+//                List<Op> ops = drawer.getOps();
+//                String saveTokenPath = composeShohousenSavePdfTokenPath(
+//                        req.patient.lastNameYomi + req.patient.firstNameYomi,
+//                        textId,
+//                        req.patient.patientId,
+//                        LocalDate.parse(req.issueDate)
+//                );
+//                SaveDrawerAsPdfRequest saveReq = new SaveDrawerAsPdfRequest();
+//                saveReq.pages = List.of(ops);
+//                saveReq.paperSize = "A5";
+//                saveReq.savePath = saveTokenPath;
+//                //ShohousenGrayStampInfo stampInfo = appConfig.getShohousenGrayStampInfo();
+////                StampRequest stampReq = new StampRequest();
+////                stampReq.path = stampInfo.path;
+////                stampReq.scale = stampInfo.scale;
+////                stampReq.offsetX = stampInfo.offsetX;
+////                stampReq.offsetY = stampInfo.offsetY;
+////                saveReq.stamp = stampReq;
+//                doSaveDrawerAsPdf(saveReq);
+//                promise.complete(jsonEncode(saveTokenPath));
+//            } catch (Exception e) {
+//                promise.fail(e);
+//            }
+//        }, ar -> {
+//            if (ar.succeeded()) {
+//                ctx.response().end(ar.result());
+//            } else {
+//                ctx.fail(ar.cause());
+//            }
+//        });
+//    }
 
     private void hokenRep(RoutingContext ctx) {
         try {

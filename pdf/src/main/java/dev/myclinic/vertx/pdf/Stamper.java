@@ -14,8 +14,8 @@ public class Stamper {
 
     public static class StamperOption {
         public double scale = 1.0;
-        public double xPos = 0.0;   // in Point (1/72 inch) unit
-        public double yPos = 0.0;   // in Point (1/72 inch) unit
+        public double xPos = 0.0;   // in mm
+        public double yPos = 0.0;   // in mm
         public boolean stampCenterRelative = true;
     }
 

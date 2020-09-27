@@ -9,60 +9,71 @@ export class Nav extends Component {
         this.lastElement = map.last;
         this.pageElement = map.page;
         this.totalElement = map.total;
+        this.patientId = 0;
     }
 
-    init(){
+    init() {
         this.set(0, 0);
-        this.firstElement.on("click", event => this.gotoPage(1, this.getTotalPage()));
+        this.firstElement.on("click", event => this.gotoPage(0, this.getTotalPage()));
         this.prevElement.on("click", event => this.gotoPage(this.getCurrentPage() - 1, this.getTotalPage()));
         this.nextElement.on("click", event => this.gotoPage(this.getCurrentPage() + 1, this.getTotalPage()));
-        this.lastElement.on("click", event => this.gotoPage(this.getTotalPage(), this.getTotalPage()));
+        this.lastElement.on("click", event => this.gotoPage(this.getTotalPage() - 1, this.getTotalPage()));
     }
 
-    set(page, total){
-        if( page > total ){
+    set(page, total) {
+        if (page > total) {
             page = total;
         }
         this.setPage(page);
         this.setTotal(total);
-    }
-
-    setPage(page){
-        this.pageElement.text(page);
-    }
-
-    setTotal(total){
-        this.totalElement.text(total);
-    }
-
-    gotoPage(page){
-        let total = this.getTotalPage();
-        if( page >= 1 && page <= total ){
-            this.triggerChange(page, total);
+        if( total <= 1 ){
+            this.hide();
+        } else {
+            this.show();
         }
     }
 
-    getCurrentPage(){
-        return parseInt(this.pageElement.text());
+    setPage(page) {
+        this.pageElement.text(page + 1);
     }
 
-    getTotalPage(){
+    setTotal(total) {
+        this.totalElement.text(total);
+    }
+
+    setPatientId(patientId) {
+        this.patientId = patientId;
+    }
+
+    gotoPage(page) {
+        let total = this.getTotalPage();
+        if (page >= 0 && page < total && this.patientId > 0) {
+            this.triggerGoto(page, total, this.patientId);
+        }
+    }
+
+    getCurrentPage() {
+        return parseInt(this.pageElement.text()) - 1;
+    }
+
+    getTotalPage() {
         return parseInt(this.totalElement.text());
     }
 
-    triggerChange(page){
-        this.trigger("change", page);
+    triggerGoto(page) {
+        if (this.patientId > 0) {
+            this.ele[0].dispatchEvent(new CustomEvent("goto-page", {
+                bubbles: true,
+                detail: {patientId: this.patientId, page}
+            }));
+        }
     }
 
-    onChange(cb){
-        this.on("change", (event, page) => cb(event, page));
-    }
-
-    show(){
+    show() {
         this.ele.removeClass("d-none");
     }
 
-    hide(){
+    hide() {
         this.ele.addClass("d-none");
     }
 

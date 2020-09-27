@@ -19,7 +19,7 @@ export class SearchTextDialog extends Dialog {
             return false;
         });
         this.nav.init();
-        this.nav.onChange((event, page) => {
+        this.nav.onGoto((event, page) => {
             this.trigger("search", page);
         });
         this.ele.on("shown.bs.modal", event => this.searchTextElement.focus());

@@ -797,7 +797,7 @@ let html = `
             名称：<span class="x-name"></span>
         </div>
         <div class="mt-1">
-            <input type="date" class="x-date-input form-control"></input>
+            <input type="date" class="x-date-input form-control"/>
         </div>
         <div class="mt-1">
             <button type="button" class="x-enter btn btn-secondary">入力</button>
@@ -1040,7 +1040,6 @@ export async function initLayout(pane, rest, controller) {
     let {PatientDisplay} = await import("./patient-display.js");
     let {wqueueStateCodeToRep} = await import("../js/consts.js");
     let DrawerSvg = await import("../js/drawer-svg.js");
-    //let {Component} = await import("./component.js");
     let {Title} = await import("./title.js");
     let {SelectWqueueDialog} = await import("./select-wqueue-dialog.js");
     let {SelectRecentVisitDialog} = await import("./select-recent-visit-dialog.js");
@@ -1074,10 +1073,8 @@ export async function initLayout(pane, rest, controller) {
     let {DiseaseEnd} = await import("./disease-end.js");
     let {DiseaseEdit} = await import("./disease-edit.js");
     let {DiseaseModify} = await import("./disease-modify.js");
-    //let {DiseasePanel} = await import("./disease-panel.js");
     let {SearchTextForPatientDialog} = await import("./search-text-for-patient-dialog.js");
     let {SearchTextGloballyDialog} = await import("./search-text-globally-dialog.js");
-    let {PracticeState} = await import("./practice-state.js");
     let {PatientSearchDialog} = await import("./patient-search-dialog.js");
     let {VisitMeisaiDialog} = await import("./visit-meisai-dialog.js");
     let {RegisteredDrugDialog} = await import("./registered-drug-dialog/registered-drug-dialog.js")
@@ -1088,6 +1085,14 @@ export async function initLayout(pane, rest, controller) {
             {bubbles: true, detail: {patientId, visitId}}));
     }
 
+    function postChangeVisitId(visitId) {
+        pane.dispatchEvent(new CustomEvent("change-visit-id", {bubles: true, detail: visitId}));
+    }
+
+    function postChangeTempVisitId(visitId) {
+        pane.dispatchEvent(new CustomEvent("change-temp-visit-id", {bubles: true, detail: visitId}));
+    }
+
     function addPatientChangedListener(f) {
         pane.addEventListener("patient-changed", event => f(event.detail));
     }
@@ -1095,6 +1100,14 @@ export async function initLayout(pane, rest, controller) {
     function addRecordsChangedListener(f) {
         pane.addEventListener("records-changed", event =>
             f(event.detail.records, event.detail.page, event.detail.totalPages));
+    }
+
+    function addVisitIdChangedListener(f) {
+        pane.addEventListener("visit-id-changed", event => f(event.detail));
+    }
+
+    function addTempVisitIdChangedListener(f) {
+        pane.addEventListener("temp-visit-id-changed", event => f(event.detail));
     }
 
     //let practiceState = new PracticeState(rest);
@@ -1168,7 +1181,7 @@ export async function initLayout(pane, rest, controller) {
             this.html = getTemplateHtml("practice-search-text-dialog-template");
         }
 
-        create(patientId) {
+        create() {
             let ele = $(this.html);
             let map = parseElement(ele);
             let dialog = new SearchTextGloballyDialog(ele, map, rest);
@@ -1178,9 +1191,9 @@ export async function initLayout(pane, rest, controller) {
         }
     }
 
-    $("#practice-registered-drug-link").on("click", async event => {
+    $("#practice-registered-drug-link").on("click", async _ => {
         let dialog = new RegisteredDrugDialog(rest);
-        let result = await dialog.open();
+        await dialog.open();
     });
 
     (function () {
@@ -1686,12 +1699,12 @@ export async function initLayout(pane, rest, controller) {
                 this.drugDispFactory, this.sendFaxFactory, this.chargeFactory,
                 this.currentVisitManager);
             record.onDelete(async visitId => {
-                await practiceState.deleteVisit(visitId);
+                await rest.deleteVisit(visitId);
                 record.remove();
+                postChangeVisitId(0);
             });
-            record.onTempVisit(visitId =>
-                practiceState.setTempVisitId(visitId));
-            record.onClearTempVisit(() => practiceState.setTempVisitId(0));
+            record.onTempVisit(visitId => postChangeTempVisitId(visitId));
+            record.onClearTempVisit(() => postChangeTempVisitId(0));
             record.onFaxSent(async (event, data) => {
                 let patient = await rest.getPatient(visitFull.visit.patientId);
                 let compProgress = this.faxProgressFactory.create(patient, data.faxNumber,
@@ -1715,15 +1728,26 @@ export async function initLayout(pane, rest, controller) {
         let map = parseElement($("#practice-select-patient-menu"));
         let patientSearchDialogFactory = new PatientSearchDialogFactory();
 
-        async function clearState() {
-            let patientId = practiceState.getPatientId();
-            let visitId = practiceState.getVisitId();
-            if (patientId > 0 && visitId === 0) {
-                practiceState.endPatient();
-            } else if (patientId > 0 && visitId > 0) {
-                await practiceState.suspendExam(visitId);
-            } else {
-                practiceState.setTempVisitId(0);
+        // async function clearState() {
+        //     let patientId = practiceState.getPatientId();
+        //     let visitId = practiceState.getVisitId();
+        //     if (patientId > 0 && visitId === 0) {
+        //         practiceState.endPatient();
+        //     } else if (patientId > 0 && visitId > 0) {
+        //         await practiceState.suspendExam(visitId);
+        //     } else {
+        //         practiceState.setTempVisitId(0);
+        //     }
+        // }
+
+        async function cancelSession(){
+            let patientId = controller.getPatientId();
+            if( patientId > 0 ){
+                let visitId = controller.getVisitId();
+                if( visitId > 0 ){
+                    await rest.suspendExam(visitId);
+                }
+                await controller.endSession();
             }
         }
 
@@ -1733,9 +1757,9 @@ export async function initLayout(pane, rest, controller) {
                 let wqueueFull = result.data;
                 let visitId = wqueueFull.visit.visitId;
                 let patientId = wqueueFull.patient.patientId;
-                await clearState();
-                //await practiceState.startExam(patientId, visitId);
-                postStartSession(patientId, visitId);
+                await cancelSession();
+                await rest.startExam(visitId);
+                await postStartSession(patientId, visitId);
             }
         });
 
@@ -1744,13 +1768,14 @@ export async function initLayout(pane, rest, controller) {
             let result = await dialog.open();
             if (result && result.mode === "enter") {
                 let patientId = result.patient.patientId;
-                await clearState();
-                practiceState.startPatient(patientId);
+                await cancelSession();
+                await controller.startSession(patientId, 0);
             } else if (result && result.mode === "register-enter") {
                 let visitId = result.visitId;
                 let patientId = result.patient.patientId;
-                await clearState();
-                await practiceState.startExam(patientId, visitId);
+                await rest.startExam(visitId);
+                await cancelSession();
+                await controller.startSession(patientId, visitId);
             }
         });
 
@@ -1758,8 +1783,8 @@ export async function initLayout(pane, rest, controller) {
             let result = await selectRecentVisitDialog.open();
             if (result.mode === "selected") {
                 let patientId = result.data.patient.patientId;
-                await clearState();
-                await practiceState.startPatient(patientId);
+                await cancelSession();
+                await controller.startSession(patientId, 0);
             }
         });
 
@@ -1767,8 +1792,8 @@ export async function initLayout(pane, rest, controller) {
             let result = await selectTodaysVisitDialog.open();
             if (result.mode === "selected") {
                 let patientId = result.data.patient.patientId;
-                await clearState();
-                await practiceState.startPatient(patientId);
+                await cancelSession();
+                await controller.startSession(patientId, 0);
             }
         });
 
@@ -1776,8 +1801,8 @@ export async function initLayout(pane, rest, controller) {
             let result = await selectPreviousVisitDialog.open();
             if (result.mode === "selected") {
                 let patientId = result.data.patient.patientId;
-                await clearState();
-                await practiceState.startPatient(patientId);
+                await cancelSession();
+                await controller.startSession(patientId, 0);
             }
         });
     })();
@@ -1900,16 +1925,6 @@ export async function initLayout(pane, rest, controller) {
 
     });
 
-    // practiceState.onPatientIdChanged(async patientId => {
-    //     if (patientId === 0) {
-    //         diseaseArea.set(0, null);
-    //     } else {
-    //         let cur = await rest.listCurrentDisease(patientId);
-    //         diseaseArea.set(patientId, cur);
-    //         diseaseArea.current();
-    //     }
-    // });
-
     let recordFactory = new RecordFactory();
 
     class NavFactory {
@@ -1933,17 +1948,6 @@ export async function initLayout(pane, rest, controller) {
             navFactory.create().appendTo($("#practice-nav-upper")),
             navFactory.create().appendTo($("#practice-nav-lower"))
         ];
-
-        // result.forEach(nav => {
-        //     nav.onChange(async (event, page) => {
-        //         if (page >= 1) {
-        //             let visitPage = await fetchRecords(practiceState.getPatientId(), page);
-        //             setRecords(visitPage.visits);
-        //             setNavs(visitPage.page + 1, visitPage.totalPages);
-        //         }
-        //     });
-        // });
-        // return result;
     })();
 
     function setNavs(page, total) {
@@ -1969,8 +1973,8 @@ export async function initLayout(pane, rest, controller) {
     function setRecords(visitFulls) {
         let recordWrapperElement = $("#practice-record-wrapper");
         recordWrapperElement.html("");
-        let currentVisitId = practiceState.getVisitId();
-        let tempVisitId = practiceState.getTempVisitId();
+        let currentVisitId = controller.getVisitId();
+        let tempVisitId = controller.getTempVisitId();
         for (let visitFull of visitFulls) {
             let record = recordFactory.create(visitFull, visitFull.hokenRep);
             if (visitFull.visit.visitId === currentVisitId) {
@@ -1987,18 +1991,6 @@ export async function initLayout(pane, rest, controller) {
             record.appendTo(recordWrapperElement);
         }
     }
-
-    // async function fetchRecords(patientId, page) {
-    //     if (patientId > 0 && page >= 1) {
-    //         let visitPage = await rest.listVisit(patientId, page - 1);
-    //         for (let visit of visitPage.visits) {
-    //             visit.hokenRep = await rest.hokenRep(visit.hoken);
-    //         }
-    //         return visitPage;
-    //     } else {
-    //         throw new Error(`Invalid call to fetchRecords: ${patientId}, ${page}`);
-    //     }
-    // }
 
     addRecordsChangedListener((records, page, totalPages) => {
         setRecords(records);
@@ -2028,7 +2020,7 @@ export async function initLayout(pane, rest, controller) {
         return null;
     }
 
-    practiceState.onTempVisitIdChanged(tempVisitId => {
+    addTempVisitIdChangedListener(tempVisitId => {
         forEachRecord(record => {
             if (record.getVisitId() === tempVisitId) {
                 record.markAsTemp();

@@ -16,6 +16,7 @@ export class SelectWqueueDialog extends Component {
         });
         this.cancelElement.on("click", event => {
             this.result.data = null;
+            this.result.mode = "cancel";
             this.ele.modal("hide");
         });
         this.enterElement.on("click", event => {

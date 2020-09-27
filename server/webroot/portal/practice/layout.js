@@ -1035,11 +1035,7 @@ export function getHtml() {
     return html;
 }
 
-export async function initLayout(pane, rest) {
-    await initLayoutOrig(pane, rest);
-}
-
-async function initLayoutOrig(pane, rest) {
+export async function initLayout(pane, rest, controller) {
     let {parseElement} = await import("./parse-element.js");
     let {PatientDisplay} = await import("./patient-display.js");
     let {wqueueStateCodeToRep} = await import("../js/consts.js");
@@ -1101,11 +1097,12 @@ async function initLayoutOrig(pane, rest) {
             f(event.detail.records, event.detail.page, event.detail.totalPages));
     }
 
-    let practiceState = new PracticeState(rest);
+    //let practiceState = new PracticeState(rest);
 
     class CurrentVisitManager {
         resolveCopyTarget() {
-            return practiceState.getVisitId() || practiceState.getTempVisitId();
+            return controller.getVisitId() || controller.getTempVisitId();
+            //return practiceState.getVisitId() || practiceState.getTempVisitId();
         }
     }
 
@@ -1265,15 +1262,6 @@ async function initLayoutOrig(pane, rest) {
         patientInfo.setPatient(patient);
     })
 
-    // practiceState.onPatientIdChanged(async patientId => {
-    //     if (patientId === 0) {
-    //         patientInfo.setPatient(null);
-    //     } else {
-    //         let patient = await rest.getPatient(patientId);
-    //         patientInfo.setPatient(patient);
-    //     }
-    // });
-
     class MeisaiDialogFactory {
         constructor() {
             this.html = getTemplateHtml("practice-meisai-dialog-template");
@@ -1317,16 +1305,8 @@ async function initLayoutOrig(pane, rest) {
             }
         })
 
-        // practiceState.onPatientIdChanged(patientId => {
-        //     if (patientId === 0) {
-        //         ele.addClass("d-none");
-        //     } else {
-        //         ele.removeClass("d-none");
-        //     }
-        // });
-
         map.cashier.on("click", async event => {
-            let visitId = practiceState.getVisitId();
+            let visitId = controller.getVisitId();
             if (visitId <= 0) {
                 alert("現在診察中ではないので、会計はできません。");
                 return;
@@ -1335,31 +1315,30 @@ async function initLayoutOrig(pane, rest) {
             let dialog = meisaiDialogFactory.create(meisai);
             let result = await dialog.open();
             if (result) {
-                await practiceState.endExam(visitId, meisai.charge);
+                await rest.endExam(visitId, meisai.charge);
+                await controller.endSession();
             }
         });
 
         map.end.on("click", async event => {
-            let visitId = practiceState.getVisitId();
+            let visitId = controller.getVisitId();
             if (visitId > 0) {
-                await practiceState.suspendExam(visitId);
-            } else if (practiceState.getPatientId() > 0) {
-                practiceState.endPatient();
+                await rest.suspendExam(visitId);
             }
+            await controller.endSession();
         });
 
         map.registerCurrent.on("click", async event => {
-            if (practiceState.getVisitId() === 0 && practiceState.getPatientId() > 0 &&
+            if (controller.getVisitId() === 0 && controller.getPatientId() > 0 &&
                 confirm("この患者を診察登録しますか？")) {
-                let patientId = practiceState.getPatientId();
-                practiceState.endPatient();
+                let patientId = controller.getPatientId();
                 let visitId = await rest.startVisit(patientId);
-                await practiceState.startExam(patientId, visitId);
+                await controller.startSession(patientId, visitId);
             }
         });
 
         map.searchText.on("click", async event => {
-            let patientId = practiceState.getPatientId();
+            let patientId = controller.getPatientId();
             let dialog = searchTextForPatientDialogFactory.create(patientId);
             await dialog.open();
         });
@@ -1368,7 +1347,7 @@ async function initLayoutOrig(pane, rest) {
         });
 
         map.uploadImage.on("click", async event => {
-            let patientId = practiceState.getPatientId();
+            let patientId = controller.getPatientId();
             if (patientId > 0) {
                 await (new UploadImageDialog(patientId)).open();
             }
@@ -1978,7 +1957,7 @@ async function initLayoutOrig(pane, rest) {
         })
     }
 
-    function setNavsPatientId(patientId){
+    function setNavsPatientId(patientId) {
         navs.forEach(nav => nav.setPatientId(patientId));
     }
 
@@ -2009,17 +1988,17 @@ async function initLayoutOrig(pane, rest) {
         }
     }
 
-    async function fetchRecords(patientId, page) {
-        if (patientId > 0 && page >= 1) {
-            let visitPage = await rest.listVisit(patientId, page - 1);
-            for (let visit of visitPage.visits) {
-                visit.hokenRep = await rest.hokenRep(visit.hoken);
-            }
-            return visitPage;
-        } else {
-            throw new Error(`Invalid call to fetchRecords: ${patientId}, ${page}`);
-        }
-    }
+    // async function fetchRecords(patientId, page) {
+    //     if (patientId > 0 && page >= 1) {
+    //         let visitPage = await rest.listVisit(patientId, page - 1);
+    //         for (let visit of visitPage.visits) {
+    //             visit.hokenRep = await rest.hokenRep(visit.hoken);
+    //         }
+    //         return visitPage;
+    //     } else {
+    //         throw new Error(`Invalid call to fetchRecords: ${patientId}, ${page}`);
+    //     }
+    // }
 
     addRecordsChangedListener((records, page, totalPages) => {
         setRecords(records);

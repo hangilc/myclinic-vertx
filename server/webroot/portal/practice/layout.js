@@ -929,11 +929,11 @@ let html = `
                         <button type="submit" class="btn btn-primary ml-2">検索</button>
                     </form>
                     <div class="x-nav_ d-none mt-2">
-                        <a href="javascript:void(0)" class="x-first">最初</a>
-                        <a href="javascript:void(0)" class="x-prev ml-1">前へ</a>
-                        <a href="javascript:void(0)" class="x-next ml-1">次へ</a>
-                        <a href="javascript:void(0)" class="x-last ml-1 mr-1">最後</a>
-                        [<span class="x-page"></span>/<span class="x-total"></span>]
+<!--                        <a href="javascript:void(0)" class="x-first">最初</a>-->
+<!--                        <a href="javascript:void(0)" class="x-prev ml-1">前へ</a>-->
+<!--                        <a href="javascript:void(0)" class="x-next ml-1">次へ</a>-->
+<!--                        <a href="javascript:void(0)" class="x-last ml-1 mr-1">最後</a>-->
+<!--                        [<span class="x-page"></span>/<span class="x-total"></span>]-->
                     </div>
                     <div class="x-result"></div>
                 </div>
@@ -1976,7 +1976,8 @@ export async function initLayout(pane, rest, controller) {
         let currentVisitId = controller.getVisitId();
         let tempVisitId = controller.getTempVisitId();
         for (let visitFull of visitFulls) {
-            let record = recordFactory.create(visitFull, visitFull.hokenRep);
+            console.log(visitFull);
+            let record = recordFactory.create(visitFull, visitFull.hoken.rep);
             if (visitFull.visit.visitId === currentVisitId) {
                 record.markAsCurrent();
             } else if (visitFull.visit.visitId === tempVisitId) {

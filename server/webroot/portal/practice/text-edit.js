@@ -138,7 +138,9 @@ export class TextEdit extends Component {
 
     async doEnter() {
         let content = this.textareaElement.val();
-        content = this.asContentOfData(content);
+        if( content.startsWith("院外処方") ){
+            content = shohousenTextContentDispToData(content);
+        }
         let text = Object.assign({}, this.text, {content: content});
         await this.rest.updateText(text);
         let updatedText = await this.rest.getText(text.textId);

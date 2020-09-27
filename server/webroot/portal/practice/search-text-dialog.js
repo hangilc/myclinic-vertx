@@ -1,5 +1,5 @@
 import {Dialog} from "./dialog.js";
-import {Nav} from "./nav.js";
+import {NavGeneric} from "./nav-generic.js";
 
 export class SearchTextDialog extends Dialog {
     constructor(ele, map, rest) {
@@ -7,7 +7,7 @@ export class SearchTextDialog extends Dialog {
         this.titleElement = map.title;
         this.searchFormElement = map.searchForm;
         this.searchTextElement = map.searchText;
-        this.nav = new Nav(map.nav_, map.nav, rest);
+        this.nav = new NavGeneric(map.nav_, rest);
         this.resultElement = map.result;
     }
 
@@ -18,10 +18,7 @@ export class SearchTextDialog extends Dialog {
             this.trigger("search", 1);
             return false;
         });
-        this.nav.init();
-        this.nav.onGoto((event, page) => {
-            this.trigger("search", page);
-        });
+        this.nav.setCallback(page => this.trigger("search", page));
         this.ele.on("shown.bs.modal", event => this.searchTextElement.focus());
     }
 

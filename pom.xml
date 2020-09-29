@@ -184,6 +184,8 @@
         <module>pdf</module>
         <module>pdf-cat</module>
         <module>pdf-text</module>
+        <module>client</module>
+        <module>rcpt</module>
     </modules>
 
 </project>

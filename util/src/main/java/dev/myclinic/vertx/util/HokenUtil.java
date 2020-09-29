@@ -33,7 +33,11 @@ public class HokenUtil {
         if (kouhi3FutanshaBangou != null) {
             terms.add(KouhiUtil.rep(kouhi3FutanshaBangou));
         }
-        return String.join("・", terms);
+        if( terms.size() == 0 ){
+            return "［保険なし］";
+        } else {
+            return String.join("・", terms);
+        }
     }
 
     public static void fillHokenRep(HokenDTO hoken) {

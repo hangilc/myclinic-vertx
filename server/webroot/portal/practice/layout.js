@@ -1976,7 +1976,6 @@ export async function initLayout(pane, rest, controller) {
         let currentVisitId = controller.getVisitId();
         let tempVisitId = controller.getTempVisitId();
         for (let visitFull of visitFulls) {
-            console.log(visitFull);
             let record = recordFactory.create(visitFull, visitFull.hoken.rep);
             if (visitFull.visit.visitId === currentVisitId) {
                 record.markAsCurrent();

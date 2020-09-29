@@ -452,10 +452,10 @@ class Rest extends Client {
     async listAllHoken(patientId){
         let result = await this.get("/list-hoken", {"patient-id": patientId});
         return {
-            shahokokuhoList: result.shahokokuhoListDTO,
-            koukikoureiList: result.koukikoureiListDTO,
-            roujinList: result.roujinListDTO,
-            kouhiList: result.kouhiListDTO,
+            shahokokuhoList: result.shahokokuhoList,
+            koukikoureiList: result.koukikoureiList,
+            roujinList: result.roujinList,
+            kouhiList: result.kouhiList,
         };
     }
 

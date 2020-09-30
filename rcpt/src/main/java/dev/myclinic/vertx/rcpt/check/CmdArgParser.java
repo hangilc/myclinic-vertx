@@ -11,26 +11,25 @@ class CmdArgParser {
     private CmdArgParser() { }
 
     private static void usage() {
-        System.err.println("usage: rcpt check [options] serverUrl year month");
+        System.err.println("usage: rcpt check [options] year month");
         System.err.println("  options:");
-        System.err.println("    -f                 : fix problems");
-        System.err.println("    -p=1234,3211,...   : handle only specified patientIds");
-        System.err.println("    -v                 : verbose");
-        System.err.println("    --debug-http       : outputs HTTP interactions");
-        System.err.println("    -h                 : help");
+        System.err.println("    -f                   : fix problems");
+        System.err.println("    -p=1234,3211,...     : handle only specified patientIds");
+        System.err.println("    -v                   : verbose");
+        System.err.println("    --debug-http         : outputs HTTP interactions");
+        System.err.println("    --server SERVER-URL  : default to $MYCLINIC_SERVICE");
+        System.err.println("    -h                   : help");
     }
 
     static RunEnv parse(String[] args) throws IOException {
         RunEnv env = new RunEnv();
-        if (args.length < 4) {
-            usage();
-            System.exit(1);
-        }
         int i = 1;
         while (i < args.length) {
             String s = args[i];
-            if( s.equals("--debug-http") ){
+            if( s.equals("--debug-http") ) {
                 env.debugHttp = true;
+            } else if( s.equals("--server") ){
+                env.server = args[++i];
             } else if (s.startsWith("-")) {
                 if (s.length() < 2) {
                     usage();
@@ -60,19 +59,26 @@ class CmdArgParser {
             }
             i += 1;
         }
-        if (args.length - i != 3) {
+        if (args.length - i != 2) {
             usage();
             System.exit(1);
         }
         try {
-            env.year = Integer.parseInt(args[i + 1]);
-            env.month = Integer.parseInt(args[i + 2]);
+            env.year = Integer.parseInt(args[i]);
+            env.month = Integer.parseInt(args[i + 1]);
         } catch (NumberFormatException ex) {
             System.err.println("Invalid year or month.");
             usage();
             System.exit(1);
         }
-        String serverUrl = args[i];
+        String serverUrl = env.server;
+        if( serverUrl == null ){
+            serverUrl = System.getenv("MYCLINIC_SERVICE");
+            if( serverUrl == null ){
+                System.err.println("Cannot find server URL");
+                System.exit(1);
+            }
+        }
         Service.setServerUrl(serverUrl);
         if( env.debugHttp ){
             Service.setLogBody();

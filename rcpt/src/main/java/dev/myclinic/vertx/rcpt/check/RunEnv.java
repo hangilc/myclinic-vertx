@@ -13,5 +13,6 @@ public class RunEnv {
     public Consumer<Error> errorHandler;
     public boolean verbose;
     public boolean debugHttp;
+    public String server;
 
 }

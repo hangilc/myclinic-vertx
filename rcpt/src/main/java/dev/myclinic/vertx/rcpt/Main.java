@@ -29,16 +29,19 @@ public class Main {
                 break;
             }
             case "create": {
-                String serverUrl = null;
-                String dataXml = null;
-                if( args.length == 3 ){
-                    serverUrl = args[1];
-                    dataXml = args[2];
-                }else  {
-                    System.err.println("Usage: newcreate Server-URL DATA-XML-FILE");
+                String serverUrl = System.getenv("MYCLINIC_SERVICE");
+                if( serverUrl == null ){
+                    System.err.println("Cannot find env var MYCLINIC_SERVICE");
                     System.exit(1);
                 }
-                dev.myclinic.vertx.rcpt.create.Create.run(args[1], args[2], System.out);
+                String dataXml = null;
+                if( args.length == 2 ){
+                    dataXml = args[1];
+                }else  {
+                    System.err.println("Usage: newcreate DATA-XML-FILE");
+                    System.exit(1);
+                }
+                dev.myclinic.vertx.rcpt.create.Create.run(serverUrl, dataXml, System.out);
                 break;
             }
             case "test-resolve": {

@@ -14,6 +14,7 @@ import dev.myclinic.vertx.consts.HoukatsuKensaKind;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -216,14 +217,21 @@ public class HoukatsuKensaRevision {
 	}
 
 	public static HoukatsuKensaRevision load(){
-		String filePath = "./config/houkatsu-kensa.xml";
-		String pathFromProperty = System.getProperty("dev.myclinic.vertx.houkatsukensa.file");
-		if( pathFromProperty != null ){
-			filePath = pathFromProperty;
+		String configDir = System.getenv("MYCLINIC_CONFIG_DIR");
+		if( configDir == null ){
+			throw new RuntimeException("Cannot find env var MYCLINIC_CONFIG_DIR");
 		}
+		Path houkatsuFile = Path.of(configDir, "houkatsu-kensa.xml");
+
+
+//		String filePath = "./config/houkatsu-kensa.xml";
+//		String pathFromProperty = System.getProperty("dev.myclinic.vertx.houkatsukensa.file");
+//		if( pathFromProperty != null ){
+//			filePath = pathFromProperty;
+//		}
 		try {
 			XmlMapper xmlMapper = new XmlMapper();
-			return xmlMapper.readValue(new File(filePath), HoukatsuKensaRevision.class);
+			return xmlMapper.readValue(houkatsuFile.toFile(), HoukatsuKensaRevision.class);
 		} catch(IOException ex){
 			throw new UncheckedIOException(ex);
 		}

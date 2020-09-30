@@ -219,6 +219,7 @@ public class ShohousenData {
                     throw new RuntimeException("Unknown command: " + line + "\n" +
                             "@有効期限：2020-04-19\n" +
                             "@memo:...\n" +
+                            "@futanwari:\\d\n" +
                             "@0410対応(+|＋)");
                 } else {
                     dLines.add(line);

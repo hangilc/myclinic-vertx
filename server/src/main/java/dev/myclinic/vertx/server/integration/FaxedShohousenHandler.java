@@ -512,8 +512,12 @@ public class FaxedShohousenHandler {
         vertx.<String>executeBlocking(promise -> {
             Path tempFile = null;
             try {
-                tempFile = Files.createTempFile("myclinic-", "-shohousen.txt");
-                Path sprintDir = getMyclinicSpringProjectDir();
+                String tmpFileToken = GlobalService.getInstance().createTempAppFilePath(
+                        GlobalService.getInstance().portalTmpDirToken,
+                        "myclinic-", "-shohousen.txt");
+                tempFile = GlobalService.getInstance().resolveAppPath(tmpFileToken);
+                //tempFile = Files.createTempFile("myclinic-", "-shohousen.txt");
+                Path springDir = getMyclinicSpringProjectDir();
                 Path groupDir = groupDir(from, upto);
                 String shohousenTextFileName = shohousenTextFileName(from, upto);
                 Path textFile = groupDir.resolve(shohousenTextFileName);
@@ -522,12 +526,13 @@ public class FaxedShohousenHandler {
                         "shohousen-drawer\\target\\shohousen-drawer-1.0.0-SNAPSHOT.jar",
                         "-i", textFile.toFile().getAbsolutePath(),
                         "-o", tempFile.toFile().getAbsolutePath())
-                        .directory(sprintDir.toFile());
+                        .directory(springDir.toFile());
                 Map<String, String> env1 = pb1.environment();
                 env1.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
                 Map<String, Object> result1 = execOld(pb1);
                 if (!result1.get("success").equals(true)) {
-                    promise.complete(mapper.writeValueAsString(result1));
+                    System.err.println(result1.get("stdErr"));
+                    promise.complete(mapper.writeValueAsString(result1.get("stdErr")));
                     return;
                 }
                 String pdfFileName = shohousenPdfFileName(from, upto);
@@ -539,15 +544,19 @@ public class FaxedShohousenHandler {
                         "--pdf-shrink", "2",
                         "-i", tempFile.toFile().getAbsolutePath(),
                         "--pdf", pdfFile.toFile().getAbsolutePath())
-                        .directory(sprintDir.toFile());
+                        .directory(springDir.toFile());
                 Map<String, String> env2 = pb1.environment();
                 env2.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
                 Map<String, Object> result2 = execOld(pb2);
                 if (result2.get("success").equals(true)) {
                     reportFileStatus(result2, pdfFile, "shohousenPdfFile");
+                } else {
+                    System.err.println(result2.get("stdErr"));
+                    promise.complete(mapper.writeValueAsString(result2.get("stdErr")));
                 }
                 promise.complete(mapper.writeValueAsString(result2));
             } catch (Exception e) {
+                e.printStackTrace();
                 throw new RuntimeException(e);
             } finally {
                 if (tempFile != null) {
@@ -560,6 +569,7 @@ public class FaxedShohousenHandler {
                 ctx.response().putHeader("content-type", "application/json; charset=UTF-8")
                         .end(ar.result());
             } else {
+                ar.cause().printStackTrace();
                 ctx.fail(ar.cause());
             }
         });
@@ -790,22 +800,12 @@ public class FaxedShohousenHandler {
         return GlobalService.getInstance().resolveAppPath(
                 GlobalService.getInstance().myclinicApiProjectDirToken
         );
-//        String dir = System.getenv("MYCLINIC_API_PROJECT_DIR");
-//        if (dir == null) {
-//            throw new RuntimeException("env var not defined: " + "MYCLINIC_API_PROJECT_DIR");
-//        }
-//        return Path.of(dir);
     }
 
     private Path getMyclinicSpringProjectDir() {
         return GlobalService.getInstance().resolveAppPath(
                 GlobalService.getInstance().myclinicSpringProjectDirToken
         );
-//        String dir = System.getenv("MYCLINIC_SPRING_PROJECT_DIR");
-//        if (dir == null) {
-//            throw new RuntimeException("env var not defined: " + "MYCLINIC_SPRING_PROJECT_DIR");
-//        }
-//        return Path.of(dir);
     }
 
     private Path getManagementRootDir() {

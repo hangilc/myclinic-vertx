@@ -1,6 +1,8 @@
 package dev.myclinic.vertx.server.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.drawer.Op;
+import dev.myclinic.vertx.drawer.Render;
 import dev.myclinic.vertx.server.GlobalService;
 import io.netty.buffer.ByteBuf;
 import io.vertx.core.Vertx;
@@ -13,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -90,7 +93,49 @@ public class HoumonKangoHandler {
         }
     }
 
-    private void handleCreateShijisho(RoutingContext ctx) {
+    public void handleCreateShijisho(RoutingContext ctx){
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                String rsrc = "houmon-kango-form/houmon-kango-form.json";
+                URL url = getClass().getClassLoader().getResource(rsrc);
+                Render.Form form = mapper.readValue(url, Render.Form.class);
+                Render render = new Render(form);
+                List<Op> ops = render.getOps();
+                byte[] opsBytes = mapper.writeValueAsBytes(List.of(ops));
+                GlobalService gs = GlobalService.getInstance();
+                String outFileIdToken = gs.createTempAppFilePath(
+                        GlobalService.getInstance().portalTmpDirToken,
+                        "houmon-kango", ".pdf"
+                );
+                Path outFile = gs.resolveAppPath(outFileIdToken);
+                ExecRequest req2 = new ExecRequest();
+                Path springProjectDir = IntegrationUtil.getMyclinicSpringProjectDir();
+                Path jar = Path.of(springProjectDir.toFile().getAbsolutePath(), "drawer-printer",
+                        "target", "drawer-printer-1.0.0-SNAPSHOT.jar");
+                req2.command = List.of("java", "-jar", jar.toString(), "-e", "utf-8", "--pdf",
+                        outFile.toString());
+                req2.stdIn = opsBytes;
+                ExecResult er2 = IntegrationUtil.exec(req2);
+                if (er2.isError()) {
+                    System.err.println(new String(er2.stdErr, StandardCharsets.UTF_8));
+                    promise.fail(er2.getErrorMessage());
+                    return;
+                }
+                ctx.response().putHeader("content-type", "text/plain; charset=UTF-8");
+                promise.complete(jsonEncode(outFileIdToken));
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
+    }
+
+    private void handleCreateShijishoOrig(RoutingContext ctx) {
         Path springProjectDir = IntegrationUtil.getMyclinicSpringProjectDir();
         String url = "https://deno.myclinic.dev/houmon-kango/create-houmon-kango-form.ts";
         vertx.<String>executeBlocking(promise -> {

@@ -19,18 +19,12 @@ class IntegrationUtil {
         return GlobalService.getInstance().resolveAppPath(
                 GlobalService.getInstance().configDirToken
         ).toString();
-        //return System.getenv("MYCLINIC_CONFIG_DIR");
     }
 
     public static Path getMyclinicSpringProjectDir() {
         return GlobalService.getInstance().resolveAppPath(
                 GlobalService.getInstance().myclinicSpringProjectDirToken
         );
-//        String dir = System.getenv("MYCLINIC_SPRING_PROJECT_DIR");
-//        if (dir == null) {
-//            throw new RuntimeException("env var not defined: " + "MYCLINIC_SPRING_PROJECT_DIR");
-//        }
-//        return Path.of(dir);
     }
 
     public static int getIntParam(RoutingContext ctx, String name) {

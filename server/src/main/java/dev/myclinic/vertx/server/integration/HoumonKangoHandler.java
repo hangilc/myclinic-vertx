@@ -2,6 +2,7 @@ package dev.myclinic.vertx.server.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.server.GlobalService;
+import io.netty.buffer.ByteBuf;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,7 +49,6 @@ public class HoumonKangoHandler {
     private void addRoutes(Router router) {
         router.route(HttpMethod.POST, "/create-shijisho").handler(this::handleCreateShijisho);
         router.route(HttpMethod.GET, "/list-params").handler(this::handleListParams);
-        //router.route(HttpMethod.GET, "/get-clinic-param").handler(this::handleGetClinicParam);
         router.route(HttpMethod.GET, "/get-record").handler(this::handleGetRecord);
         router.route(HttpMethod.POST, "/save-record").handler(this::handleSaveRecord);
     }
@@ -138,26 +139,60 @@ public class HoumonKangoHandler {
     }
 
     private void handleListParams(RoutingContext ctx) {
-        String url = "https://deno.myclinic.dev/houmon-kango/create-houmon-kango-form.ts";
-        vertx.<Buffer>executeBlocking(promise -> {
-            ExecRequest req = new ExecRequest();
-            Map<String, String> env = new HashMap<>();
-            env.put("NO_COLOR", "yes");
-            req.command = List.of("deno", "run", "--allow-net", url, "-p");
-            req.env = env;
-            ExecResult er = IntegrationUtil.exec(req);
-            if (er.stdErr.length == 0) {
-                promise.complete(Buffer.buffer(er.stdOut));
-            } else {
-                promise.fail(new String(er.stdErr, StandardCharsets.UTF_8));
+        String rsrcFile = "houmon-kango-form/houmon-kango-params.json";
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                ctx.response().putHeader("content-type", "text/plain; charset=UTF-8");
+                InputStream is = getClass().getClassLoader().getResourceAsStream(rsrcFile);
+                if( is == null ){
+                    throw new RuntimeException("Cannot find file.");
+                } else {
+                    byte[] bytes = new byte[1024];
+                    Buffer buffer = Buffer.buffer();
+                    while (true) {
+                        int nread = is.read(bytes);
+                        System.out.printf("nread: %d\n", nread);
+                        if (nread <= 0) {
+                            break;
+                        } else {
+                            buffer.appendBytes(bytes, 0, nread);
+                        }
+                    }
+                    is.close();
+                    ctx.response().putHeader("content-length", String.format("%d", buffer.length()));
+                    ctx.response().write(buffer);
+                }
+            } catch (Exception e) {
+                promise.fail(e);
             }
         }, ar -> {
             if (ar.succeeded()) {
-                ctx.response().end(ar.result());
+                ctx.response().end();
             } else {
                 ctx.fail(ar.cause());
             }
         });
+
+//        String url = "https://deno.myclinic.dev/houmon-kango/create-houmon-kango-form.ts";
+//        vertx.<Buffer>executeBlocking(promise -> {
+//            ExecRequest req = new ExecRequest();
+//            Map<String, String> env = new HashMap<>();
+//            env.put("NO_COLOR", "yes");
+//            req.command = List.of("deno", "run", "--allow-net", url, "-p");
+//            req.env = env;
+//            ExecResult er = IntegrationUtil.exec(req);
+//            if (er.stdErr.length == 0) {
+//                promise.complete(Buffer.buffer(er.stdOut));
+//            } else {
+//                promise.fail(new String(er.stdErr, StandardCharsets.UTF_8));
+//            }
+//        }, ar -> {
+//            if (ar.succeeded()) {
+//                ctx.response().end(ar.result());
+//            } else {
+//                ctx.fail(ar.cause());
+//            }
+//        });
     }
 
     private Path getHoumonKangoConfigDir(){

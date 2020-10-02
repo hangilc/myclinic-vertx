@@ -44,6 +44,9 @@ public class TextHint implements Hint {
                 case "right":
                     this.halign = HAlign.Right;
                     break;
+                case "center":
+                    this.halign = HAlign.Center;
+                    break;
                 case "para":
                     this.mode = Mode.Para;
                     break;

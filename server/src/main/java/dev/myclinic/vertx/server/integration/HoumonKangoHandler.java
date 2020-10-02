@@ -3,7 +3,9 @@ package dev.myclinic.vertx.server.integration;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.drawer.Op;
+import dev.myclinic.vertx.drawer.PaperSize;
 import dev.myclinic.vertx.drawer.Render;
+import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
 import dev.myclinic.vertx.server.GlobalService;
 import io.netty.buffer.ByteBuf;
 import io.vertx.core.Vertx;
@@ -14,8 +16,10 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -94,6 +98,21 @@ public class HoumonKangoHandler {
         }
     }
 
+    private PaperSize resolvePaperSize(String arg) {
+        if (PaperSize.standard.containsKey(arg)) {
+            return PaperSize.standard.get(arg);
+        } else {
+            String[] parts = arg.split(",");
+            if (parts.length == 2) {
+                double width = Double.parseDouble(parts[0].trim());
+                double height = Double.parseDouble(parts[1].trim());
+                return new PaperSize(width, height);
+            } else {
+                throw new RuntimeException("Invalid paper size: " + arg);
+            }
+        }
+    }
+
     public void handleCreateShijisho(RoutingContext ctx){
         vertx.<String>executeBlocking(promise -> {
             try {
@@ -110,27 +129,15 @@ public class HoumonKangoHandler {
                     render.add(key, value);
                 }
                 List<Op> ops = render.getOps();
-                byte[] opsBytes = mapper.writeValueAsBytes(List.of(ops));
                 GlobalService gs = GlobalService.getInstance();
                 String outFileIdToken = gs.createTempAppFilePath(
                         GlobalService.getInstance().portalTmpDirToken,
                         "houmon-kango", ".pdf"
                 );
                 Path outFile = gs.resolveAppPath(outFileIdToken);
-                ExecRequest req2 = new ExecRequest();
-                Path springProjectDir = IntegrationUtil.getMyclinicSpringProjectDir();
-                Path jar = Path.of(springProjectDir.toFile().getAbsolutePath(), "drawer-printer",
-                        "target", "drawer-printer-1.0.0-SNAPSHOT.jar");
-                req2.command = List.of("java", "-jar", jar.toString(), "-e", "utf-8", "--pdf",
-                        outFile.toString());
-                req2.stdIn = opsBytes;
-                ExecResult er2 = IntegrationUtil.exec(req2);
-                if (er2.isError()) {
-                    System.err.println(new String(er2.stdErr, StandardCharsets.UTF_8));
-                    promise.fail(er2.getErrorMessage());
-                    return;
-                }
-                ctx.response().putHeader("content-type", "text/plain; charset=UTF-8");
+                PaperSize resolvedPaperSize = resolvePaperSize(form.page);
+                PdfPrinter pdfPrinter = new PdfPrinter(resolvedPaperSize);
+                pdfPrinter.print(List.of(ops), outFile.toString());
                 promise.complete(jsonEncode(outFileIdToken));
             } catch (Exception e) {
                 promise.fail(e);

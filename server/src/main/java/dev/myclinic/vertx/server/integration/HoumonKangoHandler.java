@@ -7,7 +7,6 @@ import dev.myclinic.vertx.drawer.PaperSize;
 import dev.myclinic.vertx.drawer.Render;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
 import dev.myclinic.vertx.server.GlobalService;
-import io.netty.buffer.ByteBuf;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
@@ -16,20 +15,13 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static dev.myclinic.vertx.server.integration.IntegrationUtil.ExecResult;
-import static dev.myclinic.vertx.server.integration.IntegrationUtil.ExecRequest;
 
 public class HoumonKangoHandler {
 
@@ -72,7 +64,7 @@ public class HoumonKangoHandler {
                 promise.fail(e);
             }
         }, ar -> {
-            if( ar.succeeded() ){
+            if (ar.succeeded()) {
                 ctx.response().end(ar.result());
             } else {
                 ctx.fail(ar.cause());
@@ -83,17 +75,17 @@ public class HoumonKangoHandler {
     private void handleGetRecord(RoutingContext ctx) {
         int patientId = IntegrationUtil.getIntParam(ctx, "patient-id");
         Path path = getRecordPath(patientId);
-        if( !Files.exists(path) ){
+        if (!Files.exists(path)) {
             ctx.response().end(String.format("{\"patientId\": %d, \"history\": []}", patientId));
         } else {
             ctx.response().sendFile(path.toFile().getAbsolutePath());
         }
     }
 
-    private String jsonEncode(Object obj){
+    private String jsonEncode(Object obj) {
         try {
             return mapper.writeValueAsString(obj);
-        } catch(Exception ex){
+        } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -113,7 +105,7 @@ public class HoumonKangoHandler {
         }
     }
 
-    public void handleCreateShijisho(RoutingContext ctx){
+    public void handleCreateShijisho(RoutingContext ctx) {
         vertx.<String>executeBlocking(promise -> {
             try {
                 String rsrc = "houmon-kango-form/houmon-kango-form.json";
@@ -122,9 +114,10 @@ public class HoumonKangoHandler {
                 Render render = new Render(form);
                 Map<String, Object> params = mapper.readValue(
                         ctx.getBody().getBytes(),
-                        new TypeReference<>(){}
+                        new TypeReference<>() {
+                        }
                 );
-                for(String key: params.keySet()){
+                for (String key : params.keySet()) {
                     String value = params.get(key).toString();
                     render.add(key, value);
                 }
@@ -151,61 +144,13 @@ public class HoumonKangoHandler {
         });
     }
 
-    private void handleCreateShijishoOrig(RoutingContext ctx) {
-        Path springProjectDir = IntegrationUtil.getMyclinicSpringProjectDir();
-        String url = "https://deno.myclinic.dev/houmon-kango/create-houmon-kango-form.ts";
-        vertx.<String>executeBlocking(promise -> {
-            ExecRequest req1 = new ExecRequest();
-            req1.command = List.of("deno", "run", "--allow-net", url, "-");
-            Map<String, String> env = new HashMap<>();
-            env.put("NO_COLOR", "yes");
-            req1.env = env;
-            req1.stdIn = ctx.getBody().getBytes();
-            if( req1.stdIn.length == 0 ){
-                req1.stdIn = "{}".getBytes();
-            }
-            ExecResult er1 = IntegrationUtil.exec(req1);
-            if (er1.isError()) {
-                promise.fail(er1.getErrorMessage());
-                return;
-            }
-            byte[] drawer = er1.stdOut;
-            Path jar = Path.of(springProjectDir.toFile().getAbsolutePath(), "drawer-printer",
-                    "target", "drawer-printer-1.0.0-SNAPSHOT.jar");
-            GlobalService gs = GlobalService.getInstance();
-            //String outFileId = gs.createTempAppFilePath("/portal-tmp", "houmon-kango", ".pdf");
-            String outFileIdToken = gs.createTempAppFilePath(
-                    GlobalService.getInstance().portalTmpDirToken,
-                    "houmon-kango", ".pdf"
-            );
-            Path outFile = gs.resolveAppPath(outFileIdToken);
-            ExecRequest req2 = new ExecRequest();
-            req2.command = List.of("java", "-jar", jar.toString(), "-e", "utf-8", "--pdf",
-                    outFile.toString());
-            req2.stdIn = drawer;
-            ExecResult er2 = IntegrationUtil.exec(req2);
-            if (er2.isError()) {
-                promise.fail(er2.getErrorMessage());
-                return;
-            }
-            ctx.response().putHeader("content-type", "text/plain; charset=UTF-8");
-            promise.complete(jsonEncode(outFileIdToken));
-        }, ar -> {
-            if (ar.succeeded()) {
-                ctx.response().end(ar.result());
-            } else {
-                ctx.fail(ar.cause());
-            }
-        });
-    }
-
     private void handleListParams(RoutingContext ctx) {
         String rsrcFile = "houmon-kango-form/houmon-kango-params.json";
         vertx.<String>executeBlocking(promise -> {
             try {
                 ctx.response().putHeader("content-type", "text/plain; charset=UTF-8");
                 InputStream is = getClass().getClassLoader().getResourceAsStream(rsrcFile);
-                if( is == null ){
+                if (is == null) {
                     throw new RuntimeException("Cannot find file.");
                 } else {
                     byte[] bytes = new byte[1024];
@@ -256,11 +201,11 @@ public class HoumonKangoHandler {
 //        });
     }
 
-    private Path getHoumonKangoConfigDir(){
+    private Path getHoumonKangoConfigDir() {
         return Path.of(IntegrationUtil.getConfigDir(), "houmon-kango");
     }
 
-    private Path getRecordPath(int patientId){
+    private Path getRecordPath(int patientId) {
         String file = String.format("record-%d.json", patientId);
         return getHoumonKangoConfigDir().resolve(file);
     }

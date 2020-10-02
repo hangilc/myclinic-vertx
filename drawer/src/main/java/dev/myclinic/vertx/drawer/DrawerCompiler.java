@@ -82,6 +82,20 @@ public class DrawerCompiler {
         return y * scale + offsetY;
     }
 
+    public void importOps(List<Op> ops){
+        for(Op op: ops){
+            if( op instanceof OpCreateFont ) {
+                OpCreateFont o = (OpCreateFont) op;
+                createFont(o.getName(), o.getFontName(), o.getSize(), o.getWeight(), o.isItalic());
+            } else if( op instanceof  OpSetFont ){
+                OpSetFont o = (OpSetFont) op;
+                setFont(o.getName());
+            } else {
+                this.ops.add(op);
+            }
+        }
+    }
+
     public List<Op> getOps() {
         return ops;
     }

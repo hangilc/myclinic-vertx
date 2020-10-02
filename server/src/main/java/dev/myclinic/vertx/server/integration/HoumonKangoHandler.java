@@ -1,5 +1,6 @@
 package dev.myclinic.vertx.server.integration;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.drawer.Render;
@@ -100,6 +101,14 @@ public class HoumonKangoHandler {
                 URL url = getClass().getClassLoader().getResource(rsrc);
                 Render.Form form = mapper.readValue(url, Render.Form.class);
                 Render render = new Render(form);
+                Map<String, Object> params = mapper.readValue(
+                        ctx.getBody().getBytes(),
+                        new TypeReference<>(){}
+                );
+                for(String key: params.keySet()){
+                    String value = params.get(key).toString();
+                    render.add(key, value);
+                }
                 List<Op> ops = render.getOps();
                 byte[] opsBytes = mapper.writeValueAsBytes(List.of(ops));
                 GlobalService gs = GlobalService.getInstance();

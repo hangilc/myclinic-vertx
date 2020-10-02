@@ -24,19 +24,13 @@ public class Render {
         public List<Op> form;
     }
 
-    private Form form;
-    private DrawerCompiler c = new DrawerCompiler();
-
-    public Render(){
-        this.form = new Form();
-        form.page = "A4";
-        form.marks = new HashMap<>();
-        form.hints = new HashMap<>();
-        form.form = new ArrayList<>();
-    }
+    private final Form form;
+    private final DrawerCompiler c;
 
     public Render(Form form){
         this.form = form;
+        this.c = new DrawerCompiler();
+        this.c.importOps(form.form);
     }
 
     public void add(String mark, String value){
@@ -55,10 +49,7 @@ public class Render {
     }
 
     public List<Op> getOps(){
-        List<Op> ops = new ArrayList<>();
-        ops.addAll(form.form);
-        ops.addAll(c.getOps());
-        return ops;
+        return c.getOps();
     }
 
 }

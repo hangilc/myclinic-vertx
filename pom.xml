@@ -186,6 +186,7 @@
         <module>pdf-text</module>
         <module>client</module>
         <module>rcpt</module>
+        <module>drawer-form2</module>
     </modules>
 
 </project>

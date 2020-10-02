@@ -3,8 +3,6 @@ package dev.myclinic.vertx.drawer;
 import dev.myclinic.vertx.drawer.hint.Hint;
 import dev.myclinic.vertx.drawer.hint.HintParser;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

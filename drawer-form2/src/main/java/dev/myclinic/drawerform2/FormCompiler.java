@@ -47,7 +47,7 @@ public class FormCompiler extends DrawerCompiler {
         Box b = box;
         for(Multi m : args){
             b = m.render(this, b);
-            b = b.setRight(box.getRight());
+            b = box.setLeft(b.getRight());
         }
         return box.setLeft(box.getLeft());
     }

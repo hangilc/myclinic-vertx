@@ -164,16 +164,15 @@ public class HoumonKango {
                             c.mSpace(8).mark("birthday.day").right().rightPadding(0.5),
                             c.mLabel("日")
                     ));
-//
-//            c.multi(
-//                    rr[1].shrinkWidth(63, HAnchor.Right),
-//                    [
-//                    "（",
-//                    multiSpace(6).mark("age").hint("right:right-padding(0.5)"),
-//                    "歳）",
-//      ],
-//            VAlign.Center,
-//    );
+
+            c.multi(
+                    rr[1].shrinkWidth(63, HorizAnchor.Right),
+                    VAlign.Center,
+                    List.of(
+                            c.mLabel("（"),
+                            c.mSpace(6).mark("age").right().rightPadding(0.5),
+                            c.mLabel("歳）")
+                    ));
         }
     }
 

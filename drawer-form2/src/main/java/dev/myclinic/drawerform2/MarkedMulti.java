@@ -21,10 +21,7 @@ public class MarkedMulti implements Multi {
     public Box render(FormCompiler c, Box box) {
         Box b = orig.render(c, box);
         c.addMark(mark, b);
-        if( hints.size() > 0 ){
-            String h = hints.stream().map(Hint::serialize).collect(Collectors.joining(":"));
-            c.addHint(mark, h);
-        }
+        c.setHints(mark, hints);
         return b;
     }
 

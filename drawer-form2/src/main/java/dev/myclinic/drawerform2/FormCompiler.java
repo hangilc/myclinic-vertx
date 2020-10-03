@@ -1,14 +1,14 @@
 package dev.myclinic.drawerform2;
 
 import dev.myclinic.vertx.drawer.Box;
+import static dev.myclinic.vertx.drawer.Box.*;
 import dev.myclinic.vertx.drawer.DrawerCompiler;
 import dev.myclinic.vertx.drawer.Render;
-
-import static dev.myclinic.vertx.drawer.DrawerCompiler.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class FormCompiler extends DrawerCompiler {
 
@@ -20,8 +20,16 @@ public class FormCompiler extends DrawerCompiler {
         marks.put(key, r);
     }
 
-    public void addHint(String key, String hint){
-        hints.put(key, hint);
+    public void setHints(String key, List<Hint> hints){
+        if( hints.size() > 0 ){
+            String h = hints.stream().map(Hint::serialize).collect(Collectors.joining(":"));
+            this.hints.put(key, h);
+        }
+    }
+
+    public void addMarkAndHints(String key, Box box, List<Hint> hints){
+        addMark(key, box);
+        setHints(key, hints);
     }
 
     public Map<String, Render.Rect> getMarks(){
@@ -30,6 +38,18 @@ public class FormCompiler extends DrawerCompiler {
 
     public Map<String, String> getHints(){
         return hints;
+    }
+
+    public Box multi(Box box, VAlign valign, List<Multi> args){
+        if( args.size() == 0 ){
+            return box.setWidth(0, HorizAnchor.Left);
+        }
+        Box b = box;
+        for(Multi m : args){
+            b = m.render(this, b);
+            b = b.setRight(box.getRight());
+        }
+        return box.setLeft(box.getLeft());
     }
 
     public Box multiAt(double x, double y, VAlign valign, List<Multi> args){

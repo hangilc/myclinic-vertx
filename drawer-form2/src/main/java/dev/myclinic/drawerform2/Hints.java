@@ -9,6 +9,32 @@ public class Hints {
         }
     }
 
+    public static Right right(){
+        return new Right();
+    }
+
+    public static class Center implements Hint {
+        @Override
+        public String serialize() {
+            return "center";
+        }
+    }
+
+    public static Center center(){
+        return new Center();
+    }
+
+    public static class Circle implements Hint {
+        @Override
+        public String serialize() {
+            return "circle";
+        }
+    }
+
+    public static Circle circle(){
+        return new Circle();
+    }
+
     private static class SingleValueHint implements Hint {
         private final String name;
         private final double value;
@@ -28,6 +54,20 @@ public class Hints {
         public RightPadding(double value) {
             super("right-padding", value);
         }
+    }
+
+    public static RightPadding rightPadding(double padding){
+        return new RightPadding(padding);
+    }
+
+    public static class Radius extends SingleValueHint {
+        public Radius(double radius){
+            super("radius", radius);
+        }
+    }
+
+    public static Radius radius(double radius){
+        return new Radius(radius);
     }
 
 }

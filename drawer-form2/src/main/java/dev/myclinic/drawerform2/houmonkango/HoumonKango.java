@@ -177,38 +177,514 @@ public class HoumonKango {
     }
 
     private void renderRow1(Box row) {
-
+//        let cols: Box[] = row.splitToColsAt(20);
+//        cols.slice(0, -1).forEach((col) => c.frameRight(col));
+//        {
+//            c.textIn(
+//                    cols[0].shrinkWidth(1.5, HAnchor.Right),
+//                    "患者住所",
+//                    textOpts.valignCenter(),
+//                    );
+//            c.registerMark("address", cols[1], "left-padding(2)");
+//        }
     }
 
     private void renderRow2(Box row) {
+//        let cols: Box[] = row.splitToColsAt(29);
+//        cols.slice(0, -1).forEach((col) => c.frameRight(col));
+//        {
+//            c.textIn(
+//                    cols[0].shrinkWidth(1.5, HAnchor.Right),
+//                    "主たる傷病名",
+//                    textOpts.valignCenter(),
+//                    );
+//            c.registerMark("disease", cols[1], "left-padding(2)");
+//        }
 
     }
 
     private void renderRow3(Box row) {
-
+//        let cols: Box[] = row.splitToColsAt(8.5);
+//        cols.slice(0, -1).forEach((col) => c.frameRight(col));
+//        {
+//            c.textAtVertical(
+//                    [cols[0].cx, cols[0].cy],
+//            "現在の状況・該当項目に〇等",
+//                    textOpts.halignCenter().valignCenter().setSpacing(1.5),
+//    );
+//        }
+//        let rows: Box[] = cols[1].splitToRowsAt(12, 28, 42.5, 49.5, 56.5);
+//        rows.slice(0, -1).forEach((row) => c.frameBottom(row));
+//        {
+//            let box = rows[0];
+//            let cc: Box[] = box.splitToColsAt(20.5);
+//            c.frameRight(cc[0]);
+//            c.textsInRows(
+//                    cc[0].shrinkAll(2).splitToEvenRows(2),
+//                    ["病状・治療", "状態"],
+//      [
+//            textOpts.valignCenter().setSpacing(0, -0.5, -0.5, 0),
+//                    textOpts.valignCenter().setSpacing(6),
+//      ],
+//    );
+//            c.registerMark(
+//                    "disease-condition",
+//                    cc[1],
+//                    "para:padding(2):v-top:leading(0.7)",
+//                    );
+//        }
+//        {
+//            let box = rows[1];
+//            let cc: Box[] = box.splitToColsAt(20.5);
+//            c.frameRight(cc[0]);
+//            c.textsInRows(
+//                    cc[0].shrinkAll(2).splitToEvenRows(3),
+//                    ["投与中の", "薬剤の用", "量・用法"],
+//      [
+//            textOpts.valignCenter().setSpacing(1),
+//                    textOpts.valignCenter().setSpacing(1),
+//                    textOpts.valignCenter(),
+//      ],
+//    );
+//            c.registerMark("drugs", cc[1], "para:padding(2):v-top:leading(0.7)");
+//        }
+//        {
+//            let box = rows[2];
+//            let cc: Box[] = box.splitToColsAt(20.5);
+//            c.frameRight(cc[0]);
+//            c.textsInRows(
+//                    cc[0].shrink(2, 2, 2, 3).splitToEvenRows(2),
+//                    ["日常生活", "自立度"],
+//      [
+//            textOpts.valignCenter().setSpacing(1),
+//                    textOpts.valignCenter(),
+//      ],
+//    );
+//            {
+//                let [r1, r2] = cc[1].splitToEvenRows(2);
+//                c.frameBottom(r1);
+//                {
+//                    let [c1, c2] = r1.splitToColsAt(27.5);
+//                    c.frameRight(c1);
+//                    c.textIn(c1.displace(1.5, 0), "寝たきり度", textOpts.valignCenter());
+//                    c.textIn(
+//                            c2.shrinkWidth(5, HAnchor.Right),
+//                            "J1",
+//                            textOpts.valignCenter(),
+//                            );
+//                    c.registerMark("netakiri.J1", c.b, "circle:radius(1.7)");
+//                    c.textIn(c.b.flipRight().displace(6, 0), "J2", textOpts.valignCenter());
+//                    c.registerMark("netakiri.J2", c.b, "circle:radius(1.7)");
+//                    c.textIn(c.b.flipRight().displace(6, 0), "A1", textOpts.valignCenter());
+//                    c.registerMark("netakiri.A1", c.b, "circle:radius(1.7)");
+//                    c.textIn(c.b.flipRight().displace(6, 0), "A2", textOpts.valignCenter());
+//                    c.registerMark("netakiri.A2", c.b, "circle:radius(1.7)");
+//                    c.textIn(c.b.flipRight().displace(6, 0), "B1", textOpts.valignCenter());
+//                    c.registerMark("netakiri.B1", c.b, "circle:radius(1.7)");
+//                    c.textIn(c.b.flipRight().displace(6, 0), "B2", textOpts.valignCenter());
+//                    c.registerMark("netakiri.B2", c.b, "circle:radius(1.7)");
+//                    c.textIn(c.b.flipRight().displace(6, 0), "C1", textOpts.valignCenter());
+//                    c.registerMark("netakiri.C1", c.b, "circle:radius(1.7)");
+//                    c.textIn(c.b.flipRight().displace(6, 0), "C2", textOpts.valignCenter());
+//                    c.registerMark("netakiri.C2", c.b, "circle:radius(1.7)");
+//                }
+//                {
+//                    let [c1, c2] = r2.splitToColsAt(27.5);
+//                    c.frameRight(c1);
+//                    c.textIn(c1.displace(1.5, 0), "認知症の状況", textOpts.valignCenter());
+//                    c.textIn(
+//                            c2.shrinkWidth(5, HAnchor.Right),
+//                            "Ｉ",
+//                            textOpts.valignCenter(),
+//                            );
+//                    c.registerMark("ninchi.1", c.b, "circle:radius(1.7)");
+//                    c.textIn(
+//                            c.b.flipRight().displace(6, 0),
+//                            "IIa",
+//                            textOpts.valignCenter(),
+//                            );
+//                    c.registerMark("ninchi.2a", c.b, "circle:radius(1.7)");
+//                    c.textIn(
+//                            c.b.flipRight().displace(6, 0),
+//                            "IIb",
+//                            textOpts.valignCenter(),
+//                            );
+//                    c.registerMark("ninchi.2b", c.b, "circle:radius(1.7)");
+//                    c.textIn(
+//                            c.b.flipRight().displace(6, 0),
+//                            "IIIa",
+//                            textOpts.valignCenter(),
+//                            );
+//                    c.registerMark("ninchi.3a", c.b, "circle:radius(1.7)");
+//                    c.textIn(
+//                            c.b.flipRight().displace(6, 0),
+//                            "IIIb",
+//                            textOpts.valignCenter(),
+//                            );
+//                    c.registerMark("ninchi.3b", c.b, "circle:radius(1.7)");
+//                    c.textIn(c.b.flipRight().displace(6, 0), "IV", textOpts.valignCenter());
+//                    c.registerMark("ninchi.4", c.b, "circle:radius(1.7)");
+//                    c.textIn(c.b.flipRight().displace(6, 0), "Ｍ", textOpts.valignCenter());
+//                    c.registerMark("ninchi.M", c.b, "circle:radius(1.7)");
+//                }
+//            }
+//        }
+//        {
+//            let box = rows[3];
+//            let [c0, c1] = box.splitToColsAt(48);
+//            c.frameRight(c0);
+//            c.textIn(c0.displace(2), "要介護認定の状況", vCenter.setSpacing(1.5));
+//            c.textIn(c1.displace(3.5), "自立", vCenter);
+//            c.registerMark("youkaigo.jiritsu", c.b, "circle:radius(1.7)");
+//            c.textIn(c.b.flipRight().displace(6), "要支援（", vCenter);
+//            c.textIn(c.b.flipRight(), "１", vCenter);
+//            c.registerMark("youkaigo.youshien1", c.b, "circle:radius(1.7)");
+//            c.textIn(c.b.flipRight().displace(3.5), "２", vCenter);
+//            c.registerMark("youkaigo.youshien2", c.b, "circle:radius(1.7)");
+//            c.textIn(c.b.flipRight(), "）", vCenter);
+//            c.textIn(c.b.flipRight().displace(7.5), "要介護（", vCenter);
+//            c.textIn(c.b.flipRight(), "１", vCenter);
+//            c.registerMark("youkaigo.youkaigo1", c.b, "circle:radius(1.7)");
+//            c.textIn(c.b.flipRight().displace(3), "２", vCenter);
+//            c.registerMark("youkaigo.youkaigo2", c.b, "circle:radius(1.7)");
+//            c.textIn(c.b.flipRight().displace(3), "３", vCenter);
+//            c.registerMark("youkaigo.youkaigo3", c.b, "circle:radius(1.7)");
+//            c.textIn(c.b.flipRight().displace(3), "４", vCenter);
+//            c.registerMark("youkaigo.youkaigo4", c.b, "circle:radius(1.7)");
+//            c.textIn(c.b.flipRight().displace(3), "５", vCenter);
+//            c.registerMark("youkaigo.youkaigo5", c.b, "circle:radius(1.7)");
+//            c.textIn(c.b.flipRight(), "）", vCenter);
+//        }
+//        {
+//            let box = rows[4];
+//            let [c0, c1] = box.splitToColsAt(48);
+//            c.frameRight(c0);
+//            c.textIn(c0.displace(2), "要介護認定の状況", vCenter.setSpacing(2.5));
+//            c.textIn(c1.displace(3.5), "NPUAP分類", vCenter);
+//            c.textIn(c.b.flipRight().displace(6), "III度", vCenter);
+//            c.textIn(c.b.flipRight().displace(2), "IV度", vCenter);
+//            c.textIn(c.b.flipRight().displace(6), "DESIGN分類", vCenter);
+//            c.textIn(c.b.flipRight().displace(2), "D3", vCenter);
+//            c.textIn(c.b.flipRight().displace(3), "D4", vCenter);
+//            c.textIn(c.b.flipRight().displace(3), "D5", vCenter);
+//        }
+//        {
+//            let box = rows[5];
+//            let [c0, c1] = box.splitToColsAt(23.5);
+//            let r3_r5_c1 = c1;
+//            c.frameRight(c0);
+//            let lines = c0.shrinkWidth(2, HAnchor.Right).allocTextLines(
+//                    c.getCurrentFontSize(),
+//                    2.0,
+//                    2,
+//                    );
+//            let dy = box.cy - Box.vertCenterOfTextLines(lines);
+//            lines = Box.displaceTextOfLines(lines, 0, dy);
+//            c.textIn(lines[0], "装着・使用", textOpts);
+//            c.textIn(lines[1], "医療機器等", textOpts);
+//            {
+//                let rr = c1.shrinkAll(2).splitToEvenRows(7);
+//                {
+//                    c.textIn(rr[0], "１", vCenter);
+//                    c.textIn(c.b.flipRight(), "．自動腹膜灌流装置", vCenter);
+//                    c.textIn(c.b.displaceLeftTo(rr[0].left + 46), "２", vCenter);
+//                    c.textIn(c.b.flipRight(), "．透析液供給装置", vCenter);
+//                    c.textIn(c.b.displaceLeftTo(rr[0].left + 90), "３", vCenter);
+//                    c.textsWithIntervalsIn(
+//                            c.b.flipRight(),
+//                            ["．酸素療法（", "/min）"],
+//          [12],
+//                    vCenter,
+//        );
+//                }
+//                {
+//                    c.textIn(rr[1], "４", vCenter);
+//                    c.textIn(c.b.flipRight(), "．吸引器", vCenter);
+//                    c.textIn(c.b.displaceLeftTo(rr[0].left + 46), "５", vCenter);
+//                    c.textIn(c.b.flipRight(), "．中心静脈栄養", vCenter);
+//                    c.textIn(c.b.displaceLeftTo(rr[0].left + 90), "６", vCenter);
+//                    c.textIn(c.b.flipRight(), "．輸液ポンプ", vCenter);
+//                }
+//                let commaPos: number;
+//                let lastParenPos: number;
+//                {
+//                    let drawn, gaps;
+//                    c.textIn(rr[2], "７", vCenter);
+//                    c.textIn(c.b.flipRight(), "．経管栄養（", vCenter);
+//                    c.textIn(c.b.flipRight(), "経鼻", vCenter);
+//                    c.textIn(c.b.flipRight(), "・", vCenter);
+//                    c.textIn(c.b.flipRight(), "胃ろう", vCenter);
+//        [drawn, gaps] = c.textsWithIntervalsIn(
+//                        c.b.flipRight(),
+//                        ["：チューブサイズ", "、", "日に１回交換）"],
+//          [21, 15],
+//                    vCenter,
+//        );
+//                    commaPos = drawn[1].left;
+//                    lastParenPos = drawn[2].right - c.getCurrentFontSize();
+//                }
+//                {
+//                    c.textIn(rr[3], "８", vCenter);
+//                    c.textIn(c.b.flipRight(), "．留置カテーテル（サイズ", vCenter);
+//                    let markTubeSize = c.b.flipRight().setRight(commaPos);
+//                    c.textsWithIntervalsIn(
+//                            markTubeSize.flipRight(),
+//                            ["、", "日に１回交換）"],
+//          [15],
+//                    vCenter,
+//        );
+//                }
+//                {
+//                    c.multi(
+//                            rr[4],
+//                            ["９", "．人工呼吸器（", "陽圧式", "・", "陰圧式", "：設定"],
+//                    VAlign.Center,
+//        );
+//                    let p = c.b.right;
+//                    let q = lastParenPos;
+//                    let mark = new Box(p, c.b.top, q, c.b.bottom);
+//                    c.textIn(mark.flipRight(), "）", textOpts.valignCenter());
+//                }
+//                {
+//                    c.multi(
+//                            rr[5],
+//                            ["１０", "．気管カニューレ（サイズ", 11, "）"],
+//                    VAlign.Center,
+//        );
+//                }
+//                {
+//                    c.multi(
+//                            rr[6],
+//                            [
+//                            "１１",
+//                            "．人工肛門",
+//                            18,
+//                            multiText("１２").mark("mark11"),
+//                            "．人工膀胱",
+//                            10,
+//                            "１３",
+//                            "．その他（",
+//                            multiSpace(35).setRight(lastParenPos),
+//                            "）",
+//          ],
+//                    VAlign.Center,
+//        );
+//                }
+//            }
+//        }
     }
 
     private void renderRow4(Box row) {
-
+//        let [r1, r2] = row.splitToEvenRows(2);
+//        let m1 = c.multi(r1.displace(2), [multiText("留意事項及び指示事項").mark(":t1")], VAlign.Center);
+//        // c.textIn(r1.displace(2), multiText("留意事項及び指示事項").mark(":t1"), textOpts.valignCenter());
+//        let m2 = c.multi(
+//                r2.displace(2),
+//                [
+//                multiText("I").setWidth(c.getCurrentFontSize()).setOpts(
+//                        textOpts.halignCenter(),
+//                        ),
+//        multiText("療養生活指導上の留意事項").mark(":t2"),
+//    ],
+//        VAlign.Center,
+//  );
+//        let t1 = m1.t1;
+//        let t2 = m2.t2;
+//        let left = Math.max(t1.right, t2.right);
+//        let b = row.setLeft(left).shrink(2, 1, 1, 1);
+//        c.registerMark("ryuui-jikou", b, "para:v-top");
     }
 
     private void renderRow5(Box row) {
-
+//        let [c1, c2] = row.splitToColsAt(8.5);
+//        c.multi(
+//                c1.displace(2).splitToEvenRows(4)[0],
+//                [
+//                multiText("II").setWidth(c.getCurrentFontSize()).setOpts(
+//                        textOpts.halignCenter(),
+//                        ),
+//    ],
+//        VAlign.Center,
+//  );
+//        let rr = c2.splitToEvenRows(4);
+//        c.multi(
+//                rr[0],
+//                [
+//                multiText("１").mark("rehabilitation.mark").hint("circle:radius(1.5)"),
+//                "．リハビリテーション",
+//                multiSpace(0).setRight(row.right).mark("rehabilitation")
+//                        .hint("x-padding(4)"),
+//    ],
+//        VAlign.Center,
+//  );
+//        c.multi(rr[1], ["２", "．褥瘡の処置など"], VAlign.Center);
+//        c.multi(rr[2], ["３", "．装置・使用機器等の操作援助・管理"], VAlign.Center);
+//        c.multi(rr[3], ["４", "．その他"], VAlign.Center);
     }
 
     private void renderRow6(Box row) {
+//        let rr = row.splitToEvenRows(2);
+//        c.textIn(
+//                rr[0].displace(2),
+//                "在宅患者訪問点滴注射に関する指示（投与薬剤・投与量・投与方法等）",
+//                textOpts.valignCenter(),
+//                );
 
     }
 
     private void renderRow7(Box row) {
+//        let rr = row.splitToEvenRows(2);
+//        let d1 = c.textIn(
+//                rr[0].displace(2),
+//                "緊急時の連絡先",
+//                textOpts.valignCenter(),
+//                );
+//        let mark1 = d1.flipRight().setRight(row.right);
+//        let d2 = c.textIn(
+//                rr[1].displace(2),
+//                "不在時の対応法",
+//                textOpts.valignCenter(),
+//                );
+//        let mark2 = d2.flipRight().setRight(row.right);
 
     }
 
     private void renderRow8(Box row) {
-
+//        let rr = row.splitToEvenRows(3);
+//        c.textIn(rr[0].displace(2), "特記すべき留意事項", textOpts.valignCenter());
+//        c.saveFont();
+//        c.setFont("small");
+//        c.textIn(
+//                c.b.flipRight(),
+//                "（注：薬の相互作用・副作用についての留意点、薬物アレルギーの既往、定期巡回・随時対応型訪問",
+//                textOpts.valignCenter(),
+//                );
+//        c.textIn(
+//                rr[1].displace(2),
+//                "介護看護及び複合型サービス利用時の留意事項等があれば記載して下さい。）",
+//                textOpts.valignCenter(),
+//                );
+//        c.restoreFont();
+//        let mark = rr[2];
     }
 
     private void renderRow9(Box row) {
+//        let rr = row.splitToEvenRows(4);
+//        let fontSize = c.getCurrentFontSize();
+//        let rightLimit = row.right - 15;
+//        c.textIn(rr[0].displace(2), "他の訪問看護ステーションへの指示", vCenter);
+//        c.multi(
+//                rr[1].displace(10),
+//                [
+//                "（",
+//                "無",
+//                fontSize,
+//                "有",
+//                fontSize,
+//                "：指定訪問看護ステーション名",
+//                multiSpace(10).setRight(rightLimit),
+//                "）",
+//    ],
+//        VAlign.Center,
+//  );
+//        c.textIn(rr[2].displace(2), "たんの吸引等実施のための訪問介護事業所への指示", vCenter);
+//        c.multi(
+//                rr[3].displace(10),
+//                [
+//                "（",
+//                "無",
+//                fontSize,
+//                "有",
+//                fontSize,
+//                "：指定訪問介護事業所名",
+//                multiSpace(10).setRight(rightLimit),
+//                "）",
+//    ],
+//        VAlign.Center,
+//  );
+    }
+
+    private void renderAddr(Box box){
+//        let rr = box.splitToEvenRows(6);
+//        let fontSize = c.getCurrentFontSize();
+//        c.multi(
+//                rr[0].displace(c.getCurrentFontSize() * 4),
+//                [
+//                "令和",
+//                multiSpace(9).mark("issue-date.nen").hint(
+//                        "right:right-padding(1)",
+//                        ),
+//                "年",
+//                multiSpace(6).mark("issue-date.month").hint(
+//                        "right:right-padding(1)",
+//                        ),
+//                "月",
+//                multiSpace(6).mark("issue-date.day").hint(
+//                        "right:right-padding(1)",
+//                        ),
+//                "日",
+//    ],
+//        VAlign.Center,
+//  );
+//        c.multi(
+//                rr[1],
+//                [
+//                "医療機関名",
+//                fontSize,
+//                multiSpace(0).setRight(box.right).mark("clinic.name").hint(
+//                        "x-padding(2)",
+//                        ),
+//    ],
+//        VAlign.Center,
+//  );
+//        c.multi(
+//                rr[2],
+//                [
+//                multiText("住所").setOpts(textOpts.halignJustified()).setWidth(
+//                        fontSize * 5,
+//                        ),
+//                fontSize,
+//                multiSpace(10).setRight(box.right).mark("clinic.address")
+//                        .hint("x-padding(2)"),
+//    ],
+//        VAlign.Center,
+//  );
+//        c.multi(
+//                rr[3],
+//                [
+//                multiText("電話").setOpts(textOpts.halignJustified()).setWidth(
+//                        fontSize * 5,
+//                        ),
+//                fontSize,
+//                multiSpace(10).setRight(box.right).mark("clinic.phone").hint(
+//                        "x-padding(2)",
+//                        ),
+//    ],
+//        VAlign.Center,
+//  );
+//        c.multi(
+//                rr[4],
+//                [
+//                "（ＦＡＸ）",
+//                fontSize,
+//                multiSpace(10).setRight(box.right).mark("clinic.fax").hint(
+//                        "x-padding(2)",
+//                        ),
+//    ],
+//        VAlign.Center,
+//  );
+//        c.multi(
+//                rr[5],
+//                [
+//                multiText("医師氏名").setOpts(textOpts.halignJustified()).setWidth(
+//                        fontSize * 5,
+//                        ),
+//                fontSize,
+//                multiSpace(70).mark("doctor-name").hint("right-padding(30)"),
+//                "印",
+//    ],
+//        VAlign.Center,
+//  );
 
     }
 

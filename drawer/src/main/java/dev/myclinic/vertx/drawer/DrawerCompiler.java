@@ -20,6 +20,12 @@ public class DrawerCompiler {
 
     public static class TextAtOpt {
         public double extraSpace;
+
+        public TextAtOpt(){ }
+
+        public TextAtOpt(double extraSpace) {
+            this.extraSpace = extraSpace;
+        }
     }
 
     public enum TextInEvenColumnsJustification {
@@ -299,9 +305,12 @@ public class DrawerCompiler {
         }
     }
 
-    public void textAtVert(String text, double x, double y, HAlign halign, VAlign valign) {
+    public void textAtVert(String text, double x, double y, HAlign halign, VAlign valign, TextAtOpt opt) {
         List<Double> mes = doMeasureChars(text, getCurrentFontSize());
         double totalHeight = getCurrentFontSize() * text.length();
+        if( text.length() >= 2 ){
+            totalHeight += opt.extraSpace * (text.length() - 1);
+        }
         List<Double> xs = mes.stream().map(cw -> {
             switch (halign) {
                 case Left:
@@ -328,8 +337,43 @@ public class DrawerCompiler {
             default:
                 throw new RuntimeException("invalid valign: " + valign);
         }
-        List<Double> ys = composeYs(text.length(), top, getCurrentFontSize(), 0);
+        List<Double> ys = composeYs(text.length(), top, getCurrentFontSize(), opt.extraSpace);
         opDrawChars(text, xs, ys);
+    }
+
+    public void textAtVert(String text, double x, double y, HAlign halign, VAlign valign) {
+        textAtVert(text, x, y, halign, valign, new TextAtOpt());
+
+//        List<Double> mes = doMeasureChars(text, getCurrentFontSize());
+//        double totalHeight = getCurrentFontSize() * text.length();
+//        List<Double> xs = mes.stream().map(cw -> {
+//            switch (halign) {
+//                case Left:
+//                    return x;
+//                case Center:
+//                    return x - cw / 2;
+//                case Right:
+//                    return x - cw;
+//                default:
+//                    throw new RuntimeException("unknown halign: " + halign);
+//            }
+//        }).collect(toList());
+//        double top;
+//        switch (valign) {
+//            case Top:
+//                top = y;
+//                break;
+//            case Center:
+//                top = y - totalHeight / 2;
+//                break;
+//            case Bottom:
+//                top = y - totalHeight;
+//                break;
+//            default:
+//                throw new RuntimeException("invalid valign: " + valign);
+//        }
+//        List<Double> ys = composeYs(text.length(), top, getCurrentFontSize(), 0);
+//        opDrawChars(text, xs, ys);
     }
 
     public void textAtVertJustified(String text, double x, double top, double bottom, HAlign halign) {

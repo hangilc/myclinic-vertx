@@ -60,6 +60,16 @@ public class Hints {
         return new RightPadding(padding);
     }
 
+    public static class LeftPadding extends SingleValueHint {
+        public LeftPadding(double value) {
+            super("left-padding", value);
+        }
+    }
+
+    public static LeftPadding leftPadding(double padding){
+        return new LeftPadding(padding);
+    }
+
     public static class Radius extends SingleValueHint {
         public Radius(double radius){
             super("radius", radius);

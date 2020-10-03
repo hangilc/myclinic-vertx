@@ -44,6 +44,21 @@ public class PaperSize {
         this.height = height;
     }
 
+    public static PaperSize resolvePaperSize(String arg) {
+        if (PaperSize.standard.containsKey(arg)) {
+            return PaperSize.standard.get(arg);
+        } else {
+            String[] parts = arg.split(",");
+            if (parts.length == 2) {
+                double width = Double.parseDouble(parts[0].trim());
+                double height = Double.parseDouble(parts[1].trim());
+                return new PaperSize(width, height);
+            } else {
+                throw new RuntimeException("Invalid paper size: " + arg);
+            }
+        }
+    }
+
     public double getWidth() {
         return width;
     }

@@ -220,13 +220,13 @@ public class DrawerCompiler {
         return fontMap.get(fontName);
     }
 
-    public void textAt(String text, double x, double y, HAlign halign, VAlign valign, TextAtOpt opt){
-        if (text == null || text.isEmpty()) {
-            return;
+    public Box textAt(String text, double x, double y, HAlign halign, VAlign valign, TextAtOpt opt){
+        if( text == null ){
+            text = "";
         }
         double extraSpace = opt == null ? 0 : opt.extraSpace;
         List<Double> mes = doMeasureChars(text, getCurrentFontSize());
-        double totalWidth = mes.stream().reduce((a, b) -> a + b).orElse(0.0) + extraSpace * (text.length() - 1);
+        double totalWidth = mes.stream().reduce(Double::sum).orElse(0.0) + extraSpace * (text.length() - 1);
         double left, top;
         switch (halign) {
             case Left:
@@ -257,24 +257,25 @@ public class DrawerCompiler {
         List<Double> xs = composeXs(mes, left, extraSpace);
         List<Double> ys = Collections.singletonList(top);
         opDrawChars(text, xs, ys);
+        return new Box(left, top, left + totalWidth, top + getCurrentFontSize());
     }
 
-    public void textAt(String text, double x, double y, HAlign halign, VAlign valign) {
-        textAt(text, x, y, halign, valign, null);
+    public Box textAt(String text, double x, double y, HAlign halign, VAlign valign) {
+        return textAt(text, x, y, halign, valign, null);
     }
 
-    public void textAt(String text, Point p, HAlign halign, VAlign valign) {
-        textAt(text, p.getX(), p.getY(), halign, valign);
+    public Box textAt(String text, Point p, HAlign halign, VAlign valign) {
+        return textAt(text, p.getX(), p.getY(), halign, valign);
     }
 
-    public void textAtJustified(String text, double left, double right, double y, VAlign valign) {
-        if (text == null || text.isEmpty()) {
-            return;
+    public Box textAtJustified(String text, double left, double right, double y, VAlign valign) {
+        if( text == null ){
+            text = "";
         }
         List<Double> mes = doMeasureChars(text, getCurrentFontSize());
-        double totalWidth = mes.stream().reduce((a, b) -> a + b).orElse(0.0);
+        double totalWidth = mes.stream().reduce(Double::sum).orElse(0.0);
         if (text.length() < 2) {
-            textAt(text, left, y, HAlign.Left, valign);
+            return textAt(text, left, y, HAlign.Left, valign);
         } else {
             double top;
             switch (valign) {
@@ -294,6 +295,7 @@ public class DrawerCompiler {
             List<Double> xs = composeXs(mes, left, extra);
             List<Double> ys = Collections.singletonList(top);
             opDrawChars(text, xs, ys);
+            return new Box(left, top, left + totalWidth, top + getCurrentFontSize());
         }
     }
 
@@ -357,7 +359,7 @@ public class DrawerCompiler {
         opDrawChars(text, xs, ys);
     }
 
-    public void textIn(String text, Box box, HAlign halign, VAlign valign){
+    public Box textIn(String text, Box box, HAlign halign, VAlign valign){
         double x, y;
         switch (halign) {
             case Left:
@@ -385,7 +387,7 @@ public class DrawerCompiler {
             default:
                 throw new Error("invalid valign: " + valign);
         }
-        textAt(text, x, y, halign, valign, null);
+        return textAt(text, x, y, halign, valign, null);
     }
 
     public void textInVert(String text, Box box, HAlign halign, VAlign valign) {

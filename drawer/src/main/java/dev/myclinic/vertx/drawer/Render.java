@@ -13,6 +13,15 @@ public class Render {
         public double top;
         public double right;
         public double bottom;
+
+        public Rect(){ }
+
+        public Rect(double left, double top, double right, double bottom) {
+            this.left = left;
+            this.top = top;
+            this.right = right;
+            this.bottom = bottom;
+        }
     }
 
     public static class Form {

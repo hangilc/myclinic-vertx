@@ -20,11 +20,17 @@ public class DrawerCompiler {
 
     public static class TextAtOpt {
         public double extraSpace;
+        public double[] extraSpaces = null;
 
         public TextAtOpt(){ }
 
         public TextAtOpt(double extraSpace) {
             this.extraSpace = extraSpace;
+        }
+
+        public TextAtOpt extraSpaces(double ...extraSpaces){
+            this.extraSpaces = extraSpaces;
+            return this;
         }
     }
 
@@ -230,9 +236,20 @@ public class DrawerCompiler {
         if( text == null ){
             text = "";
         }
-        double extraSpace = opt == null ? 0 : opt.extraSpace;
+        if( opt == null ){
+            opt = new TextAtOpt();
+        }
         List<Double> mes = doMeasureChars(text, getCurrentFontSize());
-        double totalWidth = mes.stream().reduce(Double::sum).orElse(0.0) + extraSpace * (text.length() - 1);
+        double totalWidth = mes.stream().reduce(Double::sum).orElse(0.0);
+        if( text.length() >= 2 ){
+            if( opt.extraSpaces != null ){
+                for(double spc: opt.extraSpaces){
+                    totalWidth += spc;
+                }
+            } else if( opt.extraSpace != 0 ){
+                totalWidth *= opt.extraSpace * (text.length() - 1);
+            }
+        }
         double left, top;
         switch (halign) {
             case Left:
@@ -260,7 +277,12 @@ public class DrawerCompiler {
             default:
                 throw new RuntimeException("invalid valign: " + valign);
         }
-        List<Double> xs = composeXs(mes, left, extraSpace);
+        List<Double> xs;
+        if( opt.extraSpaces != null ){
+            xs = composeXs(mes, left, opt.extraSpaces);
+        } else {
+            xs = composeXs(mes, left, opt.extraSpace);
+        }
         List<Double> ys = Collections.singletonList(top);
         opDrawChars(text, xs, ys);
         return new Box(left, top, left + totalWidth, top + getCurrentFontSize());
@@ -403,7 +425,7 @@ public class DrawerCompiler {
         opDrawChars(text, xs, ys);
     }
 
-    public Box textIn(String text, Box box, HAlign halign, VAlign valign){
+    public Box textIn(String text, Box box, HAlign halign, VAlign valign, TextAtOpt opt){
         double x, y;
         switch (halign) {
             case Left:
@@ -431,7 +453,40 @@ public class DrawerCompiler {
             default:
                 throw new Error("invalid valign: " + valign);
         }
-        return textAt(text, x, y, halign, valign, null);
+        return textAt(text, x, y, halign, valign, opt);
+    }
+
+    public Box textIn(String text, Box box, HAlign halign, VAlign valign){
+        return textIn(text, box, halign, valign, new TextAtOpt());
+
+//        double x, y;
+//        switch (halign) {
+//            case Left:
+//                x = box.getLeft();
+//                break;
+//            case Center:
+//                x = box.getCx();
+//                break;
+//            case Right:
+//                x = box.getRight();
+//                break;
+//            default:
+//                throw new RuntimeException("invalid halign:" + halign);
+//        }
+//        switch (valign) {
+//            case Top:
+//                y = box.getTop();
+//                break;
+//            case Center:
+//                y = box.getCy();
+//                break;
+//            case Bottom:
+//                y = box.getBottom();
+//                break;
+//            default:
+//                throw new Error("invalid valign: " + valign);
+//        }
+//        return textAt(text, x, y, halign, valign, null);
     }
 
     public void textInVert(String text, Box box, HAlign halign, VAlign valign) {
@@ -623,10 +678,6 @@ public class DrawerCompiler {
     public void setTextColor(int red, int green, int blue) {
         opSetTextColor(red, green, blue);
     }
-
-//    private void createPen(String name, int red, int green, int blue, double width, int penStyle) {
-//        opCreatePen(name, red, green, blue, width, penStyle);
-//    }
 
     public void createPen(String name, int red, int green, int blue, double width) {
         opCreatePen(name, red, green, blue, width, Collections.emptyList());
@@ -901,6 +952,17 @@ public class DrawerCompiler {
         for (Double cw : mes) {
             xs.add(left);
             left += cw + extraSpace;
+        }
+        return xs;
+    }
+
+    private static List<Double> composeXs(List<Double> mes, double left, double[] extraSpaces) {
+        List<Double> xs = new ArrayList<>();
+        for(int i=0;i<mes.size();i++){
+            xs.add(left);
+            if( i != mes.size() - 1 ){
+                left += mes.get(i) + extraSpaces[i];
+            }
         }
         return xs;
     }

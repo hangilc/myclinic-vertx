@@ -35,6 +35,17 @@ public class Hints {
         return new Circle();
     }
 
+    public static class Para implements Hint {
+        @Override
+        public String serialize() {
+            return "para";
+        }
+    }
+
+    public static Para para(){
+        return new Para();
+    }
+
     private static class SingleValueHint implements Hint {
         private final String name;
         private final double value;
@@ -76,8 +87,39 @@ public class Hints {
         }
     }
 
+    public static class Padding extends SingleValueHint {
+
+        public Padding(double value) {
+            super("padding", value);
+        }
+    }
+
+    public static Padding padding(double value){
+        return new Padding(value);
+    }
+
     public static Radius radius(double radius){
         return new Radius(radius);
     }
 
+    public static class VTop implements Hint {
+        @Override
+        public String serialize() {
+            return "v-top";
+        }
+    }
+
+    public static VTop vTop(){
+        return new VTop();
+    }
+
+    public static class Leading extends SingleValueHint {
+        public Leading(double leading){
+            super("leading", leading);
+        }
+    }
+
+    public static Leading leading(double leading){
+        return new Leading(leading);
+    }
 }

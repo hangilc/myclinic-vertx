@@ -4,15 +4,13 @@ import dev.myclinic.drawerform2.FormCompiler;
 import dev.myclinic.drawerform2.Hints;
 import dev.myclinic.vertx.drawer.Box;
 import dev.myclinic.vertx.drawer.DrawerCompiler;
-import static dev.myclinic.vertx.drawer.DrawerCompiler.*;
 import dev.myclinic.vertx.drawer.DrawerConsts;
 import dev.myclinic.vertx.drawer.PaperSize;
 
 import java.util.List;
 
 import static dev.myclinic.vertx.drawer.Box.HorizAnchor;
-import static dev.myclinic.vertx.drawer.DrawerCompiler.HAlign;
-import static dev.myclinic.vertx.drawer.DrawerCompiler.VAlign;
+import static dev.myclinic.vertx.drawer.DrawerCompiler.*;
 import static dev.myclinic.vertx.drawer.Render.Form;
 
 public class HoumonKango {
@@ -226,9 +224,9 @@ public class HoumonKango {
             );
         }
         Box[] rows = cols[1].splitToRows(12, 28, 42.5, 49.5, 56.5);
-        for(int i=0;i<rows.length-1;i++){
+        for (int i = 0; i < rows.length - 1; i++) {
             c.frameBottom(rows[i]);
-        };
+        }
         {
             Box box = rows[0];
             Box[] cc = box.splitToColumns(20.5);
@@ -237,11 +235,11 @@ public class HoumonKango {
             c.textIn("病状・治療", subRows[0], HAlign.Left, VAlign.Center,
                     new TextAtOpt().extraSpaces(0, -0.5, -0.5, 0));
             c.textIn("状態", subRows[1], HAlign.Left, VAlign.Center, new TextAtOpt(6));
-//            c.addMarkAndHints(
-//                    "disease-condition",
-//                    cc[1],
-//                    "para:padding(2):v-top:leading(0.7)",
-//                    );
+            c.addMarkAndHints(
+                    "disease-condition",
+                    cc[1],
+                    List.of(Hints.para(), Hints.padding(2), Hints.vTop(), Hints.leading(0.7))
+            );
         }
 //        {
 //            let box = rows[1];

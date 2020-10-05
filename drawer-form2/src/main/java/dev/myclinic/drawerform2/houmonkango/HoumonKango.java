@@ -260,34 +260,39 @@ public class HoumonKango {
             c.textIn("日常生活", subRows[0], HAlign.Left, VAlign.Center, new TextAtOpt(1));
             c.textIn("自立度", subRows[1], HAlign.Left, VAlign.Center);
 
-//            {
-//                let [r1, r2] = cc[1].splitToEvenRows(2);
-//                c.frameBottom(r1);
-//                {
-//                    let [c1, c2] = r1.splitToColumns(27.5);
-//                    c.frameRight(c1);
-//                    c.textIn(c1.displace(1.5, 0), "寝たきり度", VAlign.Center;
-//                    c.textIn(
-//                            c2.shrinkWidth(5, HorizAnchor.Right),
-//                            "J1",
-//                            VAlign.Center
-//                            );
-//                    c.addMarkAndHints("netakiri.J1", c.b, "circle:radius(1.7)");
-//                    c.textIn(c.b.flipRight().displace(6, 0), "J2", VAlign.Center;
-//                    c.addMarkAndHints("netakiri.J2", c.b, "circle:radius(1.7)");
-//                    c.textIn(c.b.flipRight().displace(6, 0), "A1", VAlign.Center;
-//                    c.addMarkAndHints("netakiri.A1", c.b, "circle:radius(1.7)");
-//                    c.textIn(c.b.flipRight().displace(6, 0), "A2", VAlign.Center;
-//                    c.addMarkAndHints("netakiri.A2", c.b, "circle:radius(1.7)");
-//                    c.textIn(c.b.flipRight().displace(6, 0), "B1", VAlign.Center;
-//                    c.addMarkAndHints("netakiri.B1", c.b, "circle:radius(1.7)");
-//                    c.textIn(c.b.flipRight().displace(6, 0), "B2", VAlign.Center;
-//                    c.addMarkAndHints("netakiri.B2", c.b, "circle:radius(1.7)");
-//                    c.textIn(c.b.flipRight().displace(6, 0), "C1", VAlign.Center;
-//                    c.addMarkAndHints("netakiri.C1", c.b, "circle:radius(1.7)");
-//                    c.textIn(c.b.flipRight().displace(6, 0), "C2", VAlign.Center;
-//                    c.addMarkAndHints("netakiri.C2", c.b, "circle:radius(1.7)");
-//                }
+            {
+                Box[] rr = cc[1].splitToEvenRows(2);
+                Box r1 = rr[0];
+                Box r2 = rr[1];
+                c.frameBottom(r1);
+                {
+                    Box[] cN = r1.splitToColumns(27.5);
+                    Box c1 = cN[0];
+                    Box c2 = cN[1];
+                    c.frameRight(c1);
+                    c.textIn("寝たきり度", c1.shift(1.5, 0), HAlign.Left, VAlign.Center);
+                    Box b = c.textIn(
+                            "J1",
+                            c2.shrinkWidth(5, HorizAnchor.Right),
+                            HAlign.Left,
+                            VAlign.Center
+                            );
+                    c.addMarkAndHints("netakiri.J1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    b = c.textIn("J2", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
+                    c.addMarkAndHints("netakiri.J2", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    b = c.textIn("A1", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
+                    c.addMarkAndHints("netakiri.A1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    b = c.textIn("A2", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
+                    c.addMarkAndHints("netakiri.A2", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    b = c.textIn("B1", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
+                    c.addMarkAndHints("netakiri.B1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    b = c.textIn("B2", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
+                    c.addMarkAndHints("netakiri.B2", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    b = c.textIn("C1", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
+                    c.addMarkAndHints("netakiri.C1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    b = c.textIn("C2", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
+                    c.addMarkAndHints("netakiri.C2", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                }
 //                {
 //                    let [c1, c2] = r2.splitToColumns(27.5);
 //                    c.frameRight(c1);
@@ -327,7 +332,7 @@ public class HoumonKango {
 //                    c.textIn(c.b.flipRight().displace(6, 0), "Ｍ", VAlign.Center;
 //                    c.addMarkAndHints("ninchi.M", c.b, "circle:radius(1.7)");
 //                }
-//            }
+            }
         }
 //        {
 //            let box = rows[3];

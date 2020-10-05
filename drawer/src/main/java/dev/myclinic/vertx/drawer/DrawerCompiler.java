@@ -323,7 +323,7 @@ public class DrawerCompiler {
             List<Double> xs = composeXs(mes, left, extra);
             List<Double> ys = Collections.singletonList(top);
             opDrawChars(text, xs, ys);
-            return new Box(left, top, left + totalWidth, top + getCurrentFontSize());
+            return new Box(left, top, right, top + getCurrentFontSize());
         }
     }
 
@@ -365,37 +365,6 @@ public class DrawerCompiler {
 
     public void textAtVert(String text, double x, double y, HAlign halign, VAlign valign) {
         textAtVert(text, x, y, halign, valign, new TextAtOpt());
-
-//        List<Double> mes = doMeasureChars(text, getCurrentFontSize());
-//        double totalHeight = getCurrentFontSize() * text.length();
-//        List<Double> xs = mes.stream().map(cw -> {
-//            switch (halign) {
-//                case Left:
-//                    return x;
-//                case Center:
-//                    return x - cw / 2;
-//                case Right:
-//                    return x - cw;
-//                default:
-//                    throw new RuntimeException("unknown halign: " + halign);
-//            }
-//        }).collect(toList());
-//        double top;
-//        switch (valign) {
-//            case Top:
-//                top = y;
-//                break;
-//            case Center:
-//                top = y - totalHeight / 2;
-//                break;
-//            case Bottom:
-//                top = y - totalHeight;
-//                break;
-//            default:
-//                throw new RuntimeException("invalid valign: " + valign);
-//        }
-//        List<Double> ys = composeYs(text.length(), top, getCurrentFontSize(), 0);
-//        opDrawChars(text, xs, ys);
     }
 
     public void textAtVertJustified(String text, double x, double top, double bottom, HAlign halign) {
@@ -458,35 +427,6 @@ public class DrawerCompiler {
 
     public Box textIn(String text, Box box, HAlign halign, VAlign valign){
         return textIn(text, box, halign, valign, new TextAtOpt());
-
-//        double x, y;
-//        switch (halign) {
-//            case Left:
-//                x = box.getLeft();
-//                break;
-//            case Center:
-//                x = box.getCx();
-//                break;
-//            case Right:
-//                x = box.getRight();
-//                break;
-//            default:
-//                throw new RuntimeException("invalid halign:" + halign);
-//        }
-//        switch (valign) {
-//            case Top:
-//                y = box.getTop();
-//                break;
-//            case Center:
-//                y = box.getCy();
-//                break;
-//            case Bottom:
-//                y = box.getBottom();
-//                break;
-//            default:
-//                throw new Error("invalid valign: " + valign);
-//        }
-//        return textAt(text, x, y, halign, valign, null);
     }
 
     public void textInVert(String text, Box box, HAlign halign, VAlign valign) {
@@ -520,7 +460,7 @@ public class DrawerCompiler {
         textAtVert(text, x, y, halign, valign);
     }
 
-    public void textInJustified(String text, Box box, VAlign valign) {
+    public Box textInJustified(String text, Box box, VAlign valign) {
         double y;
         switch (valign) {
             case Top:
@@ -535,7 +475,7 @@ public class DrawerCompiler {
             default:
                 throw new Error("invalid valign: " + valign);
         }
-        textAtJustified(text, box.getLeft(), box.getRight(), y, valign);
+        return textAtJustified(text, box.getLeft(), box.getRight(), y, valign);
     }
 
     public void textInVertJustified(String text, Box box, HAlign halign) {

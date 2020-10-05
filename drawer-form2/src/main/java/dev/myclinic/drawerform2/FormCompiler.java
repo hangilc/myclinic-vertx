@@ -96,4 +96,12 @@ public class FormCompiler extends DrawerCompiler {
     public MultiBracket mBracket(String left, String right){
         return new MultiBracket(left, right);
     }
+
+    public MultiJustified mJustified(String text, double width){
+        return new MultiJustified(text, width);
+    }
+
+    public MultiJustified mJustified(String text){
+        return new MultiJustified(text, null);
+    }
 }

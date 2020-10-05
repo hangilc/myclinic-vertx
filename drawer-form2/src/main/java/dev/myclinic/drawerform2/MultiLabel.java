@@ -7,6 +7,7 @@ import static dev.myclinic.vertx.drawer.DrawerCompiler.VAlign;
 public class MultiLabel implements Multi {
 
     private final String text;
+    private String font = null;
 
     public MultiLabel(String text) {
         this.text = text;
@@ -14,6 +15,19 @@ public class MultiLabel implements Multi {
 
     @Override
     public Box render(FormCompiler c, Box box, VAlign valign) {
-        return c.textIn(text, box, DrawerCompiler.HAlign.Left, valign);
+        if( font != null ){
+            c.pushFont();
+            c.setFont(font);
+        }
+        Box b = c.textIn(text, box, DrawerCompiler.HAlign.Left, valign);
+        if( font != null ){
+            c.popFont();
+        }
+        return b;
+    }
+
+    public MultiLabel font(String font){
+        this.font = font;
+        return this;
     }
 }

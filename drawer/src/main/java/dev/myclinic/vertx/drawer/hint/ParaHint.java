@@ -31,7 +31,15 @@ class ParaHint extends HintBase implements Hint {
     @Override
     public void render(DrawerCompiler compiler, Box box, String s) {
         box = adjustBox(box);
+        String font = getFont();
+        if( font != null ){
+            compiler.pushFont();
+            compiler.setFont(font);
+        }
         compiler.paragraph(s, box, getHAlign(), getVAlign(), leading);
+        if( font != null ){
+            compiler.popFont();
+        }
     }
 
 }

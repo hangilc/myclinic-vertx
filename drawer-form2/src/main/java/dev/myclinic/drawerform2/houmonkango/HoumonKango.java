@@ -56,6 +56,18 @@ public class HoumonKango {
         renderRow7(rows[7]);
         renderRow8(rows[8]);
         renderRow9(rows[9]);
+        c.textAt(
+                "上記のとおり、指定訪問看護の実施を指示する。",
+                mainBox.getLeft(), mainBox.getBottom() + 3,
+                HAlign.Left, VAlign.Top
+        );
+        Box addrBox = new Box(
+                mainBox.getLeft() + 75,
+                mainBox.getBottom() + 10,
+                mainBox.getRight(),
+                mainBox.getBottom() + 35
+        );
+        renderAddr(addrBox);
         c.setFont("input-regular");
         form.page = "A4";
         form.marks = c.getMarks();
@@ -627,86 +639,72 @@ public class HoumonKango {
     }
 
     private void renderAddr(Box box) {
-//        let rr = box.splitToEvenRows(6);
-//        let fontSize = c.getCurrentFontSize();
-//        c.multi(
-//                rr[0].shift(c.getCurrentFontSize() * 4),
-//                [
-//                "令和",
-//                multiSpace(9).mark("issue-date.nen").hint(
-//                        "right:right-padding(1)",
-//                        ),
-//                "年",
-//                multiSpace(6).mark("issue-date.month").hint(
-//                        "right:right-padding(1)",
-//                        ),
-//                "月",
-//                multiSpace(6).mark("issue-date.day").hint(
-//                        "right:right-padding(1)",
-//                        ),
-//                "日",
-//    ],
-//        VAlign.Center,
-//  );
-//        c.multi(
-//                rr[1],
-//                [
-//                "医療機関名",
-//                fontSize,
-//                multiSpace(0).setRight(box.right).mark("clinic.name").hint(
-//                        "x-padding(2)",
-//                        ),
-//    ],
-//        VAlign.Center,
-//  );
-//        c.multi(
-//                rr[2],
-//                [
-//                multiText("住所").setOpts(textOpts.halignJustified()).setWidth(
-//                        fontSize * 5,
-//                        ),
-//                fontSize,
-//                multiSpace(10).setRight(box.right).mark("clinic.address")
-//                        .hint("x-padding(2)"),
-//    ],
-//        VAlign.Center,
-//  );
-//        c.multi(
-//                rr[3],
-//                [
-//                multiText("電話").setOpts(textOpts.halignJustified()).setWidth(
-//                        fontSize * 5,
-//                        ),
-//                fontSize,
-//                multiSpace(10).setRight(box.right).mark("clinic.phone").hint(
-//                        "x-padding(2)",
-//                        ),
-//    ],
-//        VAlign.Center,
-//  );
-//        c.multi(
-//                rr[4],
-//                [
-//                "（ＦＡＸ）",
-//                fontSize,
-//                multiSpace(10).setRight(box.right).mark("clinic.fax").hint(
-//                        "x-padding(2)",
-//                        ),
-//    ],
-//        VAlign.Center,
-//  );
-//        c.multi(
-//                rr[5],
-//                [
-//                multiText("医師氏名").setOpts(textOpts.halignJustified()).setWidth(
-//                        fontSize * 5,
-//                        ),
-//                fontSize,
-//                multiSpace(70).mark("doctor-name").hint("right-padding(30)"),
-//                "印",
-//    ],
-//        VAlign.Center,
-//  );
+        Box[] rr = box.splitToEvenRows(6);
+        double fontSize = c.getCurrentFontSize();
+        c.multi(
+                rr[0].shift(c.getCurrentFontSize() * 4, 0),
+                VAlign.Center,
+                List.of(
+                        c.mLabel("令和"),
+                        c.mSpace(9).mark("issue-date.nen")
+                                .addHints(Hints.right(), Hints.rightPadding(1)),
+                        c.mLabel("年"),
+                        c.mSpace(6).mark("issue-date.month")
+                                .addHints(Hints.right(), Hints.rightPadding(1)),
+                        c.mLabel("月"),
+                        c.mSpace(6).mark("issue-date.day")
+                                .addHints(Hints.right(), Hints.rightPadding(1)),
+                        c.mLabel("日")
+                )
+        );
+        c.multi(
+                rr[1],
+                VAlign.Center,
+                List.of(
+                        c.mLabel("医療機関名"),
+                        c.mSpace(fontSize),
+                        c.mBracket("", "clinic.name", List.of(Hints.xPadding(2), Hints.font("regular")), "")
+                )
+        );
+        c.multi(
+                rr[2],
+                VAlign.Center,
+                List.of(
+                        c.mJustified("住所", fontSize * 5),
+                        c.mSpace(fontSize),
+                        c.mBracket("", "clinic.address", List.of(Hints.xPadding(2), Hints.font("regular")), "")
+                )
+        );
+        c.multi(
+                rr[3],
+                VAlign.Center,
+                List.of(
+                        c.mJustified("電話", fontSize * 5),
+                        c.mSpace(fontSize),
+                        c.mBracket("", "clinic.phone", List.of(Hints.xPadding(2), Hints.font("regular")), "")
+                )
+        );
+        c.multi(
+                rr[4],
+                VAlign.Center,
+                List.of(
+                        c.mLabel("（ＦＡＸ）"),
+                        c.mSpace(fontSize),
+                        c.mBracket("", "clinic.fax", List.of(Hints.xPadding(2), Hints.font("regular")), "")
+                )
+        );
+        c.multi(
+                rr[5],
+                VAlign.Center,
+                List.of(
+                        c.mJustified("医師氏名", fontSize * 5),
+                        c.mSpace(fontSize),
+                        c.mSpace(70).mark("doctor-name").addHints(
+                                Hints.rightPadding(30), Hints.font("regular")
+                        ),
+                        c.mLabel("印")
+                )
+        );
 
     }
 

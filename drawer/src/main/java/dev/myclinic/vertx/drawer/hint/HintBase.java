@@ -14,6 +14,7 @@ class HintBase {
     private double bottomPadding = 0;
     private HAlign halign = HAlign.Left;
     private VAlign valign = VAlign.Top;
+    private String font = null;
 
     private final static Pattern patLeftPadding =
             Pattern.compile("left-padding\\(([0-9.]+)\\)");
@@ -31,6 +32,7 @@ class HintBase {
             Pattern.compile("y-padding\\(([0-9.]+)\\)");
     private final static Pattern patDefaultVAlign =
             Pattern.compile("default-v-align\\((top|center|bottom)\\)");
+    private final static Pattern patFont = Pattern.compile("font\\((.+)\\)");
 
     public boolean parse(String s){
         Matcher m;
@@ -80,6 +82,11 @@ class HintBase {
             this.topPadding = this.bottomPadding = Double.parseDouble(m.group(1));
             return true;
         }
+        m = patFont.matcher(s);
+        if( m.matches() ){
+            this.font = m.group(1);
+            return true;
+        }
         switch(s){
             case "left": {
                 this.halign = HAlign.Left;
@@ -119,6 +126,10 @@ class HintBase {
 
     public VAlign getVAlign(){
         return valign;
+    }
+
+    public String getFont(){
+        return font;
     }
 
 }

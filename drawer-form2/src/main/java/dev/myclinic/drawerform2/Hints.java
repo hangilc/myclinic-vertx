@@ -188,4 +188,20 @@ public class Hints {
             }
         }
     }
+
+    public static class Font implements Hint {
+        private String font;
+        public Font(String font){
+            this.font = font;
+        }
+
+        @Override
+        public String serialize() {
+            return String.format("font(%s)", font);
+        }
+    }
+
+    public static Font font(String font){
+        return new Font(font);
+    }
 }

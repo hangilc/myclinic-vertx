@@ -6,6 +6,8 @@ import dev.myclinic.vertx.drawer.hint.HintParser;
 import java.util.List;
 import java.util.Map;
 
+import static dev.myclinic.vertx.drawer.DrawerCompiler.VAlign;
+
 public class Render {
 
     public static class Rect {

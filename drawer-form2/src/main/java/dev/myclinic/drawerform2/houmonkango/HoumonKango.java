@@ -563,7 +563,7 @@ public class HoumonKango {
     }
 
     private void renderRow7(Box row) {
-        Box [] rr = row.splitToEvenRows(2);
+        Box[] rr = row.splitToEvenRows(2);
         Box d1 = c.textIn("緊急時の連絡先", rr[0].shift(2, 0), HAlign.Left, VAlign.Center);
         c.addMarkAndHints("emergency.contact", rr[0].setLeft(d1.getRight()).shrinkWidth(2, HorizAnchor.Right),
                 List.of(Hints.vCenter()));
@@ -582,13 +582,13 @@ public class HoumonKango {
                 b.flipRight(),
                 HAlign.Left,
                 VAlign.Center
-                );
+        );
         c.textIn(
                 "介護看護及び複合型サービス利用時の留意事項等があれば記載して下さい。）",
                 rr[1].shift(2, 0),
                 HAlign.Left,
                 VAlign.Center
-                );
+        );
         c.popFont();
         c.addMarkAndHints("special-notice", rr[2].shrinkWidth(2, HorizAnchor.Right), List.of(Hints.vCenter()));
     }
@@ -598,35 +598,32 @@ public class HoumonKango {
         double fontSize = c.getCurrentFontSize();
         double rightLimit = row.getRight() - 15;
         c.textIn("他の訪問看護ステーションへの指示", rr[0].shift(2, 0), HAlign.Left, VAlign.Center);
-//        c.multi(
-//                rr[1].shift(10),
-//                [
-//                "（",
-//                "無",
-//                fontSize,
-//                "有",
-//                fontSize,
-//                "：指定訪問看護ステーション名",
-//                multiSpace(10).setRight(rightLimit),
-//                "）",
-//    ],
-//        VAlign.Center,
-//  );
-//        c.textIn(rr[2].shift(2), "たんの吸引等実施のための訪問介護事業所への指示", vCenter);
-//        c.multi(
-//                rr[3].shift(10),
-//                [
-//                "（",
-//                "無",
-//                fontSize,
-//                "有",
-//                fontSize,
-//                "：指定訪問介護事業所名",
-//                multiSpace(10).setRight(rightLimit),
-//                "）",
-//    ],
-//        VAlign.Center,
-//  );
+        c.multi(
+                rr[1].shift(10, 0).setRight(rightLimit),
+                VAlign.Center,
+                List.of(
+                        c.mLabel("（"),
+                        c.mLabel("無"),
+                        c.mSpace(fontSize),
+                        c.mLabel("有"),
+                        c.mSpace(fontSize),
+                        c.mBracket("：指定訪問看護ステーション名", "）")
+                )
+        );
+        c.textIn("たんの吸引等実施のための訪問介護事業所への指示", rr[2].shift(2, 0),
+                HAlign.Left, VAlign.Center);
+        c.multi(
+                rr[3].shift(10, 0).setRight(rightLimit),
+                VAlign.Center,
+                List.of(
+                        c.mLabel("（"),
+                        c.mLabel("無"),
+                        c.mSpace(fontSize),
+                        c.mLabel("有"),
+                        c.mSpace(fontSize),
+                        c.mBracket("：指定訪問介護事業所名", "）")
+                )
+        );
     }
 
     private void renderAddr(Box box) {

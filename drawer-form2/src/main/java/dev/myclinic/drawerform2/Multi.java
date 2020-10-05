@@ -7,7 +7,7 @@ public interface Multi {
 
     Box render(FormCompiler c, Box box, VAlign valign);
 
-    default public MarkedMulti mark(String key){
+    default MarkedMulti mark(String key){
         return new MarkedMulti(this, key);
     }
 

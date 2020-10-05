@@ -89,4 +89,11 @@ public class FormCompiler extends DrawerCompiler {
         return new MultiSpace(width);
     }
 
+    public MultiBracket mBracket(String left, String mark, List<Hint> hints, String right){
+        return new MultiBracket(left, mark, hints, right);
+    }
+
+    public MultiBracket mBracket(String left, String right){
+        return new MultiBracket(left, right);
+    }
 }

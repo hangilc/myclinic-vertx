@@ -29,9 +29,21 @@ class HintBase {
             Pattern.compile("x-padding\\(([0-9.]+)\\)");
     private final static Pattern patYPadding =
             Pattern.compile("y-padding\\(([0-9.]+)\\)");
+    private final static Pattern patDefaultVAlign =
+            Pattern.compile("default-v-align\\((top|center|bottom)\\)");
 
     public boolean parse(String s){
         Matcher m;
+        m = patDefaultVAlign.matcher(s);
+        if( m.matches() ){
+            switch(m.group(1)){
+                case "top": this.valign = VAlign.Top; break;
+                case "center": this.valign = VAlign.Center; break;
+                case "bottom": this.valign = VAlign.Bottom; break;
+                default: throw new RuntimeException("Invalid valign: " + m.group(1));
+            }
+            return true;
+        }
         m = patLeftPadding.matcher(s);
         if( m.matches() ){
             this.leftPadding = Double.parseDouble(m.group(1));

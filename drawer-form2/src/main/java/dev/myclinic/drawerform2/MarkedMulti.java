@@ -22,6 +22,7 @@ public class MarkedMulti implements Multi {
     public Box render(FormCompiler c, Box box, VAlign valign) {
         Box b = orig.render(c, box, valign);
         c.addMark(mark, b);
+        hints.add(0, new Hints.DefaultVAlign(valign));
         c.setHints(mark, hints);
         return b;
     }

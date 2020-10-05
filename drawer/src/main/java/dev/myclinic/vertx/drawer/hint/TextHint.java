@@ -23,7 +23,7 @@ public class TextHint extends HintBase implements Hint {
             }
             Matcher m;
             m = spacingPattern.matcher(spec);
-            if( m.matches() ){
+            if (m.matches()) {
                 this.spacing = Double.parseDouble(m.group(1));
                 continue;
             }

@@ -1,5 +1,7 @@
 package dev.myclinic.drawerform2;
 
+import static dev.myclinic.vertx.drawer.DrawerCompiler.*;
+
 public class Hints {
 
     public static class Right implements Hint {
@@ -162,5 +164,28 @@ public class Hints {
 
     public static RightAt rightAt(double right){
         return new RightAt(right);
+    }
+
+    public static class DefaultVAlign implements Hint {
+
+        private final VAlign valign;
+
+        public DefaultVAlign(VAlign valign){
+            this.valign = valign;
+        }
+
+        @Override
+        public String serialize() {
+            return String.format("default-v-align(%s)", getRep());
+        }
+
+        private String getRep(){
+            switch(valign){
+                case Top: return "top";
+                case Center: return "center";
+                case Bottom: return "bottom";
+                default: throw new RuntimeException("Invalid valign: " + valign);
+            }
+        }
     }
 }

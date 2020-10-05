@@ -56,6 +56,7 @@ public class HoumonKango {
         renderRow7(rows[7]);
         renderRow8(rows[8]);
         renderRow9(rows[9]);
+        c.setFont("input-regular");
         form.page = "A4";
         form.marks = c.getMarks();
         form.hints = c.getHints();
@@ -496,7 +497,7 @@ public class HoumonKango {
                                     c.mLabel("１２"),
                                     c.mLabel("．人工膀胱"),
                                     c.mSpace(10),
-                                    c.mLabel("１３").mark("souchi.sonota.label").addHints(Hints.circle()),
+                                    c.mLabel("１３").mark("souchi.sonota.mark").addHints(Hints.circle()),
                                     c.mLabel("．その他（"),
                                     c.mSpace(35).mark("souchi.sonota.value").addHints(Hints.center()),
                                     (comp, b, valign) -> {
@@ -532,83 +533,71 @@ public class HoumonKango {
     }
 
     private void renderRow5(Box row) {
-//        let [c1, c2] = row.splitToColumns(8.5);
-//        c.multi(
-//                c1.shift(2).splitToEvenRows(4)[0],
-//                [
-//                multiText("II").setWidth(c.getCurrentFontSize()).setOpts(
-//                        textOpts.halignCenter(),
-//                        ),
-//    ],
-//        VAlign.Center,
-//  );
-//        let rr = c2.splitToEvenRows(4);
-//        c.multi(
-//                rr[0],
-//                [
-//                multiText("１").mark("rehabilitation.mark").hint("circle:radius(1.5)"),
-//                "．リハビリテーション",
-//                multiSpace(0).setRight(row.right).mark("rehabilitation")
-//                        .hint("x-padding(4)"),
-//    ],
-//        VAlign.Center,
-//  );
-//        c.multi(rr[1], ["２", "．褥瘡の処置など"], VAlign.Center);
-//        c.multi(rr[2], ["３", "．装置・使用機器等の操作援助・管理"], VAlign.Center);
-//        c.multi(rr[3], ["４", "．その他"], VAlign.Center);
+        Box[] cN = row.splitToColumns(8.5);
+        Box c1 = cN[0];
+        Box c2 = cN[1];
+        c.textIn("II",
+                c1.shift(2, 0).splitToEvenRows(4)[0].setWidth(c.getCurrentFontSize(), HorizAnchor.Left),
+                HAlign.Center, VAlign.Center);
+        Box[] rr = c2.splitToEvenRows(4);
+        Box b;
+        b = c.multi(rr[0], VAlign.Center, List.of(
+                c.mLabel("１").mark("rehabilitation.mark")
+                        .addHints(Hints.circle(), Hints.radius(1.5)),
+                c.mLabel("．リハビリテーション")));
+        b = rr[0].setLeft(b.getRight());
+        c.addMarkAndHints("rehabilitation", b, List.of(Hints.xPadding(4), Hints.vCenter()));
+        c.multi(rr[1], VAlign.Center, List.of(c.mLabel("２"), c.mLabel("．褥瘡の処置など")));
+        c.multi(rr[2], VAlign.Center, List.of(c.mLabel("３"), c.mLabel("．装置・使用機器等の操作援助・管理")));
+        c.multi(rr[3], VAlign.Center, List.of(c.mLabel("４"), c.mLabel("．その他")));
     }
 
     private void renderRow6(Box row) {
-//        let rr = row.splitToEvenRows(2);
-//        c.textIn(
-//                rr[0].shift(2),
-//                "在宅患者訪問点滴注射に関する指示（投与薬剤・投与量・投与方法等）",
-//                VAlign.Center
-//                );
-
+        Box[] rr = row.splitToEvenRows(2);
+        c.textIn(
+                "在宅患者訪問点滴注射に関する指示（投与薬剤・投与量・投与方法等）",
+                rr[0].shift(2, 0),
+                HAlign.Left,
+                VAlign.Center
+        );
     }
 
     private void renderRow7(Box row) {
-//        let rr = row.splitToEvenRows(2);
-//        let d1 = c.textIn(
-//                rr[0].shift(2),
-//                "緊急時の連絡先",
-//                VAlign.Center
-//                );
-//        let mark1 = d1.flipRight().setRight(row.right);
-//        let d2 = c.textIn(
-//                rr[1].shift(2),
-//                "不在時の対応法",
-//                VAlign.Center
-//                );
-//        let mark2 = d2.flipRight().setRight(row.right);
-
+        Box [] rr = row.splitToEvenRows(2);
+        Box d1 = c.textIn("緊急時の連絡先", rr[0].shift(2, 0), HAlign.Left, VAlign.Center);
+        c.addMarkAndHints("emergency.contact", rr[0].setLeft(d1.getRight()).shrinkWidth(2, HorizAnchor.Right),
+                List.of(Hints.vCenter()));
+        Box d2 = c.textIn("不在時の対応法", rr[1].shift(2, 0), HAlign.Left, VAlign.Center);
+        c.addMarkAndHints("absence.reaction", rr[1].setLeft(d2.getRight()).shrinkWidth(2, HorizAnchor.Right),
+                List.of(Hints.vCenter()));
     }
 
     private void renderRow8(Box row) {
-//        let rr = row.splitToEvenRows(3);
-//        c.textIn(rr[0].shift(2), "特記すべき留意事項", VAlign.Center;
-//        c.saveFont();
-//        c.setFont("small");
-//        c.textIn(
-//                c.b.flipRight(),
-//                "（注：薬の相互作用・副作用についての留意点、薬物アレルギーの既往、定期巡回・随時対応型訪問",
-//                VAlign.Center
-//                );
-//        c.textIn(
-//                rr[1].shift(2),
-//                "介護看護及び複合型サービス利用時の留意事項等があれば記載して下さい。）",
-//                VAlign.Center
-//                );
-//        c.restoreFont();
-//        let mark = rr[2];
+        Box[] rr = row.splitToEvenRows(3);
+        Box b = c.textIn("特記すべき留意事項", rr[0].shift(2, 0), HAlign.Left, VAlign.Center);
+        c.pushFont();
+        c.setFont("small");
+        c.textIn(
+                "（注：薬の相互作用・副作用についての留意点、薬物アレルギーの既往、定期巡回・随時対応型訪問",
+                b.flipRight(),
+                HAlign.Left,
+                VAlign.Center
+                );
+        c.textIn(
+                "介護看護及び複合型サービス利用時の留意事項等があれば記載して下さい。）",
+                rr[1].shift(2, 0),
+                HAlign.Left,
+                VAlign.Center
+                );
+        c.popFont();
+        c.addMarkAndHints("special-notice", rr[2].shrinkWidth(2, HorizAnchor.Right), List.of(Hints.vCenter()));
     }
 
     private void renderRow9(Box row) {
-//        let rr = row.splitToEvenRows(4);
-//        let fontSize = c.getCurrentFontSize();
-//        let rightLimit = row.right - 15;
-//        c.textIn(rr[0].shift(2), "他の訪問看護ステーションへの指示", vCenter);
+        Box[] rr = row.splitToEvenRows(4);
+        double fontSize = c.getCurrentFontSize();
+        double rightLimit = row.getRight() - 15;
+        c.textIn("他の訪問看護ステーションへの指示", rr[0].shift(2, 0), HAlign.Left, VAlign.Center);
 //        c.multi(
 //                rr[1].shift(10),
 //                [

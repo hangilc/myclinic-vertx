@@ -98,6 +98,16 @@ public class Hints {
         return new Padding(value);
     }
 
+    public static class XPadding extends SingleValueHint {
+        public XPadding(double value) {
+            super("x-padding", value);
+        }
+    }
+
+    public static XPadding xPadding(double padding){
+        return new XPadding(padding);
+    }
+
     public static Radius radius(double radius){
         return new Radius(radius);
     }
@@ -111,6 +121,17 @@ public class Hints {
 
     public static VTop vTop(){
         return new VTop();
+    }
+
+    public static class VCenter implements Hint {
+        @Override
+        public String serialize() {
+            return "v-center";
+        }
+    }
+
+    public static VCenter vCenter(){
+        return new VCenter();
     }
 
     public static class Leading extends SingleValueHint {

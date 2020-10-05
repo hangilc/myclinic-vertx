@@ -405,7 +405,6 @@ public class HoumonKango {
             Box[] cN = box.splitToColumns(23.5);
             Box c0 = cN[0];
             Box c1 = cN[1];
-            Box r3_r5_c1 = c1;
             c.frameRight(c0);
             c.paragraph("装着・使用\n医療機器等", c0.inset(2), HAlign.Left, VAlign.Center, 2.0);
             {
@@ -497,14 +496,18 @@ public class HoumonKango {
                                     c.mLabel("１２"),
                                     c.mLabel("．人工膀胱"),
                                     c.mSpace(10),
-                                    c.mLabel("１３"),
+                                    c.mLabel("１３").mark("souchi.sonota.label").addHints(Hints.circle()),
                                     c.mLabel("．その他（"),
-                                    c.mSpace(35),
+                                    c.mSpace(35).mark("souchi.sonota.value").addHints(Hints.center()),
                                     (comp, b) -> {
                                         b = b.setRight(lastParenRightPos);
-                                        return c.textIn("）", b, HAlign.Right, VAlign.Center);
+                                        Box bb = c.textIn("）", b, HAlign.Right, VAlign.Center);
+                                        comp.modifyMark("souchi.sonota.value",
+                                                mb -> mb.setRight(bb.getLeft()));
+                                        return bb;
                                     }
                             ));
+
                 }
             }
         }

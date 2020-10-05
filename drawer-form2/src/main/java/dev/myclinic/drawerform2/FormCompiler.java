@@ -8,6 +8,7 @@ import dev.myclinic.vertx.drawer.Render;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class FormCompiler extends DrawerCompiler {
@@ -17,6 +18,14 @@ public class FormCompiler extends DrawerCompiler {
 
     public void addMark(String key, Box box){
         Render.Rect r = new Render.Rect(box.getLeft(), box.getTop(), box.getRight(), box.getBottom());
+        marks.put(key, r);
+    }
+
+    public void modifyMark(String key, Function<Box, Box> modifier){
+        Render.Rect r = marks.get(key);
+        Box b = new Box(r.left, r.top, r.right, r.bottom);
+        b = modifier.apply(b);
+        r = new Render.Rect(b.getLeft(), b.getTop(), b.getRight(), b.getBottom());
         marks.put(key, r);
     }
 

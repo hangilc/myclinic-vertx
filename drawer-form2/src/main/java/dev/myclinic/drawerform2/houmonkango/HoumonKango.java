@@ -369,19 +369,22 @@ public class HoumonKango {
             c.addMarkAndHints("youkaigo.youkaigo5", b, List.of(Hints.circle(), Hints.radius(1.7)));
             c.textIn("）", b.flipRight(), HAlign.Left, VAlign.Center);
         }
-//        {
-//            let box = rows[4];
-//            let [c0, c1] = box.splitToColumns(48);
-//            c.frameRight(c0);
-//            c.textIn(c0.shift(2), "要介護認定の状況", vCenter.setSpacing(2.5));
-//            c.textIn(c1.shift(3.5), "NPUAP分類", vCenter);
-//            c.textIn(c.b.flipRight().shift(6), "III度", vCenter);
-//            c.textIn(c.b.flipRight().shift(2), "IV度", vCenter);
-//            c.textIn(c.b.flipRight().shift(6), "DESIGN分類", vCenter);
-//            c.textIn(c.b.flipRight().shift(2), "D3", vCenter);
-//            c.textIn(c.b.flipRight().shift(3), "D4", vCenter);
-//            c.textIn(c.b.flipRight().shift(3), "D5", vCenter);
-//        }
+        {
+            Box box = rows[4];
+            Box[] cN = box.splitToColumns(48);
+            Box c0 = cN[0];
+            Box c1 = cN[1];
+            c.frameRight(c0);
+            c.textIn("褥瘡の深さ", c0.shift(2, 0), HAlign.Left, VAlign.Center,
+                    new TextAtOpt(1.5));
+            Box b = c.textIn("NPUAP分類", c1.shift(3.5, 0), HAlign.Left, VAlign.Center);
+            b = c.textIn("III度", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
+            b = c.textIn("IV度", b.flipRight().shift(2, 0), HAlign.Left, VAlign.Center);
+            b = c.textIn("DESIGN分類", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
+            b = c.textIn("D3", b.flipRight().shift(2, 0), HAlign.Left, VAlign.Center);
+            b = c.textIn("D4", b.flipRight().shift(3, 0), HAlign.Left, VAlign.Center);
+            c.textIn("D5", b.flipRight().shift(3, 0), HAlign.Left, VAlign.Center);
+        }
 //        {
 //            let box = rows[5];
 //            let [c0, c1] = box.splitToColumns(23.5);

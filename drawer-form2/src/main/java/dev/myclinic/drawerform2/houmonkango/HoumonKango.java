@@ -293,85 +293,92 @@ public class HoumonKango {
                     b = c.textIn("C2", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
                     c.addMarkAndHints("netakiri.C2", b, List.of(Hints.circle(), Hints.radius(1.7)));
                 }
-//                {
-//                    let [c1, c2] = r2.splitToColumns(27.5);
-//                    c.frameRight(c1);
-//                    c.textIn(c1.displace(1.5, 0), "認知症の状況", VAlign.Center;
-//                    c.textIn(
-//                            c2.shrinkWidth(5, HorizAnchor.Right),
-//                            "Ｉ",
-//                            VAlign.Center
-//                            );
-//                    c.addMarkAndHints("ninchi.1", c.b, "circle:radius(1.7)");
-//                    c.textIn(
-//                            c.b.flipRight().displace(6, 0),
-//                            "IIa",
-//                            VAlign.Center
-//                            );
-//                    c.addMarkAndHints("ninchi.2a", c.b, "circle:radius(1.7)");
-//                    c.textIn(
-//                            c.b.flipRight().displace(6, 0),
-//                            "IIb",
-//                            VAlign.Center
-//                            );
-//                    c.addMarkAndHints("ninchi.2b", c.b, "circle:radius(1.7)");
-//                    c.textIn(
-//                            c.b.flipRight().displace(6, 0),
-//                            "IIIa",
-//                            VAlign.Center
-//                            );
-//                    c.addMarkAndHints("ninchi.3a", c.b, "circle:radius(1.7)");
-//                    c.textIn(
-//                            c.b.flipRight().displace(6, 0),
-//                            "IIIb",
-//                            VAlign.Center
-//                            );
-//                    c.addMarkAndHints("ninchi.3b", c.b, "circle:radius(1.7)");
-//                    c.textIn(c.b.flipRight().displace(6, 0), "IV", VAlign.Center;
-//                    c.addMarkAndHints("ninchi.4", c.b, "circle:radius(1.7)");
-//                    c.textIn(c.b.flipRight().displace(6, 0), "Ｍ", VAlign.Center;
-//                    c.addMarkAndHints("ninchi.M", c.b, "circle:radius(1.7)");
-//                }
+                {
+                    Box[] cN = r2.splitToColumns(27.5);
+                    Box c1 = cN[0];
+                    Box c2 = cN[1];
+                    c.frameRight(c1);
+                    c.textIn("認知症の状況", c1.shift(1.5, 0), HAlign.Left, VAlign.Center);
+                    Box b = c.textIn(
+                            "Ｉ",
+                            c2.shrinkWidth(5, HorizAnchor.Right),
+                            HAlign.Left,
+                            VAlign.Center
+                            );
+                    c.addMarkAndHints("ninchi.1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    b = c.textIn(
+                            "IIa",
+                            b.flipRight().shift(6, 0),
+                            HAlign.Left,
+                            VAlign.Center
+                            );
+                    c.addMarkAndHints("ninchi.2a", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    b = c.textIn(
+                            "IIb",
+                            b.flipRight().shift(6, 0),
+                            HAlign.Left,
+                            VAlign.Center
+                            );
+                    c.addMarkAndHints("ninchi.2b", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    b = c.textIn(
+                            "IIIa",
+                            b.flipRight().shift(6, 0),
+                            HAlign.Left,
+                            VAlign.Center
+                            );
+                    c.addMarkAndHints("ninchi.3a", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    b = c.textIn(
+                            "IIIb",
+                            b.flipRight().shift(6, 0),
+                            HAlign.Left,
+                            VAlign.Center
+                            );
+                    c.addMarkAndHints("ninchi.3b", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    b = c.textIn("IV", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
+                    c.addMarkAndHints("ninchi.4", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    b = c.textIn("Ｍ", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
+                    c.addMarkAndHints("ninchi.M", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                }
             }
         }
 //        {
 //            let box = rows[3];
 //            let [c0, c1] = box.splitToColumns(48);
 //            c.frameRight(c0);
-//            c.textIn(c0.displace(2), "要介護認定の状況", vCenter.setSpacing(1.5));
-//            c.textIn(c1.displace(3.5), "自立", vCenter);
-//            c.addMarkAndHints("youkaigo.jiritsu", c.b, "circle:radius(1.7)");
-//            c.textIn(c.b.flipRight().displace(6), "要支援（", vCenter);
+//            c.textIn(c0.shift(2), "要介護認定の状況", vCenter.setSpacing(1.5));
+//            c.textIn(c1.shift(3.5), "自立", vCenter);
+//            c.addMarkAndHints("youkaigo.jiritsu", b, List.of(Hints.circle(), Hints.radius(1.7)));
+//            c.textIn(c.b.flipRight().shift(6), "要支援（", vCenter);
 //            c.textIn(c.b.flipRight(), "１", vCenter);
-//            c.addMarkAndHints("youkaigo.youshien1", c.b, "circle:radius(1.7)");
-//            c.textIn(c.b.flipRight().displace(3.5), "２", vCenter);
-//            c.addMarkAndHints("youkaigo.youshien2", c.b, "circle:radius(1.7)");
+//            c.addMarkAndHints("youkaigo.youshien1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+//            c.textIn(c.b.flipRight().shift(3.5), "２", vCenter);
+//            c.addMarkAndHints("youkaigo.youshien2", b, List.of(Hints.circle(), Hints.radius(1.7)));
 //            c.textIn(c.b.flipRight(), "）", vCenter);
-//            c.textIn(c.b.flipRight().displace(7.5), "要介護（", vCenter);
+//            c.textIn(c.b.flipRight().shift(7.5), "要介護（", vCenter);
 //            c.textIn(c.b.flipRight(), "１", vCenter);
-//            c.addMarkAndHints("youkaigo.youkaigo1", c.b, "circle:radius(1.7)");
-//            c.textIn(c.b.flipRight().displace(3), "２", vCenter);
-//            c.addMarkAndHints("youkaigo.youkaigo2", c.b, "circle:radius(1.7)");
-//            c.textIn(c.b.flipRight().displace(3), "３", vCenter);
-//            c.addMarkAndHints("youkaigo.youkaigo3", c.b, "circle:radius(1.7)");
-//            c.textIn(c.b.flipRight().displace(3), "４", vCenter);
-//            c.addMarkAndHints("youkaigo.youkaigo4", c.b, "circle:radius(1.7)");
-//            c.textIn(c.b.flipRight().displace(3), "５", vCenter);
-//            c.addMarkAndHints("youkaigo.youkaigo5", c.b, "circle:radius(1.7)");
+//            c.addMarkAndHints("youkaigo.youkaigo1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+//            c.textIn(c.b.flipRight().shift(3), "２", vCenter);
+//            c.addMarkAndHints("youkaigo.youkaigo2", b, List.of(Hints.circle(), Hints.radius(1.7)));
+//            c.textIn(c.b.flipRight().shift(3), "３", vCenter);
+//            c.addMarkAndHints("youkaigo.youkaigo3", b, List.of(Hints.circle(), Hints.radius(1.7)));
+//            c.textIn(c.b.flipRight().shift(3), "４", vCenter);
+//            c.addMarkAndHints("youkaigo.youkaigo4", b, List.of(Hints.circle(), Hints.radius(1.7)));
+//            c.textIn(c.b.flipRight().shift(3), "５", vCenter);
+//            c.addMarkAndHints("youkaigo.youkaigo5", b, List.of(Hints.circle(), Hints.radius(1.7)));
 //            c.textIn(c.b.flipRight(), "）", vCenter);
 //        }
 //        {
 //            let box = rows[4];
 //            let [c0, c1] = box.splitToColumns(48);
 //            c.frameRight(c0);
-//            c.textIn(c0.displace(2), "要介護認定の状況", vCenter.setSpacing(2.5));
-//            c.textIn(c1.displace(3.5), "NPUAP分類", vCenter);
-//            c.textIn(c.b.flipRight().displace(6), "III度", vCenter);
-//            c.textIn(c.b.flipRight().displace(2), "IV度", vCenter);
-//            c.textIn(c.b.flipRight().displace(6), "DESIGN分類", vCenter);
-//            c.textIn(c.b.flipRight().displace(2), "D3", vCenter);
-//            c.textIn(c.b.flipRight().displace(3), "D4", vCenter);
-//            c.textIn(c.b.flipRight().displace(3), "D5", vCenter);
+//            c.textIn(c0.shift(2), "要介護認定の状況", vCenter.setSpacing(2.5));
+//            c.textIn(c1.shift(3.5), "NPUAP分類", vCenter);
+//            c.textIn(c.b.flipRight().shift(6), "III度", vCenter);
+//            c.textIn(c.b.flipRight().shift(2), "IV度", vCenter);
+//            c.textIn(c.b.flipRight().shift(6), "DESIGN分類", vCenter);
+//            c.textIn(c.b.flipRight().shift(2), "D3", vCenter);
+//            c.textIn(c.b.flipRight().shift(3), "D4", vCenter);
+//            c.textIn(c.b.flipRight().shift(3), "D5", vCenter);
 //        }
 //        {
 //            let box = rows[5];
@@ -481,10 +488,10 @@ public class HoumonKango {
 
     private void renderRow4(Box row) {
 //        let [r1, r2] = row.splitToEvenRows(2);
-//        let m1 = c.multi(r1.displace(2), [multiText("留意事項及び指示事項").mark(":t1")], VAlign.Center);
-//        // c.textIn(r1.displace(2), multiText("留意事項及び指示事項").mark(":t1"), VAlign.Center;
+//        let m1 = c.multi(r1.shift(2), [multiText("留意事項及び指示事項").mark(":t1")], VAlign.Center);
+//        // c.textIn(r1.shift(2), multiText("留意事項及び指示事項").mark(":t1"), VAlign.Center;
 //        let m2 = c.multi(
-//                r2.displace(2),
+//                r2.shift(2),
 //                [
 //                multiText("I").setWidth(c.getCurrentFontSize()).setOpts(
 //                        textOpts.halignCenter(),
@@ -503,7 +510,7 @@ public class HoumonKango {
     private void renderRow5(Box row) {
 //        let [c1, c2] = row.splitToColumns(8.5);
 //        c.multi(
-//                c1.displace(2).splitToEvenRows(4)[0],
+//                c1.shift(2).splitToEvenRows(4)[0],
 //                [
 //                multiText("II").setWidth(c.getCurrentFontSize()).setOpts(
 //                        textOpts.halignCenter(),
@@ -530,7 +537,7 @@ public class HoumonKango {
     private void renderRow6(Box row) {
 //        let rr = row.splitToEvenRows(2);
 //        c.textIn(
-//                rr[0].displace(2),
+//                rr[0].shift(2),
 //                "在宅患者訪問点滴注射に関する指示（投与薬剤・投与量・投与方法等）",
 //                VAlign.Center
 //                );
@@ -540,13 +547,13 @@ public class HoumonKango {
     private void renderRow7(Box row) {
 //        let rr = row.splitToEvenRows(2);
 //        let d1 = c.textIn(
-//                rr[0].displace(2),
+//                rr[0].shift(2),
 //                "緊急時の連絡先",
 //                VAlign.Center
 //                );
 //        let mark1 = d1.flipRight().setRight(row.right);
 //        let d2 = c.textIn(
-//                rr[1].displace(2),
+//                rr[1].shift(2),
 //                "不在時の対応法",
 //                VAlign.Center
 //                );
@@ -556,7 +563,7 @@ public class HoumonKango {
 
     private void renderRow8(Box row) {
 //        let rr = row.splitToEvenRows(3);
-//        c.textIn(rr[0].displace(2), "特記すべき留意事項", VAlign.Center;
+//        c.textIn(rr[0].shift(2), "特記すべき留意事項", VAlign.Center;
 //        c.saveFont();
 //        c.setFont("small");
 //        c.textIn(
@@ -565,7 +572,7 @@ public class HoumonKango {
 //                VAlign.Center
 //                );
 //        c.textIn(
-//                rr[1].displace(2),
+//                rr[1].shift(2),
 //                "介護看護及び複合型サービス利用時の留意事項等があれば記載して下さい。）",
 //                VAlign.Center
 //                );
@@ -577,9 +584,9 @@ public class HoumonKango {
 //        let rr = row.splitToEvenRows(4);
 //        let fontSize = c.getCurrentFontSize();
 //        let rightLimit = row.right - 15;
-//        c.textIn(rr[0].displace(2), "他の訪問看護ステーションへの指示", vCenter);
+//        c.textIn(rr[0].shift(2), "他の訪問看護ステーションへの指示", vCenter);
 //        c.multi(
-//                rr[1].displace(10),
+//                rr[1].shift(10),
 //                [
 //                "（",
 //                "無",
@@ -592,9 +599,9 @@ public class HoumonKango {
 //    ],
 //        VAlign.Center,
 //  );
-//        c.textIn(rr[2].displace(2), "たんの吸引等実施のための訪問介護事業所への指示", vCenter);
+//        c.textIn(rr[2].shift(2), "たんの吸引等実施のための訪問介護事業所への指示", vCenter);
 //        c.multi(
-//                rr[3].displace(10),
+//                rr[3].shift(10),
 //                [
 //                "（",
 //                "無",
@@ -613,7 +620,7 @@ public class HoumonKango {
 //        let rr = box.splitToEvenRows(6);
 //        let fontSize = c.getCurrentFontSize();
 //        c.multi(
-//                rr[0].displace(c.getCurrentFontSize() * 4),
+//                rr[0].shift(c.getCurrentFontSize() * 4),
 //                [
 //                "令和",
 //                multiSpace(9).mark("issue-date.nen").hint(

@@ -1,6 +1,7 @@
 package dev.myclinic.drawerform2;
 
 import dev.myclinic.vertx.drawer.Box;
+import static dev.myclinic.vertx.drawer.DrawerCompiler.VAlign;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,8 +19,8 @@ public class MarkedMulti implements Multi {
     }
 
     @Override
-    public Box render(FormCompiler c, Box box) {
-        Box b = orig.render(c, box);
+    public Box render(FormCompiler c, Box box, VAlign valign) {
+        Box b = orig.render(c, box, valign);
         c.addMark(mark, b);
         c.setHints(mark, hints);
         return b;

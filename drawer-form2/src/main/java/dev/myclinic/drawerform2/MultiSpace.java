@@ -1,6 +1,7 @@
 package dev.myclinic.drawerform2;
 
 import dev.myclinic.vertx.drawer.Box;
+import static dev.myclinic.vertx.drawer.DrawerCompiler.VAlign;
 
 public class MultiSpace implements Multi {
 
@@ -11,7 +12,7 @@ public class MultiSpace implements Multi {
     }
 
     @Override
-    public Box render(FormCompiler c, Box box) {
+    public Box render(FormCompiler c, Box box, VAlign valign) {
         return box.setWidth(width, Box.HorizAnchor.Left);
     }
 }

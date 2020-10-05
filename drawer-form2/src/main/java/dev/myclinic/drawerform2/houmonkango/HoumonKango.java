@@ -499,7 +499,7 @@ public class HoumonKango {
                                     c.mLabel("１３").mark("souchi.sonota.label").addHints(Hints.circle()),
                                     c.mLabel("．その他（"),
                                     c.mSpace(35).mark("souchi.sonota.value").addHints(Hints.center()),
-                                    (comp, b) -> {
+                                    (comp, b, valign) -> {
                                         b = b.setRight(lastParenRightPos);
                                         Box bb = c.textIn("）", b, HAlign.Right, VAlign.Center);
                                         comp.modifyMark("souchi.sonota.value",
@@ -514,24 +514,21 @@ public class HoumonKango {
     }
 
     private void renderRow4(Box row) {
-//        let [r1, r2] = row.splitToEvenRows(2);
-//        let m1 = c.multi(r1.shift(2), [multiText("留意事項及び指示事項").mark(":t1")], VAlign.Center);
-//        // c.textIn(r1.shift(2), multiText("留意事項及び指示事項").mark(":t1"), VAlign.Center;
-//        let m2 = c.multi(
-//                r2.shift(2),
-//                [
-//                multiText("I").setWidth(c.getCurrentFontSize()).setOpts(
-//                        textOpts.halignCenter(),
-//                        ),
-//        multiText("療養生活指導上の留意事項").mark(":t2"),
-//    ],
-//        VAlign.Center,
-//  );
-//        let t1 = m1.t1;
-//        let t2 = m2.t2;
-//        let left = Math.max(t1.right, t2.right);
-//        let b = row.setLeft(left).inset(2, 1, 1, 1);
-//        c.addMarkAndHints("ryuui-jikou", b, "para:v-top");
+        Box[] cN = row.splitToEvenRows(2);
+        Box r1 = cN[0];
+        Box r2 = cN[1];
+        Box b1 = c.textIn("留意事項及び指示事項", r1.shift(2, 0), HAlign.Left, VAlign.Center);
+        Box b2 = c.multi(r2.shift(2, 0), VAlign.Center,
+                List.of(
+                        (comp, b, valign) -> {
+                            b = b.setWidth(comp.getCurrentFontSize(), HorizAnchor.Left);
+                            comp.textIn("I", b, HAlign.Center, valign);
+                            return b;
+                        },
+                        c.mLabel("療養生活指導上の留意事項")
+                ));
+        Box b = row.setLeft(Math.max(b1.getRight(), b2.getRight())).inset(2, 1, 1, 1);
+        c.addMarkAndHints("ryuui-jikou", b, List.of(Hints.para(), Hints.vTop()));
     }
 
     private void renderRow5(Box row) {

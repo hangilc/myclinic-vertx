@@ -408,82 +408,90 @@ public class HoumonKango {
                             c.mLabel("/min）")
                     ));
                 }
+                {
+                    Box b;
+                    b = c.textIn("４", rr[1], HAlign.Left, VAlign.Center);
+                    b = c.textIn("．吸引器", b.flipRight(), HAlign.Left, VAlign.Center);
+                    b = c.textIn("５", b.setLeft(rr[0].getLeft() + 46), HAlign.Left, VAlign.Center);
+                    b = c.textIn("．中心静脈栄養", b.flipRight(), HAlign.Left, VAlign.Center);
+                    b = c.textIn("６", b.setLeft(rr[0].getLeft() + 90), HAlign.Left, VAlign.Center);
+                    c.textIn("．輸液ポンプ", b.flipRight(), HAlign.Left, VAlign.Center);
+                }
+                double commaPos;
+                double lastParenPos;
+                double lastParenRightPos;
+                {
+                    Box b;
+                    b = c.textIn("７", rr[2], HAlign.Left, VAlign.Center);
+                    b = c.textIn("．経管栄養（", b.flipRight(), HAlign.Left, VAlign.Center);
+                    b = c.textIn("経鼻", b.flipRight(), HAlign.Left, VAlign.Center);
+                    b = c.textIn("・", b.flipRight(), HAlign.Left, VAlign.Center);
+                    b = c.textIn("胃ろう", b.flipRight(), HAlign.Left, VAlign.Center);
+                    b = c.textIn("：チューブサイズ", b.flipRight(), HAlign.Left, VAlign.Center);
+                    b = b.flipRight().shift(21, 0);
+                    commaPos = b.getLeft();
+                    b = c.textIn("、", b, HAlign.Left, VAlign.Center);
+                    b = b.flipRight().shift(15, 0);
+                    lastParenPos = b.getLeft();
+                    b = c.textIn("日に１回交換）", b, HAlign.Left, VAlign.Center);
+                    lastParenRightPos = b.getRight();
+                }
+                {
+                    Box b;
+                    b = c.textIn("８", rr[3], HAlign.Left, VAlign.Center);
+                    b = c.textIn("．留置カテーテル（サイズ", b.flipRight(), HAlign.Left, VAlign.Center);
+                    b = b.shift(commaPos - b.getLeft(), 0);
+                    b = c.textIn("、", b, HAlign.Left, VAlign.Center);
+                    b = b.shift(lastParenPos - b.getLeft(), 0);
+                    b = c.textIn("日に１回交換）", b, HAlign.Left, VAlign.Center);
+                }
+                {
+                    Box b;
+                    b = c.multi(
+                            rr[4],
+                            VAlign.Center,
+                            List.of(
+                                    c.mLabel("９．人工呼吸器（"),
+                                    c.mLabel("陽圧式"),
+                                    c.mLabel("・"),
+                                    c.mLabel("陰圧式"),
+                                    c.mLabel("：設定")));
+                    b = b.flipRight();
+                    b = b.setRight(lastParenRightPos);
+                    c.textIn("）", b, HAlign.Right, VAlign.Center);
+                }
+                {
+                    c.multi(
+                            rr[5],
+                            VAlign.Center,
+                            List.of(
+                                    c.mLabel("１０"),
+                                    c.mLabel("．気管カニューレ（サイズ"),
+                                    c.mSpace(11),
+                                    c.mLabel("）"))
+                    );
+                }
+                {
+                    c.multi(
+                            rr[6],
+                            VAlign.Center,
+                            List.of(
+                                    c.mLabel("１１"),
+                                    c.mLabel("．人工肛門"),
+                                    c.mSpace(18),
+                                    c.mLabel("１２"),
+                                    c.mLabel("．人工膀胱"),
+                                    c.mSpace(10),
+                                    c.mLabel("１３"),
+                                    c.mLabel("．その他（"),
+                                    c.mSpace(35),
+                                    (comp, b) -> {
+                                        b = b.setRight(lastParenRightPos);
+                                        return c.textIn("）", b, HAlign.Right, VAlign.Center);
+                                    }
+                            ));
+                }
             }
-//                {
-//                    c.textIn(rr[1], "４", vCenter);
-//                    c.textIn(c.b.flipRight(), "．吸引器", vCenter);
-//                    c.textIn(c.b.displaceLeftTo(rr[0].left + 46), "５", vCenter);
-//                    c.textIn(c.b.flipRight(), "．中心静脈栄養", vCenter);
-//                    c.textIn(c.b.displaceLeftTo(rr[0].left + 90), "６", vCenter);
-//                    c.textIn(c.b.flipRight(), "．輸液ポンプ", vCenter);
-//                }
-//                let commaPos: number;
-//                let lastParenPos: number;
-//                {
-//                    let drawn, gaps;
-//                    c.textIn(rr[2], "７", vCenter);
-//                    c.textIn(c.b.flipRight(), "．経管栄養（", vCenter);
-//                    c.textIn(c.b.flipRight(), "経鼻", vCenter);
-//                    c.textIn(c.b.flipRight(), "・", vCenter);
-//                    c.textIn(c.b.flipRight(), "胃ろう", vCenter);
-//        [drawn, gaps] = c.textsWithIntervalsIn(
-//                        c.b.flipRight(),
-//                        ["：チューブサイズ", "、", "日に１回交換）"],
-//          [21, 15],
-//                    vCenter,
-//        );
-//                    commaPos = drawn[1].left;
-//                    lastParenPos = drawn[2].right - c.getCurrentFontSize();
-//                }
-//                {
-//                    c.textIn(rr[3], "８", vCenter);
-//                    c.textIn(c.b.flipRight(), "．留置カテーテル（サイズ", vCenter);
-//                    let markTubeSize = c.b.flipRight().setRight(commaPos);
-//                    c.textsWithIntervalsIn(
-//                            markTubeSize.flipRight(),
-//                            ["、", "日に１回交換）"],
-//          [15],
-//                    vCenter,
-//        );
-//                }
-//                {
-//                    c.multi(
-//                            rr[4],
-//                            ["９", "．人工呼吸器（", "陽圧式", "・", "陰圧式", "：設定"],
-//                    VAlign.Center,
-//        );
-//                    let p = c.b.right;
-//                    let q = lastParenPos;
-//                    let mark = new Box(p, c.b.top, q, c.b.bottom);
-//                    c.textIn(mark.flipRight(), "）", VAlign.Center;
-//                }
-//                {
-//                    c.multi(
-//                            rr[5],
-//                            ["１０", "．気管カニューレ（サイズ", 11, "）"],
-//                    VAlign.Center,
-//        );
-//                }
-//                {
-//                    c.multi(
-//                            rr[6],
-//                            [
-//                            "１１",
-//                            "．人工肛門",
-//                            18,
-//                            multiText("１２").mark("mark11"),
-//                            "．人工膀胱",
-//                            10,
-//                            "１３",
-//                            "．その他（",
-//                            multiSpace(35).setRight(lastParenPos),
-//                            "）",
-//          ],
-//                    VAlign.Center,
-//        );
-//                }
-//            }
-//        }
         }
     }
 

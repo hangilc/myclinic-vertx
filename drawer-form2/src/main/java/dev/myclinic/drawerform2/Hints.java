@@ -132,4 +132,14 @@ public class Hints {
     public static Spacing spacing(double spacing){
         return new Spacing(spacing);
     }
+
+    public static class RightAt extends SingleValueHint {
+        public RightAt(double right){
+            super("right-at", right);
+        }
+    }
+
+    public static RightAt rightAt(double right){
+        return new RightAt(right);
+    }
 }

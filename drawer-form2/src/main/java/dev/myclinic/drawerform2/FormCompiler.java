@@ -49,7 +49,7 @@ public class FormCompiler extends DrawerCompiler {
             b = m.render(this, b);
             b = box.setLeft(b.getRight());
         }
-        return box.setLeft(box.getLeft());
+        return box.setRight(b.getLeft());
     }
 
     public Box multiAt(double x, double y, VAlign valign, List<Multi> args){
@@ -64,11 +64,12 @@ public class FormCompiler extends DrawerCompiler {
             return new Box(x, top, x, top + height);
         }
         Box box = new Box(x, top, 300, top + height);
+        Box b = box;
         for(Multi m : args){
-            Box b = m.render(this, box);
-            box = box.setLeft(b.getRight());
+            b = m.render(this, b);
+            b = box.setLeft(b.getRight());
         }
-        return box.setLeft(x);
+        return box.setRight(b.getLeft());
     }
 
     public MultiLabel mLabel(String s){

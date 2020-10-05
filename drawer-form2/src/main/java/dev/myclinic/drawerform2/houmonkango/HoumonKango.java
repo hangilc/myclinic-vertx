@@ -276,7 +276,7 @@ public class HoumonKango {
                             c2.shrinkWidth(5, HorizAnchor.Right),
                             HAlign.Left,
                             VAlign.Center
-                            );
+                    );
                     c.addMarkAndHints("netakiri.J1", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn("J2", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
                     c.addMarkAndHints("netakiri.J2", b, List.of(Hints.circle(), Hints.radius(1.7)));
@@ -304,35 +304,35 @@ public class HoumonKango {
                             c2.shrinkWidth(5, HorizAnchor.Right),
                             HAlign.Left,
                             VAlign.Center
-                            );
+                    );
                     c.addMarkAndHints("ninchi.1", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn(
                             "IIa",
                             b.flipRight().shift(6, 0),
                             HAlign.Left,
                             VAlign.Center
-                            );
+                    );
                     c.addMarkAndHints("ninchi.2a", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn(
                             "IIb",
                             b.flipRight().shift(6, 0),
                             HAlign.Left,
                             VAlign.Center
-                            );
+                    );
                     c.addMarkAndHints("ninchi.2b", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn(
                             "IIIa",
                             b.flipRight().shift(6, 0),
                             HAlign.Left,
                             VAlign.Center
-                            );
+                    );
                     c.addMarkAndHints("ninchi.3a", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn(
                             "IIIb",
                             b.flipRight().shift(6, 0),
                             HAlign.Left,
                             VAlign.Center
-                            );
+                    );
                     c.addMarkAndHints("ninchi.3b", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn("IV", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
                     c.addMarkAndHints("ninchi.4", b, List.of(Hints.circle(), Hints.radius(1.7)));
@@ -385,35 +385,30 @@ public class HoumonKango {
             b = c.textIn("D4", b.flipRight().shift(3, 0), HAlign.Left, VAlign.Center);
             c.textIn("D5", b.flipRight().shift(3, 0), HAlign.Left, VAlign.Center);
         }
-//        {
-//            let box = rows[5];
-//            let [c0, c1] = box.splitToColumns(23.5);
-//            let r3_r5_c1 = c1;
-//            c.frameRight(c0);
-//            let lines = c0.shrinkWidth(2, HorizAnchor.Right).allocTextLines(
-//                    c.getCurrentFontSize(),
-//                    2.0,
-//                    2,
-//                    );
-//            let dy = box.cy - Box.vertCenterOfTextLines(lines);
-//            lines = Box.displaceTextOfLines(lines, 0, dy);
-//            c.textIn(lines[0], "装着・使用", textOpts);
-//            c.textIn(lines[1], "医療機器等", textOpts);
-//            {
-//                let rr = c1.shrinkAll(2).splitToEvenRows(7);
-//                {
-//                    c.textIn(rr[0], "１", vCenter);
-//                    c.textIn(c.b.flipRight(), "．自動腹膜灌流装置", vCenter);
-//                    c.textIn(c.b.displaceLeftTo(rr[0].left + 46), "２", vCenter);
-//                    c.textIn(c.b.flipRight(), "．透析液供給装置", vCenter);
-//                    c.textIn(c.b.displaceLeftTo(rr[0].left + 90), "３", vCenter);
-//                    c.textsWithIntervalsIn(
-//                            c.b.flipRight(),
-//                            ["．酸素療法（", "/min）"],
-//          [12],
-//                    vCenter,
-//        );
-//                }
+        {
+            Box box = rows[5];
+            Box[] cN = box.splitToColumns(23.5);
+            Box c0 = cN[0];
+            Box c1 = cN[1];
+            Box r3_r5_c1 = c1;
+            c.frameRight(c0);
+            c.paragraph("装着・使用\n医療機器等", c0.inset(2), HAlign.Left, VAlign.Center, 2.0);
+            {
+                Box[] rr = c1.inset(2).splitToEvenRows(7);
+                {
+                    Box b;
+                    b = c.textIn("１", rr[0], HAlign.Left, VAlign.Center);
+                    b = c.textIn("．自動腹膜灌流装置", b.flipRight(), HAlign.Left, VAlign.Center);
+                    b = c.textIn("２", b.setLeft(rr[0].getLeft() + 46), HAlign.Left, VAlign.Center);
+                    b = c.textIn("．透析液供給装置", b.flipRight(), HAlign.Left, VAlign.Center);
+                    b = c.textIn("３", b.setLeft(rr[0].getLeft() + 90), HAlign.Left, VAlign.Center);
+                    c.multi(b.flipRight(), VAlign.Center, List.of(
+                            c.mLabel("．酸素療法（"),
+                            c.mSpace(12),
+                            c.mLabel("/min）")
+                    ));
+                }
+            }
 //                {
 //                    c.textIn(rr[1], "４", vCenter);
 //                    c.textIn(c.b.flipRight(), "．吸引器", vCenter);
@@ -489,6 +484,7 @@ public class HoumonKango {
 //                }
 //            }
 //        }
+        }
     }
 
     private void renderRow4(Box row) {

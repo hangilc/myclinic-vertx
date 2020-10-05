@@ -81,17 +81,23 @@ public class HoumonKango {
         c.textAt("訪問看護指示期間", x, y, HAlign.Right, VAlign.Top);
         c.multiAt(x, y, VAlign.Top, List.of(
                 c.mLabel("（令和"),
-                c.mSpace(7).mark("subtitle1.from.nen").right().rightPadding(0.5),
+                c.mSpace(7).mark("subtitle1.from.nen")
+                        .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("年"),
-                c.mSpace(4.5).mark("subtitle1.from.month").right().rightPadding(0.5),
+                c.mSpace(4.5).mark("subtitle1.from.month")
+                        .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("月"),
-                c.mSpace(4.5).mark("subtitle1.from.day").right().rightPadding(0.5),
+                c.mSpace(4.5).mark("subtitle1.from.day")
+                        .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("日～令和"),
-                c.mSpace(7).mark("subtitle1.upto.nen").right().rightPadding(0.5),
+                c.mSpace(7).mark("subtitle1.upto.nen")
+                        .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("年"),
-                c.mSpace(4.5).mark("subtitle1.upto.month").right().rightPadding(0.5),
+                c.mSpace(4.5).mark("subtitle1.upto.month")
+                        .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("月"),
-                c.mSpace(4.5).mark("subtitle1.upto.day").right().rightPadding(0.5),
+                c.mSpace(4.5).mark("subtitle1.upto.day")
+                        .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("日）")
         ));
     }
@@ -101,17 +107,23 @@ public class HoumonKango {
         c.textAt("点滴注射指示期間", x, y, HAlign.Right, VAlign.Top);
         c.multiAt(x, y, VAlign.Top, List.of(
                 c.mLabel("（令和"),
-                c.mSpace(7).mark("subtitle2.from.nen").right().rightPadding(0.5),
+                c.mSpace(7).mark("subtitle2.from.nen")
+                        .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("年"),
-                c.mSpace(4.5).mark("subtitle2.from.month").right().rightPadding(0.5),
+                c.mSpace(4.5).mark("subtitle2.from.month")
+                        .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("月"),
-                c.mSpace(4.5).mark("subtitle2.from.day").right().rightPadding(0.5),
+                c.mSpace(4.5).mark("subtitle2.from.day")
+                        .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("日～令和"),
-                c.mSpace(7).mark("subtitle2.upto.nen").right().rightPadding(0.5),
+                c.mSpace(7).mark("subtitle2.upto.nen")
+                        .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("年"),
-                c.mSpace(4.5).mark("subtitle2.upto.month").right().rightPadding(0.5),
+                c.mSpace(4.5).mark("subtitle2.upto.month")
+                        .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("月"),
-                c.mSpace(4.5).mark("subtitle2.upto.day").right().rightPadding(0.5),
+                c.mSpace(4.5).mark("subtitle2.upto.day")
+                        .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("日）")
         ));
     }
@@ -157,11 +169,14 @@ public class HoumonKango {
                     b.flipRight(),
                     VAlign.Center,
                     List.of(
-                            c.mSpace(8).mark("birthday.nen").right().rightPadding(0.5),
+                            c.mSpace(8).mark("birthday.nen")
+                                    .addHints(Hints.right(), Hints.rightPadding(0.5)),
                             c.mLabel("年"),
-                            c.mSpace(8).mark("birthday.month").right().rightPadding(0.5),
+                            c.mSpace(8).mark("birthday.month")
+                                    .addHints(Hints.right(), Hints.rightPadding(0.5)),
                             c.mLabel("月"),
-                            c.mSpace(8).mark("birthday.day").right().rightPadding(0.5),
+                            c.mSpace(8).mark("birthday.day")
+                                    .addHints(Hints.right(), Hints.rightPadding(0.5)),
                             c.mLabel("日")
                     ));
 
@@ -170,7 +185,7 @@ public class HoumonKango {
                     VAlign.Center,
                     List.of(
                             c.mLabel("（"),
-                            c.mSpace(6).mark("age").right().rightPadding(0.5),
+                            c.mSpace(6).mark("age").addHints(Hints.right(), Hints.rightPadding(0.5)),
                             c.mLabel("歳）")
                     ));
         }

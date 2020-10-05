@@ -3,8 +3,8 @@ package dev.myclinic.drawerform2;
 import dev.myclinic.vertx.drawer.Box;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class MarkedMulti implements Multi {
 
@@ -25,13 +25,8 @@ public class MarkedMulti implements Multi {
         return b;
     }
 
-    public MarkedMulti right(){
-        hints.add(new Hints.Right());
-        return this;
-    }
-
-    public MarkedMulti rightPadding(double padding){
-        hints.add(new Hints.RightPadding(padding));
+    public MarkedMulti addHints(Hint ...hints){
+        Collections.addAll(this.hints, hints);
         return this;
     }
 

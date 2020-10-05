@@ -341,32 +341,34 @@ public class HoumonKango {
                 }
             }
         }
-//        {
-//            let box = rows[3];
-//            let [c0, c1] = box.splitToColumns(48);
-//            c.frameRight(c0);
-//            c.textIn(c0.shift(2), "要介護認定の状況", vCenter.setSpacing(1.5));
-//            c.textIn(c1.shift(3.5), "自立", vCenter);
-//            c.addMarkAndHints("youkaigo.jiritsu", b, List.of(Hints.circle(), Hints.radius(1.7)));
-//            c.textIn(c.b.flipRight().shift(6), "要支援（", vCenter);
-//            c.textIn(c.b.flipRight(), "１", vCenter);
-//            c.addMarkAndHints("youkaigo.youshien1", b, List.of(Hints.circle(), Hints.radius(1.7)));
-//            c.textIn(c.b.flipRight().shift(3.5), "２", vCenter);
-//            c.addMarkAndHints("youkaigo.youshien2", b, List.of(Hints.circle(), Hints.radius(1.7)));
-//            c.textIn(c.b.flipRight(), "）", vCenter);
-//            c.textIn(c.b.flipRight().shift(7.5), "要介護（", vCenter);
-//            c.textIn(c.b.flipRight(), "１", vCenter);
-//            c.addMarkAndHints("youkaigo.youkaigo1", b, List.of(Hints.circle(), Hints.radius(1.7)));
-//            c.textIn(c.b.flipRight().shift(3), "２", vCenter);
-//            c.addMarkAndHints("youkaigo.youkaigo2", b, List.of(Hints.circle(), Hints.radius(1.7)));
-//            c.textIn(c.b.flipRight().shift(3), "３", vCenter);
-//            c.addMarkAndHints("youkaigo.youkaigo3", b, List.of(Hints.circle(), Hints.radius(1.7)));
-//            c.textIn(c.b.flipRight().shift(3), "４", vCenter);
-//            c.addMarkAndHints("youkaigo.youkaigo4", b, List.of(Hints.circle(), Hints.radius(1.7)));
-//            c.textIn(c.b.flipRight().shift(3), "５", vCenter);
-//            c.addMarkAndHints("youkaigo.youkaigo5", b, List.of(Hints.circle(), Hints.radius(1.7)));
-//            c.textIn(c.b.flipRight(), "）", vCenter);
-//        }
+        {
+            Box box = rows[3];
+            Box[] cN = box.splitToColumns(48);
+            Box c0 = cN[0];
+            Box c1 = cN[1];
+            c.frameRight(c0);
+            c.textIn("要介護認定の状況", c0.shift(2, 0), HAlign.Left, VAlign.Center, new TextAtOpt(1.5));
+            Box b = c.textIn("自立", c1.shift(3.5, 0), HAlign.Left, VAlign.Center);
+            c.addMarkAndHints("youkaigo.jiritsu", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            b = c.textIn("要支援（", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
+            b = c.textIn("１", b.flipRight(), HAlign.Left, VAlign.Center);
+            c.addMarkAndHints("youkaigo.youshien1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            b = c.textIn("２", b.flipRight().shift(3.5, 0), HAlign.Left, VAlign.Center);
+            c.addMarkAndHints("youkaigo.youshien2", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            b = c.textIn("）", b.flipRight(), HAlign.Left, VAlign.Center);
+            b = c.textIn("要介護（", b.flipRight().shift(7.5, 0), HAlign.Left, VAlign.Center);
+            b = c.textIn("１", b.flipRight(), HAlign.Left, VAlign.Center);
+            c.addMarkAndHints("youkaigo.youkaigo1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            b = c.textIn("２", b.flipRight().shift(3, 0), HAlign.Left, VAlign.Center);
+            c.addMarkAndHints("youkaigo.youkaigo2", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            b = c.textIn("３", b.flipRight().shift(3, 0), HAlign.Left, VAlign.Center);
+            c.addMarkAndHints("youkaigo.youkaigo3", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            b = c.textIn("４", b.flipRight().shift(3, 0), HAlign.Left, VAlign.Center);
+            c.addMarkAndHints("youkaigo.youkaigo4", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            b = c.textIn("５", b.flipRight().shift(3, 0), HAlign.Left, VAlign.Center);
+            c.addMarkAndHints("youkaigo.youkaigo5", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            c.textIn("）", b.flipRight(), HAlign.Left, VAlign.Center);
+        }
 //        {
 //            let box = rows[4];
 //            let [c0, c1] = box.splitToColumns(48);

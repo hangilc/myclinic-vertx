@@ -241,33 +241,25 @@ public class HoumonKango {
                     List.of(Hints.para(), Hints.padding(2), Hints.vTop(), Hints.leading(0.7))
             );
         }
-//        {
-//            let box = rows[1];
-//            let cc: Box[] = box.splitToColumns(20.5);
-//            c.frameRight(cc[0]);
-//            c.textsInRows(
-//                    cc[0].shrinkAll(2).splitToEvenRows(3),
-//                    ["投与中の", "薬剤の用", "量・用法"],
-//      [
-//            VAlign.CentersetSpacing(1),
-//                    VAlign.CentersetSpacing(1),
-//                    VAlign.Center
-//      ],
-//    );
-//            c.addMarkAndHints("drugs", cc[1], "para:padding(2):v-top:leading(0.7)");
-//        }
-//        {
-//            let box = rows[2];
-//            let cc: Box[] = box.splitToColumns(20.5);
-//            c.frameRight(cc[0]);
-//            c.textsInRows(
-//                    cc[0].shrink(2, 2, 2, 3).splitToEvenRows(2),
-//                    ["日常生活", "自立度"],
-//      [
-//            VAlign.CentersetSpacing(1),
-//                    VAlign.Center
-//      ],
-//    );
+        {
+            Box box = rows[1];
+            Box[] cc = box.splitToColumns(20.5);
+            c.frameRight(cc[0]);
+            Box[] subRows = cc[0].inset(2).splitToEvenRows(3);
+            c.textIn("投与中の", subRows[0], HAlign.Left, VAlign.Center, new TextAtOpt(1));
+            c.textIn("薬剤の用", subRows[1], HAlign.Left, VAlign.Center, new TextAtOpt(1));
+            c.textIn("量・用法", subRows[2], HAlign.Left, VAlign.Center);
+            c.addMarkAndHints("drugs", cc[1],
+                    List.of(Hints.para(), Hints.padding(2), Hints.vTop(), Hints.leading(0.7)));
+        }
+        {
+            Box box = rows[2];
+            Box[] cc = box.splitToColumns(20.5);
+            c.frameRight(cc[0]);
+            Box[] subRows = cc[0].inset(2, 2, 2, 3).splitToEvenRows(2);
+            c.textIn("日常生活", subRows[0], HAlign.Left, VAlign.Center, new TextAtOpt(1));
+            c.textIn("自立度", subRows[1], HAlign.Left, VAlign.Center);
+
 //            {
 //                let [r1, r2] = cc[1].splitToEvenRows(2);
 //                c.frameBottom(r1);
@@ -336,7 +328,7 @@ public class HoumonKango {
 //                    c.addMarkAndHints("ninchi.M", c.b, "circle:radius(1.7)");
 //                }
 //            }
-//        }
+        }
 //        {
 //            let box = rows[3];
 //            let [c0, c1] = box.splitToColumns(48);
@@ -499,7 +491,7 @@ public class HoumonKango {
 //        let t1 = m1.t1;
 //        let t2 = m2.t2;
 //        let left = Math.max(t1.right, t2.right);
-//        let b = row.setLeft(left).shrink(2, 1, 1, 1);
+//        let b = row.setLeft(left).inset(2, 1, 1, 1);
 //        c.addMarkAndHints("ryuui-jikou", b, "para:v-top");
     }
 

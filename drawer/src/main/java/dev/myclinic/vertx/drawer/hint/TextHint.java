@@ -3,7 +3,15 @@ package dev.myclinic.vertx.drawer.hint;
 import dev.myclinic.vertx.drawer.Box;
 import dev.myclinic.vertx.drawer.DrawerCompiler;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class TextHint extends HintBase implements Hint {
+
+    private double spacing = 0;
+
+    private final static Pattern spacingPattern =
+            Pattern.compile("spacing\\(([0-9.]+)\\)");
 
     public TextHint(String[] specs) {
         for (String spec : specs) {
@@ -13,6 +21,12 @@ public class TextHint extends HintBase implements Hint {
             if (super.parse(spec)) {
                 continue;
             }
+            Matcher m;
+            m = spacingPattern.matcher(spec);
+            if( m.matches() ){
+                this.spacing = Double.parseDouble(m.group(1));
+                continue;
+            }
             throw new RuntimeException("Unknonw hint: " + spec);
         }
     }
@@ -20,7 +34,7 @@ public class TextHint extends HintBase implements Hint {
     @Override
     public void render(DrawerCompiler compiler, Box box, String s) {
         box = adjustBox(box);
-        compiler.textIn(s, box, super.getHAlign(), getVAlign());
+        compiler.textIn(s, box, super.getHAlign(), getVAlign(), new DrawerCompiler.TextAtOpt(spacing));
     }
 
 }

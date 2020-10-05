@@ -122,4 +122,14 @@ public class Hints {
     public static Leading leading(double leading){
         return new Leading(leading);
     }
+
+    public static class Spacing extends SingleValueHint {
+        public Spacing(double spacing){
+            super("spacing", spacing);
+        }
+    }
+
+    public static Spacing spacing(double spacing){
+        return new Spacing(spacing);
+    }
 }

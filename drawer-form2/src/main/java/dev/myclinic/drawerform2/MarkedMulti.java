@@ -12,18 +12,19 @@ public class MarkedMulti implements Multi {
     private final Multi orig;
     private final String mark;
     private final List<Hint> hints = new ArrayList<>();
+    private final String description;
 
-    public MarkedMulti(Multi orig, String mark) {
+    public MarkedMulti(Multi orig, String mark, String description) {
         this.orig = orig;
         this.mark = mark;
+        this.description = description;
     }
 
     @Override
     public Box render(FormCompiler c, Box box, VAlign valign) {
         Box b = orig.render(c, box, valign);
-        c.addMark(mark, b);
         hints.add(0, new Hints.DefaultVAlign(valign));
-        c.setHints(mark, hints);
+        c.addMark(mark, description, b, hints);
         return b;
     }
 

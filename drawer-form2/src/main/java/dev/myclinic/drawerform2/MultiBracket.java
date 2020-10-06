@@ -12,17 +12,19 @@ public class MultiBracket implements Multi {
     private final String left;
     private final String mark;
     private final List<Hint> hints;
+    private final String description;
     private final String right;
 
-    public MultiBracket(String left, String mark, List<Hint> hints, String right) {
+    public MultiBracket(String left, String mark, String description, List<Hint> hints, String right) {
         this.left = left;
         this.mark = mark;
         this.hints = hints;
+        this.description = description;
         this.right = right;
     }
 
     public MultiBracket(String left, String right) {
-        this(left, null, null, right);
+        this(left, null, null, null, right);
     }
 
     @Override
@@ -34,7 +36,7 @@ public class MultiBracket implements Multi {
             List<Hint> mhints = new ArrayList<>();
             mhints.add(new Hints.DefaultVAlign(valign));
             mhints.addAll(hints);
-            c.addMarkAndHints(mark, mb, mhints);
+            c.addMark(mark, description, mb, mhints);
         }
         return box;
     }

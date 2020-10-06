@@ -24,12 +24,21 @@ public class Render {
             this.right = right;
             this.bottom = bottom;
         }
+
+        public Box toBox(){
+            return new Box(left, top, right, bottom);
+        }
+
+        public static Rect fromBox(Box box){
+            return new Rect(box.getLeft(), box.getTop(), box.getRight(), box.getBottom());
+        }
     }
 
     public static class Form {
         public String page;
         public Map<String, Rect> marks;
         public Map<String, String> hints;
+        public List<String> descriptions;
         public List<Op> form;
     }
 
@@ -47,7 +56,7 @@ public class Render {
         if( rect == null ){
             throw new RuntimeException("Cannot find mark: " + mark);
         }
-        Box box = new Box(rect.left, rect.top, rect.right, rect.bottom);
+        Box box = rect.toBox();
         String hintSrc = form.hints.get(mark);
         if( hintSrc == null ){
             c.textIn(value, box, DrawerCompiler.HAlign.Left, DrawerCompiler.VAlign.Top);

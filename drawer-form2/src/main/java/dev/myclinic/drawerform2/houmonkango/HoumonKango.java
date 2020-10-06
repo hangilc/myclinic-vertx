@@ -74,12 +74,13 @@ public class HoumonKango {
                 addrBox.getBottom() + 2,
                 mainBox.getRight(),
                 addrBox.getBottom() + 6
-                ).setHeight(5, VertAnchor.Top);
+        ).setHeight(5, VertAnchor.Top);
         c.multi(
                 recipientBox,
                 VAlign.Center,
                 List.of(
-                        c.mSpace(60).mark("recipient").addHints(Hints.right(), Hints.rightPadding(3)),
+                        c.mSpace(60).mark("recipient", "提出先（訪問看護ステーション）")
+                                .addHints(Hints.right(), Hints.rightPadding(3)),
                         c.mLabel("殿")
                 )
         );
@@ -87,6 +88,7 @@ public class HoumonKango {
         form.page = "A4";
         form.marks = c.getMarks();
         form.hints = c.getHints();
+        form.descriptions = c.getDescriptions();
         form.form = c.getOps();
         return form;
     }
@@ -109,22 +111,22 @@ public class HoumonKango {
         c.textAt("訪問看護指示期間", x, y, HAlign.Right, VAlign.Top);
         c.multiAt(x, y, VAlign.Top, List.of(
                 c.mLabel("（令和"),
-                c.mSpace(7).mark("subtitle1.from.nen")
+                c.mSpace(7).mark("subtitle1.from.nen", "訪問看護指示期間開始（年）")
                         .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("年"),
-                c.mSpace(4.5).mark("subtitle1.from.month")
+                c.mSpace(4.5).mark("subtitle1.from.month", "訪問看護指示期間開始（月）")
                         .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("月"),
-                c.mSpace(4.5).mark("subtitle1.from.day")
+                c.mSpace(4.5).mark("subtitle1.from.day", "訪問看護指示期間開始（日）")
                         .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("日～令和"),
-                c.mSpace(7).mark("subtitle1.upto.nen")
+                c.mSpace(7).mark("subtitle1.upto.nen", "訪問看護指示期間期限（年）")
                         .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("年"),
-                c.mSpace(4.5).mark("subtitle1.upto.month")
+                c.mSpace(4.5).mark("subtitle1.upto.month", "訪問看護指示期間期限（月）")
                         .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("月"),
-                c.mSpace(4.5).mark("subtitle1.upto.day")
+                c.mSpace(4.5).mark("subtitle1.upto.day", "訪問看護指示期間期限（日）")
                         .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("日）")
         ));
@@ -135,22 +137,22 @@ public class HoumonKango {
         c.textAt("点滴注射指示期間", x, y, HAlign.Right, VAlign.Top);
         c.multiAt(x, y, VAlign.Top, List.of(
                 c.mLabel("（令和"),
-                c.mSpace(7).mark("subtitle2.from.nen")
+                c.mSpace(7).mark("subtitle2.from.nen", "点滴注射指示期間開始（年）")
                         .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("年"),
-                c.mSpace(4.5).mark("subtitle2.from.month")
+                c.mSpace(4.5).mark("subtitle2.from.month", "点滴注射指示期間開始（月）")
                         .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("月"),
-                c.mSpace(4.5).mark("subtitle2.from.day")
+                c.mSpace(4.5).mark("subtitle2.from.day", "点滴注射指示期間開始（日）")
                         .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("日～令和"),
-                c.mSpace(7).mark("subtitle2.upto.nen")
+                c.mSpace(7).mark("subtitle2.upto.nen", "点滴注射指示期間期限（年）")
                         .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("年"),
-                c.mSpace(4.5).mark("subtitle2.upto.month")
+                c.mSpace(4.5).mark("subtitle2.upto.month", "点滴注射指示期間期限（月）")
                         .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("月"),
-                c.mSpace(4.5).mark("subtitle2.upto.day")
+                c.mSpace(4.5).mark("subtitle2.upto.day", "点滴注射指示期間期限（日）")
                         .addHints(Hints.right(), Hints.rightPadding(0.5)),
                 c.mLabel("日）")
         ));
@@ -172,7 +174,7 @@ public class HoumonKango {
         {
             Box[] cc = cols[1].splitToColumns(55.5);
             c.textIn("様", cc[1], HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("shimei", cc[0], List.of(Hints.center(), Hints.vCenter()));
+            c.addMark("shimei", "患者氏名", cc[0], List.of(Hints.center(), Hints.vCenter()));
         }
         {
             Box[] rr = cols[2].splitToEvenRows(2);
@@ -183,27 +185,27 @@ public class HoumonKango {
                     VAlign.Center
             );
             b = c.textIn("明", b.flipRight().shift(3, 0), HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("birthday.gengou.meiji", b, List.of(Hints.circle(), Hints.radius(1.5)));
+            c.addMark("birthday.gengou.meiji", "生年月日（元号：明治）", b, List.of(Hints.circle(), Hints.radius(1.5)));
             b = c.textIn("・", b.flipRight(), HAlign.Left, VAlign.Center);
             b = c.textIn("大", b.flipRight(), HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("birthday.gengou.taishou", b, List.of(Hints.circle(), Hints.radius(1.5)));
+            c.addMark("birthday.gengou.taishou", "生年月日（元号：大正）", b, List.of(Hints.circle(), Hints.radius(1.5)));
             b = c.textIn("・", b.flipRight(), HAlign.Left, VAlign.Center);
             b = c.textIn("昭", b.flipRight(), HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("birthday.gengou.shouwa", b, List.of(Hints.circle(), Hints.radius(1.5)));
+            c.addMark("birthday.gengou.shouwa", "生年月日（元号：昭和）", b, List.of(Hints.circle(), Hints.radius(1.5)));
             b = c.textIn("・", b.flipRight(), HAlign.Left, VAlign.Center);
             b = c.textIn("平", b.flipRight(), HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("birthday.gengou.heisei", b, List.of(Hints.circle(), Hints.radius(1.5)));
+            c.addMark("birthday.gengou.heisei", "生年月日（元号：平成）", b, List.of(Hints.circle(), Hints.radius(1.5)));
             b = c.multi(
                     b.flipRight(),
                     VAlign.Center,
                     List.of(
-                            c.mSpace(8).mark("birthday.nen")
+                            c.mSpace(8).mark("birthday.nen", "生年月日（年）")
                                     .addHints(Hints.right(), Hints.rightPadding(0.5)),
                             c.mLabel("年"),
-                            c.mSpace(8).mark("birthday.month")
+                            c.mSpace(8).mark("birthday.month", "生年月日（月）")
                                     .addHints(Hints.right(), Hints.rightPadding(0.5)),
                             c.mLabel("月"),
-                            c.mSpace(8).mark("birthday.day")
+                            c.mSpace(8).mark("birthday.day", "生年月日（日）")
                                     .addHints(Hints.right(), Hints.rightPadding(0.5)),
                             c.mLabel("日")
                     ));
@@ -213,7 +215,7 @@ public class HoumonKango {
                     VAlign.Center,
                     List.of(
                             c.mLabel("（"),
-                            c.mSpace(6).mark("age").addHints(Hints.right(), Hints.rightPadding(0.5)),
+                            c.mSpace(6).mark("age", "年齢").addHints(Hints.right(), Hints.rightPadding(0.5)),
                             c.mLabel("歳）")
                     ));
         }
@@ -231,7 +233,7 @@ public class HoumonKango {
                     HAlign.Left,
                     VAlign.Center
             );
-            c.addMarkAndHints("address", cols[1], List.of(Hints.leftPadding(2), Hints.vCenter()));
+            c.addMark("address", "患者住所", cols[1], List.of(Hints.leftPadding(2), Hints.vCenter()));
         }
     }
 
@@ -247,7 +249,7 @@ public class HoumonKango {
                     HAlign.Left,
                     VAlign.Center
             );
-            c.addMarkAndHints("disease", cols[1], List.of(Hints.leftPadding(2), Hints.vCenter()));
+            c.addMark("disease", "主たる傷病名", cols[1], List.of(Hints.leftPadding(2), Hints.vCenter()));
         }
     }
 
@@ -278,8 +280,8 @@ public class HoumonKango {
             c.textIn("病状・治療", subRows[0], HAlign.Left, VAlign.Center,
                     new TextAtOpt().extraSpaces(0, -0.5, -0.5, 0));
             c.textIn("状態", subRows[1], HAlign.Left, VAlign.Center, new TextAtOpt(6));
-            c.addMarkAndHints(
-                    "disease-condition",
+            c.addMark(
+                    "disease-condition", "病状",
                     cc[1],
                     List.of(Hints.para(), Hints.padding(2), Hints.vTop(), Hints.leading(0.7))
             );
@@ -292,7 +294,7 @@ public class HoumonKango {
             c.textIn("投与中の", subRows[0], HAlign.Left, VAlign.Center, new TextAtOpt(1));
             c.textIn("薬剤の用", subRows[1], HAlign.Left, VAlign.Center, new TextAtOpt(1));
             c.textIn("量・用法", subRows[2], HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("drugs", cc[1],
+            c.addMark("drugs", "薬剤", cc[1],
                     List.of(Hints.para(), Hints.padding(2), Hints.vTop(), Hints.leading(0.7)));
         }
         {
@@ -320,21 +322,21 @@ public class HoumonKango {
                             HAlign.Left,
                             VAlign.Center
                     );
-                    c.addMarkAndHints("netakiri.J1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("netakiri.J1", "寝たきり度(J1)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn("J2", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
-                    c.addMarkAndHints("netakiri.J2", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("netakiri.J2", "寝たきり度(J2)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn("A1", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
-                    c.addMarkAndHints("netakiri.A1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("netakiri.A1", "寝たきり度(A1)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn("A2", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
-                    c.addMarkAndHints("netakiri.A2", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("netakiri.A2", "寝たきり度(A2)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn("B1", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
-                    c.addMarkAndHints("netakiri.B1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("netakiri.B1", "寝たきり度(B1)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn("B2", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
-                    c.addMarkAndHints("netakiri.B2", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("netakiri.B2", "寝たきり度(B2)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn("C1", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
-                    c.addMarkAndHints("netakiri.C1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("netakiri.C1", "寝たきり度(C1)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn("C2", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
-                    c.addMarkAndHints("netakiri.C2", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("netakiri.C2", "寝たきり度(C2)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                 }
                 {
                     Box[] cN = r2.splitToColumns(27.5);
@@ -348,39 +350,39 @@ public class HoumonKango {
                             HAlign.Left,
                             VAlign.Center
                     );
-                    c.addMarkAndHints("ninchi.1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("ninchi.1", "認知症の状況(1)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn(
                             "IIa",
                             b.flipRight().shift(6, 0),
                             HAlign.Left,
                             VAlign.Center
                     );
-                    c.addMarkAndHints("ninchi.2a", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("ninchi.2a", "認知症の状況(2a)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn(
                             "IIb",
                             b.flipRight().shift(6, 0),
                             HAlign.Left,
                             VAlign.Center
                     );
-                    c.addMarkAndHints("ninchi.2b", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("ninchi.2b", "認知症の状況(2b)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn(
                             "IIIa",
                             b.flipRight().shift(6, 0),
                             HAlign.Left,
                             VAlign.Center
                     );
-                    c.addMarkAndHints("ninchi.3a", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("ninchi.3a", "認知症の状況(3a)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn(
                             "IIIb",
                             b.flipRight().shift(6, 0),
                             HAlign.Left,
                             VAlign.Center
                     );
-                    c.addMarkAndHints("ninchi.3b", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("ninchi.3b", "認知症の状況(3b)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn("IV", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
-                    c.addMarkAndHints("ninchi.4", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("ninchi.4", "認知症の状況(4)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                     b = c.textIn("Ｍ", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
-                    c.addMarkAndHints("ninchi.M", b, List.of(Hints.circle(), Hints.radius(1.7)));
+                    c.addMark("ninchi.M", "認知症の状況(M)", b, List.of(Hints.circle(), Hints.radius(1.7)));
                 }
             }
         }
@@ -392,24 +394,24 @@ public class HoumonKango {
             c.frameRight(c0);
             c.textIn("要介護認定の状況", c0.shift(2, 0), HAlign.Left, VAlign.Center, new TextAtOpt(1.5));
             Box b = c.textIn("自立", c1.shift(3.5, 0), HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("youkaigo.jiritsu", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            c.addMark("youkaigo.jiritsu", "要介護認定の状況（自立）", b, List.of(Hints.circle(), Hints.radius(1.7)));
             b = c.textIn("要支援（", b.flipRight().shift(6, 0), HAlign.Left, VAlign.Center);
             b = c.textIn("１", b.flipRight(), HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("youkaigo.youshien1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            c.addMark("youkaigo.youshien1", "要介護認定の状況（要支援１）", b, List.of(Hints.circle(), Hints.radius(1.7)));
             b = c.textIn("２", b.flipRight().shift(3.5, 0), HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("youkaigo.youshien2", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            c.addMark("youkaigo.youshien2", "要介護認定の状況（要支援２）", b, List.of(Hints.circle(), Hints.radius(1.7)));
             b = c.textIn("）", b.flipRight(), HAlign.Left, VAlign.Center);
             b = c.textIn("要介護（", b.flipRight().shift(7.5, 0), HAlign.Left, VAlign.Center);
             b = c.textIn("１", b.flipRight(), HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("youkaigo.youkaigo1", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            c.addMark("youkaigo.youkaigo1", "要介護認定の状況（要介護１）", b, List.of(Hints.circle(), Hints.radius(1.7)));
             b = c.textIn("２", b.flipRight().shift(3, 0), HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("youkaigo.youkaigo2", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            c.addMark("youkaigo.youkaigo2", "要介護認定の状況（要介護２）", b, List.of(Hints.circle(), Hints.radius(1.7)));
             b = c.textIn("３", b.flipRight().shift(3, 0), HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("youkaigo.youkaigo3", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            c.addMark("youkaigo.youkaigo3", "要介護認定の状況（要介護３）", b, List.of(Hints.circle(), Hints.radius(1.7)));
             b = c.textIn("４", b.flipRight().shift(3, 0), HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("youkaigo.youkaigo4", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            c.addMark("youkaigo.youkaigo4", "要介護認定の状況（要介護４）", b, List.of(Hints.circle(), Hints.radius(1.7)));
             b = c.textIn("５", b.flipRight().shift(3, 0), HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("youkaigo.youkaigo5", b, List.of(Hints.circle(), Hints.radius(1.7)));
+            c.addMark("youkaigo.youkaigo5", "要介護認定の状況（要介護５）", b, List.of(Hints.circle(), Hints.radius(1.7)));
             c.textIn("）", b.flipRight(), HAlign.Left, VAlign.Center);
         }
         {
@@ -524,13 +526,15 @@ public class HoumonKango {
                                     c.mLabel("１２"),
                                     c.mLabel("．人工膀胱"),
                                     c.mSpace(10),
-                                    c.mLabel("１３").mark("souchi.sonota.mark").addHints(Hints.circle()),
+                                    c.mLabel("１３").mark("souchi.sonota.mark",
+                                            "装置・その他：１３（マーク）").addHints(Hints.circle()),
                                     c.mLabel("．その他（"),
-                                    c.mSpace(35).mark("souchi.sonota.value").addHints(Hints.center()),
+                                    c.mSpace(35).mark("souchi.sonota",
+                                            "装置・その他：１３").addHints(Hints.center()),
                                     (comp, b, valign) -> {
                                         b = b.setRight(lastParenRightPos);
                                         Box bb = c.textIn("）", b, HAlign.Right, VAlign.Center);
-                                        comp.modifyMark("souchi.sonota.value",
+                                        comp.modifyMark("souchi.sonota",
                                                 mb -> mb.setRight(bb.getLeft()));
                                         return bb;
                                     }
@@ -556,7 +560,7 @@ public class HoumonKango {
                         c.mLabel("療養生活指導上の留意事項")
                 ));
         Box b = row.setLeft(Math.max(b1.getRight(), b2.getRight())).inset(2, 1, 1, 1);
-        c.addMarkAndHints("ryuui-jikou", b, List.of(Hints.para(), Hints.vTop()));
+        c.addMark("ryuui-jikou", "留意事項：療養生活指導上の留意事項", b, List.of(Hints.para(), Hints.vTop()));
     }
 
     private void renderRow5(Box row) {
@@ -569,11 +573,11 @@ public class HoumonKango {
         Box[] rr = c2.splitToEvenRows(4);
         Box b;
         b = c.multi(rr[0], VAlign.Center, List.of(
-                c.mLabel("１").mark("rehabilitation.mark")
+                c.mLabel("１").mark("rehabilitation.mark", "留意事項：リハビリテーション（マーク）")
                         .addHints(Hints.circle(), Hints.radius(1.5)),
                 c.mLabel("．リハビリテーション")));
         b = rr[0].setLeft(b.getRight());
-        c.addMarkAndHints("rehabilitation", b, List.of(Hints.xPadding(4), Hints.vCenter()));
+        c.addMark("rehabilitation", "留意事項：リハビリテーション", b, List.of(Hints.xPadding(4), Hints.vCenter()));
         c.multi(rr[1], VAlign.Center, List.of(c.mLabel("２"), c.mLabel("．褥瘡の処置など")));
         c.multi(rr[2], VAlign.Center, List.of(c.mLabel("３"), c.mLabel("．装置・使用機器等の操作援助・管理")));
         c.multi(rr[3], VAlign.Center, List.of(c.mLabel("４"), c.mLabel("．その他")));
@@ -592,10 +596,10 @@ public class HoumonKango {
     private void renderRow7(Box row) {
         Box[] rr = row.splitToEvenRows(2);
         Box d1 = c.textIn("緊急時の連絡先", rr[0].shift(2, 0), HAlign.Left, VAlign.Center);
-        c.addMarkAndHints("emergency.contact", rr[0].setLeft(d1.getRight()).shrinkWidth(2, HorizAnchor.Right),
+        c.addMark("emergency.contact", "緊急時の連絡先", rr[0].setLeft(d1.getRight()).shrinkWidth(2, HorizAnchor.Right),
                 List.of(Hints.vCenter()));
         Box d2 = c.textIn("不在時の対応法", rr[1].shift(2, 0), HAlign.Left, VAlign.Center);
-        c.addMarkAndHints("absence.reaction", rr[1].setLeft(d2.getRight()).shrinkWidth(2, HorizAnchor.Right),
+        c.addMark("absence.reaction", "不在時の対応法", rr[1].setLeft(d2.getRight()).shrinkWidth(2, HorizAnchor.Right),
                 List.of(Hints.vCenter()));
     }
 
@@ -617,7 +621,7 @@ public class HoumonKango {
                 VAlign.Center
         );
         c.popFont();
-        c.addMarkAndHints("special-notice", rr[2].shrinkWidth(2, HorizAnchor.Right), List.of(Hints.vCenter()));
+        c.addMark("special-notice", "特記すべき留意事項", rr[2].shrinkWidth(2, HorizAnchor.Right), List.of(Hints.vCenter()));
     }
 
     private void renderRow9(Box row) {
@@ -661,13 +665,13 @@ public class HoumonKango {
                 VAlign.Center,
                 List.of(
                         c.mLabel("令和"),
-                        c.mSpace(9).mark("issue-date.nen")
+                        c.mSpace(9).mark("issue-date.nen", "発行日（年）")
                                 .addHints(Hints.right(), Hints.rightPadding(1)),
                         c.mLabel("年"),
-                        c.mSpace(6).mark("issue-date.month")
+                        c.mSpace(6).mark("issue-date.month", "発行日（月）")
                                 .addHints(Hints.right(), Hints.rightPadding(1)),
                         c.mLabel("月"),
-                        c.mSpace(6).mark("issue-date.day")
+                        c.mSpace(6).mark("issue-date.day", "発行日（日）")
                                 .addHints(Hints.right(), Hints.rightPadding(1)),
                         c.mLabel("日")
                 )
@@ -678,7 +682,7 @@ public class HoumonKango {
                 List.of(
                         c.mLabel("医療機関名"),
                         c.mSpace(fontSize),
-                        c.mBracket("", "clinic.name", List.of(Hints.xPadding(2), Hints.font("regular")), "")
+                        c.mBracket("", "clinic.name", "医療機関名", List.of(Hints.xPadding(2), Hints.font("regular")), "")
                 )
         );
         c.multi(
@@ -687,7 +691,7 @@ public class HoumonKango {
                 List.of(
                         c.mJustified("住所", fontSize * 5),
                         c.mSpace(fontSize),
-                        c.mBracket("", "clinic.address", List.of(Hints.xPadding(2), Hints.font("regular")), "")
+                        c.mBracket("", "clinic.address", "医療機関（住所）", List.of(Hints.xPadding(2), Hints.font("regular")), "")
                 )
         );
         c.multi(
@@ -696,7 +700,7 @@ public class HoumonKango {
                 List.of(
                         c.mJustified("電話", fontSize * 5),
                         c.mSpace(fontSize),
-                        c.mBracket("", "clinic.phone", List.of(Hints.xPadding(2), Hints.font("regular")), "")
+                        c.mBracket("", "clinic.phone", "医療機関（電話）", List.of(Hints.xPadding(2), Hints.font("regular")), "")
                 )
         );
         c.multi(
@@ -705,7 +709,7 @@ public class HoumonKango {
                 List.of(
                         c.mLabel("（ＦＡＸ）"),
                         c.mSpace(fontSize),
-                        c.mBracket("", "clinic.fax", List.of(Hints.xPadding(2), Hints.font("regular")), "")
+                        c.mBracket("", "clinic.fax", "医療機関（ＦＡＸ）", List.of(Hints.xPadding(2), Hints.font("regular")), "")
                 )
         );
         c.multi(
@@ -714,7 +718,7 @@ public class HoumonKango {
                 List.of(
                         c.mJustified("医師氏名", fontSize * 5),
                         c.mSpace(fontSize),
-                        c.mSpace(70).mark("doctor-name").addHints(
+                        c.mSpace(70).mark("doctor-name", "医師氏名").addHints(
                                 Hints.rightPadding(30), Hints.font("regular")
                         ),
                         c.mLabel("印")

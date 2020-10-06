@@ -5,6 +5,7 @@ import static dev.myclinic.vertx.drawer.Box.*;
 import dev.myclinic.vertx.drawer.DrawerCompiler;
 import dev.myclinic.vertx.drawer.Render;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,41 +14,44 @@ import java.util.stream.Collectors;
 
 public class FormCompiler extends DrawerCompiler {
 
-    private final Map<String, Render.Rect> marks = new HashMap<>();
+    private final Map<String, Box> marks = new HashMap<>();
     private final Map<String, String> hints = new HashMap<>();
+    private final List<String> descriptions = new ArrayList<>();
 
-    public void addMark(String key, Box box){
-        Render.Rect r = new Render.Rect(box.getLeft(), box.getTop(), box.getRight(), box.getBottom());
-        marks.put(key, r);
-    }
-
-    public void modifyMark(String key, Function<Box, Box> modifier){
-        Render.Rect r = marks.get(key);
-        Box b = new Box(r.left, r.top, r.right, r.bottom);
-        b = modifier.apply(b);
-        r = new Render.Rect(b.getLeft(), b.getTop(), b.getRight(), b.getBottom());
-        marks.put(key, r);
-    }
-
-    public void setHints(String key, List<Hint> hints){
-        if( hints.size() > 0 ){
+    public void addMark(String key, String description, Box box, List<Hint> hints){
+        if( key.indexOf(':') >= 0 ){
+            throw new RuntimeException("mark key cannot contain ':'");
+        }
+        marks.put(key, box);
+        if( hints != null && hints.size() > 0 ){
             String h = hints.stream().map(Hint::serialize).collect(Collectors.joining(":"));
             this.hints.put(key, h);
         }
+        if( description != null ){
+            descriptions.add(String.format("%s:%s", key, description));
+        }
     }
 
-    public void addMarkAndHints(String key, Box box, List<Hint> hints){
-        addMark(key, box);
-        setHints(key, hints);
+    public void modifyMark(String key, Function<Box, Box> modifier){
+        Box b = marks.get(key);
+        b = modifier.apply(b);
+        marks.put(key, b);
     }
 
     public Map<String, Render.Rect> getMarks(){
-        return marks;
+        Map<String, Render.Rect> rs = new HashMap<>();
+        for(String key: marks.keySet()){
+            Box b = marks.get(key);
+            rs.put(key, Render.Rect.fromBox(b));
+        }
+        return rs;
     }
 
     public Map<String, String> getHints(){
         return hints;
     }
+
+    public List<String> getDescriptions(){ return descriptions; }
 
     public Box multi(Box box, VAlign valign, List<Multi> args){
         if( args.size() == 0 ){
@@ -89,8 +93,8 @@ public class FormCompiler extends DrawerCompiler {
         return new MultiSpace(width);
     }
 
-    public MultiBracket mBracket(String left, String mark, List<Hint> hints, String right){
-        return new MultiBracket(left, mark, hints, right);
+    public MultiBracket mBracket(String left, String mark, String description, List<Hint> hints, String right){
+        return new MultiBracket(left, mark, description, hints, right);
     }
 
     public MultiBracket mBracket(String left, String right){

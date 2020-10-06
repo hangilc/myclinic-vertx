@@ -108,7 +108,7 @@ public class HoumonKangoHandler {
     public void handleCreateShijisho(RoutingContext ctx) {
         vertx.<String>executeBlocking(promise -> {
             try {
-                String rsrc = "houmon-kango-form/houmon-kango-form.json";
+                String rsrc = "houmon-kango-form.json";
                 URL url = getClass().getClassLoader().getResource(rsrc);
                 Render.Form form = mapper.readValue(url, Render.Form.class);
                 Render render = new Render(form);
@@ -147,7 +147,7 @@ public class HoumonKangoHandler {
     private void handleListParams(RoutingContext ctx) {
         vertx.<String>executeBlocking(promise -> {
             try {
-                String rsrc = "houmon-kango-form/houmon-kango-form.json";
+                String rsrc = "houmon-kango-form.json";
                 URL url = getClass().getClassLoader().getResource(rsrc);
                 Render.Form form = mapper.readValue(url, Render.Form.class);
                 StringBuilder sb = new StringBuilder();

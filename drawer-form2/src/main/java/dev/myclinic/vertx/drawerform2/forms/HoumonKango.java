@@ -1,27 +1,29 @@
-package dev.myclinic.drawerform2.houmonkango;
+package dev.myclinic.vertx.drawerform2.forms;
 
-import dev.myclinic.drawerform2.FormCompiler;
-import dev.myclinic.drawerform2.Hints;
-import dev.myclinic.vertx.drawer.Box;
-import dev.myclinic.vertx.drawer.DrawerCompiler;
-import dev.myclinic.vertx.drawer.DrawerConsts;
-import dev.myclinic.vertx.drawer.PaperSize;
+import dev.myclinic.vertx.drawerform2.FormCompiler;
+import dev.myclinic.vertx.drawerform2.Hints;
+import dev.myclinic.vertx.drawer.*;
 
 import java.util.List;
 
 import static dev.myclinic.vertx.drawer.Box.HorizAnchor;
 import static dev.myclinic.vertx.drawer.Box.VertAnchor;
 import static dev.myclinic.vertx.drawer.DrawerCompiler.*;
-import static dev.myclinic.vertx.drawer.Render.Form;
+import dev.myclinic.vertx.drawer.form.*;
 
 public class HoumonKango {
 
-    private FormCompiler c = new FormCompiler();
+    private final FormCompiler c = new FormCompiler();
 
     public Form createForm() {
         Form form = new Form();
-        Box paperBox = new Box(PaperSize.A4);
+        String paper = "A4";
+        form.paper = paper;
+        PaperSize paperSize = PaperSize.resolvePaperSize(paper);
+        Box paperBox = new Box(paperSize);
         setupFonts();
+        form.setup = c.getOps();
+        c.clearOps();
         drawTitle(paperBox);
         c.setFont("regular");
         subtitle1(24);
@@ -85,11 +87,13 @@ public class HoumonKango {
                 )
         );
         c.setFont("input-regular");
-        form.page = "A4";
-        form.marks = c.getMarks();
-        form.hints = c.getHints();
-        form.descriptions = c.getDescriptions();
-        form.form = c.getOps();
+        Page page = new Page();
+        page.name = "訪問看護指示書";
+        page.ops = c.getOps();
+        page.marks = c.getMarks();
+        page.hints = c.getHints();
+        page.descriptions = c.getDescriptions();
+        form.pages.add(page);
         return form;
     }
 

@@ -116,9 +116,9 @@ public class DrawerCompiler {
         this.ops = new ArrayList<>();
     }
 
-    public void setOps(List<Op> ops){
-        this.ops = ops;
-    }
+//    public void setOps(List<Op> ops){
+//        this.ops = ops;
+//    }
 
     private void opMoveTo(double x, double y){
         x = transX(x);

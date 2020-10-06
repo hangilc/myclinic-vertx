@@ -2,9 +2,11 @@ package dev.myclinic.vertx.server.integration;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.drawer.DrawerCompiler;
 import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.drawer.PaperSize;
 import dev.myclinic.vertx.drawer.Render;
+import dev.myclinic.vertx.drawer.form.Form;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
 import dev.myclinic.vertx.server.GlobalService;
 import io.vertx.core.Vertx;
@@ -110,8 +112,8 @@ public class HoumonKangoHandler {
             try {
                 String rsrc = "houmon-kango-form.json";
                 URL url = getClass().getClassLoader().getResource(rsrc);
-                Render.Form form = mapper.readValue(url, Render.Form.class);
-                Render render = new Render(form);
+                Form form = mapper.readValue(url, Form.class);
+                DrawerCompiler c = new DrawerCompiler();
                 Map<String, Object> params = mapper.readValue(
                         ctx.getBody().getBytes(),
                         new TypeReference<>() {

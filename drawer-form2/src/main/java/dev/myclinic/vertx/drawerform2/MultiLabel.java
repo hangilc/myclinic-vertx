@@ -1,4 +1,4 @@
-package dev.myclinic.drawerform2;
+package dev.myclinic.vertx.drawerform2;
 
 import dev.myclinic.vertx.drawer.Box;
 import dev.myclinic.vertx.drawer.DrawerCompiler;

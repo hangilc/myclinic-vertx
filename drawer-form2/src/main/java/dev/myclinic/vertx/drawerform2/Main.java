@@ -1,14 +1,15 @@
-package dev.myclinic.drawerform2;
+package dev.myclinic.vertx.drawerform2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import dev.myclinic.drawerform2.houmonkango.HoumonKango;
+import dev.myclinic.vertx.drawer.form.Form;
+import dev.myclinic.vertx.drawer.form.Page;
+import dev.myclinic.vertx.drawerform2.forms.HoumonKango;
 import dev.myclinic.vertx.drawer.*;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import static dev.myclinic.vertx.drawer.Render.Form;
 
 public class Main {
 
@@ -39,17 +40,18 @@ public class Main {
     }
 
     private static void outputPdf(Form form, List<CmdArgs.Mark> marks) throws Exception {
-        PaperSize paperSize = PaperSize.resolvePaperSize(form.page);
-        PdfPrinter pdfPrinter = new PdfPrinter(paperSize);
-        if (marks.size() > 0) {
-            Render render = new Render(form);
-            for (CmdArgs.Mark m : marks) {
-                render.add(m.key, m.value);
-            }
-            pdfPrinter.print(List.of(render.getOps()), System.out);
-        } else {
-            pdfPrinter.print(List.of(form.form), System.out);
+        DrawerCompiler c = new DrawerCompiler();
+        c.importOps(form.setup);
+        c.clearOps();
+        List<List<Op>> pages = new ArrayList<>();
+        for(Page page: form.pages){
+            c.importOps(page.ops);
+            pages.add(c.getOps());
+            c.clearOps();
         }
+        PaperSize paperSize = PaperSize.resolvePaperSize(form.paper);
+        PdfPrinter pdfPrinter = new PdfPrinter(paperSize);
+        pdfPrinter.print(form.setup, pages, System.out);
     }
 
 }

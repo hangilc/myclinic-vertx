@@ -1,9 +1,9 @@
-package dev.myclinic.drawerform2;
+package dev.myclinic.vertx.drawerform2;
 
 import dev.myclinic.vertx.drawer.Box;
 import static dev.myclinic.vertx.drawer.Box.*;
 import dev.myclinic.vertx.drawer.DrawerCompiler;
-import dev.myclinic.vertx.drawer.Render;
+import dev.myclinic.vertx.drawer.form.Rect;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,11 +38,11 @@ public class FormCompiler extends DrawerCompiler {
         marks.put(key, b);
     }
 
-    public Map<String, Render.Rect> getMarks(){
-        Map<String, Render.Rect> rs = new HashMap<>();
+    public Map<String, Rect> getMarks(){
+        Map<String, Rect> rs = new HashMap<>();
         for(String key: marks.keySet()){
             Box b = marks.get(key);
-            rs.put(key, Render.Rect.fromBox(b));
+            rs.put(key, Rect.fromBox(b));
         }
         return rs;
     }

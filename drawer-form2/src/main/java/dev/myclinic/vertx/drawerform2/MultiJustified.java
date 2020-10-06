@@ -1,9 +1,8 @@
-package dev.myclinic.drawerform2;
+package dev.myclinic.vertx.drawerform2;
 
 import dev.myclinic.vertx.drawer.Box;
 import static dev.myclinic.vertx.drawer.Box.HorizAnchor;
 import dev.myclinic.vertx.drawer.DrawerCompiler;
-import static dev.myclinic.vertx.drawer.DrawerCompiler.HAlign;
 
 public class MultiJustified implements Multi {
 

@@ -16,8 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -145,60 +145,32 @@ public class HoumonKangoHandler {
     }
 
     private void handleListParams(RoutingContext ctx) {
-        String rsrcFile = "houmon-kango-form/houmon-kango-params.json";
         vertx.<String>executeBlocking(promise -> {
             try {
-                ctx.response().putHeader("content-type", "text/plain; charset=UTF-8");
-                InputStream is = getClass().getClassLoader().getResourceAsStream(rsrcFile);
-                if (is == null) {
-                    throw new RuntimeException("Cannot find file.");
-                } else {
-                    byte[] bytes = new byte[1024];
-                    Buffer buffer = Buffer.buffer();
-                    while (true) {
-                        int nread = is.read(bytes);
-                        System.out.printf("nread: %d\n", nread);
-                        if (nread <= 0) {
-                            break;
-                        } else {
-                            buffer.appendBytes(bytes, 0, nread);
-                        }
-                    }
-                    is.close();
-                    ctx.response().putHeader("content-length", String.format("%d", buffer.length()));
-                    ctx.response().write(buffer);
+                String rsrc = "houmon-kango-form/houmon-kango-form.json";
+                URL url = getClass().getClassLoader().getResource(rsrc);
+                Render.Form form = mapper.readValue(url, Render.Form.class);
+                StringBuilder sb = new StringBuilder();
+                for (String desc : form.descriptions) {
+                    sb.append(desc);
+                    sb.append("\n");
                 }
+                byte[] bytes = sb.toString().getBytes(StandardCharsets.UTF_8);
+                Buffer buffer = Buffer.buffer(bytes);
+                ctx.response().putHeader("content-type", "text/plain; charset=UTF-8");
+                ctx.response().putHeader("content-length", String.format("%d", bytes.length));
+                ctx.response().write(buffer);
             } catch (Exception e) {
                 promise.fail(e);
             }
-        }, ar -> {
+        }, ar ->
+        {
             if (ar.succeeded()) {
                 ctx.response().end();
             } else {
                 ctx.fail(ar.cause());
             }
         });
-
-//        String url = "https://deno.myclinic.dev/houmon-kango/create-houmon-kango-form.ts";
-//        vertx.<Buffer>executeBlocking(promise -> {
-//            ExecRequest req = new ExecRequest();
-//            Map<String, String> env = new HashMap<>();
-//            env.put("NO_COLOR", "yes");
-//            req.command = List.of("deno", "run", "--allow-net", url, "-p");
-//            req.env = env;
-//            ExecResult er = IntegrationUtil.exec(req);
-//            if (er.stdErr.length == 0) {
-//                promise.complete(Buffer.buffer(er.stdOut));
-//            } else {
-//                promise.fail(new String(er.stdErr, StandardCharsets.UTF_8));
-//            }
-//        }, ar -> {
-//            if (ar.succeeded()) {
-//                ctx.response().end(ar.result());
-//            } else {
-//                ctx.fail(ar.cause());
-//            }
-//        });
     }
 
     private Path getHoumonKangoConfigDir() {

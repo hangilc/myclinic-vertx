@@ -10,6 +10,7 @@ import dev.myclinic.vertx.drawer.PaperSize;
 import java.util.List;
 
 import static dev.myclinic.vertx.drawer.Box.HorizAnchor;
+import static dev.myclinic.vertx.drawer.Box.VertAnchor;
 import static dev.myclinic.vertx.drawer.DrawerCompiler.*;
 import static dev.myclinic.vertx.drawer.Render.Form;
 
@@ -68,6 +69,20 @@ public class HoumonKango {
                 mainBox.getBottom() + 35
         );
         renderAddr(addrBox);
+        Box recipientBox = new Box(
+                mainBox.getLeft(),
+                addrBox.getBottom() + 2,
+                mainBox.getRight(),
+                addrBox.getBottom() + 6
+                ).setHeight(5, VertAnchor.Top);
+        c.multi(
+                recipientBox,
+                VAlign.Center,
+                List.of(
+                        c.mSpace(60).mark("recipient").addHints(Hints.right(), Hints.rightPadding(3)),
+                        c.mLabel("殿")
+                )
+        );
         c.setFont("input-regular");
         form.page = "A4";
         form.marks = c.getMarks();
@@ -157,7 +172,7 @@ public class HoumonKango {
         {
             Box[] cc = cols[1].splitToColumns(55.5);
             c.textIn("様", cc[1], HAlign.Left, VAlign.Center);
-            c.addMarkAndHints("shimei", cc[0], List.of(new Hints.Center()));
+            c.addMarkAndHints("shimei", cc[0], List.of(Hints.center(), Hints.vCenter()));
         }
         {
             Box[] rr = cols[2].splitToEvenRows(2);
@@ -216,7 +231,7 @@ public class HoumonKango {
                     HAlign.Left,
                     VAlign.Center
             );
-            c.addMarkAndHints("address", cols[1], List.of(Hints.leftPadding(2)));
+            c.addMarkAndHints("address", cols[1], List.of(Hints.leftPadding(2), Hints.vCenter()));
         }
     }
 
@@ -232,7 +247,7 @@ public class HoumonKango {
                     HAlign.Left,
                     VAlign.Center
             );
-            c.addMarkAndHints("disease", cols[1], List.of(Hints.leftPadding(2)));
+            c.addMarkAndHints("disease", cols[1], List.of(Hints.leftPadding(2), Hints.vCenter()));
         }
     }
 

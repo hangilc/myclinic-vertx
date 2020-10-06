@@ -9,6 +9,8 @@ import java.util.regex.Pattern;
 public class CircleHint implements Hint {
 
     private static Pattern patRadius = Pattern.compile("radius\\(([0-9.]+)\\)");
+    private final static Pattern patDefaultVAlign =
+            Pattern.compile("default-v-align\\((top|center|bottom)\\)");
 
     private double radius = 2;
 
@@ -17,7 +19,12 @@ public class CircleHint implements Hint {
             if (spec == null || "circle".equals(spec)) {
                 continue;
             }
-            Matcher m = patRadius.matcher(spec);
+            Matcher m;
+            m = patDefaultVAlign.matcher(spec);
+            if( m.matches() ){ // ignore default-v-align
+                continue;
+            }
+            m = patRadius.matcher(spec);
             if (m.matches()) {
                 this.radius = Double.parseDouble(m.group(1));
                 continue;

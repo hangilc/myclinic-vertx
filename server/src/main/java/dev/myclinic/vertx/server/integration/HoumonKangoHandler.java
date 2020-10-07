@@ -3,10 +3,9 @@ package dev.myclinic.vertx.server.integration;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.drawer.DrawerCompiler;
-import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.drawer.PaperSize;
-import dev.myclinic.vertx.drawer.Render;
 import dev.myclinic.vertx.drawer.form.Form;
+import dev.myclinic.vertx.drawer.form.Page;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
 import dev.myclinic.vertx.server.GlobalService;
 import io.vertx.core.Vertx;
@@ -17,11 +16,14 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -119,20 +121,25 @@ public class HoumonKangoHandler {
                         new TypeReference<>() {
                         }
                 );
+                Map<String, String> markTexts = new HashMap<>();
                 for (String key : params.keySet()) {
                     String value = params.get(key).toString();
-                    render.add(key, value);
+                    markTexts.put(key, value);
                 }
-                List<Op> ops = render.getOps();
+                PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
+                pageData.pageId = 0;
+                pageData.markTexts = markTexts;
+                pageData.customRenderers = new HashMap<>();
                 GlobalService gs = GlobalService.getInstance();
                 String outFileIdToken = gs.createTempAppFilePath(
                         GlobalService.getInstance().portalTmpDirToken,
                         "houmon-kango", ".pdf"
                 );
                 Path outFile = gs.resolveAppPath(outFileIdToken);
-                PaperSize resolvedPaperSize = resolvePaperSize(form.page);
-                PdfPrinter pdfPrinter = new PdfPrinter(resolvedPaperSize);
-                pdfPrinter.print(List.of(ops), outFile.toString());
+                PdfPrinter pdfPrinter = new PdfPrinter(form.paper);
+                try(OutputStream os = new FileOutputStream(outFile.toString())){
+                    pdfPrinter.print(form, List.of(pageData), os);
+                }
                 promise.complete(jsonEncode(outFileIdToken));
             } catch (Exception e) {
                 promise.fail(e);
@@ -151,11 +158,13 @@ public class HoumonKangoHandler {
             try {
                 String rsrc = "houmon-kango-form.json";
                 URL url = getClass().getClassLoader().getResource(rsrc);
-                Render.Form form = mapper.readValue(url, Render.Form.class);
+                Form form = mapper.readValue(url, Form.class);
                 StringBuilder sb = new StringBuilder();
-                for (String desc : form.descriptions) {
-                    sb.append(desc);
-                    sb.append("\n");
+                for(Page page: form.pages){
+                    for (String desc : page.descriptions) {
+                        sb.append(desc);
+                        sb.append("\n");
+                    }
                 }
                 byte[] bytes = sb.toString().getBytes(StandardCharsets.UTF_8);
                 Buffer buffer = Buffer.buffer(bytes);

@@ -3,6 +3,9 @@ package dev.myclinic.vertx.drawer.hint;
 public class HintParser {
 
     public static Hint parse(String hintSrc) {
+        if( hintSrc == null ){
+            return null;
+        }
         String[] parts = hintSrc.split(":");
         for (String part : parts) {
             if ("circle".equals(part)) {

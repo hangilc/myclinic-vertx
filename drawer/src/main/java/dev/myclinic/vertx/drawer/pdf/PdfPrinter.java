@@ -11,29 +11,38 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfWriter;
 import dev.myclinic.vertx.drawer.*;
+import dev.myclinic.vertx.drawer.form.Form;
+import dev.myclinic.vertx.drawer.form.Page;
+import dev.myclinic.vertx.drawer.hint.Hint;
+import dev.myclinic.vertx.drawer.hint.HintParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class PdfPrinter {
 
-    private static Logger logger = LoggerFactory.getLogger(PdfPrinter.class);
+    private static final Logger logger = LoggerFactory.getLogger(PdfPrinter.class);
 
     private final double paperWidth;
     private final double paperHeight;
     private boolean inText;
-    private TextContext textContext = new TextContext();
-    private GraphicContext graphicContext = new GraphicContext();
+    private final TextContext textContext = new TextContext();
+    private final GraphicContext graphicContext = new GraphicContext();
     private double shrinkMargin = 0;
 
     public PdfPrinter() {
         this(PaperSize.A4);
+    }
+
+    public PdfPrinter(String paper){
+        this(PaperSize.resolvePaperSize(paper));
     }
 
     public PdfPrinter(PaperSize paperSize) {
@@ -120,6 +129,51 @@ public class PdfPrinter {
             beginGraphicMode(cb);
             inText = false;
         }
+    }
+
+    public interface CustomRenderer {
+        void render(DrawerCompiler c, Box box, String mark, String s, Hint hint);
+    }
+
+    public static class FormPageData {
+        public int pageId;
+        public Map<String, String> markTexts;
+        public Map<String, CustomRenderer> customRenderers;
+    }
+
+    public void print(Form form, List<FormPageData> pageDataList, OutputStream outStream) throws Exception {
+        List<Map<String, Hint>> compiledHints = new ArrayList<>();
+        for (Page formPage : form.pages) {
+            Map<String, Hint> ch = new HashMap<>();
+            for (String key : formPage.hints.keySet()) {
+                String src = formPage.hints.get(key);
+                Hint h = HintParser.parse(src);
+                ch.put(key, h);
+            }
+            compiledHints.add(ch);
+        }
+        DrawerCompiler c = new DrawerCompiler();
+        c.importOps(form.setup);
+        List<List<Op>> pageOps = new ArrayList<>();
+        for (FormPageData data : pageDataList) {
+            c.clearOps();
+            Page formPage = form.pages.get(data.pageId);
+            c.importOps(formPage.ops);
+            Map<String, Hint> ch = compiledHints.get(data.pageId);
+            for(String key: data.markTexts.keySet()){
+                String s = data.markTexts.get(key);
+                CustomRenderer cr = data.customRenderers.get(key);
+                Box box = formPage.marks.get(key).toBox();
+                Hint h = ch.get(key);
+                if( cr != null ){
+                    cr.render(c, box, key, s, h);
+                } else {
+                    Hint.render(c, box, s, h);
+                }
+            }
+            pageOps.add(c.getOps());
+        }
+        print(form.setup, pageOps, outStream);
     }
 
     public interface Callback {

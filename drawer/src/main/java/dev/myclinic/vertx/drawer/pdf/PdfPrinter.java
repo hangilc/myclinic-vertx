@@ -184,7 +184,10 @@ public class PdfPrinter {
     public void print(List<Op> setup, List<List<Op>> pages, OutputStream outStream, Callback callback)
             throws Exception {
         if (pages.size() > 0) {
-            pages.get(0).addAll(setup);
+            List<Op> ops = new ArrayList<>();
+            ops.addAll(setup);
+            ops.addAll(pages.get(0));
+            pages.set(0, ops);
         }
         print(pages, outStream, callback);
     }

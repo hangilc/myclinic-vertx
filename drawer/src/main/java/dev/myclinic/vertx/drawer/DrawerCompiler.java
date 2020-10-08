@@ -207,7 +207,7 @@ public class DrawerCompiler {
     public void popFont() {
         String f = fontStack.pop();
         if( f != null ) {
-            setFont(fontStack.pop());
+            setFont(f);
         }
     }
 
@@ -233,6 +233,55 @@ public class DrawerCompiler {
 
     public double getFontSizeFor(String fontName) {
         return fontMap.get(fontName);
+    }
+
+    public Box measureTextAt(String text, double x, double y, HAlign halign, VAlign valign, TextAtOpt opt,
+                             double fontSize){
+        if( text == null ){
+            text = "";
+        }
+        if( opt == null ){
+            opt = new TextAtOpt();
+        }
+        List<Double> mes = doMeasureChars(text, fontSize);
+        double totalWidth = mes.stream().reduce(Double::sum).orElse(0.0);
+        if( text.length() >= 2 ){
+            if( opt.extraSpaces != null ){
+                for(double spc: opt.extraSpaces){
+                    totalWidth += spc;
+                }
+            } else if( opt.extraSpace != 0 ){
+                totalWidth += opt.extraSpace * (text.length() - 1);
+            }
+        }
+        double left, top;
+        switch (halign) {
+            case Left:
+                left = x;
+                break;
+            case Center:
+                left = x - totalWidth / 2.0;
+                break;
+            case Right:
+                left = x - totalWidth;
+                break;
+            default:
+                throw new RuntimeException("invalid halign: " + halign);
+        }
+        switch (valign) {
+            case Top:
+                top = y;
+                break;
+            case Center:
+                top = y - getCurrentFontSize() / 2;
+                break;
+            case Bottom:
+                top = y - getCurrentFontSize();
+                break;
+            default:
+                throw new RuntimeException("invalid valign: " + valign);
+        }
+        return new Box(left, top, left + totalWidth, top + fontSize);
     }
 
     public Box textAt(String text, double x, double y, HAlign halign, VAlign valign, TextAtOpt opt){
@@ -395,6 +444,37 @@ public class DrawerCompiler {
         double extra = ((bottom - top) - totalHeight) / (text.length() - 1);
         List<Double> ys = composeYs(text.length(), top, getCurrentFontSize(), extra);
         opDrawChars(text, xs, ys);
+    }
+
+    public Box measureTextIn(String text, Box box, HAlign halign, VAlign valign, TextAtOpt opt, double fontSize){
+        double x, y;
+        switch (halign) {
+            case Left:
+                x = box.getLeft();
+                break;
+            case Center:
+                x = box.getCx();
+                break;
+            case Right:
+                x = box.getRight();
+                break;
+            default:
+                throw new RuntimeException("invalid halign:" + halign);
+        }
+        switch (valign) {
+            case Top:
+                y = box.getTop();
+                break;
+            case Center:
+                y = box.getCy();
+                break;
+            case Bottom:
+                y = box.getBottom();
+                break;
+            default:
+                throw new Error("invalid valign: " + valign);
+        }
+        return measureTextAt(text, x, y, halign, valign, opt, fontSize);
     }
 
     public Box textIn(String text, Box box, HAlign halign, VAlign valign, TextAtOpt opt){

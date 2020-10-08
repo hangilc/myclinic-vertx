@@ -136,6 +136,17 @@ public class Hints {
         return new VCenter();
     }
 
+    public static class VBottom implements Hint {
+        @Override
+        public String serialize() {
+            return "v-bottom";
+        }
+    }
+
+    public static VBottom vBottom() {
+        return new VBottom();
+    }
+
     public static class Leading extends SingleValueHint {
         public Leading(double leading){
             super("leading", leading);

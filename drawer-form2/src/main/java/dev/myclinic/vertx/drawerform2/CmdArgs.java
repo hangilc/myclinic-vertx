@@ -18,14 +18,19 @@ class CmdArgs {
     public boolean pdf;
     public boolean nativeEncoding;
     public List<Mark> marks = new ArrayList<>();
+    public String form;
 
 
     static void usage(){
-        System.err.println("Main [options]");
+        System.err.println("Main [options] form");
         System.err.println("options: ");
         System.err.println("--native-encoding");
         System.err.println("--pdf                : output PDF instead of form");
         System.err.println("--mark KEY=VALUE");
+        System.err.println("--help");
+        System.err.println("Available forms are: ");
+        System.err.println("houmon-kango");
+        System.err.println("refer");
     }
 
     static CmdArgs parse(String[] args){
@@ -46,12 +51,26 @@ class CmdArgs {
                     cmdArgs.marks.add(parseMark(m));
                     break;
                 }
-                default: {
-                    System.err.printf("Unknown argument: %s\n", arg);
+                case "--help": {
                     usage();
-                    System.exit(1);
+                    System.exit(0);
+                }
+                default: {
+                    if( cmdArgs.form == null ){
+                        cmdArgs.form = arg;
+                        break;
+                    } else {
+                        System.err.printf("Invalid argument: %s\n", arg);
+                        usage();
+                        System.exit(1);
+                    }
                 }
             }
+        }
+        if( cmdArgs.form == null ){
+            System.err.println("form name is not specified.");
+            usage();
+            System.exit(1);
         }
         return cmdArgs;
     }

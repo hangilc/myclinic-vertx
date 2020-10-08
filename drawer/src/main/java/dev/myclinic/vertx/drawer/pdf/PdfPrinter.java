@@ -41,7 +41,7 @@ public class PdfPrinter {
         this(PaperSize.A4);
     }
 
-    public PdfPrinter(String paper){
+    public PdfPrinter(String paper) {
         this(PaperSize.resolvePaperSize(paper));
     }
 
@@ -135,13 +135,18 @@ public class PdfPrinter {
         void render(DrawerCompiler c, Box box, String mark, String s, Hint hint);
     }
 
+    public interface PageCallback {
+        void render(DrawerCompiler c, int page, int totalPages);
+    }
+
     public static class FormPageData {
         public int pageId;
         public Map<String, String> markTexts;
         public Map<String, CustomRenderer> customRenderers;
     }
 
-    public void print(Form form, List<FormPageData> pageDataList, OutputStream outStream) throws Exception {
+    public void print(Form form, List<FormPageData> pageDataList, PageCallback pageCallback,
+                      OutputStream outStream) throws Exception {
         List<Map<String, Hint>> compiledHints = new ArrayList<>();
         for (Page formPage : form.pages) {
             Map<String, Hint> ch = new HashMap<>();
@@ -155,25 +160,35 @@ public class PdfPrinter {
         DrawerCompiler c = new DrawerCompiler();
         c.importOps(form.setup);
         List<List<Op>> pageOps = new ArrayList<>();
+        int totalPages = pageDataList.size();
+        int page = 1;
         for (FormPageData data : pageDataList) {
             c.clearOps();
             Page formPage = form.pages.get(data.pageId);
             c.importOps(formPage.ops);
             Map<String, Hint> ch = compiledHints.get(data.pageId);
-            for(String key: data.markTexts.keySet()){
+            for (String key : data.markTexts.keySet()) {
                 String s = data.markTexts.get(key);
                 CustomRenderer cr = data.customRenderers.get(key);
                 Box box = formPage.marks.get(key).toBox();
                 Hint h = ch.get(key);
-                if( cr != null ){
+                if (cr != null) {
                     cr.render(c, box, key, s, h);
                 } else {
                     Hint.render(c, box, s, h);
                 }
             }
+            if (pageCallback != null) {
+                pageCallback.render(c, page, totalPages);
+                page += 1;
+            }
             pageOps.add(c.getOps());
         }
         print(form.setup, pageOps, outStream);
+    }
+
+    public void print(Form form, List<FormPageData> pageDataList, OutputStream outStream) throws Exception {
+        print(form, pageDataList, null, outStream);
     }
 
     public interface Callback {
@@ -191,9 +206,6 @@ public class PdfPrinter {
         }
         print(pages, outStream, callback);
     }
-    
-    
-    
 
     public void print(List<Op> setup, List<List<Op>> pages, OutputStream outStream)
             throws Exception {

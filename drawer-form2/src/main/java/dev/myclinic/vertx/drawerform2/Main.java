@@ -4,11 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import dev.myclinic.vertx.drawer.form.Form;
 import dev.myclinic.vertx.drawer.form.Page;
+import dev.myclinic.vertx.drawer.form.Rect;
 import dev.myclinic.vertx.drawerform2.forms.HoumonKango;
 import dev.myclinic.vertx.drawer.*;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
+import dev.myclinic.vertx.drawerform2.forms.Refer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class Main {
@@ -25,8 +28,23 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         CmdArgs cmdArgs = CmdArgs.parse(args);
-        HoumonKango creator = new HoumonKango();
-        Form form = creator.createForm();
+        Form form = null;
+        switch(cmdArgs.form){
+            case "houmon-kango": {
+                HoumonKango houmonKango = new HoumonKango();
+                form = houmonKango.createForm();
+                break;
+            }
+            case "refer": {
+                Refer refer = new Refer();
+                form = refer.createForm();
+                break;
+            }
+            default: {
+                System.err.printf("Unknown form name: %s\n", cmdArgs.form);
+                System.exit(1);
+            }
+        }
         if (cmdArgs.pdf) {
             outputPdf(form, cmdArgs.marks);
         } else {
@@ -40,18 +58,15 @@ public class Main {
     }
 
     private static void outputPdf(Form form, List<CmdArgs.Mark> marks) throws Exception {
-        DrawerCompiler c = new DrawerCompiler();
-        c.importOps(form.setup);
-        c.clearOps();
-        List<List<Op>> pages = new ArrayList<>();
-        for(Page page: form.pages){
-            c.importOps(page.ops);
-            pages.add(c.getOps());
-            c.clearOps();
+        PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
+        pageData.pageId = 0;
+        pageData.markTexts = new HashMap<>();
+        pageData.customRenderers = new HashMap<>();
+        for(CmdArgs.Mark mark: marks){
+            pageData.markTexts.put(mark.key, mark.value);
         }
-        PaperSize paperSize = PaperSize.resolvePaperSize(form.paper);
-        PdfPrinter pdfPrinter = new PdfPrinter(paperSize);
-        pdfPrinter.print(form.setup, pages, System.out);
+        PdfPrinter pdfPrinter = new PdfPrinter(form.paper);
+        pdfPrinter.print(form, List.of(pageData), System.out);
     }
 
 }

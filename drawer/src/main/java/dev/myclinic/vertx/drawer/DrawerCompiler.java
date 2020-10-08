@@ -205,7 +205,10 @@ public class DrawerCompiler {
     }
 
     public void popFont() {
-        setFont(fontStack.pop());
+        String f = fontStack.pop();
+        if( f != null ) {
+            setFont(fontStack.pop());
+        }
     }
 
     public void setFont(String name) {
@@ -247,7 +250,7 @@ public class DrawerCompiler {
                     totalWidth += spc;
                 }
             } else if( opt.extraSpace != 0 ){
-                totalWidth *= opt.extraSpace * (text.length() - 1);
+                totalWidth += opt.extraSpace * (text.length() - 1);
             }
         }
         double left, top;

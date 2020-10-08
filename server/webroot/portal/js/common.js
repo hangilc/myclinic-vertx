@@ -577,6 +577,10 @@ class Rest extends Client {
         });
     }
 
+    async printRefer(data){
+        return await this.post("/print-refer", data);
+    }
+
     async referDrawer(data){
         return await this.post("/refer-drawer", data);
     }

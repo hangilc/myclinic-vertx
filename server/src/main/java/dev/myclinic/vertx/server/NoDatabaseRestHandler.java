@@ -9,6 +9,7 @@ import dev.myclinic.vertx.appconfig.types.StampInfo;
 import dev.myclinic.vertx.drawer.DrawerColor;
 import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.drawer.PaperSize;
+import dev.myclinic.vertx.drawer.form.Form;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
 import dev.myclinic.vertx.drawer.printer.AuxSetting;
 import dev.myclinic.vertx.drawer.printer.DrawerPrinter;
@@ -39,9 +40,8 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.MalformedInputException;
 import java.nio.charset.StandardCharsets;
@@ -189,7 +189,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 });
     }
 
-    private static Map<String, String> mimeMap = new HashMap<>();
+    private static final Map<String, String> mimeMap = new HashMap<>();
 
     {
         mimeMap.put("jpg", "image/jpeg");
@@ -199,7 +199,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         mimeMap.put("pdf", "application/pdf");
     }
 
-    private static Pattern fileExtPattern = Pattern.compile("\\.([^.]+)$");
+    private static final Pattern fileExtPattern = Pattern.compile("\\.([^.]+)$");
 
     private String getFileExtension(String file) {
         Matcher m = fileExtPattern.matcher(file);
@@ -310,6 +310,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("print-guide-frame", this::printGuideFrame);
         noDatabaseFuncMap.put("get-printer-json-setting", this::getPrinterJsonSetting);
         noDatabaseFuncMap.put("save-printer-json-setting", this::savePrinterJsonSetting);
+        noDatabaseFuncMap.put("print-refer", this::printRefer);
         noDatabaseFuncMap.put("refer-drawer", this::referDrawer);
         noDatabaseFuncMap.put("save-refer", this::saveRefer);
         noDatabaseFuncMap.put("list-refer", this::listRefer);
@@ -657,6 +658,50 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 } else {
                     promise.complete("[]");
                 }
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().end(ar.result());
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
+    }
+
+    private Form readFormRsrc(String rsrc) throws IOException {
+        URL url = getClass().getClassLoader().getResource(rsrc);
+        return mapper.readValue(url, Form.class);
+    }
+
+    private String printPdf(Form form, List<PdfPrinter.FormPageData> pageDataList, String tempFilePrefix)
+            throws Exception {
+        String outToken = GlobalService.getInstance().createTempAppFilePath(
+                GlobalService.getInstance().portalTmpDirToken,
+                tempFilePrefix,
+                ".pdf"
+        );
+        Path outPath = GlobalService.getInstance().resolveAppPath(outToken);
+        try(OutputStream os = new FileOutputStream(outPath.toString())){
+            PdfPrinter pdfPrinter = new PdfPrinter(form.paper);
+            pdfPrinter.print(form, pageDataList, os);
+        }
+        return outToken;
+    }
+
+    private void printRefer(RoutingContext ctx){
+        vertx.<String>executeBlocking(promise -> {
+            try {
+                Form form = readFormRsrc("refer-form.json");
+                Map<String, String> marks = mapper.readValue(ctx.getBody().getBytes(),
+                        new TypeReference<>(){});
+                PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
+                pageData.pageId = 0;
+                pageData.markTexts = marks;
+                pageData.customRenderers = new HashMap<>();
+                String token = printPdf(form, List.of(pageData), "refer");
+                promise.complete(jsonEncode(token));
             } catch (Exception e) {
                 promise.fail(e);
             }

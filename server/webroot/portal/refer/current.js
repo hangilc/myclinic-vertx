@@ -119,14 +119,52 @@ export class Current extends Component {
         return data;
     }
 
+    async compilePageData(){
+        let data = { };
+        data.title = this.getReferTitleInput();
+        if( this.patient ){
+            let patient = this.patient;
+            data["patient-name"] = `患者： ${patient.lastName}${patient.firstName} 様`;
+            let birthday = kanjidate.sqldateToKanji(patient.birthday);
+            let age = kanjidate.calcAge(patient.birthday);
+            let sex = patient.sex === "M" ? "男" : "女";
+            data["patient-info"] = `${birthday}生 ${age}才 ${sex}性`;
+        }
+        let clinicInfo = await this.rest.getClinicInfo();
+        data["refer-hospital"] = this.referHospitalElement.val();
+        let doctorValue = this.referDoctorElement.val().trim();
+        if( doctorValue === "" ){
+            doctorValue = "　　　　　　　　"
+        }
+        if( !doctorValue.includes("先生") ){
+            doctorValue += " 先生御机下";
+        }
+        data["refer-doctor"] = doctorValue;
+        data["diagnosis"] = "診断： " + this.diagnosisElement.val();
+        data["content"] = this.contentElement.val();
+        data["issue-date"] = this.issueDateElement.val();
+        data["address-1"] = clinicInfo.postalCode;
+        data["address-2"] = clinicInfo.address;
+        data["address-3"] = "電話 " + clinicInfo.tel;
+        data["address-4"] = "FAX " + clinicInfo.fax;
+        data["clinic-name"] = clinicInfo.name;
+        data["doctor-name"] = clinicInfo.doctorName;
+        return data;
+    }
+
     async doCreate(){
         if( this.patient ){
-            let data = await this.compileData();
-            let ops = await this.rest.referDrawer(data);
-            let savePath = await this.rest.createTempFileName("refer-", ".pdf");
-            await this.rest.saveDrawerAsPdf([ops], "A4", savePath, null);
-            let workarea = new SavedPdfWorkarea(this.rest, savePath, this.patient.patientId);
+            let pageData = await this.compilePageData();
+            let tok = await this.rest.printRefer(pageData);
+            let workarea = new SavedPdfWorkarea(this.rest, tok, this.patient.patientId);
             this.savedPdfWorkareaWrapper.append(workarea.ele);
+
+            // let data = await this.compileData();
+            // let ops = await this.rest.referDrawer(data);
+            // let savePath = await this.rest.createTempFileName("refer-", ".pdf");
+            // await this.rest.saveDrawerAsPdf([ops], "A4", savePath, null);
+            // let workarea = new SavedPdfWorkarea(this.rest, savePath, this.patient.patientId);
+            // this.savedPdfWorkareaWrapper.append(workarea.ele);
         }
     }
 

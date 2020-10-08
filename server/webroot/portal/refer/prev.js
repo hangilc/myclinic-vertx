@@ -54,7 +54,29 @@ export class Prev extends Component {
 
     async doCopy(patientId, prev){
         let data = await this.rest.getRefer(patientId, prev);
+        if( data["doctorName"] ){
+            data["refer-hospital"] = data.referHospital;
+            data["refer-doctor"] = data.referDoctor;
+            data["patient-name"] = data.patientName;
+            data["patient-info"] = data.patientInfo;
+            data["diagnosis"] = adjustDiagnosis(data.diagnosis);
+            data["issue-date"] = data.issueDate;
+            data["address-1"] = data.clinicPostalCode;
+            data["address-2"] = data.clinicAddress;
+            data["address-3"] = data.clinicPhone;
+            data["address-4"] = data.clinicFax;
+            data["clinic-name"] = data.clinicName;
+            data["doctgr-name"] = data.doctorName;
+        }
         this.trigger("copy", data);
+
+        function adjustDiagnosis(diagnosis){
+            if( diagnosis ){
+                return diagnosis.replace(/^診断[:：]\s*/, "");
+            } else {
+                return "";
+            }
+        }
     }
 
     onDeleted(cb){

@@ -79,9 +79,10 @@ let html = `
             </div>
             <div class="form row mt-2">
                 <div class="col-sm-3 d-flex justify-content-end col-form-label">紹介先生</div>
-                <div class="col-sm-9">
+                <div class="col-sm-6">
                     <input type="text" class="x-refer-doctor form-control"/>
                 </div>
+                <div class="col-sm-3 col-form-label">先生御机下</div>
             </div>
             <div class="form row mt-2">
                 <div class="col-sm-3 d-flex justify-content-end col-form-label">診断</div>

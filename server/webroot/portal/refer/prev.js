@@ -55,20 +55,35 @@ export class Prev extends Component {
     async doCopy(patientId, prev){
         let data = await this.rest.getRefer(patientId, prev);
         if( data["doctorName"] ){
-            data["refer-hospital"] = data.referHospital;
-            data["refer-doctor"] = data.referDoctor;
-            data["patient-name"] = data.patientName;
-            data["patient-info"] = data.patientInfo;
-            data["diagnosis"] = adjustDiagnosis(data.diagnosis);
-            data["issue-date"] = data.issueDate;
-            data["address-1"] = data.clinicPostalCode;
-            data["address-2"] = data.clinicAddress;
-            data["address-3"] = data.clinicPhone;
-            data["address-4"] = data.clinicFax;
-            data["clinic-name"] = data.clinicName;
-            data["doctgr-name"] = data.doctorName;
+            let src = data;
+            data = {};
+            data["title"] = src.title;
+            data["refer-hospital"] = src.referHospital;
+            data["refer-doctor"] = adjustReferDoctor(src.referDoctor);
+            data["patient-name"] = adjustPatientName(src.patientName);
+            data["patient-info"] = src.patientInfo;
+            data["diagnosis"] = adjustDiagnosis(src.diagnosis);
+            data["issue-date"] = src.issueDate;
+            data["address-1"] = src.clinicPostalCode;
+            data["address-2"] = src.clinicAddress;
+            data["address-3"] = src.clinicPhone;
+            data["address-4"] = src.clinicFax;
+            data["clinic-name"] = src.clinicName;
+            data["doctgr-name"] = src.doctorName;
+            data["content"] = src.content;
         }
+        console.log("doCopy", data);
         this.trigger("copy", data);
+
+        function adjustReferDoctor(s){
+            s = s.replace(/\s*御机下\s*$/, "");
+            return s.replace(/\s*先生$/, "");
+        }
+
+        function adjustPatientName(name){
+            name = name.replace(/^患者[:：]\s+/, "");
+            return name.replace(/\s*様\s*$/, "");
+        }
 
         function adjustDiagnosis(diagnosis){
             if( diagnosis ){

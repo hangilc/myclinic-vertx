@@ -581,10 +581,6 @@ class Rest extends Client {
         return await this.post("/print-refer", data);
     }
 
-    async referDrawer(data){
-        return await this.post("/refer-drawer", data);
-    }
-
     async saveRefer(data, patientId){
         return await this.post("/save-refer", data, {
             params: {"patient-id": patientId}

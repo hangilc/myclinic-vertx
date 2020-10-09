@@ -86,39 +86,6 @@ export class Current extends Component {
         return this.referTitleControls.find("input[type=radio][name=refer-title]:checked").val();
     }
 
-    // async compileData(){
-    //     let data = { };
-    //     data.title = this.getReferTitleInput();
-    //     if( this.patient ){
-    //         let patient = this.patient;
-    //         data.patientName = `患者： ${patient.lastName}${patient.firstName} 様`;
-    //         let birthday = kanjidate.sqldateToKanji(patient.birthday);
-    //         let age = kanjidate.calcAge(patient.birthday);
-    //         let sex = patient.sex === "M" ? "男" : "女";
-    //         data.patientInfo = `${birthday}生 ${age}才 ${sex}性`;
-    //     }
-    //     let clinicInfo = await this.rest.getClinicInfo();
-    //     data.referHospital = this.referHospitalElement.val();
-    //     let doctorValue = this.referDoctorElement.val().trim();
-    //     if( doctorValue === "" ){
-    //         doctorValue = "　　　　　　　　"
-    //     }
-    //     if( !doctorValue.includes("先生") ){
-    //         doctorValue += " 先生";
-    //     }
-    //     data.referDoctor = doctorValue;
-    //     data.diagnosis = "診断： " + this.diagnosisElement.val();
-    //     data.content = this.contentElement.val();
-    //     data.issueDate = this.issueDateElement.val();
-    //     data.clinicPostalCode = clinicInfo.postalCode;
-    //     data.clinicAddress = clinicInfo.address;
-    //     data.clinicPhone = "電話 " + clinicInfo.tel;
-    //     data.clinicFax = "FAX " + clinicInfo.fax;
-    //     data.clinicName = clinicInfo.name;
-    //     data.doctorName = clinicInfo.doctorName;
-    //     return data;
-    // }
-
     async compileData(){
         let data = { };
         data.title = this.getReferTitleInput();

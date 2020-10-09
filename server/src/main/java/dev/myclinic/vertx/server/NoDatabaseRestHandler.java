@@ -18,8 +18,8 @@ import dev.myclinic.vertx.drawerform.FormCompiler;
 import dev.myclinic.vertx.drawerform.Paper;
 import dev.myclinic.vertx.drawerform.medcert.MedCertData;
 import dev.myclinic.vertx.drawerform.medcert.MedCertForm;
-import dev.myclinic.vertx.drawerform.referform.ReferData;
-import dev.myclinic.vertx.drawerform.referform.ReferForm;
+//import dev.myclinic.vertx.drawerform.referform.ReferData;
+//import dev.myclinic.vertx.drawerform.referform.ReferForm;
 import dev.myclinic.vertx.drawerform.shujiiform.ShujiiData;
 import dev.myclinic.vertx.drawerform.shujiiform.ShujiiForm;
 import dev.myclinic.vertx.dto.*;
@@ -311,7 +311,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("get-printer-json-setting", this::getPrinterJsonSetting);
         noDatabaseFuncMap.put("save-printer-json-setting", this::savePrinterJsonSetting);
         noDatabaseFuncMap.put("print-refer", this::printRefer);
-        noDatabaseFuncMap.put("refer-drawer", this::referDrawer);
+        //noDatabaseFuncMap.put("refer-drawer", this::referDrawer);
         noDatabaseFuncMap.put("save-refer", this::saveRefer);
         noDatabaseFuncMap.put("list-refer", this::listRefer);
         noDatabaseFuncMap.put("get-refer", this::getRefer);
@@ -714,17 +714,17 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         });
     }
 
-    private void referDrawer(RoutingContext ctx) {
-        try {
-            ReferData data = mapper.readValue(ctx.getBody().getBytes(), ReferData.class);
-            ReferForm form = new ReferForm();
-            List<Op> ops = form.render(data);
-            ctx.response().end(jsonEncode(ops));
-        } catch (Exception e) {
-            ctx.fail(e);
-        }
-    }
-
+//    private void referDrawer(RoutingContext ctx) {
+//        try {
+//            ReferData data = mapper.readValue(ctx.getBody().getBytes(), ReferData.class);
+//            ReferForm form = new ReferForm();
+//            List<Op> ops = form.render(data);
+//            ctx.response().end(jsonEncode(ops));
+//        } catch (Exception e) {
+//            ctx.fail(e);
+//        }
+//    }
+//
     private static double objectToDouble(Object obj) {
         if (obj instanceof Number) {
             return ((Number) obj).doubleValue();

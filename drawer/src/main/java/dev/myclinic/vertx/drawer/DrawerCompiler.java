@@ -968,6 +968,7 @@ public class DrawerCompiler {
                     return new ParagraphResult(origBox.setBottom(box.getTop()), endIndex);
                 }
                 String line = src.substring(lineSlice.start, lineSlice.end);
+                System.err.printf("line: %s\n", line);
                 box = textIn(line, box, halign, valign);
                 box = origBox.setTop(box.getBottom());
                 box.shrinkHeight(leading, VertAnchor.Bottom);

@@ -742,7 +742,6 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     paraHint.getHAlign(), paraHint.getLeading());
             pageData.markTexts.put("content", content.substring(0, pr.renderedEndIndex));
             content = content.substring(pr.renderedEndIndex);
-            System.err.printf("Conent length %d", content.length());
             pageData.customRenderers = new HashMap<>();
             result.add(pageData);
         }
@@ -768,7 +767,6 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     paraHint.getHAlign(), paraHint.getLeading());
             pageData.markTexts.put("content", content.substring(0, pr.renderedEndIndex));
             content = content.substring(pr.renderedEndIndex);
-            System.err.printf("content length %d\n", content.length());
             pageData.customRenderers = new HashMap<>();
             result.add(pageData);
         }

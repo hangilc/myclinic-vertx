@@ -9,30 +9,29 @@ public class LineBreaker2 {
         public int start;
         public int end;
 
-        public  Slice(int start, int end) {
+        public Slice(int start, int end) {
             this.start = start;
             this.end = end;
         }
     }
 
-    public static List<Slice> breakToLines(List<Double> cws, double lineWidth){
+    public static List<Slice> breakToLines(List<Double> cws, double lineWidth) {
         List<Slice> result = new ArrayList<>();
         int curStart = 0;
         int curEnd = 0;
         double curWidth = 0;
         int i = 0;
-        for(double cw: cws){
-            if( curEnd == curStart || curWidth + cw <= lineWidth ){
-                curWidth += cw;
-                curEnd = i;
-            } else {
+        for (double cw : cws) {
+            if (curStart != curEnd && curWidth + cw > lineWidth) {
                 result.add(new Slice(curStart, curEnd));
                 curStart = curEnd;
                 curWidth = 0;
             }
+            curWidth += cw;
+            curEnd = i + 1;
             i += 1;
         }
-        if( curStart < curEnd ){
+        if (curStart < curEnd) {
             result.add(new Slice(curStart, curEnd));
         }
         return result;

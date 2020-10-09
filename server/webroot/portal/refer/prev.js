@@ -72,7 +72,6 @@ export class Prev extends Component {
             data["doctgr-name"] = src.doctorName;
             data["content"] = src.content;
         }
-        console.log("doCopy", data);
         this.trigger("copy", data);
 
         function adjustReferDoctor(s){

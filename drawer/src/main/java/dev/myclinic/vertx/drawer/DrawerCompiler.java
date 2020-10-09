@@ -957,6 +957,7 @@ public class DrawerCompiler {
         VAlign valign = VAlign.Top;
         List<LineBreaker2.Slice> chunks = splitByNewLines(src);
         double fontSize = getCurrentFontSize();
+        boolean isFirstLine = true;
         for(LineBreaker2.Slice slice: chunks){
             endIndex = slice.start;
             List<Double> cws = doMeasureChars(src.substring(slice.start, slice.end), fontSize);
@@ -964,14 +965,22 @@ public class DrawerCompiler {
                     .stream().map(s -> new LineBreaker2.Slice(slice.start + s.start, slice.start + s.end))
                     .collect(Collectors.toList());
             for(LineBreaker2.Slice lineSlice: lines){
-                if( box.getHeight() < fontSize ){
+                double reqHeight = fontSize;
+                if( !isFirstLine ){
+                    reqHeight += leading;
+                }
+                if( box.getHeight() < reqHeight ){
+                    System.err.printf("para1 returning: %s\n", src.substring(0, endIndex));
                     return new ParagraphResult(origBox.setBottom(box.getTop()), endIndex);
                 }
                 String line = src.substring(lineSlice.start, lineSlice.end);
-                System.err.printf("line: %s\n", line);
+                if( isFirstLine ){
+                    isFirstLine = false;
+                } else {
+                    box = box.shrinkHeight(leading, VertAnchor.Bottom);
+                }
                 box = textIn(line, box, halign, valign);
                 box = origBox.setTop(box.getBottom());
-                box.shrinkHeight(leading, VertAnchor.Bottom);
                 endIndex = lineSlice.end;
             }
         }

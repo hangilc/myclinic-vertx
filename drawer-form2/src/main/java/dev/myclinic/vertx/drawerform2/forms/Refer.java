@@ -19,8 +19,9 @@ public class Refer {
     private final PaperSize paper = PaperSize.A4;
     private final Box paperBox = new Box(0, 0, paper.getWidth(), paper.getHeight());
     private final Box contentBox = new Box(30, 103, 170, 210);
-    private final Box contentBoxFirst = new Box(30, 103, 170, paper.getHeight() - 45);
-    private final Box contentBoxSecond = new Box(30, 40, 170, 210);
+    private final Box contentBoxMultiFirst = new Box(30, 103, 170, paper.getHeight() - 45);
+    private final Box contentBoxMultiMiddle = new Box(30, 40, 170, paper.getHeight() - 45);
+    private final Box contentBoxMultiLast = new Box(30, 40, 170, 210);
     private final Point titlePoint = new Point(paperBox.getCx(), 41);
     private final Point referHospitalPoint = new Point(30, 58);
     private final Point referDoctorPoint = new Point(30, 58+6);
@@ -40,6 +41,7 @@ public class Refer {
         pages.add(page0());
         pages.add(page1());
         pages.add(page2());
+        pages.add(page3());
         form.pages = pages;
         return form;
     }
@@ -62,7 +64,7 @@ public class Refer {
         markIssueDate();
         renderAddress();
         Page page = new Page();
-        page.name = "単ページ紹介状";
+        page.name = "single-page";
         page.ops = c.getOps();
         page.marks = c.getMarks();
         page.hints = c.getHints();
@@ -76,14 +78,15 @@ public class Refer {
 
     private Page page1(){
         Page page = new Page();
-        page.name = "複数ページ紹介状（最初のページ）";
+        page.name = "multi-page-first";
         markTitle();
         markReferHospital();
         markReferDoctor();
         markPatientName();
         markPatientInfo();
         markDiagnosis();
-        markContent(contentBoxFirst);
+        markContent(contentBoxMultiFirst);
+        c.box(contentBoxMultiFirst);
         page.ops = c.getOps();
         page.marks = c.getMarks();
         page.hints = c.getHints();
@@ -97,8 +100,24 @@ public class Refer {
 
     private Page page2(){
         Page page = new Page();
-        page.name = "複数ページ紹介状（最初のページ）";
-        markContent(contentBoxSecond);
+        page.name = "multi-page-middle";
+        markContent(contentBoxMultiMiddle);
+        c.box(contentBoxMultiMiddle);
+        page.ops = c.getOps();
+        page.marks = c.getMarks();
+        page.hints = c.getHints();
+        page.descriptions = c.getDescriptions();
+        c.clearOps();
+        c.clearMarks();
+        c.clearHints();
+        c.clearDescriptions();
+        return page;
+    }
+
+    private Page page3(){
+        Page page = new Page();
+        page.name = "multi-page-last";
+        markContent(contentBoxMultiLast);
         markIssueDate();
         renderAddress();
         page.ops = c.getOps();

@@ -6,7 +6,7 @@ import static dev.myclinic.vertx.drawer.DrawerCompiler.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class HintBase {
+public class HintBase {
 
     private double leftPadding = 0;
     private double topPadding = 0;

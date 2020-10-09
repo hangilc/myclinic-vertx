@@ -34,11 +34,12 @@ public class CircleHint implements Hint {
     }
 
     @Override
-    public void render(DrawerCompiler compiler, Box box, String s) {
+    public Box render(DrawerCompiler compiler, Box box, String s) {
         if (!"false".equals(s)) {
             double cx = box.getCx();
             double cy = box.getCy();
             compiler.circle(cx, cy, radius);
         }
+        return box;
     }
 }

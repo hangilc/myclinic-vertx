@@ -6,15 +6,13 @@ import dev.myclinic.vertx.drawer.DrawerCompiler;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static dev.myclinic.vertx.drawer.DrawerCompiler.*;
-
-class ParaHint extends HintBase implements Hint {
+public class ParaHint extends HintBase implements Hint {
 
     private double leading = 0;
 
     private final static Pattern patLeading = Pattern.compile("leading\\(([0-9.]+)\\)");
 
-    public ParaHint(String[] args){
+    public ParaHint(String[] args) {
         for (String a : args) {
             if (a == null || "para".equals(a) || parse(a)) {
                 continue;
@@ -29,17 +27,22 @@ class ParaHint extends HintBase implements Hint {
     }
 
     @Override
-    public void render(DrawerCompiler compiler, Box box, String s) {
+    public Box render(DrawerCompiler compiler, Box box, String s) {
         box = adjustBox(box);
         String font = getFont();
-        if( font != null ){
+        if (font != null) {
             compiler.pushFont();
             compiler.setFont(font);
         }
-        compiler.paragraph(s, box, getHAlign(), getVAlign(), leading);
-        if( font != null ){
+        Box b = compiler.paragraph(s, box, getHAlign(), getVAlign(), leading);
+        if (font != null) {
             compiler.popFont();
         }
+        return b;
+    }
+
+    public double getLeading(){
+        return leading;
     }
 
 }

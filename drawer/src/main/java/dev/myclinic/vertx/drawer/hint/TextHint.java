@@ -32,17 +32,19 @@ public class TextHint extends HintBase implements Hint {
     }
 
     @Override
-    public void render(DrawerCompiler compiler, Box box, String s) {
+    public Box render(DrawerCompiler compiler, Box box, String s) {
         box = adjustBox(box);
         String font = getFont();
         if( font != null ){
             compiler.pushFont();
             compiler.setFont(font);
         }
-        compiler.textIn(s, box, super.getHAlign(), getVAlign(), new DrawerCompiler.TextAtOpt(spacing));
+        Box r = compiler.textIn(s, box, super.getHAlign(), getVAlign(),
+                new DrawerCompiler.TextAtOpt(spacing));
         if( font != null ){
             compiler.popFont();
         }
+        return r;
     }
 
 }

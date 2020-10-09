@@ -58,15 +58,23 @@ public class Main {
     }
 
     private static void outputPdf(Form form, List<CmdArgs.Mark> marks) throws Exception {
-        PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
-        pageData.pageId = 0;
-        pageData.markTexts = new HashMap<>();
-        pageData.customRenderers = new HashMap<>();
-        for(CmdArgs.Mark mark: marks){
-            pageData.markTexts.put(mark.key, mark.value);
+        List<PdfPrinter.FormPageData> pageDataList = new ArrayList<>();
+        for(int i=0;i<form.pages.size();i++){
+            Page page = form.pages.get(i);
+            PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
+            pageData.pageId = i;
+            pageData.markTexts = new HashMap<>();
+            pageData.customRenderers = new HashMap<>();
+            for(CmdArgs.Mark mark: marks){
+                String key = mark.key;
+                if( page.marks.containsKey(key) ){
+                    pageData.markTexts.put(key, mark.value);
+                }
+            }
+            pageDataList.add(pageData);
         }
         PdfPrinter pdfPrinter = new PdfPrinter(form.paper);
-        pdfPrinter.print(form, List.of(pageData), System.out);
+        pdfPrinter.print(form, pageDataList, System.out);
     }
 
 }

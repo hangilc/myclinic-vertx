@@ -47,11 +47,23 @@ public class FormCompiler extends DrawerCompiler {
         return rs;
     }
 
-    public Map<String, String> getHints(){
-        return hints;
+    public void clearMarks(){
+        marks.clear();
     }
 
-    public List<String> getDescriptions(){ return descriptions; }
+    public Map<String, String> getHints(){
+        return new HashMap<>(hints);
+    }
+
+    public void clearHints(){
+        hints.clear();
+    }
+
+    public List<String> getDescriptions(){ return new ArrayList<>(descriptions); }
+
+    public void clearDescriptions(){
+        descriptions.clear();
+    }
 
     public Box multi(Box box, VAlign valign, List<Multi> args){
         if( args.size() == 0 ){

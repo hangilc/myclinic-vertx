@@ -7,13 +7,20 @@ import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.appconfig.types.ShohousenGrayStampInfo;
 import dev.myclinic.vertx.appconfig.types.StampInfo;
 import dev.myclinic.vertx.drawer.DrawerColor;
+import dev.myclinic.vertx.drawer.DrawerCompiler;
 import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.drawer.PaperSize;
 import dev.myclinic.vertx.drawer.form.Form;
+import dev.myclinic.vertx.drawer.form.Page;
+import dev.myclinic.vertx.drawer.hint.Hint;
+import dev.myclinic.vertx.drawer.hint.HintBase;
+import dev.myclinic.vertx.drawer.hint.HintParser;
+import dev.myclinic.vertx.drawer.hint.ParaHint;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
 import dev.myclinic.vertx.drawer.printer.AuxSetting;
 import dev.myclinic.vertx.drawer.printer.DrawerPrinter;
-import dev.myclinic.vertx.drawerform.Box;
+import dev.myclinic.vertx.drawer.Box;
+//import dev.myclinic.vertx.drawerform.Box;
 import dev.myclinic.vertx.drawerform.FormCompiler;
 import dev.myclinic.vertx.drawerform.Paper;
 import dev.myclinic.vertx.drawerform.medcert.MedCertData;
@@ -690,17 +697,95 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         return outToken;
     }
 
+    private List<PdfPrinter.FormPageData> trySinglePageRefer(Form form, Map<String, String> marks){
+        Page page = form.pages.get(0);
+        DrawerCompiler c = new DrawerCompiler();
+        c.importOps(form.setup);
+        Box box = page.marks.get("content").toBox();
+        String s = marks.get("content");
+        Box rendered = Hint.render(c, box, s, page.hints.get("content"));
+        if( rendered.getBottom() > box.getBottom() ){
+            return null;
+        } else {
+            PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
+            pageData.pageId = 0;
+            pageData.markTexts = marks;
+            pageData.customRenderers = new HashMap<>();
+            return List.of(pageData);
+        }
+    }
+
+    private List<PdfPrinter.FormPageData> multiPageRefer(Form form, Map<String, String> marks){
+        List<PdfPrinter.FormPageData> result = new ArrayList<>();
+        DrawerCompiler c = new DrawerCompiler();
+        String content = marks.get("content");
+        c.importOps(form.setup);
+        {
+            Page page1 = form.pages.get(1);
+            PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
+            pageData.pageId = 1;
+            pageData.markTexts = new HashMap<>();
+            for(String key: marks.keySet()){
+                if( page1.marks.containsKey(key) ){
+                    if( !key.equals("content") ) {
+                        pageData.markTexts.put(key, marks.get(key));
+                    }
+                }
+            }
+            ParaHint paraHint = (ParaHint)HintParser.parse(page1.hints.get("content"));
+            String font = paraHint.getFont();
+            if( font == null ){
+                throw new RuntimeException("Cannot find font of paragraph (refer).");
+            }
+            c.setFont(font);
+            DrawerCompiler.ParagraphResult pr = c.paragraph2(content, page1.marks.get("content").toBox(),
+                    paraHint.getHAlign(), paraHint.getLeading());
+            pageData.markTexts.put("content", content.substring(0, pr.renderedEndIndex));
+            content = content.substring(pr.renderedEndIndex);
+            System.err.printf("Conent length %d", content.length());
+            pageData.customRenderers = new HashMap<>();
+            result.add(pageData);
+        }
+        Page page2 = form.pages.get(2);
+        while( content.length() > 0 ){
+            PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
+            pageData.pageId = 2;
+            pageData.markTexts = new HashMap<>();
+            for(String key: marks.keySet()){
+                if( page2.marks.containsKey(key) ){
+                    if( !key.equals("content") ) {
+                        pageData.markTexts.put(key, marks.get(key));
+                    }
+                }
+            }
+            ParaHint paraHint = (ParaHint)HintParser.parse(page2.hints.get("content"));
+            String font = paraHint.getFont();
+            if( font == null ){
+                throw new RuntimeException("Cannot find font of paragraph (refer).");
+            }
+            c.setFont(font);
+            DrawerCompiler.ParagraphResult pr = c.paragraph2(content, page2.marks.get("content").toBox(),
+                    paraHint.getHAlign(), paraHint.getLeading());
+            pageData.markTexts.put("content", content.substring(0, pr.renderedEndIndex));
+            content = content.substring(pr.renderedEndIndex);
+            System.err.printf("content length %d\n", content.length());
+            pageData.customRenderers = new HashMap<>();
+            result.add(pageData);
+        }
+        return result;
+    }
+
     private void printRefer(RoutingContext ctx){
         vertx.<String>executeBlocking(promise -> {
             try {
                 Form form = readFormRsrc("refer-form.json");
                 Map<String, String> marks = mapper.readValue(ctx.getBody().getBytes(),
                         new TypeReference<>(){});
-                PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
-                pageData.pageId = 0;
-                pageData.markTexts = marks;
-                pageData.customRenderers = new HashMap<>();
-                String token = printPdf(form, List.of(pageData), "refer");
+                List<PdfPrinter.FormPageData> pageDataList = trySinglePageRefer(form, marks);
+                if( pageDataList == null ){
+                    pageDataList = multiPageRefer(form, marks);
+                }
+                String token = printPdf(form, pageDataList, "refer");
                 promise.complete(jsonEncode(token));
             } catch (Exception e) {
                 promise.fail(e);
@@ -876,7 +961,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 c.setOffsetX(jsonSetting.offsetX);
                 c.setOffsetY(jsonSetting.offsetY);
                 c.createPen("regular", 0, 0, 0, 0.2);
-                c.box(new Box(0, 0, paper.getWidth(), paper.getHeight()).inset(inset));
+                c.box(new dev.myclinic.vertx.drawerform.Box(0, 0, paper.getWidth(), paper.getHeight()).inset(inset));
                 List<Op> ops = c.getOps();
                 DrawerPrinter printer = new DrawerPrinter();
                 printer.print(ops, setting.devmode, setting.devnames);

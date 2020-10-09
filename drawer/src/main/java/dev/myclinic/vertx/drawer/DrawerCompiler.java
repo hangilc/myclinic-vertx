@@ -5,6 +5,8 @@ import dev.myclinic.vertx.drawer.render.Renderable;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import static dev.myclinic.vertx.drawer.Box.*;
+import static dev.myclinic.vertx.drawer.DrawerCompiler.*;
 
 import static java.util.stream.Collectors.toList;
 
@@ -109,11 +111,11 @@ public class DrawerCompiler {
     }
 
     public List<Op> getOps() {
-        return ops;
+        return new ArrayList<>(ops);
     }
 
     public void clearOps(){
-        this.ops = new ArrayList<>();
+        this.ops.clear();
     }
 
 //    public void setOps(List<Op> ops){
@@ -864,9 +866,9 @@ public class DrawerCompiler {
         return new MultiTextResult(index == lines.size(), index, box.getTop() - y);
     }
 
-    public double multilineText(Collection<String> lines, Box box, HAlign halign, VAlign valign, double leading) {
+    public Box multilineText(Collection<String> lines, Box box, HAlign halign, VAlign valign, double leading) {
         if (lines == null || lines.size() == 0) {
-            return box.getTop();
+            return box.copy().setHeight(0, VertAnchor.Top);
         }
         int nLines = lines.size();
         double y;
@@ -878,11 +880,12 @@ public class DrawerCompiler {
                 y = box.getTop() + (box.getHeight() - calcTotalHeight(nLines, getCurrentFontSize(), leading)) / 2;
                 break;
             case Bottom:
-                y = box.getTop() + box.getHeight() - calcTotalHeight(nLines, getCurrentFontSize(), leading);
+                y = box.getBottom() - calcTotalHeight(nLines, getCurrentFontSize(), leading);
                 break;
             default:
                 throw new RuntimeException("invalid valign: " + valign);
         }
+        double drawerTop = y;
         double x;
         switch (halign) {
             case Left:
@@ -901,14 +904,14 @@ public class DrawerCompiler {
             textAt(line, x, y, halign, VAlign.Top);
             y += getCurrentFontSize() + leading;
         }
-        return y - leading;
+        return new Box(box.getLeft(), drawerTop, box.getRight(), y - leading);
     }
 
-    public double multilineText(String[] lines, Box box, HAlign halign, VAlign valign, double leading) {
+    public Box multilineText(String[] lines, Box box, HAlign halign, VAlign valign, double leading) {
         return multilineText(Arrays.asList(lines), box, halign, valign, leading);
     }
 
-    public double paragraph(String src, Box box, HAlign halign, VAlign valign, double leading) {
+    public Box paragraph(String src, Box box, HAlign halign, VAlign valign, double leading) {
         String[] para = src.split("\\r?\n");
         List<String> lines = new ArrayList<>();
         double width = box.getWidth();
@@ -917,6 +920,64 @@ public class DrawerCompiler {
             lines.addAll(bl);
         }
         return multilineText(lines, box, halign, valign, leading);
+    }
+
+    private List<LineBreaker2.Slice> splitByNewLines(String s){
+        int curStart = 0;
+        List<LineBreaker2.Slice> result = new ArrayList<>();
+        for(int i=0;i<s.length();i++){
+            char c = s.charAt(i);
+            if( c == '\r' || c == '\n' ){
+                result.add(new LineBreaker2.Slice(curStart, i));
+                if( c == '\r' && i + 1 < s.length() && s.charAt(i+1) == '\n' ){
+                    i += 1;
+                }
+                curStart = i + 1;
+            }
+        }
+        if( curStart < s.length() ){
+            result.add(new LineBreaker2.Slice(curStart, s.length()));
+        }
+        return result;
+    }
+
+    public static class ParagraphResult {
+        public Box box;
+        public int renderedEndIndex;
+
+        private ParagraphResult(Box box, int renderedEndIndex) {
+            this.box = box;
+            this.renderedEndIndex = renderedEndIndex;
+        }
+    }
+
+    public ParagraphResult paragraph2(String src, Box box, HAlign halign, double leading){
+        Box origBox = box;
+        int endIndex = 0;
+        VAlign valign = VAlign.Top;
+        List<LineBreaker2.Slice> chunks = splitByNewLines(src);
+        double fontSize = getCurrentFontSize();
+        for(LineBreaker2.Slice slice: chunks){
+            endIndex = slice.start;
+            List<Double> cws = doMeasureChars(src.substring(slice.start, slice.end), fontSize);
+            List<LineBreaker2.Slice> lines = LineBreaker2.breakToLines(cws, box.getWidth())
+                    .stream().map(s -> new LineBreaker2.Slice(slice.start + s.start, slice.start + s.end))
+                    .collect(Collectors.toList());
+            for(LineBreaker2.Slice lineSlice: lines){
+                if( box.getHeight() < fontSize ){
+                    return new ParagraphResult(origBox.setBottom(box.getTop()), endIndex);
+                }
+                String line = src.substring(lineSlice.start, lineSlice.end);
+                box = textIn(line, box, halign, valign);
+                box = origBox.setTop(box.getBottom());
+                box.shrinkHeight(leading, VertAnchor.Bottom);
+                endIndex = lineSlice.end;
+            }
+        }
+        return new ParagraphResult(
+                origBox.setBottom(box.getTop()),
+                src.length()
+        );
     }
 
     public double calcTotalHeight(int nLines, double fontSize, double leading) {

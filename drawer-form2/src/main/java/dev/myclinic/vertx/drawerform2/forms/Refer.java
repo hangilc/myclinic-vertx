@@ -10,6 +10,7 @@ import dev.myclinic.vertx.drawerform2.FormCompiler;
 import dev.myclinic.vertx.drawerform2.Hints;
 import static dev.myclinic.vertx.drawer.DrawerCompiler.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Refer {
@@ -18,6 +19,8 @@ public class Refer {
     private final PaperSize paper = PaperSize.A4;
     private final Box paperBox = new Box(0, 0, paper.getWidth(), paper.getHeight());
     private final Box contentBox = new Box(30, 103, 170, 210);
+    private final Box contentBoxFirst = new Box(30, 103, 170, paper.getHeight() - 45);
+    private final Box contentBoxSecond = new Box(30, 40, 170, 210);
     private final Point titlePoint = new Point(paperBox.getCx(), 41);
     private final Point referHospitalPoint = new Point(30, 58);
     private final Point referDoctorPoint = new Point(30, 58+6);
@@ -33,21 +36,11 @@ public class Refer {
         setupFonts();
         form.setup = c.getOps();
         c.clearOps();
-        markTitle();
-        markReferHospital();
-        markReferDoctor();
-        markPatientName();
-        markPatientInfo();
-        markDiagnosis();
-        markIssueDate();
-        renderAddress();
-        markContent();
-        Page page = new Page();
-        page.name = "単ページ紹介状";
-        page.ops = c.getOps();
-        page.marks = c.getMarks();
-        page.hints = c.getHints();
-        form.pages = List.of(page);
+        List<Page> pages = new ArrayList<>();
+        pages.add(page0());
+        pages.add(page1());
+        pages.add(page2());
+        form.pages = pages;
         return form;
     }
 
@@ -56,6 +49,67 @@ public class Refer {
         c.createFont("serif-5", "MS Mincho", 5);
         c.createFont("serif-5-bold", "MS Mincho", 5, PrinterConsts.FW_BOLD, false);
         c.createFont("serif-4", "MS Mincho", 4);
+    }
+
+    private Page page0(){
+        markTitle();
+        markReferHospital();
+        markReferDoctor();
+        markPatientName();
+        markPatientInfo();
+        markDiagnosis();
+        markContent(contentBox);
+        markIssueDate();
+        renderAddress();
+        Page page = new Page();
+        page.name = "単ページ紹介状";
+        page.ops = c.getOps();
+        page.marks = c.getMarks();
+        page.hints = c.getHints();
+        page.descriptions = c.getDescriptions();
+        c.clearOps();
+        c.clearMarks();
+        c.clearHints();
+        c.clearDescriptions();
+        return page;
+    }
+
+    private Page page1(){
+        Page page = new Page();
+        page.name = "複数ページ紹介状（最初のページ）";
+        markTitle();
+        markReferHospital();
+        markReferDoctor();
+        markPatientName();
+        markPatientInfo();
+        markDiagnosis();
+        markContent(contentBoxFirst);
+        page.ops = c.getOps();
+        page.marks = c.getMarks();
+        page.hints = c.getHints();
+        page.descriptions = c.getDescriptions();
+        c.clearOps();
+        c.clearMarks();
+        c.clearHints();
+        c.clearDescriptions();
+        return page;
+    }
+
+    private Page page2(){
+        Page page = new Page();
+        page.name = "複数ページ紹介状（最初のページ）";
+        markContent(contentBoxSecond);
+        markIssueDate();
+        renderAddress();
+        page.ops = c.getOps();
+        page.marks = c.getMarks();
+        page.hints = c.getHints();
+        page.descriptions = c.getDescriptions();
+        c.clearOps();
+        c.clearMarks();
+        c.clearHints();
+        c.clearDescriptions();
+        return page;
     }
 
     private void markTitle(){
@@ -128,8 +182,8 @@ public class Refer {
         ));
     }
 
-    private void markContent(){
-        c.addMark("content", "内容", contentBox, List.of(Hints.para(), Hints.font("serif-4")));
+    private void markContent(Box box){
+        c.addMark("content", "内容", box, List.of(Hints.para(), Hints.font("serif-4")));
     }
 
 }

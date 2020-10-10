@@ -912,10 +912,6 @@ public class DrawerCompiler {
     }
 
     public Box paragraph(String src, Box box, HAlign halign, VAlign valign, double leading) {
-        System.err.printf("PARAGRAPH BOX: %g X %g\n", box.getWidth(), box.getHeight());
-        System.err.printf("PARAGRAPH FONT-SIZE: %g\n", getCurrentFontSize());
-        System.err.printf("PARAGRAPH CONTENT-LENGTH: %d\n", src.length());
-        System.err.printf("PARAGRAPH CONTENT: %s --- %s\n", src.substring(0, 10), src.substring(src.length() - 10));
         String[] para = src.split("\\r?\n");
         List<String> lines = new ArrayList<>();
         double width = box.getWidth();
@@ -956,19 +952,10 @@ public class DrawerCompiler {
     }
 
     public ParagraphResult paragraph2(String src, Box box, HAlign halign, double leading){
-        System.err.printf("\n\nENTER PARAGRAPH2 with Box %g X %g =================\n", box.getWidth(), box.getHeight());
-        int nLines = 0;
         Box origBox = box;
         int endIndex = 0;
         VAlign valign = VAlign.Top;
         List<LineBreaker2.Slice> chunks = splitByNewLines(src);
-        {
-            System.err.println("=== CHUNKS ===");
-            for(LineBreaker2.Slice slice: chunks){
-                String chunk = src.substring(slice.start, slice.end);
-                System.err.printf("  CHUNK -- %s\n", chunk);
-            }
-        }
         double fontSize = getCurrentFontSize();
         boolean isFirstLine = true;
         for(LineBreaker2.Slice slice: chunks){
@@ -983,12 +970,9 @@ public class DrawerCompiler {
                     reqHeight += leading;
                 }
                 if( box.getHeight() < reqHeight ){
-                    System.err.printf("LEAVE PARAGRAPH2 after %d lines -- %s\n\n", nLines,
-                            src.substring(endIndex - 10, endIndex));
                     return new ParagraphResult(origBox.setBottom(box.getTop()), endIndex);
                 }
                 String line = src.substring(lineSlice.start, lineSlice.end);
-                nLines += 1;
                 if( isFirstLine ){
                     isFirstLine = false;
                 } else {
@@ -997,9 +981,6 @@ public class DrawerCompiler {
                 box = textIn(line, box, halign, valign);
                 box = origBox.setTop(box.getBottom());
                 endIndex = lineSlice.end;
-                System.err.printf("ADDED LINE (%d) -> Box %g X %g -- %s\n",
-                        nLines, box.getWidth(), box.getHeight(),
-                        line);
             }
         }
         return new ParagraphResult(

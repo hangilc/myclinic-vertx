@@ -1,6 +1,7 @@
 package dev.myclinic.vertx.drawerform2.forms;
 
 import dev.myclinic.vertx.drawer.Box;
+import static dev.myclinic.vertx.drawer.Box.*;
 import dev.myclinic.vertx.drawer.PaperSize;
 import dev.myclinic.vertx.drawer.Point;
 import dev.myclinic.vertx.drawer.form.Form;
@@ -14,6 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Refer {
+
+    private static Box centeredBox(double cx, double cy){
+        return new Box(cx, cy, cx, cy);
+    }
 
     private final FormCompiler c = new FormCompiler();
     private final PaperSize paper = PaperSize.A4;
@@ -30,6 +35,8 @@ public class Refer {
     private final Point diagnosisPoint = new Point(30, 96);
     private final Point issueDatePoint = new Point(30, 220);
     private final Point addressPoint = new Point(118, 220);
+    private final Box pageTagBox = centeredBox(paper.getWidth()*0.5, paper.getHeight() - 20)
+            .setWidth(10, HorizAnchor.Center).setHeight(2.5, VertAnchor.Center);
 
     public Form createForm(){
         Form form = new Form();
@@ -63,6 +70,7 @@ public class Refer {
         markContent(contentBox);
         markIssueDate();
         renderAddress();
+        markPageTag();
         Page page = new Page();
         page.name = "single-page";
         page.ops = c.getOps();
@@ -86,6 +94,7 @@ public class Refer {
         markPatientInfo();
         markDiagnosis();
         markContent(contentBoxMultiFirst);
+        markPageTag();
         page.ops = c.getOps();
         page.marks = c.getMarks();
         page.hints = c.getHints();
@@ -101,6 +110,7 @@ public class Refer {
         Page page = new Page();
         page.name = "multi-page-middle";
         markContent(contentBoxMultiMiddle);
+        markPageTag();
         page.ops = c.getOps();
         page.marks = c.getMarks();
         page.hints = c.getHints();
@@ -118,6 +128,7 @@ public class Refer {
         markContent(contentBoxMultiLast);
         markIssueDate();
         renderAddress();
+        markPageTag();
         page.ops = c.getOps();
         page.marks = c.getMarks();
         page.hints = c.getHints();
@@ -203,4 +214,9 @@ public class Refer {
         c.addMark("content", "内容", box, List.of(Hints.para(), Hints.font("serif-4")));
     }
 
+    private void markPageTag(){
+        c.addMark("page-tag", "ページタグ", pageTagBox, List.of(
+                Hints.center(), Hints.vCenter(), Hints.font("serif-4")
+        ));
+    }
 }

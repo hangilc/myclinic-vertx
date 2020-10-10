@@ -779,6 +779,10 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 pageData.markTexts.put("content", content.substring(0, pr.renderedEndIndex));
                 pageData.customRenderers = new HashMap<>();
                 result.add(pageData);
+                int totalPages = result.size();
+                for(int i = 0;i<result.size();i++){
+                    result.get(i).markTexts.put("page-tag", String.format("%d/%d", i + 1, totalPages));
+                }
                 return result;
             } else {
                 Page page2 = form.pages.get(2); // middle

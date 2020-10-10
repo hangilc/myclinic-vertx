@@ -86,7 +86,6 @@ public class Refer {
         markPatientInfo();
         markDiagnosis();
         markContent(contentBoxMultiFirst);
-        c.box(contentBoxMultiFirst);
         page.ops = c.getOps();
         page.marks = c.getMarks();
         page.hints = c.getHints();
@@ -102,7 +101,6 @@ public class Refer {
         Page page = new Page();
         page.name = "multi-page-middle";
         markContent(contentBoxMultiMiddle);
-        c.box(contentBoxMultiMiddle);
         page.ops = c.getOps();
         page.marks = c.getMarks();
         page.hints = c.getHints();

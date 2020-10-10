@@ -16,6 +16,9 @@ public class LineBreaker2 {
     }
 
     public static List<Slice> breakToLines(List<Double> cws, double lineWidth) {
+        if( cws.size() == 0 ){
+            return List.of(new Slice(0, 0));
+        }
         List<Slice> result = new ArrayList<>();
         int curStart = 0;
         int curEnd = 0;

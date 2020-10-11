@@ -1028,6 +1028,11 @@ public class Service {
         @POST("batch-resolve-shuushokugo-names")
         CompletableFuture<Map<String, Integer>> batchResolveShuushokugoNames(
                 @Query("at") LocalDate at, @Body List<List<String>> args);
+
+        @GET("list-visit-id-in-date-range")
+        CompletableFuture<List<Integer>> listVisitIdInDateRange(
+                @Query("from") LocalDate from, @Query("upto") LocalDate upto
+        );
     }
 
     public static ServerAPI api;

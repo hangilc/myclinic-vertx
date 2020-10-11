@@ -257,7 +257,7 @@ public class ShohousenDrawer {
         DrawerCompiler c = this.compiler;
         c.setTextColor(0, 0, 0);
         c.setFont("gothic-4.5");
-        double y = c.multilineText(drugLines, drugsPaneBox, HAlign.Left, VAlign.Top, 0);
+        double y = c.multilineText(drugLines, drugsPaneBox, HAlign.Left, VAlign.Top, 0).getBottom();
         Box memoBox = memoPaneBox;
         if( y > memoPaneBox.getTop() ){
              memoBox = memoPaneBox.setTop(y + 4.5);

@@ -568,6 +568,12 @@ public class Backend {
         return getQuery().get(xlate(sql, ts.visitTable), ts.visitTable, patientId);
     }
 
+    public List<Integer> listVisitIdInDateInterval(LocalDate fromDate, LocalDate uptoDate){
+        String sql = "select visitId from visit where date(visitedAt) >= ? and " +
+                " date(visitedAt) <= ? order by visitId ";
+        return getQuery().query(xlate(sql, ts.visitTable), intProjector, fromDate, uptoDate);
+    }
+
     // Charge /////////////////////////////////////////////////////////////////////////////
 
     void enterCharge(ChargeDTO charge) {

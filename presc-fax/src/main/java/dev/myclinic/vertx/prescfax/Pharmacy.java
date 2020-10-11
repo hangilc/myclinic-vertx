@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 public class Pharmacy {
 
-    private static final Pattern namePattern = Pattern.compile("\\s*【(.+)】\\s*");
+    private static final Pattern namePattern = Pattern.compile("\\s*【(.+)】.*");
     private static final Pattern telPattern = Pattern.compile("tel:\\s*(.+)");
     private static final Pattern faxPattern = Pattern.compile("fax:\\s*(.+)");
     private static final Pattern addrPattern = Pattern.compile("〒(\\d{3}-\\d{4})\\s+(.+)");
@@ -47,48 +47,57 @@ public class Pharmacy {
         private String sPostalCode;
         private String sAddr;
 
-        public void flush(List<Pharmacy> list){
-            if( sName == null && sTel == null && sFax == null && sAddr == null ){
+        public void flush(List<Pharmacy> list) {
+            if (sName == null && sTel == null && sFax == null && sAddr == null) {
                 return;
             }
-            if( sName == null ){
+            if (sName == null) {
                 throw new RuntimeException("Missing pharmacy name.");
             }
-            if( sTel == null ){
+            if (sTel == null) {
+                System.err.printf("name: %s\n", sName);
                 throw new RuntimeException("Missing pharmacy tel.");
             }
-            if( sFax == null ){
+            if (sFax == null) {
                 throw new RuntimeException("Missing pharmacy fax.");
             }
-            if( sAddr == null ){
+            if (sAddr == null) {
                 throw new RuntimeException("Missing pharmacy address.");
             }
             list.add(new Pharmacy(sName, sTel, sFax, sPostalCode, sAddr));
+            this.sName = null;
+            this.sTel = null;
+            this.sFax = null;
+            this.sPostalCode = null;
+            this.sAddr = null;
         }
 
-        public void setName(String name){
-            if( this.sName != null ){
+        public void setName(String name) {
+            if (this.sName != null) {
                 throw new RuntimeException("Cannot set name.");
             }
             this.sName = name;
         }
-        public void setTel(String tel){
-            if( this.sTel != null ){
+
+        public void setTel(String tel) {
+            if (this.sTel != null) {
                 throw new RuntimeException("Cannot set tel.");
             }
             this.sTel = tel;
         }
-        public void setFax(String fax){
-            if( this.sFax != null ){
+
+        public void setFax(String fax) {
+            if (this.sFax != null) {
                 throw new RuntimeException("Cannot set fax.");
             }
             this.sFax = fax;
         }
-        public void setAddr(String postalCode, String addr){
-            if( this.sPostalCode != null ){
+
+        public void setAddr(String postalCode, String addr) {
+            if (this.sPostalCode != null) {
                 throw new RuntimeException("Cannot set postal code.");
             }
-            if( this.sAddr != null ){
+            if (this.sAddr != null) {
                 throw new RuntimeException("Cannot set address.");
             }
             this.sPostalCode = postalCode;
@@ -101,23 +110,37 @@ public class Pharmacy {
         List<String> lines = Files.readAllLines(Path.of(file));
         Stage stage = new Stage();
         Matcher m;
-        for(String line: lines){
+        for (String line : lines) {
             m = namePattern.matcher(line);
-            if( m.matches() ){
+            if (m.matches()) {
                 String name = m.group(1);
                 stage.flush(result);
                 stage.setName(name);
+                continue;
             }
             m = telPattern.matcher(line);
-            if( m.matches() ){
+            if (m.matches()) {
                 String tel = m.group(1);
                 stage.setTel(tel);
+                continue;
             }
             m = faxPattern.matcher(line);
-            if( m.matches() ){
+            if (m.matches()) {
                 String fax = m.group(1);
                 stage.setFax(fax);
+                continue;
             }
+            m = addrPattern.matcher(line);
+            if (m.matches()) {
+                String pc = m.group(1);
+                String addr = m.group(2);
+                stage.setAddr(pc, addr);
+                continue;
+            }
+            if( "".equals(line.trim()) ){
+                continue;
+            }
+            System.err.printf("Unknown pharmacy line: %s\n", line);
         }
         stage.flush(result);
         return result;

@@ -2014,7 +2014,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     {
         funcMap.put("search-byoumei-master", this::searchByoumeiMaster);
         funcMap.put("list-visit-by-patient-having-hoken", this::listVisitByPatientHavingHoken);
-        funcMap.put("list-visit-id-in-date-interval", this::listVisitIdInDateInterval);
+        funcMap.put("list-visit-id-in-date-in-range", this::listVisitIdInDateInRange);
         funcMap.put("list-recently-registered-patients", this::listRecentlyRegisteredPatients);
         funcMap.put("list-todays-hotline-in-range", this::listTodaysHotlineInRange);
         funcMap.put("list-todays-visits", this::listTodaysVisits);
@@ -2199,7 +2199,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("enter-xp", this::enterXp);
     }
 
-    private void listVisitIdInDateInterval(RoutingContext ctx, Connection conn) throws Exception {
+    private void listVisitIdInDateInRange(RoutingContext ctx, Connection conn) throws Exception {
         String fromDateArg = ctx.request().getParam("from");
         if( fromDateArg == null ){
             throw new RuntimeException("Missing parameter: from");
@@ -2212,7 +2212,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         LocalDate uptoDate = LocalDate.parse(uptoDateArg);
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        List<Integer> visitIds = backend.listVisitIdInDateInterval(fromDate, uptoDate);
+        List<Integer> visitIds = backend.listVisitIdInDateInRange(fromDate, uptoDate);
         conn.commit();
         ctx.response().end(jsonEncode(visitIds));
     }

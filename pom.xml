@@ -192,6 +192,7 @@
         <module>client</module>
         <module>rcpt</module>
         <module>drawer-form2</module>
+        <module>client2</module>
         <module>presc-fax</module>
     </modules>
 

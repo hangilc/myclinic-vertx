@@ -10,10 +10,8 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         Client client = new Client(System.getenv("MYCLINIC_SERVICE"));
-        List<Presc> prescList = Presc.listPresc(client, LocalDate.of(2020, 10, 1), LocalDate.of(2020, 10, 15));
-        for(Presc presc: prescList){
-            System.out.println(presc);
-        }
+        Data data = Data.create(client, LocalDate.of(2020, 10, 1), LocalDate.of(2020, 10, 15));
+        System.out.println(data);
     }
 
 }

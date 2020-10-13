@@ -105,7 +105,15 @@ public class Pharmacy {
         }
     }
 
-    public static List<Pharmacy> readFromFile(String file) throws IOException {
+    public static List<Pharmacy> getList() throws IOException {
+        String file = System.getenv("MYCLINIC_PHARMACY_LIST");
+        if( file == null ){
+            throw new RuntimeException("Cannot read env var: MYCLINIC_PHARMACY_LIST");
+        }
+        return readListFromFile(file);
+    }
+
+    public static List<Pharmacy> readListFromFile(String file) throws IOException {
         List<Pharmacy> result = new ArrayList<>();
         List<String> lines = Files.readAllLines(Path.of(file));
         Stage stage = new Stage();
@@ -137,7 +145,7 @@ public class Pharmacy {
                 stage.setAddr(pc, addr);
                 continue;
             }
-            if( "".equals(line.trim()) ){
+            if( "".equals(line.trim()) || line.startsWith("memo:") ){
                 continue;
             }
             System.err.printf("Unknown pharmacy line: %s\n", line);

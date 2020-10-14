@@ -1,5 +1,6 @@
 package dev.myclinic.vertx.master;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -11,6 +12,10 @@ public class Main {
         switch(cmdArgs.command){
             case "download": {
                 doDownload();
+                break;
+            }
+            case "update-shinryou": {
+                doUpdateShinryou(cmdArgs.updateShinryouArgs);
                 break;
             }
             default: {
@@ -35,5 +40,21 @@ public class Main {
         Downloader.downloadShuushokugo(Path.of(saveDir, "z.zip"));
         System.out.printf("Master files have been saved to %s\n", saveDir);
     }
+
+    private static void doUpdateShinryou(CmdArgs.UpdateShinryouArgs args) throws Exception {
+        String savedDir = Misc.mostRecentlyDownloaded();
+        Path zipFile = Path.of(savedDir, "s.zip");
+        System.out.printf("reading master file: %s\n", zipFile.toString());
+        ShinryouUpdater updater = new ShinryouUpdater(zipFile);
+        if( args.exec ){
+
+        } else if( args.henkoukubun ){
+            updater.henkouKubun();
+        } else {
+            updater.dryRun();
+        }
+    }
+
+
 
 }

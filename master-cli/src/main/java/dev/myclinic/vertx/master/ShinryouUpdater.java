@@ -1,38 +1,37 @@
 package dev.myclinic.vertx.master;
 
+import dev.myclinic.vertx.master.csv.ShinryouMasterCSV;
 import dev.myclinic.vertx.master.csv.ZipFileParser;
 import dev.myclinic.vertx.master.db.DB;
 import dev.myclinic.vertx.master.db.ShinryouMaster;
 
-import java.sql.*;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.function.Consumer;
 
-public class MainShinryouUpdate {
+public class ShinryouUpdater {
 
-    public static void usage() {
-        System.err.println("MainShinryouCSV shinryou-zip-file [exec]");
+    private final Path zipFile;
+
+    public ShinryouUpdater(Path zipFile) {
+        this.zipFile = zipFile;
     }
 
-    public static void main(String[] args) throws Exception {
-        String zipFile = null;
-        boolean exec = false;
-        if( args.length >= 1 ){
-            zipFile = args[0];
-        }
-        if( args.length >= 2 ){
-            if( args[1].equals("exec") ){
-                exec = true;
-            } else {
-                System.err.println("'exec' expected as second arg");
-                usage();
-                System.exit(1);
+    public void henkouKubun() throws SQLException, IOException, ClassNotFoundException {
+        iter(csv -> {
+            if( csv.kubun != 0 ){
+                System.out.printf("%d: %s\n", csv.kubun, csv.name);
             }
-        }
-        if (zipFile == null) {
-            usage();
-            System.exit(1);
-        }
+        });
+    }
+
+    public void dryRun() throws SQLException, ClassNotFoundException, IOException {
         Connection conn = DB.openConnection();
-        ZipFileParser.iterShinryouZipFile(zipFile, csv -> {
+        iter(csv -> {
             try {
                 ShinryouMaster cur = getCurrent(conn, csv.shinryoucode);
                 if( cur == null ){
@@ -50,7 +49,12 @@ public class MainShinryouUpdate {
         conn.close();
     }
 
-    public static ShinryouMaster getCurrent(Connection conn, int shinryoucode) throws SQLException {
+    public void iter(Consumer<ShinryouMasterCSV> consumer)
+            throws SQLException, ClassNotFoundException, IOException {
+        ZipFileParser.iterShinryouZipFile(zipFile.toFile(), consumer);
+    }
+
+    public ShinryouMaster getCurrent(Connection conn, int shinryoucode) throws SQLException {
         String sql = "select * from shinryoukoui_master_arch where shinryoucode = ? " +
                 " and valid_upto = '0000-00-00' ";
         PreparedStatement stmt = conn.prepareStatement(sql);
@@ -69,4 +73,5 @@ public class MainShinryouUpdate {
         stmt.close();
         return m;
     }
+
 }

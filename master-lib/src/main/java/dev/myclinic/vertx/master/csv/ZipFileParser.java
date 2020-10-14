@@ -22,8 +22,8 @@ public class ZipFileParser {
 
     }
 
-    public static void iterShinryouZipFile(String zipFile, Consumer<ShinryouMasterCSV> consumer) throws IOException {
-        parse(new File(zipFile), Pattern.compile("s\\.csv"), rec -> {
+    public static void iterShinryouZipFile(File zipFile, Consumer<ShinryouMasterCSV> consumer) throws IOException {
+        parse(zipFile, Pattern.compile("s\\.csv"), rec -> {
             ShinryouMasterCSV csv = new ShinryouMasterCSV(new CommonsCSVRow(rec));
             consumer.accept(csv);
         });

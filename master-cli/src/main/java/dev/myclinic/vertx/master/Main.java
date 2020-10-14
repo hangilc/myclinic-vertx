@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 public class Main {
 
@@ -44,10 +45,10 @@ public class Main {
     private static void doUpdateShinryou(CmdArgs.UpdateShinryouArgs args) throws Exception {
         String savedDir = Misc.mostRecentlyDownloaded();
         Path zipFile = Path.of(savedDir, "s.zip");
-        System.out.printf("reading master file: %s\n", zipFile.toString());
+        System.err.printf("reading master file: %s\n", zipFile.toString());
         ShinryouUpdater updater = new ShinryouUpdater(zipFile);
         if( args.exec ){
-
+            updater.update(args.validFrom);
         } else if( args.henkoukubun ){
             updater.henkouKubun();
         } else {

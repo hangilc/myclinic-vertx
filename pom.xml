@@ -187,7 +187,8 @@
         <module>client</module>
         <module>rcpt</module>
         <module>drawer-form2</module>
-        <module>master</module>
+        <module>master-lib</module>
+        <module>master-cli</module>
     </modules>
 
 </project>

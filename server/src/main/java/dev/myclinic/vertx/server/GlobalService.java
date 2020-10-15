@@ -1,13 +1,11 @@
 package dev.myclinic.vertx.server;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-public class GlobalService {
+public final class GlobalService {
 
     private final static GlobalService INSTANCE = new GlobalService();
 
@@ -124,98 +122,111 @@ public class GlobalService {
         }
     }
 
-    /*
-    private Path getPortalTmpDir() {
-        return Path.of("work", "portal-tmp");
+    public String getPaperScanPatientFileToken(int patientId, String fileName){
+        if( fileName.contains("/") || fileName.contains("\\") ){
+            throw new RuntimeException("fileName cannot contain directory separator.");
+        }
+        return paperScanDirToken + "/" + String.format("%d", patientId) + "/" + fileName;
     }
 
-    private Path getPaperScanRootDir() {
-        String dir = System.getenv("MYCLINIC_PAPER_SCAN_DIR");
-        if (dir == null) {
-            throw new RuntimeException("Missing env var: MYCLINIC_PAPER_SCAN_DIR");
-        }
-        return Path.of(dir);
-    }
+    public static class AppFileToken {
+        private final String dirToken;
+        private final List<String> subDirs;
+        private final String fileName;
 
-    private static final Pattern paperScanDirPattern =
-            Pattern.compile("/paper-scan/(\\d+)");
+        public static AppFileToken parse(String path){
+            String[] parts = path.split("[/\\\\]");
+            if( parts.length >= 2 ){
+                List<String> subDirs = new ArrayList<>(Arrays.asList(parts).subList(1, parts.length - 1));
+                return new AppFileToken(parts[0], subDirs, parts[parts.length - 1]);
+            } else {
+                throw new RuntimeException("too few parts for AppFileTokey.parse");
+            }
+        }
 
-    public Path getAppDirectory(String id) {
-        if (id.equals("/portal-tmp")) {
-            return getPortalTmpDir();
+        public AppFileToken(String dirToken, String fileName){
+            this(dirToken, Collections.emptyList(), fileName);
         }
-        if (id.equals("/paper-scan")) {
-            return getPaperScanRootDir();
-        }
-        Matcher m = paperScanDirPattern.matcher(id);
-        if (m.matches()) {
-            return getPaperScanRootDir().resolve(m.group(1));
-        }
-        throw new RuntimeException("Invalid app directory id: " + id);
-    }
 
-    public void ensureAppDirectory(String id, String... subs) {
-        Path dir = getAppDirectory(id);
-        if( subs.length > 0 ){
-            dir = Path.of(dir.toString(), subs);
+        public AppFileToken(String dirToken, List<String> subDirs, String fileName){
+            if( !GlobalService.getInstance().isValidDirToken(dirToken) ){
+                throw new RuntimeException("Invalid dir token: " + dirToken);
+            }
+            this.dirToken = dirToken;
+            for(String subDir: subDirs){
+                if( subDir.contains("/") || subDir.contains("\\") ){
+                    throw new RuntimeException("subdir cannot contain directory separator");
+                }
+                if( subDir.equals("..") ){
+                    throw new RuntimeException("subdir cannot be '..'");
+                }
+            }
+            this.subDirs = new ArrayList<>(subDirs);
+            if( fileName.contains("/") || fileName.contains("\\") ){
+                throw new RuntimeException("fileName cannot contain directory separator");
+            }
+            this.fileName = fileName;
         }
-        if (!Files.exists(dir)) {
+
+        @Override
+        public String toString(){
+            List<String> parts = new ArrayList<>();
+            parts.add(dirToken);
+            parts.addAll(subDirs);
+            parts.add(fileName);
+            return String.join("/", parts);
+        }
+
+        private Path ensureSubDirs() throws IOException {
+            String top = GlobalService.getInstance().resolveDirToken(dirToken);
+            Path path = Path.of(top, subDirs.toArray(new String[0]));
+            Files.createDirectories(path);
+            return path;
+        }
+
+        private Path resolve(){
             try {
-                Files.createDirectories(dir);
+                return ensureSubDirs().resolve(fileName);
+            } catch(Exception e){
+                throw new RuntimeException(e);
+            }
+        }
+
+        public OutputStream openOutputStream(){
+            try {
+                return new FileOutputStream(resolve().toFile());
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public InputStream openInputStream(){
+            try {
+                return new FileInputStream(resolve().toFile());
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public static void move(AppFileToken src, AppFileToken dst){
+            Path srcPath = src.resolve();
+            Path dstPath = dst.resolve();
+            try {
+                Files.move(srcPath, dstPath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public static void copy(AppFileToken src, AppFileToken dst){
+            Path srcPath = src.resolve();
+            Path dstPath = dst.resolve();
+            try {
+                Files.copy(srcPath, dstPath);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
     }
-
-    public String createTempAppFilePath(String dirId, String prefix, String suffix) {
-        Path dir = getAppDirectory(dirId);
-        try {
-            Path path = Files.createTempFile(dir, prefix, suffix);
-            return dirId + "/" + path.getFileName().toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Path fileIdToPath(String fileId) {
-        if( !fileId.startsWith("/") ){
-            throw new RuntimeException("fileId should start with '/'");
-        }
-        int index = fileId.indexOf("/", 1);
-        if( index <= 0 ){
-            throw new RuntimeException("Cannot find file part in fileId: " + fileId);
-        }
-        Path dir = getAppDirectory(fileId.substring(0, index));
-        String file = fileId.substring(index + 1);
-        return dir.resolve(file);
-    }
-
-    public void moveAppFile(String srcId, String dstId) {
-        Path srcPath = fileIdToPath(srcId);
-        Path dstPath = fileIdToPath(dstId);
-        try {
-            System.out.println("moveAppFile src: " + srcPath.toString());
-            System.out.println("moveAppFile dst: " + dstPath.toString());
-            Path parent = dstPath.getParent();
-            if( !Files.exists(parent) ){
-                Files.createDirectories(parent);
-            }
-            Files.move(srcPath, dstPath);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void deleteAppFile(String file){
-        Path path = fileIdToPath(file);
-        try {
-            Files.delete(path);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-     */
 
 }

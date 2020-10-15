@@ -566,11 +566,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
         String timestamp = DateTimeUtil.toPackedSqlDateTime(LocalDateTime.now());
         String fileName = String.format("%s-refer-%s.%s", patientId, timestamp, suffix);
-        Path local = Path.of(patientId, fileName);
-        String result = GlobalService.getInstance().createAppPathToken(
-                GlobalService.getInstance().paperScanDirToken,
-                local.toString()
+        String result = GlobalService.getInstance().getPaperScanPatientFileToken(
+                Integer.parseInt(patientId), fileName
         );
+//        Path local = Path.of(patientId, fileName);
+//        String result = GlobalService.getInstance().createAppPathToken(
+//                GlobalService.getInstance().paperScanDirToken,
+//                local.toString()
+//        );
         ctx.response().end(jsonEncode(result));
     }
 

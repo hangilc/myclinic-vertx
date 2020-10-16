@@ -151,8 +151,8 @@ public class Main {
 //        router.route("/portal2").handler(ctx -> ctx.response().setStatusCode(301)
 //                .putHeader("Location", "/portal2/index.html")
 //                .end());
-        ensureAppDir(GlobalService.getInstance().portalTmpDirToken);
-        ensureAppDir(GlobalService.getInstance().paperScanDirToken);
+        //ensureAppDir(GlobalService.getInstance().portalTmpDirToken);
+        //ensureAppDir(GlobalService.getInstance().paperScanDirToken);
         server.requestHandler(router);
         server.webSocketHandler(ws -> {
             System.out.println("opened: " + ws.path());

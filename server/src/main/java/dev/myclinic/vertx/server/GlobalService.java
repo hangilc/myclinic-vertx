@@ -2,14 +2,12 @@ package dev.myclinic.vertx.server;
 
 import dev.myclinic.vertx.client2.Client;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-public class GlobalService {
+public final class GlobalService {
 
     private final static GlobalService INSTANCE = new GlobalService();
 
@@ -69,63 +67,171 @@ public class GlobalService {
         return appDirTokenMap.containsKey(token);
     }
 
-    public String createAppPathToken(String dirToken, String... subpaths) {
-        if (isValidDirToken(dirToken)) {
-            return dirToken + "/" + String.join("/", subpaths);
-        } else {
-            throw new RuntimeException("Invalid appDirToken");
-        }
-    }
-
-    private static class AppPath {
-        String dirToken;
-        String subpath;
-
-        public AppPath(String dirToken, String subpath) {
-            this.dirToken = dirToken;
-            this.subpath = subpath;
-        }
-
-        static AppPath parse(String tokenPath) {
-            if (tokenPath == null || !tokenPath.startsWith("[")) {
-                System.err.printf("Invalid appPath: %s\n", tokenPath);
-                throw new RuntimeException("Invalid token path");
-            }
-            int i = tokenPath.indexOf(']');
-            if (i < 0) {
-                throw new RuntimeException("Invalid token path");
-            }
-            String dirToken = tokenPath.substring(0, i + 1);
-            String subpath = tokenPath.substring(i + 1);
-            subpath = subpath.replaceAll("^/+", "");
-            return new AppPath(dirToken, subpath);
-        }
-    }
-
-
     public Path resolveAppPath(String tokenPath) {
-        AppPath appPath = AppPath.parse(tokenPath);
-        Path result = Path.of(resolveDirToken(appPath.dirToken), appPath.subpath);
-        String prefix = appDirTokenMap.get(appPath.dirToken);
-        try {
-            if (result.toString().equals(prefix) ||
-                    result.toFile().getCanonicalPath().startsWith(prefix + File.separator)) {
-                return result;
-            } else {
-                throw new RuntimeException("Invalid token path");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return AppFileToken.parse(tokenPath).resolve();
     }
 
     public String createTempAppFilePath(String dirToken, String prefix, String suffix) {
-        Path dir = Path.of(resolveDirToken(dirToken));
-        try {
-            Path path = Files.createTempFile(dir, prefix, suffix);
-            return dirToken + "/" + path.getFileName().toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        AppDirToken appDir = new AppDirToken(dirToken, Collections.emptyList());
+        return appDir.createTemp(prefix, suffix).toString();
+    }
+
+    public final static class AppDirToken {
+        private final String dirToken;
+        private final List<String> subDirs = new ArrayList<>();
+
+        public AppDirToken(String dirToken, List<String> subDirs){
+            checkDirToken(dirToken);
+            this.dirToken = dirToken;
+            for(String subDir: subDirs){
+                addSubDir(subDir);
+            }
+        }
+
+        public AppDirToken addSubDir(String dir){
+            checkSubDir(dir);
+            this.subDirs.add(dir);
+            return this;
+        }
+
+        @Override
+        public String toString(){
+            List<String> parts = new ArrayList<>();
+            parts.add(dirToken);
+            parts.addAll(subDirs);
+            parts.add("");
+            return String.join("/", parts);
+        }
+
+        private Path ensureSubDirs() throws IOException {
+            String top = GlobalService.getInstance().resolveDirToken(dirToken);
+            Path path = Path.of(top, subDirs.toArray(new String[0]));
+            if( !Files.isDirectory(path) ){
+                Files.createDirectories(path);
+            }
+            return path;
+        }
+
+        public Path resolve() {
+            try {
+                return ensureSubDirs();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private static void checkDirToken(String dirToken) {
+            if (!GlobalService.getInstance().isValidDirToken(dirToken)) {
+                throw new RuntimeException("Invalid dir token: " + dirToken);
+            }
+        }
+
+        private static void checkSubDir(String subDir) {
+            if (subDir == null) {
+                throw new RuntimeException("subDir cannot be null");
+            }
+            if ("..".equals(subDir)) {
+                throw new RuntimeException("Invalid subDir");
+            }
+            if (subDir.contains("/") || subDir.contains("\\")) {
+                throw new RuntimeException("subDir cannot contain directory separator");
+            }
+        }
+
+        public AppFileToken toFileToken(String fileName){
+            return new AppFileToken(this, fileName);
+        }
+
+        public AppFileToken createTemp(String prefix, String suffix) {
+            Path dir = resolve();
+            try {
+                Path path = Files.createTempFile(dir, prefix, suffix);
+                return toFileToken(path.getFileName().toString());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+    }
+
+    public final static class AppFileToken {
+        private final AppDirToken appDirToken;
+        private final String fileName;
+
+        public static AppFileToken parse(String path) {
+            String[] subPaths = path.split("[/\\\\]");
+            if( subPaths.length >= 2 ){
+                String dirToken = subPaths[0];
+                List<String> subDirs = Arrays.asList(subPaths).subList(1, subPaths.length - 1);
+                AppDirToken appDir = new AppDirToken(dirToken, subDirs);
+                String fileName = subPaths[subPaths.length - 1];
+                return appDir.toFileToken(fileName);
+            } else {
+                throw new RuntimeException("Too few arguments to parse");
+            }
+        }
+
+        @Override
+        public String toString() {
+            return appDirToken.toString() + "/" + fileName;
+        }
+
+        public AppFileToken(AppDirToken appDirToken, String fileName) {
+            this.appDirToken = appDirToken;
+            checkFileName(fileName);
+            this.fileName = fileName;
+        }
+
+        private static void checkFileName(String fileName) {
+            if (fileName == null) {
+                throw new RuntimeException("fileName cannot be null");
+            }
+            if ("..".equals(fileName) || ".".equals(fileName) || "".equals(fileName)) {
+                throw new RuntimeException("Invalid fileName");
+            }
+            if (fileName.contains("/") || fileName.contains("\\")) {
+                throw new RuntimeException("fileName cannot contain directory separator");
+            }
+        }
+
+        public Path resolve(){
+            return appDirToken.resolve().resolve(fileName);
+        }
+
+        public OutputStream openOutputStream() {
+            try {
+                return new FileOutputStream(resolve().toFile());
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public InputStream openInputStream() {
+            try {
+                return new FileInputStream(resolve().toFile());
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public static void move(AppFileToken src, AppFileToken dst) {
+            Path srcPath = src.resolve();
+            Path dstPath = dst.resolve();
+            try {
+                Files.move(srcPath, dstPath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public static void copy(AppFileToken src, AppFileToken dst) {
+            Path srcPath = src.resolve();
+            Path dstPath = dst.resolve();
+            try {
+                Files.copy(srcPath, dstPath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

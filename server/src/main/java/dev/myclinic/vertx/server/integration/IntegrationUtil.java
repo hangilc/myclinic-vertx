@@ -15,11 +15,11 @@ import java.util.Map;
 
 class IntegrationUtil {
 
-    public static String getConfigDir() {
-        return GlobalService.getInstance().resolveAppPath(
-                GlobalService.getInstance().configDirToken
-        ).toString();
-    }
+//    public static String getConfigDir() {
+//        return GlobalService.getInstance().resolveAppPath(
+//                GlobalService.getInstance().configDirToken
+//        ).toString();
+//    }
 
     public static Path getMyclinicSpringProjectDir() {
         return GlobalService.getInstance().resolveAppPath(

@@ -194,6 +194,8 @@
         <module>drawer-form2</module>
         <module>client2</module>
         <module>presc-fax</module>
+        <module>master-lib</module>
+        <module>master-cli</module>
     </modules>
 
 </project>

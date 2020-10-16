@@ -52,11 +52,15 @@ export class PdfItem extends Component {
         if( patientId > 0 ){
             let src = this.url;
             let stamp = kanjidate.getTimestamp();
-            let dst = `/paper-scan/${patientId}/${patientId}-houmon-kango-${stamp}.pdf`;
+            let dst = await this.rest.createPaperScanPath(
+                patientId,
+                `${patientId}-houmon-kango-${stamp}.pdf`
+            );
             let result = await this.rest.moveAppFile(src, dst);
             if( result === true ){
                 alert("ファイルが保存されました。");
-                this.deleteTmpElement.addClass("d-none");
+                this.trigger("deleted");
+                //this.deleteTmpElement.addClass("d-none");
             }
         }
     }

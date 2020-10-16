@@ -4,29 +4,20 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itextpdf.text.Image;
 import dev.myclinic.vertx.appconfig.AppConfig;
-import dev.myclinic.vertx.appconfig.types.ShohousenGrayStampInfo;
 import dev.myclinic.vertx.appconfig.types.StampInfo;
-import dev.myclinic.vertx.drawer.DrawerColor;
-import dev.myclinic.vertx.drawer.DrawerCompiler;
-import dev.myclinic.vertx.drawer.Op;
-import dev.myclinic.vertx.drawer.PaperSize;
+import dev.myclinic.vertx.drawer.*;
 import dev.myclinic.vertx.drawer.form.Form;
 import dev.myclinic.vertx.drawer.form.Page;
 import dev.myclinic.vertx.drawer.hint.Hint;
-import dev.myclinic.vertx.drawer.hint.HintBase;
 import dev.myclinic.vertx.drawer.hint.HintParser;
 import dev.myclinic.vertx.drawer.hint.ParaHint;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
 import dev.myclinic.vertx.drawer.printer.AuxSetting;
 import dev.myclinic.vertx.drawer.printer.DrawerPrinter;
-import dev.myclinic.vertx.drawer.Box;
-//import dev.myclinic.vertx.drawerform.Box;
 import dev.myclinic.vertx.drawerform.FormCompiler;
 import dev.myclinic.vertx.drawerform.Paper;
 import dev.myclinic.vertx.drawerform.medcert.MedCertData;
 import dev.myclinic.vertx.drawerform.medcert.MedCertForm;
-//import dev.myclinic.vertx.drawerform.referform.ReferData;
-//import dev.myclinic.vertx.drawerform.referform.ReferForm;
 import dev.myclinic.vertx.drawerform.shujiiform.ShujiiData;
 import dev.myclinic.vertx.drawerform.shujiiform.ShujiiForm;
 import dev.myclinic.vertx.dto.*;
@@ -62,6 +53,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.util.stream.Collectors.toList;
+
+//import dev.myclinic.vertx.drawerform.Box;
+//import dev.myclinic.vertx.drawerform.referform.ReferData;
+//import dev.myclinic.vertx.drawerform.referform.ReferForm;
 
 class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingContext> {
 
@@ -333,6 +328,25 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("copy-file", this::copyFile);
         noDatabaseFuncMap.put("put-stamp-on-pdf", this::putStampOnPdf);
         noDatabaseFuncMap.put("render-medcert", this::renderMedCert);
+        noDatabaseFuncMap.put("create-paper-scan-path", this::createPaperScanPath);
+    }
+
+    private void createPaperScanPath(RoutingContext ctx) {
+        String patientId = ctx.request().getParam("patient-id");
+        if (patientId == null) {
+            throw new RuntimeException("Missing param: patient-id");
+        }
+        //noinspection ResultOfMethodCallIgnored
+        Integer.parseInt(patientId);
+        String fileName = ctx.request().getParam("file-name");
+        if (fileName == null) {
+            throw new RuntimeException("Missing param: file-name");
+        }
+        String tok = new GlobalService.AppDirToken(
+                GlobalService.getInstance().paperScanDirToken,
+                List.of(patientId)
+        ).toFileToken(fileName).toString();
+        ctx.response().end(jsonEncode(tok));
     }
 
     private void renderMedCert(RoutingContext ctx) {
@@ -359,35 +373,35 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private void deleteFile(RoutingContext ctx) {
         String file = ctx.request().getParam("file");
-        if( file == null ){
+        if (file == null) {
             throw new RuntimeException("Missing parameter: file");
         }
         Path path = GlobalService.getInstance().resolveAppPath(file);
         try {
             Files.delete(path);
             ctx.response().end("true");
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
 
-    public void copyFile(RoutingContext ctx){
+    public void copyFile(RoutingContext ctx) {
         String src = ctx.request().getParam("src");
-        if( src == null ){
+        if (src == null) {
             throw new RuntimeException("Missing parameter: src");
         }
         Path srcPath = GlobalService.getInstance().resolveAppPath(src);
         String dst = ctx.request().getParam("dst");
-        if( dst == null ){
+        if (dst == null) {
             throw new RuntimeException("Missing parameter: dst");
         }
         Path dstPath = GlobalService.getInstance().resolveAppPath(dst);
         String mkdir = ctx.request().getParam("mkdir");
         vertx.<Void>executeBlocking(promise -> {
             try {
-                if( mkdir != null ){
+                if (mkdir != null) {
                     Path parent = dstPath.getParent();
-                    if( parent != null && !Files.exists(parent) ){
+                    if (parent != null && !Files.exists(parent)) {
                         Files.createDirectories(parent);
                     }
                 }
@@ -405,7 +419,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         });
     }
 
-    private String doCreateTempFileName(String prefix, String suffix){
+    private String doCreateTempFileName(String prefix, String suffix) {
         String fileId = GlobalService.getInstance().createTempAppFilePath(
                 GlobalService.getInstance().portalTmpDirToken,
                 prefix,
@@ -416,11 +430,11 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private void createTempFileName(RoutingContext ctx) {
         String prefix = ctx.request().getParam("prefix");
-        if( prefix == null ){
+        if (prefix == null) {
             prefix = "";
         }
         String suffix = ctx.request().getParam("suffix");
-        if( suffix == null ){
+        if (suffix == null) {
             suffix = "";
         }
         ctx.response().end(jsonEncode(doCreateTempFileName(prefix, suffix)));
@@ -428,16 +442,16 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private void putStampOnPdf(RoutingContext ctx) {
         String srcFile = ctx.request().getParam("src-file");
-        if( srcFile == null ){
+        if (srcFile == null) {
             throw new RuntimeException("Missing parameter: src-file");
         }
         Path srcPath = GlobalService.getInstance().resolveAppPath(srcFile);
         String stamp = ctx.request().getParam("stamp");
-        if( stamp == null ){
+        if (stamp == null) {
             throw new RuntimeException("Missing parameter: stamp");
         }
         String dstFile = ctx.request().getParam("dst-file");
-        if( dstFile == null ){
+        if (dstFile == null) {
             throw new RuntimeException("Missing parameter: dst-file");
         }
         Path dstPath = GlobalService.getInstance().resolveAppPath(dstFile);
@@ -550,27 +564,33 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         });
     }
 
-    private void createReferImageSavePath(RoutingContext ctx){
+    private void createReferImageSavePath(RoutingContext ctx) {
         String patientId = ctx.request().getParam("patient-id");
-        if( patientId == null ){
+        if (patientId == null) {
             throw new RuntimeException("Missing parameter: patient-id");
         }
         try {
             Integer.parseInt(patientId);
-        } catch(NumberFormatException e){
+        } catch (NumberFormatException e) {
             throw new RuntimeException("Invalid patient-id: " + patientId);
         }
         String suffix = ctx.request().getParam("suffix");
-        if( suffix == null ){
+        if (suffix == null) {
             throw new RuntimeException("Missing param: suffix");
         }
         String timestamp = DateTimeUtil.toPackedSqlDateTime(LocalDateTime.now());
         String fileName = String.format("%s-refer-%s.%s", patientId, timestamp, suffix);
-        Path local = Path.of(patientId, fileName);
-        String result = GlobalService.getInstance().createAppPathToken(
+        String result = new GlobalService.AppDirToken(
                 GlobalService.getInstance().paperScanDirToken,
-                local.toString()
-        );
+                List.of(patientId)).toFileToken(fileName).toString();
+//        String result = GlobalService.getInstance().getPaperScanPatientFileToken(
+//                Integer.parseInt(patientId), fileName
+//        );
+//        Path local = Path.of(patientId, fileName);
+//        String result = GlobalService.getInstance().createAppPathToken(
+//                GlobalService.getInstance().paperScanDirToken,
+//                local.toString()
+//        );
         ctx.response().end(jsonEncode(result));
     }
 
@@ -690,21 +710,21 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 ".pdf"
         );
         Path outPath = GlobalService.getInstance().resolveAppPath(outToken);
-        try(OutputStream os = new FileOutputStream(outPath.toString())){
+        try (OutputStream os = new FileOutputStream(outPath.toString())) {
             PdfPrinter pdfPrinter = new PdfPrinter(form.paper);
             pdfPrinter.print(form, pageDataList, os);
         }
         return outToken;
     }
 
-    private List<PdfPrinter.FormPageData> trySinglePageRefer(Form form, Map<String, String> marks){
+    private List<PdfPrinter.FormPageData> trySinglePageRefer(Form form, Map<String, String> marks) {
         Page page = form.pages.get(0);
         DrawerCompiler c = new DrawerCompiler();
         c.importOps(form.setup);
         Box box = page.marks.get("content").toBox();
         String s = marks.get("content");
         Box rendered = Hint.render(c, box, s, page.hints.get("content"));
-        if( rendered.getBottom() > box.getBottom() ){
+        if (rendered.getBottom() > box.getBottom()) {
             return null;
         } else {
             PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
@@ -715,7 +735,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private List<PdfPrinter.FormPageData> multiPageRefer(Form form, Map<String, String> marks){
+    private List<PdfPrinter.FormPageData> multiPageRefer(Form form, Map<String, String> marks) {
         List<PdfPrinter.FormPageData> result = new ArrayList<>();
         DrawerCompiler c = new DrawerCompiler();
         String content = marks.get("content");
@@ -725,16 +745,16 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
             pageData.pageId = 1;
             pageData.markTexts = new HashMap<>();
-            for(String key: marks.keySet()){
-                if( page1.marks.containsKey(key) ){
-                    if( !key.equals("content") ) {
+            for (String key : marks.keySet()) {
+                if (page1.marks.containsKey(key)) {
+                    if (!key.equals("content")) {
                         pageData.markTexts.put(key, marks.get(key));
                     }
                 }
             }
-            ParaHint paraHint = (ParaHint)HintParser.parse(page1.hints.get("content"));
+            ParaHint paraHint = (ParaHint) HintParser.parse(page1.hints.get("content"));
             String font = paraHint.getFont();
-            if( font == null ){
+            if (font == null) {
                 throw new RuntimeException("Cannot find font of paragraph (refer).");
             }
             c.setFont(font);
@@ -747,8 +767,8 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             result.add(pageData);
         }
         int pageCount = 0;
-        while( true ){
-            if( pageCount++ > 100 ){
+        while (true) {
+            if (pageCount++ > 100) {
                 throw new RuntimeException("Too many pages");
             }
             DrawerCompiler.ParagraphResult pr;
@@ -764,14 +784,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                         paraHint.getHAlign(), paraHint.getLeading());
                 c.clearOps();
             }
-            if( pr.renderedEndIndex >= content.length() ){
+            if (pr.renderedEndIndex >= content.length()) {
                 Page page3 = form.pages.get(3); // last
                 PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
                 pageData.pageId = 3;
                 pageData.markTexts = new HashMap<>();
-                for(String key: marks.keySet()){
-                    if( page3.marks.containsKey(key) ){
-                        if( !key.equals("content") ) {
+                for (String key : marks.keySet()) {
+                    if (page3.marks.containsKey(key)) {
+                        if (!key.equals("content")) {
                             pageData.markTexts.put(key, marks.get(key));
                         }
                     }
@@ -780,15 +800,15 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 pageData.customRenderers = new HashMap<>();
                 result.add(pageData);
                 int totalPages = result.size();
-                for(int i = 0;i<result.size();i++){
+                for (int i = 0; i < result.size(); i++) {
                     result.get(i).markTexts.put("page-tag", String.format("%d/%d", i + 1, totalPages));
                 }
                 return result;
             } else {
                 Page page2 = form.pages.get(2); // middle
-                ParaHint paraHint = (ParaHint)HintParser.parse(page2.hints.get("content"));
+                ParaHint paraHint = (ParaHint) HintParser.parse(page2.hints.get("content"));
                 String font = paraHint.getFont();
-                if( font == null ){
+                if (font == null) {
                     throw new RuntimeException("Cannot find font of paragraph (refer).");
                 }
                 c.setFont(font);
@@ -798,9 +818,9 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
                 pageData.pageId = 2;
                 pageData.markTexts = new HashMap<>();
-                for(String key: marks.keySet()){
-                    if( page2.marks.containsKey(key) ){
-                        if( !key.equals("content") ) {
+                for (String key : marks.keySet()) {
+                    if (page2.marks.containsKey(key)) {
+                        if (!key.equals("content")) {
                             pageData.markTexts.put(key, marks.get(key));
                         }
                     }
@@ -813,14 +833,15 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void printRefer(RoutingContext ctx){
+    private void printRefer(RoutingContext ctx) {
         vertx.<String>executeBlocking(promise -> {
             try {
                 Form form = readFormRsrc("refer-form.json");
                 Map<String, String> marks = mapper.readValue(ctx.getBody().getBytes(),
-                        new TypeReference<>(){});
+                        new TypeReference<>() {
+                        });
                 List<PdfPrinter.FormPageData> pageDataList = trySinglePageRefer(form, marks);
-                if( pageDataList == null ){
+                if (pageDataList == null) {
                     pageDataList = multiPageRefer(form, marks);
                 }
                 String token = printPdf(form, pageDataList, "refer");
@@ -837,7 +858,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         });
     }
 
-//    private void referDrawer(RoutingContext ctx) {
+    //    private void referDrawer(RoutingContext ctx) {
 //        try {
 //            ReferData data = mapper.readValue(ctx.getBody().getBytes(), ReferData.class);
 //            ReferForm form = new ReferForm();
@@ -1405,7 +1426,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private String composeShohousenSavePdfTokenPath(String name, int textId, int patientId,
-                                               LocalDate date) {
+                                                    LocalDate date) {
         String nameRomaji = name;
         if (isNotRomaji(nameRomaji)) {
             nameRomaji = Romaji.toRomaji(nameRomaji);
@@ -1413,19 +1434,22 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         String month = date.toString().substring(0, 7);
         String file = String.format("%s-%d-%d-%s-stamped.pdf", nameRomaji,
                 textId, patientId, date.toString().replace("-", ""));
-        String parentToken = GlobalService.getInstance().createAppPathToken(
+        return new GlobalService.AppDirToken(
                 GlobalService.getInstance().shohousenFaxDirToken,
-                month
-        );
-        Path parentPath = GlobalService.getInstance().resolveAppPath(parentToken);
-        if( !Files.exists(parentPath) ){
-            try {
-                Files.createDirectories(parentPath);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return parentToken + File.separator + file;
+                List.of(month)).toFileToken(file).toString();
+//        String parentToken = GlobalService.getInstance().createAppPathToken(
+//                GlobalService.getInstance().shohousenFaxDirToken,
+//                month
+//        );
+//        Path parentPath = GlobalService.getInstance().resolveAppPath(parentToken);
+//        if( !Files.exists(parentPath) ){
+//            try {
+//                Files.createDirectories(parentPath);
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//        }
+//        return parentToken + File.separator + file;
     }
 
     private boolean isNotRomaji(String s) {

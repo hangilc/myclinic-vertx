@@ -184,13 +184,15 @@ public class HoumonKangoHandler {
         });
     }
 
-    private Path getHoumonKangoConfigDir() {
-        return Path.of(IntegrationUtil.getConfigDir(), "houmon-kango");
-    }
+//    private Path getHoumonKangoConfigDir() {
+//        return Path.of(IntegrationUtil.getConfigDir(), "houmon-kango");
+//    }
 
     private Path getRecordPath(int patientId) {
         String file = String.format("record-%d.json", patientId);
-        return getHoumonKangoConfigDir().resolve(file);
+        return new GlobalService.AppDirToken(
+                GlobalService.getInstance().configDirToken,
+                List.of("houmon-kango")).toFileToken(file).resolve();
     }
 
 }

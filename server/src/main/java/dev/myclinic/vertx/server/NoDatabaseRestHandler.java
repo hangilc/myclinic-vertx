@@ -70,7 +70,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private final AppConfig appConfig;
     private final Vertx vertx;
-    private final ExecutorService executorService = Executors.newFixedThreadPool(6);
+    private final ExecutorService executorService = GlobalService.getInstance().executorService;
 
     NoDatabaseRestHandler(AppConfig appConfig, ObjectMapper mapper, Vertx vertx, MasterMap masterMap) {
         super(mapper, masterMap);

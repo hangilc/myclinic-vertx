@@ -6,6 +6,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class GlobalService {
 
@@ -24,6 +26,7 @@ public final class GlobalService {
     public final String configDirToken = "[config]";
 
     public final Client client;
+    public final ExecutorService executorService;
 
     private final Map<String, String> appDirTokenMap = new HashMap<>();
 
@@ -36,6 +39,7 @@ public final class GlobalService {
         addDirTokenFromEnv(myclinicSpringProjectDirToken, "MYCLINIC_SPRING_PROJECT_DIR");
         addDirTokenFromEnv(configDirToken, "MYCLINIC_CONFIG_DIR");
         this.client = new Client(System.getenv("MYCLINIC_SERVICE"));
+        this.executorService = Executors.newFixedThreadPool(6);
     }
 
     private void addDirTokenFromEnv(String token, String envVar) {

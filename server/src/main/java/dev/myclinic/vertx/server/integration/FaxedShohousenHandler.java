@@ -749,38 +749,44 @@ public class FaxedShohousenHandler {
         String uptoDate = ctx.queryParam("upto").get(0);
         String from = fromDate.replace("-", "");
         String upto = uptoDate.replace("-", "");
-        vertx.<String>executeBlocking(promise -> {
-            try {
-                Client client = GlobalService.getInstance().client;
-                PatientDTO patient = client.getPatient(198);
-                System.out.println(patient);
-                throw new RuntimeException("testing");
-//                dev.myclinic.vertx.prescfax.Data data = Data.create(
-//                        GlobalService.getInstance().client,
-//                        LocalDate.parse(fromDate),
-//                        LocalDate.parse(uptoDate)
-//                );
-//                GlobalService.AppDirToken groupDir = groupDir(from, upto);
-//                String dataFileName = dataFileName(from, upto);
-//                GlobalService.AppFileToken dataFile = groupDir.toFileToken(dataFileName);
-//                try(OutputStream os = dataFile.openOutputStream()){
-//                    mapper.writeValue(os, data);
-//                }
-//                Map<String, Object> map = new HashMap<>();
-//                map.put("success", true);
-//                reportFileStatus(map, dataFile.resolve(), "dataFile");
-//                promise.complete(mapper.writeValueAsString(map));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }, ar -> {
-            if (ar.succeeded()) {
-                ctx.response().putHeader("content-type", "application/json; charset=UTF-8")
-                        .end(ar.result());
-            } else {
-                ctx.fail(ar.cause());
-            }
+        GlobalService.getInstance().executorService.execute(() -> {
+            Client client = GlobalService.getInstance().client;
+            PatientDTO patient = client.getPatient(198);
+            System.out.println(patient);
+            ctx.response().end("{}");
         });
+//        vertx.<String>executeBlocking(promise -> {
+//            try {
+//                Client client = GlobalService.getInstance().client;
+//                PatientDTO patient = client.getPatient(198);
+//                System.out.println(patient);
+//                throw new RuntimeException("testing");
+////                dev.myclinic.vertx.prescfax.Data data = Data.create(
+////                        GlobalService.getInstance().client,
+////                        LocalDate.parse(fromDate),
+////                        LocalDate.parse(uptoDate)
+////                );
+////                GlobalService.AppDirToken groupDir = groupDir(from, upto);
+////                String dataFileName = dataFileName(from, upto);
+////                GlobalService.AppFileToken dataFile = groupDir.toFileToken(dataFileName);
+////                try(OutputStream os = dataFile.openOutputStream()){
+////                    mapper.writeValue(os, data);
+////                }
+////                Map<String, Object> map = new HashMap<>();
+////                map.put("success", true);
+////                reportFileStatus(map, dataFile.resolve(), "dataFile");
+////                promise.complete(mapper.writeValueAsString(map));
+//            } catch (Exception e) {
+//                throw new RuntimeException(e);
+//            }
+//        }, ar -> {
+//            if (ar.succeeded()) {
+//                ctx.response().putHeader("content-type", "application/json; charset=UTF-8")
+//                        .end(ar.result());
+//            } else {
+//                ctx.fail(ar.cause());
+//            }
+//        });
     }
 
 //    private void handleCreateData(RoutingContext ctx) {

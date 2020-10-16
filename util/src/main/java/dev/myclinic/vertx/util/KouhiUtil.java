@@ -25,4 +25,12 @@ public class KouhiUtil {
 			return String.format("公費負担（%d）", futanshaBangou);
 	}
 
+	public static String futanshaBangouString(int futanshaBangou){
+		return String.format("%08d", futanshaBangou);
+	}
+
+	public static String jukyuushaBangouString(int jukyuushaBangou){
+		return String.format("%07d", jukyuushaBangou);
+	}
+
 }

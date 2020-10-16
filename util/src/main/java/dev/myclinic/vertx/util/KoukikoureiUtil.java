@@ -12,4 +12,11 @@ public class KoukikoureiUtil {
 		return "後期高齢" + futanWari + "割";
 	}
 
+	public static String hokenshaBangouString(int hokenshaBangou){
+		return String.format("%08d", hokenshaBangou);
+	}
+
+	public static String hihokenshaBangouString(int hihokenshaBangou){
+		return String.format("%08d", hihokenshaBangou);
+	}
 }

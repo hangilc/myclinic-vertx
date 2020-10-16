@@ -45,21 +45,23 @@ export class KoukikoureiForm {
             this.error = "保険者番号が入力されていません。";
             return undefined;
         }
-        let hokenshaBangou = parseInt(hokenshaBangouInput);
-        if( isNaN(hokenshaBangou) ){
-            this.error = "保険者番号の入力が不適切です。";
-            return undefined;
-        }
+        let hokenshaBangou = hokenshaBangouInput;
+        // let hokenshaBangou = parseInt(hokenshaBangouInput);
+        // if( isNaN(hokenshaBangou) ){
+        //     this.error = "保険者番号の入力が不適切です。";
+        //     return undefined;
+        // }
         let hihokenshaBangouInput = this.hihokenshaBangouElement.val();
         if( hihokenshaBangouInput === "" ){
             this.error = "被保険者番号が入力されていません。";
             return undefined;
         }
-        let hihokenshaBangou = parseInt(hihokenshaBangouInput);
-        if( isNaN(hihokenshaBangou) ){
-            this.error = "被保険者番号の入力が不適切です。";
-            return undefined;
-        }
+        let hihokenshaBangou = hihokenshaBangouInput;
+        // let hihokenshaBangou = parseInt(hihokenshaBangouInput);
+        // if( isNaN(hihokenshaBangou) ){
+        //     this.error = "被保険者番号の入力が不適切です。";
+        //     return undefined;
+        // }
         let validFrom = this.validFromElement.val();
         if( !validFrom ){
             this.error = "開始日の入力が不適切です。";

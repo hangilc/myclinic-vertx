@@ -47,4 +47,16 @@ public class ShahokokuhoUtil {
 		return String.format("%08d", hokenshaBangou);
 	}
 
+	public static String hihokenshaRep(ShahokokuhoDTO shahokokuho){
+		String kigou = shahokokuho.hihokenshaKigou;
+		String bangou = shahokokuho.hihokenshaBangou;
+		if( kigou == null || kigou.equals("") ){
+			return bangou;
+		}
+		if( bangou == null || bangou.equals("") ){
+			return kigou;
+		}
+		return kigou + " ・ " + bangou;
+	}
+
 }

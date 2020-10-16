@@ -1,5 +1,6 @@
 package dev.myclinic.vertx.prescfax;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.myclinic.vertx.dto.ClinicInfoDTO;
 
 public class ShohousenClinicInfo {
@@ -8,6 +9,7 @@ public class ShohousenClinicInfo {
     public final String name;
     public final String phone;
     public final String kikancode;
+    @JsonProperty("doctor_name")
     public final String doctorName;
 
     public static ShohousenClinicInfo fromClinicInfoDTO(ClinicInfoDTO c){

@@ -1,6 +1,8 @@
 package dev.myclinic.vertx.prescfax;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.myclinic.vertx.client2.Client;
+import dev.myclinic.vertx.dto.ClinicInfoDTO;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -10,13 +12,18 @@ import java.util.regex.Pattern;
 
 public class Data {
 
+    @JsonProperty("date_from")
     public final String dateFrom;
+    @JsonProperty("date_upto")
     public final String dateUpto;
+    @JsonProperty("clinic_info")
+    public final ShohousenClinicInfo clinicInfo;
     public final List<ShohousenGroup> groups;
 
-    public Data(String dateFrom, String dateUpto, List<ShohousenGroup> groups) {
+    public Data(String dateFrom, String dateUpto, ShohousenClinicInfo clinicInfo, List<ShohousenGroup> groups) {
         this.dateFrom = dateFrom;
         this.dateUpto = dateUpto;
+        this.clinicInfo = clinicInfo;
         this.groups = groups;
     }
 
@@ -25,7 +32,8 @@ public class Data {
         return "Data{" +
                 "dateFrom='" + dateFrom + '\'' +
                 ", dateUpto='" + dateUpto + '\'' +
-                ", groups=" + String.format("%d", groups.size()) +
+                ", clinicInfo=" + clinicInfo +
+                ", groups=" + groups +
                 '}';
     }
 
@@ -51,8 +59,9 @@ public class Data {
             }
             sgList.add(new ShohousenGroup(pharma, groupMap.get(fax)));
         }
-        sgList.sort(Comparator.<ShohousenGroup>comparingInt(sg -> sg.prescList.size()).reversed());
-        return new Data(from.toString(), upto.toString(), sgList);
+        sgList.sort(Comparator.<ShohousenGroup>comparingInt(sg -> sg.items.size()).reversed());
+        ClinicInfoDTO clinicInfo = client.getClinicInfo();
+        return new Data(from.toString(), upto.toString(), ShohousenClinicInfo.fromClinicInfoDTO(clinicInfo), sgList);
     }
 
     private final static Pattern prescPattern = Pattern.compile("^\\s*院外処方\\s*\\r?\\n");

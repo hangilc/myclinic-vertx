@@ -1,5 +1,6 @@
 package dev.myclinic.vertx.prescfax;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.myclinic.vertx.client2.Client;
 import dev.myclinic.vertx.dto.HokenDTO;
 import dev.myclinic.vertx.dto.PatientDTO;
@@ -14,6 +15,7 @@ import java.util.List;
 public class Presc {
 
     public final VisitDTO visit;
+    @JsonProperty("presc_content")
     public final String prescContent;
     public final String fax;
     public final HokenDTO hoken;

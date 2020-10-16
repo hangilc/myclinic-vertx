@@ -5,18 +5,18 @@ import java.util.List;
 public class ShohousenGroup {
 
     public final Pharmacy pharmacy;
-    public final List<Presc> prescList;
+    public final List<Presc> items;
 
-    public ShohousenGroup(Pharmacy pharmacy, List<Presc> prescList) {
+    public ShohousenGroup(Pharmacy pharmacy, List<Presc> items) {
         this.pharmacy = pharmacy;
-        this.prescList = prescList;
+        this.items = items;
     }
 
     @Override
     public String toString() {
         return "ShohousenGroup{" +
                 "pharmacy=" + pharmacy +
-                ", prescList=" + prescList +
+                ", prescList=" + items +
                 '}';
     }
 }

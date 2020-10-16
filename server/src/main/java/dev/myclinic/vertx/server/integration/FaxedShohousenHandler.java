@@ -740,6 +740,49 @@ public class FaxedShohousenHandler {
         }
     }
 
+//    private void handleCreateData(RoutingContext ctx){
+//        String fromDate = ctx.queryParam("from").get(0);
+//        String uptoDate = ctx.queryParam("upto").get(0);
+//        String from = fromDate.replace("-", "");
+//        String upto = uptoDate.replace("-", "");
+//        vertx.<String>executeBlocking(promise -> {
+//            try {
+//                Path groupDir = groupDir(from, upto);
+//                //noinspection ResultOfMethodCallIgnored
+//                groupDir.toFile().mkdir();
+//                String dataFileName = dataFileName(from, upto);
+//                Path dataFile = groupDir.resolve(dataFileName);
+//                ProcessBuilder pb = new ProcessBuilder("python",
+//                        "presc.py", "data", fromDate, uptoDate, "-o", dataFile.toFile().getAbsolutePath())
+//                        .directory(apiDir.toFile());
+//                Map<String, String> env = pb.environment();
+//                env.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+//                Process process = pb.start();
+//                InputStream is = process.getInputStream();
+//                InputStream es = process.getErrorStream();
+//                String stdErr = readInputStream(es);
+//                boolean isSuccess = process.exitValue() == 0;
+//                Map<String, Object> map = new HashMap<>();
+//                map.put("success", isSuccess);
+//                if (isSuccess) {
+//                    reportFileStatus(map, dataFile, "dataFile");
+//                } else {
+//                    map.put("errorMessage", stdErr);
+//                }
+//                promise.complete(mapper.writeValueAsString(map));
+//            } catch (Exception e) {
+//                throw new RuntimeException(e);
+//            }
+//        }, ar -> {
+//            if (ar.succeeded()) {
+//                ctx.response().putHeader("content-type", "application/json; charset=UTF-8")
+//                        .end(ar.result());
+//            } else {
+//                ctx.fail(ar.cause());
+//            }
+//        });
+//    }
+
     private void handleCreateData(RoutingContext ctx) {
         String fromDate = ctx.queryParam("from").get(0);
         String uptoDate = ctx.queryParam("upto").get(0);

@@ -333,6 +333,26 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("copy-file", this::copyFile);
         noDatabaseFuncMap.put("put-stamp-on-pdf", this::putStampOnPdf);
         noDatabaseFuncMap.put("render-medcert", this::renderMedCert);
+        noDatabaseFuncMap.put("create-paper-scan-path", this::createPaperScanPath);
+    }
+
+    private void createPaperScanPath(RoutingContext ctx) {
+        String patientId = ctx.request().getParam("patient-id");
+        if( patientId == null ){
+            throw new RuntimeException("Missing param: patient-id");
+        }
+        //noinspection ResultOfMethodCallIgnored
+        Integer.parseInt(patientId);
+        String fileName = ctx.request().getParam("file-name");
+        if( fileName == null ){
+            throw new RuntimeException("Missing param: file-name");
+        }
+        String tok = GlobalService.AppFileToken.create(
+                GlobalService.getInstance().paperScanDirToken,
+                patientId,
+                fileName
+        ).toString();
+        ctx.response().end(jsonEncode(tok));
     }
 
     private void renderMedCert(RoutingContext ctx) {
@@ -566,9 +586,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
         String timestamp = DateTimeUtil.toPackedSqlDateTime(LocalDateTime.now());
         String fileName = String.format("%s-refer-%s.%s", patientId, timestamp, suffix);
-        String result = GlobalService.getInstance().getPaperScanPatientFileToken(
-                Integer.parseInt(patientId), fileName
-        );
+        String result = GlobalService.AppFileToken.create(
+                GlobalService.getInstance().paperScanDirToken,
+                patientId,
+                fileName
+        ).toString();
+//        String result = GlobalService.getInstance().getPaperScanPatientFileToken(
+//                Integer.parseInt(patientId), fileName
+//        );
 //        Path local = Path.of(patientId, fileName);
 //        String result = GlobalService.getInstance().createAppPathToken(
 //                GlobalService.getInstance().paperScanDirToken,
@@ -1416,19 +1441,24 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         String month = date.toString().substring(0, 7);
         String file = String.format("%s-%d-%d-%s-stamped.pdf", nameRomaji,
                 textId, patientId, date.toString().replace("-", ""));
-        String parentToken = GlobalService.getInstance().createAppPathToken(
+        return GlobalService.AppFileToken.create(
                 GlobalService.getInstance().shohousenFaxDirToken,
-                month
-        );
-        Path parentPath = GlobalService.getInstance().resolveAppPath(parentToken);
-        if( !Files.exists(parentPath) ){
-            try {
-                Files.createDirectories(parentPath);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return parentToken + File.separator + file;
+                month,
+                file
+        ).toString();
+//        String parentToken = GlobalService.getInstance().createAppPathToken(
+//                GlobalService.getInstance().shohousenFaxDirToken,
+//                month
+//        );
+//        Path parentPath = GlobalService.getInstance().resolveAppPath(parentToken);
+//        if( !Files.exists(parentPath) ){
+//            try {
+//                Files.createDirectories(parentPath);
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//        }
+//        return parentToken + File.separator + file;
     }
 
     private boolean isNotRomaji(String s) {

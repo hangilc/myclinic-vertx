@@ -62,13 +62,13 @@ public final class GlobalService {
         return appDirTokenMap.containsKey(token);
     }
 
-    public String createAppPathToken(String dirToken, String... subpaths) {
-        if (isValidDirToken(dirToken)) {
-            return dirToken + "/" + String.join("/", subpaths);
-        } else {
-            throw new RuntimeException("Invalid appDirToken");
-        }
-    }
+//    public String createAppPathToken(String dirToken, String... subpaths) {
+//        if (isValidDirToken(dirToken)) {
+//            return dirToken + "/" + String.join("/", subpaths);
+//        } else {
+//            throw new RuntimeException("Invalid appDirToken");
+//        }
+//    }
 
     private static class AppPath {
         String dirToken;
@@ -97,42 +97,65 @@ public final class GlobalService {
 
 
     public Path resolveAppPath(String tokenPath) {
-        AppPath appPath = AppPath.parse(tokenPath);
-        Path result = Path.of(resolveDirToken(appPath.dirToken), appPath.subpath);
-        String prefix = appDirTokenMap.get(appPath.dirToken);
-        try {
-            if (result.toString().equals(prefix) ||
-                    result.toFile().getCanonicalPath().startsWith(prefix + File.separator)) {
-                return result;
-            } else {
-                throw new RuntimeException("Invalid token path");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return AppFileToken.parse(tokenPath).resolve();
+//        AppPath appPath = AppPath.parse(tokenPath);
+//        Path result = Path.of(resolveDirToken(appPath.dirToken), appPath.subpath);
+//        String prefix = appDirTokenMap.get(appPath.dirToken);
+//        try {
+//            if (result.toString().equals(prefix) ||
+//                    result.toFile().getCanonicalPath().startsWith(prefix + File.separator)) {
+//                return result;
+//            } else {
+//                throw new RuntimeException("Invalid token path");
+//            }
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
     }
 
     public String createTempAppFilePath(String dirToken, String prefix, String suffix) {
-        Path dir = Path.of(resolveDirToken(dirToken));
-        try {
-            Path path = Files.createTempFile(dir, prefix, suffix);
-            return dirToken + "/" + path.getFileName().toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return AppFileToken.createTemp(dirToken, prefix, suffix).toString();
+//        Path dir = Path.of(resolveDirToken(dirToken));
+//        try {
+//            Path path = Files.createTempFile(dir, prefix, suffix);
+//            return AppFileToken.create(dirToken, path.getFileName().toString()).toString();
+//            //return dirToken + "/" + path.getFileName().toString();
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
     }
 
-    public String getPaperScanPatientFileToken(int patientId, String fileName){
-        if( fileName.contains("/") || fileName.contains("\\") ){
-            throw new RuntimeException("fileName cannot contain directory separator.");
-        }
-        return paperScanDirToken + "/" + String.format("%d", patientId) + "/" + fileName;
-    }
+//    public String getPaperScanPatientFileToken(int patientId, String fileName){
+//        if( fileName.contains("/") || fileName.contains("\\") ){
+//            throw new RuntimeException("fileName cannot contain directory separator.");
+//        }
+//        return paperScanDirToken + "/" + String.format("%d", patientId) + "/" + fileName;
+//    }
 
     public static class AppFileToken {
         private final String dirToken;
         private final List<String> subDirs;
         private final String fileName;
+
+        public static AppFileToken create(String... subPaths){
+            if( subPaths.length >= 2 ){
+                List<String> subDirs = new ArrayList<>(
+                        Arrays.asList(subPaths).subList(1, subPaths.length - 1));
+                return new AppFileToken(subPaths[0], subDirs, subPaths[subPaths.length - 1]);
+            } else {
+                throw new RuntimeException("too few parts for AppFileTokey.parse");
+            }
+        }
+
+        public static AppFileToken createTemp(String dirToken, String prefix, String suffix){
+            Path dir = Path.of(GlobalService.getInstance().resolveDirToken(dirToken));
+            try {
+                Path path = Files.createTempFile(dir, prefix, suffix);
+                return AppFileToken.create(dirToken, path.getFileName().toString());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         public static AppFileToken parse(String path){
             String[] parts = path.split("[/\\\\]");
@@ -144,11 +167,16 @@ public final class GlobalService {
             }
         }
 
-        public AppFileToken(String dirToken, String fileName){
-            this(dirToken, Collections.emptyList(), fileName);
+        @Override
+        public String toString(){
+            List<String> parts = new ArrayList<>();
+            parts.add(dirToken);
+            parts.addAll(subDirs);
+            parts.add(fileName);
+            return String.join("/", parts);
         }
 
-        public AppFileToken(String dirToken, List<String> subDirs, String fileName){
+        private AppFileToken(String dirToken, List<String> subDirs, String fileName){
             if( !GlobalService.getInstance().isValidDirToken(dirToken) ){
                 throw new RuntimeException("Invalid dir token: " + dirToken);
             }
@@ -168,15 +196,6 @@ public final class GlobalService {
             this.fileName = fileName;
         }
 
-        @Override
-        public String toString(){
-            List<String> parts = new ArrayList<>();
-            parts.add(dirToken);
-            parts.addAll(subDirs);
-            parts.add(fileName);
-            return String.join("/", parts);
-        }
-
         private Path ensureSubDirs() throws IOException {
             String top = GlobalService.getInstance().resolveDirToken(dirToken);
             Path path = Path.of(top, subDirs.toArray(new String[0]));
@@ -184,7 +203,7 @@ public final class GlobalService {
             return path;
         }
 
-        private Path resolve(){
+        public Path resolve(){
             try {
                 return ensureSubDirs().resolve(fileName);
             } catch(Exception e){

@@ -666,6 +666,13 @@ class Rest extends Client {
         return await this.get("/get-most-recent-visit-of-patient", {"patient-id": patientId});
     }
 
+    async createPaperScanPath(patientId, fileName){
+        return await this.get("/create-paper-scan-path", {
+            "patient-id": patientId,
+            "file-name": fileName
+        });
+    }
+
 }
 
 class Integration extends Client {

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
+import dev.myclinic.vertx.multidrawer.text.TextDrawer;
 import dev.myclinic.vertx.prescfax.Data;
 import dev.myclinic.vertx.server.GlobalService;
 import dev.myclinic.vertx.shohousendrawer.ShohousenData;
@@ -404,176 +405,165 @@ public class FaxedShohousenHandler {
         String uptoDate = ctx.queryParam("upto").get(0);
         String from = fromDate.replace("-", "");
         String upto = uptoDate.replace("-", "");
-        vertx.<String>executeBlocking(promise -> {
-            Path tempFile = null;
-            try {
-                tempFile = Files.createTempFile("myclinic-", "-pharma-letter-drawer.txt");
-                Path sprintDir = getMyclinicSpringProjectDir();
-                Path groupDir = groupDir(from, upto).resolve();
-                String textFileName = pharmaLetterTextFileName(from, upto);
-                Path textFile = groupDir.resolve(textFileName);
-                ProcessBuilder pb1 = new ProcessBuilder(
-                        "java", "-jar",
-                        "multi-drawer-cli\\target\\multi-drawer-cli-1.0.0-SNAPSHOT.jar",
-                        "text",
-                        "-i", textFile.toFile().getAbsolutePath(),
-                        "-o", tempFile.toFile().getAbsolutePath())
-                        .directory(sprintDir.toFile());
-                Map<String, String> env1 = pb1.environment();
-                env1.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
-                Map<String, Object> result1 = execOld(pb1);
-                if (!result1.get("success").equals(true)) {
-                    promise.complete(mapper.writeValueAsString(result1));
-                    return;
-                }
-                String pdfFileName = pharmaLetterPdfFileName(from, upto);
-                Path pdfFile = groupDir.resolve(pdfFileName);
-                ProcessBuilder pb2 = new ProcessBuilder(
-                        "java", "-jar",
-                        "drawer-printer\\target\\drawer-printer-1.0.0-SNAPSHOT.jar",
-                        "-i", tempFile.toFile().getAbsolutePath(),
-                        "--pdf", pdfFile.toFile().getAbsolutePath())
-                        .directory(sprintDir.toFile());
-                Map<String, String> env2 = pb1.environment();
-                env2.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
-                Map<String, Object> result2 = execOld(pb2);
-                if (result2.get("success").equals(true)) {
-                    reportFileStatus(result2, pdfFile, "pharmaLetterPdfFile");
-                }
-                promise.complete(mapper.writeValueAsString(result2));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            } finally {
-                if (tempFile != null) {
-                    //noinspection ResultOfMethodCallIgnored
-                    tempFile.toFile().delete();
-                }
-            }
-        }, ar -> {
-            if (ar.succeeded()) {
-                ctx.response().putHeader("content-type", "application/json; charset=UTF-8")
-                        .end(ar.result());
-            } else {
-                ctx.fail(ar.cause());
-            }
-        });
-    }
-
-    private void handleCreatePharmaLetterText(RoutingContext ctx) {
-        String fromDate = ctx.queryParam("from").get(0);
-        String uptoDate = ctx.queryParam("upto").get(0);
-        String from = fromDate.replace("-", "");
-        String upto = uptoDate.replace("-", "");
         GlobalService.getInstance().executorService.execute(() -> {
             try {
                 GlobalService.AppDirToken groupDir = groupDir(from, upto);
-                String dataFileName = dataFileName(from, upto);
-                Path dataFile = groupDir.toFileToken(dataFileName).resolve();
-                dev.myclinic.vertx.prescfax.Data data =
-                        mapper.readValue(dataFile.toFile(),
-                                dev.myclinic.vertx.prescfax.Data.class);
                 String textFileName = pharmaLetterTextFileName(from, upto);
-                GlobalService.AppFileToken textFile = groupDir.toFileToken(textFileName);
-                String letterText = dev.myclinic.vertx.prescfax.PharmaLetterText.createFromData(data);
-                textFile.write(letterText);
+                var textFile = groupDir.toFileToken(textFileName);
+                String pharmaLetterText = textFile.read();
+                TextDrawer textDrawer = new TextDrawer();
+                List<List<Op>> pages = textDrawer.draw(pharmaLetterText);
+                String pdfFileName = pharmaLetterPdfFileName(from, upto);
+                Path pdfFile = groupDir.toFileToken(pdfFileName).resolve();
+                PdfPrinter pdfPrinter = new PdfPrinter("A4");
+                pdfPrinter.print(pages, pdfFile.toString());
                 Map<String, Object> result = new HashMap<>();
                 result.put("success", true);
-                reportFileStatus(result, textFile.resolve(), "pharmaLetterTextFile");
+                reportFileStatus(result, pdfFile, "pharmaLetterPdfFile");
                 ctx.response().end(mapper.writeValueAsString(result));
             } catch (Exception e) {
-                ctx.fail(e);
-            }
+                throw new RuntimeException(e);
+            };
         });
     }
 
-//    private void handleCreatePharmaLetterText(RoutingContext ctx) {
+//    private void handleCreatePharmaLetterPdf(RoutingContext ctx) {
 //        String fromDate = ctx.queryParam("from").get(0);
 //        String uptoDate = ctx.queryParam("upto").get(0);
 //        String from = fromDate.replace("-", "");
 //        String upto = uptoDate.replace("-", "");
 //        vertx.<String>executeBlocking(promise -> {
+//            Path tempFile = null;
 //            try {
-//                Path apiDir = getMyclinicApiProjectDir();
+//                tempFile = Files.createTempFile("myclinic-", "-pharma-letter-drawer.txt");
+//                Path sprintDir = getMyclinicSpringProjectDir();
 //                Path groupDir = groupDir(from, upto).resolve();
-//                String dataFileName = dataFileName(from, upto);
-//                Path dataFile = groupDir.resolve(dataFileName);
 //                String textFileName = pharmaLetterTextFileName(from, upto);
 //                Path textFile = groupDir.resolve(textFileName);
-//                ProcessBuilder pb = new ProcessBuilder("python",
-//                        "presc.py", "pharma-letter",
-//                        "-i", dataFile.toFile().getAbsolutePath(),
-//                        "-o", textFile.toFile().getAbsolutePath())
-//                        .directory(apiDir.toFile());
-//                Map<String, String> env = pb.environment();
-//                env.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
-//                Map<String, Object> result = execOld(pb);
-//                boolean isSuccess = result.get("success").equals(true);
-//                if (isSuccess) {
-//                    reportFileStatus(result, textFile, "pharmaLetterTextFile");
+//                ProcessBuilder pb1 = new ProcessBuilder(
+//                        "java", "-jar",
+//                        "multi-drawer-cli\\target\\multi-drawer-cli-1.0.0-SNAPSHOT.jar",
+//                        "text",
+//                        "-i", textFile.toFile().getAbsolutePath(),
+//                        "-o", tempFile.toFile().getAbsolutePath())
+//                        .directory(sprintDir.toFile());
+//                Map<String, String> env1 = pb1.environment();
+//                env1.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+//                Map<String, Object> result1 = execOld(pb1);
+//                if (!result1.get("success").equals(true)) {
+//                    promise.complete(mapper.writeValueAsString(result1));
+//                    return;
 //                }
-//                promise.complete(mapper.writeValueAsString(result));
+//                String pdfFileName = pharmaLetterPdfFileName(from, upto);
+//                Path pdfFile = groupDir.resolve(pdfFileName);
+//                ProcessBuilder pb2 = new ProcessBuilder(
+//                        "java", "-jar",
+//                        "drawer-printer\\target\\drawer-printer-1.0.0-SNAPSHOT.jar",
+//                        "-i", tempFile.toFile().getAbsolutePath(),
+//                        "--pdf", pdfFile.toFile().getAbsolutePath())
+//                        .directory(sprintDir.toFile());
+//                Map<String, String> env2 = pb1.environment();
+//                env2.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+//                Map<String, Object> result2 = execOld(pb2);
+//                if (result2.get("success").equals(true)) {
+//                    reportFileStatus(result2, pdfFile, "pharmaLetterPdfFile");
+//                }
+//                promise.complete(mapper.writeValueAsString(result2));
 //            } catch (Exception e) {
 //                throw new RuntimeException(e);
+//            } finally {
+//                if (tempFile != null) {
+//                    //noinspection ResultOfMethodCallIgnored
+//                    tempFile.toFile().delete();
+//                }
 //            }
 //        }, ar -> {
 //            if (ar.succeeded()) {
-//                ctx.response().end(ar.result());
+//                ctx.response().putHeader("content-type", "application/json; charset=UTF-8")
+//                        .end(ar.result());
 //            } else {
 //                ctx.fail(ar.cause());
 //            }
 //        });
 //    }
 
-    private Map<String, Object> execOld(ProcessBuilder pb) throws IOException {
-        Process process = pb.start();
-        InputStream os = process.getInputStream();
-        InputStream es = process.getErrorStream();
-        String stdOut = readInputStream(os);
-        String stdErr = readInputStream(es);
-        boolean isSuccess = process.exitValue() == 0;
-        Map<String, Object> result = new HashMap<>();
-        result.put("success", isSuccess);
-        result.put("stdOut", stdOut);
-        result.put("stdErr", stdErr);
-        return result;
-    }
-
-    private void handleCreateShohousenPdf(RoutingContext ctx) {
-        String fromDate = ctx.queryParam("from").get(0);
-        String uptoDate = ctx.queryParam("upto").get(0);
-        String from = fromDate.replace("-", "");
-        String upto = uptoDate.replace("-", "");
-        GlobalService.getInstance().executorService.execute(() -> {
-            try {
-                Path groupDir = groupDir(from, upto).resolve();
-                String shohousenTextFileName = shohousenTextFileName(from, upto);
-                Path textFile = groupDir.resolve(shohousenTextFileName);
-                List<dev.myclinic.vertx.prescfax.Text> texts =
-                        mapper.readValue(textFile.toFile(),
-                                new TypeReference<>() {
-                                });
-                List<ShohousenData> dataList = texts.stream().map(this::shohousenTextToData)
-                        .collect(Collectors.toList());
-                List<List<Op>> pages = new ArrayList<>();
-                for (ShohousenData data : dataList) {
-                    ShohousenDrawer drawer = new ShohousenDrawer();
-                    drawer.init();
-                    data.applyTo(drawer);
-                    List<Op> ops = drawer.getOps();
-                    pages.add(ops);
+        private void handleCreatePharmaLetterText (RoutingContext ctx){
+            String fromDate = ctx.queryParam("from").get(0);
+            String uptoDate = ctx.queryParam("upto").get(0);
+            String from = fromDate.replace("-", "");
+            String upto = uptoDate.replace("-", "");
+            GlobalService.getInstance().executorService.execute(() -> {
+                try {
+                    GlobalService.AppDirToken groupDir = groupDir(from, upto);
+                    String dataFileName = dataFileName(from, upto);
+                    Path dataFile = groupDir.toFileToken(dataFileName).resolve();
+                    dev.myclinic.vertx.prescfax.Data data =
+                            mapper.readValue(dataFile.toFile(),
+                                    dev.myclinic.vertx.prescfax.Data.class);
+                    String textFileName = pharmaLetterTextFileName(from, upto);
+                    GlobalService.AppFileToken textFile = groupDir.toFileToken(textFileName);
+                    String letterText = dev.myclinic.vertx.prescfax.PharmaLetterText.createFromData(data);
+                    textFile.write(letterText);
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("success", true);
+                    reportFileStatus(result, textFile.resolve(), "pharmaLetterTextFile");
+                    ctx.response().end(mapper.writeValueAsString(result));
+                } catch (Exception e) {
+                    ctx.fail(e);
                 }
-                String pdfFileName = shohousenPdfFileName(from, upto);
-                Path pdfFile = groupDir.resolve(pdfFileName);
-                PdfPrinter pdfPrinter = new PdfPrinter("A5");
-                pdfPrinter.print(pages, pdfFile.toString());
-                Map<String, Object> result2 = new HashMap<>();
-                result2.put("success", true);
-                reportFileStatus(result2, pdfFile, "shohousenPdfFile");
-                ctx.response().end(mapper.writeValueAsString(result2));
-            } catch (Exception e) {
-                ctx.fail(e);
-            }
-        });
+            });
+        }
+
+        private Map<String, Object> execOld (ProcessBuilder pb) throws IOException {
+            Process process = pb.start();
+            InputStream os = process.getInputStream();
+            InputStream es = process.getErrorStream();
+            String stdOut = readInputStream(os);
+            String stdErr = readInputStream(es);
+            boolean isSuccess = process.exitValue() == 0;
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", isSuccess);
+            result.put("stdOut", stdOut);
+            result.put("stdErr", stdErr);
+            return result;
+        }
+
+        private void handleCreateShohousenPdf (RoutingContext ctx){
+            String fromDate = ctx.queryParam("from").get(0);
+            String uptoDate = ctx.queryParam("upto").get(0);
+            String from = fromDate.replace("-", "");
+            String upto = uptoDate.replace("-", "");
+            GlobalService.getInstance().executorService.execute(() -> {
+                try {
+                    Path groupDir = groupDir(from, upto).resolve();
+                    String shohousenTextFileName = shohousenTextFileName(from, upto);
+                    Path textFile = groupDir.resolve(shohousenTextFileName);
+                    List<dev.myclinic.vertx.prescfax.Text> texts =
+                            mapper.readValue(textFile.toFile(),
+                                    new TypeReference<>() {
+                                    });
+                    List<ShohousenData> dataList = texts.stream().map(this::shohousenTextToData)
+                            .collect(Collectors.toList());
+                    List<List<Op>> pages = new ArrayList<>();
+                    for (ShohousenData data : dataList) {
+                        ShohousenDrawer drawer = new ShohousenDrawer();
+                        drawer.init();
+                        data.applyTo(drawer);
+                        List<Op> ops = drawer.getOps();
+                        pages.add(ops);
+                    }
+                    String pdfFileName = shohousenPdfFileName(from, upto);
+                    Path pdfFile = groupDir.resolve(pdfFileName);
+                    PdfPrinter pdfPrinter = new PdfPrinter("A5");
+                    pdfPrinter.print(pages, pdfFile.toString());
+                    Map<String, Object> result2 = new HashMap<>();
+                    result2.put("success", true);
+                    reportFileStatus(result2, pdfFile, "shohousenPdfFile");
+                    ctx.response().end(mapper.writeValueAsString(result2));
+                } catch (Exception e) {
+                    ctx.fail(e);
+                }
+            });
 //        vertx.<String>executeBlocking(promise -> {
 //            Path tempFile = null;
 //            try {
@@ -638,7 +628,7 @@ public class FaxedShohousenHandler {
 //                ctx.fail(ar.cause());
 //            }
 //        });
-    }
+        }
 
 //    private void handleCreateShohousenPdf(RoutingContext ctx) {
 //        String fromDate = ctx.queryParam("from").get(0);
@@ -711,32 +701,32 @@ public class FaxedShohousenHandler {
 //        });
 //    }
 
-    private void handleCreateShohousenText(RoutingContext ctx) {
-        String fromDate = ctx.queryParam("from").get(0);
-        String uptoDate = ctx.queryParam("upto").get(0);
-        String from = fromDate.replace("-", "");
-        String upto = uptoDate.replace("-", "");
-        GlobalService.getInstance().executorService.execute(() -> {
-            try {
-                Path groupDir = groupDir(from, upto).resolve();
-                String dataFileName = dataFileName(from, upto);
-                Path dataFile = groupDir.resolve(dataFileName);
-                dev.myclinic.vertx.prescfax.Data data = mapper.readValue(dataFile.toFile(),
-                        dev.myclinic.vertx.prescfax.Data.class);
-                List<dev.myclinic.vertx.prescfax.Text> texts =
-                        dev.myclinic.vertx.prescfax.Text.createFromData(data);
-                String textFileName = shohousenTextFileName(from, upto);
-                Path textFile = groupDir.resolve(textFileName);
-                mapper.writeValue(textFile.toFile(), texts);
-                Map<String, Object> map = new HashMap<>();
-                map.put("success", true);
-                reportFileStatus(map, textFile, "shohousenTextFile");
-                ctx.response().end(mapper.writeValueAsString(map));
-            } catch (Exception e) {
-                ctx.fail(e);
-            }
-        });
-    }
+        private void handleCreateShohousenText (RoutingContext ctx){
+            String fromDate = ctx.queryParam("from").get(0);
+            String uptoDate = ctx.queryParam("upto").get(0);
+            String from = fromDate.replace("-", "");
+            String upto = uptoDate.replace("-", "");
+            GlobalService.getInstance().executorService.execute(() -> {
+                try {
+                    Path groupDir = groupDir(from, upto).resolve();
+                    String dataFileName = dataFileName(from, upto);
+                    Path dataFile = groupDir.resolve(dataFileName);
+                    dev.myclinic.vertx.prescfax.Data data = mapper.readValue(dataFile.toFile(),
+                            dev.myclinic.vertx.prescfax.Data.class);
+                    List<dev.myclinic.vertx.prescfax.Text> texts =
+                            dev.myclinic.vertx.prescfax.Text.createFromData(data);
+                    String textFileName = shohousenTextFileName(from, upto);
+                    Path textFile = groupDir.resolve(textFileName);
+                    mapper.writeValue(textFile.toFile(), texts);
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("success", true);
+                    reportFileStatus(map, textFile, "shohousenTextFile");
+                    ctx.response().end(mapper.writeValueAsString(map));
+                } catch (Exception e) {
+                    ctx.fail(e);
+                }
+            });
+        }
 
 //    private void handleCreateShohousenText(RoutingContext ctx) {
 //        String fromDate = ctx.queryParam("from").get(0);
@@ -786,150 +776,150 @@ public class FaxedShohousenHandler {
 //        });
 //    }
 
-    private void handleGetGroup(RoutingContext ctx) {
-        String from = ctx.queryParam("from").get(0).replace("-", "");
-        String upto = ctx.queryParam("upto").get(0).replace("-", "");
-        Path dir = groupDir(from, upto).resolve();
-        if (!Files.isDirectory(dir)) {
-            ctx.response().end("null");
-        } else {
-            Map<String, Object> map = getGroupStatus(dir, from, upto);
-            try {
-                ctx.response().end(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map));
-            } catch (JsonProcessingException e) {
-                ctx.fail(e);
-            }
-        }
-    }
-
-    private void handleGetLastGroup(RoutingContext ctx) {
-        try {
-            List<Path> paths = listGroupDirs();
-            if (paths.size() == 0) {
+        private void handleGetGroup (RoutingContext ctx){
+            String from = ctx.queryParam("from").get(0).replace("-", "");
+            String upto = ctx.queryParam("upto").get(0).replace("-", "");
+            Path dir = groupDir(from, upto).resolve();
+            if (!Files.isDirectory(dir)) {
                 ctx.response().end("null");
             } else {
-                paths.sort(Comparator.naturalOrder());
-                Path lastDir = paths.get(paths.size() - 1);
-                String name = lastDir.toFile().getName();
-                String[] dates = name.split("-");
-                String from = dates[0];
-                String upto = dates[1];
-                Map<String, Object> map = getGroupStatus(lastDir, from, upto);
-                ctx.response().end(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map));
-            }
-        } catch (IOException e) {
-            ctx.fail(e);
-        }
-    }
-
-    private Map<String, Object> getGroupStatus(Path groupDir, String from, String upto) {
-        String name = groupDirName(from, upto);
-        Map<String, Object> map = new HashMap<>();
-        map.put("name", name);
-        map.put("from", toSqlDateFormat(from));
-        map.put("upto", toSqlDateFormat(upto));
-        boolean done = reportFileStatus(map, groupDir.resolve(shohousenTextFileName(from, upto)),
-                "shohousenTextFile", true);
-        done = reportFileStatus(map, groupDir.resolve(shohousenPdfFileName(from, upto)),
-                "shohousenPdfFile", done);
-        done = reportFileStatus(map, groupDir.resolve(clinicLabelPdfFileName(from, upto)),
-                "clinicLabelPdfFile", done);
-        done = reportFileStatus(map, groupDir.resolve(dataFileName(from, upto)),
-                "dataFile", done);
-        done = reportFileStatus(map, groupDir.resolve(pharmaLabelPdfFileName(from, upto)),
-                "pharmaLabelPdfFile", done);
-        done = reportFileStatus(map, groupDir.resolve(pharmaLetterPdfFileName(from, upto)),
-                "pharmaLetterPdfFile", done);
-        done = reportFileStatus(map, groupDir.resolve(pharmaLetterTextFileName(from, upto)),
-                "pharmaLetterTextFile", done);
-        map.put("completed", done);
-        return map;
-    }
-
-    private static final Pattern patDateSpec = Pattern.compile("(\\d{4})(\\d{2})(\\d{2})");
-    private static final Pattern patSqlDate = Pattern.compile("(\\d{4})-(\\d{2})-(\\d{2})");
-    private static final Pattern patGroupDir = Pattern.compile("\\d{8}-\\d{8}");
-
-    private String toSqlDateFormat(String fromOrUpto) {
-        Matcher matcher = patDateSpec.matcher(fromOrUpto);
-        if (matcher.matches()) {
-            return String.format("%s-%s-%s", matcher.group(1), matcher.group(2), matcher.group(3));
-        }
-        matcher = patSqlDate.matcher(fromOrUpto);
-        if (matcher.matches()) {
-            return fromOrUpto;
-        } else {
-            throw new RuntimeException("Invalid Date: " + fromOrUpto);
-        }
-    }
-
-    private static final DateTimeFormatter sqlDateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
-
-    private String getFileTimeRep(FileTime ft) {
-        return ft.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().format(sqlDateTimeFormatter);
-    }
-
-    private boolean reportFileStatus(Map<String, Object> map, Path path, String prefix) {
-        boolean exists = path.toFile().exists();
-        if (exists) {
-            map.put(prefix, prefix);
-            map.put(prefix + "Size", path.toFile().length());
-            try {
-                String modifiedAt = getFileTimeRep(Files.getLastModifiedTime(path));
-                map.put(prefix + "LastModifiedAt", modifiedAt);
-            } catch (Exception e) {
-                logger.error("Cannot get file modification date.", e);
-            }
-        }
-        return exists;
-    }
-
-    private boolean reportFileStatus(Map<String, Object> map, Path path, String prefix, boolean done) {
-        boolean exists = reportFileStatus(map, path, prefix);
-        return exists && done;
-    }
-
-    private void handleListGroups(RoutingContext ctx) {
-        try {
-            List<String> result = new ArrayList<>();
-            List<Path> paths = listGroupDirs();
-            paths.forEach(path -> {
-                String name = path.toFile().getName();
-                result.add(name);
-            });
-            ctx.response().end(mapper.writeValueAsString(result));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void handleCreateData(RoutingContext ctx) {
-        String fromDate = ctx.queryParam("from").get(0);
-        String uptoDate = ctx.queryParam("upto").get(0);
-        String from = fromDate.replace("-", "");
-        String upto = uptoDate.replace("-", "");
-        GlobalService.getInstance().executorService.execute(() -> {
-            try {
-                dev.myclinic.vertx.prescfax.Data data = Data.create(
-                        GlobalService.getInstance().client,
-                        LocalDate.parse(fromDate),
-                        LocalDate.parse(uptoDate)
-                );
-                GlobalService.AppDirToken groupDir = groupDir(from, upto);
-                String dataFileName = dataFileName(from, upto);
-                GlobalService.AppFileToken dataFile = groupDir.toFileToken(dataFileName);
-                try (OutputStream os = dataFile.openOutputStream()) {
-                    mapper.writeValue(os, data);
+                Map<String, Object> map = getGroupStatus(dir, from, upto);
+                try {
+                    ctx.response().end(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map));
+                } catch (JsonProcessingException e) {
+                    ctx.fail(e);
                 }
-                Map<String, Object> map = new HashMap<>();
-                map.put("success", true);
-                reportFileStatus(map, dataFile.resolve(), "dataFile");
-                ctx.response().end(mapper.writeValueAsString(map));
-            } catch (Exception e) {
+            }
+        }
+
+        private void handleGetLastGroup (RoutingContext ctx){
+            try {
+                List<Path> paths = listGroupDirs();
+                if (paths.size() == 0) {
+                    ctx.response().end("null");
+                } else {
+                    paths.sort(Comparator.naturalOrder());
+                    Path lastDir = paths.get(paths.size() - 1);
+                    String name = lastDir.toFile().getName();
+                    String[] dates = name.split("-");
+                    String from = dates[0];
+                    String upto = dates[1];
+                    Map<String, Object> map = getGroupStatus(lastDir, from, upto);
+                    ctx.response().end(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map));
+                }
+            } catch (IOException e) {
                 ctx.fail(e);
             }
-        });
-    }
+        }
+
+        private Map<String, Object> getGroupStatus (Path groupDir, String from, String upto){
+            String name = groupDirName(from, upto);
+            Map<String, Object> map = new HashMap<>();
+            map.put("name", name);
+            map.put("from", toSqlDateFormat(from));
+            map.put("upto", toSqlDateFormat(upto));
+            boolean done = reportFileStatus(map, groupDir.resolve(shohousenTextFileName(from, upto)),
+                    "shohousenTextFile", true);
+            done = reportFileStatus(map, groupDir.resolve(shohousenPdfFileName(from, upto)),
+                    "shohousenPdfFile", done);
+            done = reportFileStatus(map, groupDir.resolve(clinicLabelPdfFileName(from, upto)),
+                    "clinicLabelPdfFile", done);
+            done = reportFileStatus(map, groupDir.resolve(dataFileName(from, upto)),
+                    "dataFile", done);
+            done = reportFileStatus(map, groupDir.resolve(pharmaLabelPdfFileName(from, upto)),
+                    "pharmaLabelPdfFile", done);
+            done = reportFileStatus(map, groupDir.resolve(pharmaLetterPdfFileName(from, upto)),
+                    "pharmaLetterPdfFile", done);
+            done = reportFileStatus(map, groupDir.resolve(pharmaLetterTextFileName(from, upto)),
+                    "pharmaLetterTextFile", done);
+            map.put("completed", done);
+            return map;
+        }
+
+        private static final Pattern patDateSpec = Pattern.compile("(\\d{4})(\\d{2})(\\d{2})");
+        private static final Pattern patSqlDate = Pattern.compile("(\\d{4})-(\\d{2})-(\\d{2})");
+        private static final Pattern patGroupDir = Pattern.compile("\\d{8}-\\d{8}");
+
+        private String toSqlDateFormat (String fromOrUpto){
+            Matcher matcher = patDateSpec.matcher(fromOrUpto);
+            if (matcher.matches()) {
+                return String.format("%s-%s-%s", matcher.group(1), matcher.group(2), matcher.group(3));
+            }
+            matcher = patSqlDate.matcher(fromOrUpto);
+            if (matcher.matches()) {
+                return fromOrUpto;
+            } else {
+                throw new RuntimeException("Invalid Date: " + fromOrUpto);
+            }
+        }
+
+        private static final DateTimeFormatter sqlDateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
+
+        private String getFileTimeRep (FileTime ft){
+            return ft.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().format(sqlDateTimeFormatter);
+        }
+
+        private boolean reportFileStatus (Map < String, Object > map, Path path, String prefix){
+            boolean exists = path.toFile().exists();
+            if (exists) {
+                map.put(prefix, prefix);
+                map.put(prefix + "Size", path.toFile().length());
+                try {
+                    String modifiedAt = getFileTimeRep(Files.getLastModifiedTime(path));
+                    map.put(prefix + "LastModifiedAt", modifiedAt);
+                } catch (Exception e) {
+                    logger.error("Cannot get file modification date.", e);
+                }
+            }
+            return exists;
+        }
+
+        private boolean reportFileStatus (Map < String, Object > map, Path path, String prefix,boolean done){
+            boolean exists = reportFileStatus(map, path, prefix);
+            return exists && done;
+        }
+
+        private void handleListGroups (RoutingContext ctx){
+            try {
+                List<String> result = new ArrayList<>();
+                List<Path> paths = listGroupDirs();
+                paths.forEach(path -> {
+                    String name = path.toFile().getName();
+                    result.add(name);
+                });
+                ctx.response().end(mapper.writeValueAsString(result));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private void handleCreateData (RoutingContext ctx){
+            String fromDate = ctx.queryParam("from").get(0);
+            String uptoDate = ctx.queryParam("upto").get(0);
+            String from = fromDate.replace("-", "");
+            String upto = uptoDate.replace("-", "");
+            GlobalService.getInstance().executorService.execute(() -> {
+                try {
+                    dev.myclinic.vertx.prescfax.Data data = Data.create(
+                            GlobalService.getInstance().client,
+                            LocalDate.parse(fromDate),
+                            LocalDate.parse(uptoDate)
+                    );
+                    GlobalService.AppDirToken groupDir = groupDir(from, upto);
+                    String dataFileName = dataFileName(from, upto);
+                    GlobalService.AppFileToken dataFile = groupDir.toFileToken(dataFileName);
+                    try (OutputStream os = dataFile.openOutputStream()) {
+                        mapper.writeValue(os, data);
+                    }
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("success", true);
+                    reportFileStatus(map, dataFile.resolve(), "dataFile");
+                    ctx.response().end(mapper.writeValueAsString(map));
+                } catch (Exception e) {
+                    ctx.fail(e);
+                }
+            });
+        }
 
 //    private void handleCreateData(RoutingContext ctx) {
 //        String fromDate = ctx.queryParam("from").get(0);
@@ -975,125 +965,125 @@ public class FaxedShohousenHandler {
 //        });
 //    }
 
-    private List<Path> listGroupDirs() throws IOException {
-        Path dir = getManagementRootDir().resolve();
-        List<Path> result = new ArrayList<>();
-        Files.newDirectoryStream(dir).forEach(path -> {
-            Matcher matcher = patGroupDir.matcher(path.toFile().getName());
-            if (matcher.matches()) {
-                result.add(path);
-            }
-        });
-        return result;
-    }
+        private List<Path> listGroupDirs () throws IOException {
+            Path dir = getManagementRootDir().resolve();
+            List<Path> result = new ArrayList<>();
+            Files.newDirectoryStream(dir).forEach(path -> {
+                Matcher matcher = patGroupDir.matcher(path.toFile().getName());
+                if (matcher.matches()) {
+                    result.add(path);
+                }
+            });
+            return result;
+        }
 
-    private Path getMyclinicApiProjectDir() {
-        return GlobalService.getInstance().resolveAppPath(
-                GlobalService.getInstance().myclinicApiProjectDirToken
-        );
-    }
+        private Path getMyclinicApiProjectDir () {
+            return GlobalService.getInstance().resolveAppPath(
+                    GlobalService.getInstance().myclinicApiProjectDirToken
+            );
+        }
 
-    private Path getMyclinicSpringProjectDir() {
-        return GlobalService.getInstance().resolveAppPath(
-                GlobalService.getInstance().myclinicSpringProjectDirToken
-        );
-    }
+        private Path getMyclinicSpringProjectDir () {
+            return GlobalService.getInstance().resolveAppPath(
+                    GlobalService.getInstance().myclinicSpringProjectDirToken
+            );
+        }
 
-    private GlobalService.AppDirToken getManagementRootDir() {
-        return new GlobalService.AppDirToken(
-                GlobalService.getInstance().shohousenFaxManagementDirToken,
-                Collections.emptyList()
-        );
-    }
+        private GlobalService.AppDirToken getManagementRootDir () {
+            return new GlobalService.AppDirToken(
+                    GlobalService.getInstance().shohousenFaxManagementDirToken,
+                    Collections.emptyList()
+            );
+        }
 
-    private String readInputStream(InputStream is) {
-        InputStreamReader streamReader = new InputStreamReader(is);
-        BufferedReader reader = new BufferedReader(streamReader);
-        return reader.lines().collect(Collectors.joining("\n"));
-    }
+        private String readInputStream (InputStream is){
+            InputStreamReader streamReader = new InputStreamReader(is);
+            BufferedReader reader = new BufferedReader(streamReader);
+            return reader.lines().collect(Collectors.joining("\n"));
+        }
 
-    private String groupDirName(String from, String upto) {
-        return String.format("%s-%s", from, upto);
-    }
+        private String groupDirName (String from, String upto){
+            return String.format("%s-%s", from, upto);
+        }
 
-    private GlobalService.AppDirToken groupDir(String from, String upto) {
-        return getManagementRootDir().addSubDir(groupDirName(from, upto));
-    }
+        private GlobalService.AppDirToken groupDir (String from, String upto){
+            return getManagementRootDir().addSubDir(groupDirName(from, upto));
+        }
 
-    private String shohousenTextFileName(String from, String upto) {
-        return String.format("shohousen-%s-%s.json", from, upto);
-    }
+        private String shohousenTextFileName (String from, String upto){
+            return String.format("shohousen-%s-%s.json", from, upto);
+        }
 
-    private String shohousenPdfFileName(String from, String upto) {
-        return String.format("shohousen-%s-%s.pdf", from, upto);
-    }
+        private String shohousenPdfFileName (String from, String upto){
+            return String.format("shohousen-%s-%s.pdf", from, upto);
+        }
 
-    private GlobalService.AppFileToken shohousenPdfFile(String from, String upto) {
-        return groupDir(from, upto).toFileToken(shohousenPdfFileName(from, upto));
-    }
+        private GlobalService.AppFileToken shohousenPdfFile (String from, String upto){
+            return groupDir(from, upto).toFileToken(shohousenPdfFileName(from, upto));
+        }
 
-    private String clinicLabelPdfFileName(String from, String upto) {
-        return String.format("shohousen-clinic-label-%s-%s.pdf", from, upto);
-    }
+        private String clinicLabelPdfFileName (String from, String upto){
+            return String.format("shohousen-clinic-label-%s-%s.pdf", from, upto);
+        }
 
-    private GlobalService.AppFileToken clinicLabelPdf(String from, String upto) {
-        return groupDir(from, upto).toFileToken(clinicLabelPdfFileName(from, upto));
-    }
+        private GlobalService.AppFileToken clinicLabelPdf (String from, String upto){
+            return groupDir(from, upto).toFileToken(clinicLabelPdfFileName(from, upto));
+        }
 
-    private String dataFileName(String from, String upto) {
-        return String.format("shohousen-data-%s-%s.json", from, upto);
-    }
+        private String dataFileName (String from, String upto){
+            return String.format("shohousen-data-%s-%s.json", from, upto);
+        }
 
-    private GlobalService.AppFileToken dataFile(String from, String upto) {
-        GlobalService.AppDirToken dir = groupDir(from, upto);
-        return dir.toFileToken(dataFileName(from, upto));
-    }
+        private GlobalService.AppFileToken dataFile (String from, String upto){
+            GlobalService.AppDirToken dir = groupDir(from, upto);
+            return dir.toFileToken(dataFileName(from, upto));
+        }
 
-    private String pharmaLabelPdfFileName(String from, String upto) {
-        return String.format("shohousen-pharma-label-%s-%s.pdf", from, upto);
-    }
+        private String pharmaLabelPdfFileName (String from, String upto){
+            return String.format("shohousen-pharma-label-%s-%s.pdf", from, upto);
+        }
 
-    private GlobalService.AppFileToken pharmaLabelPdf(String from, String upto) {
-        return groupDir(from, upto).toFileToken(pharmaLabelPdfFileName(from, upto));
-    }
+        private GlobalService.AppFileToken pharmaLabelPdf (String from, String upto){
+            return groupDir(from, upto).toFileToken(pharmaLabelPdfFileName(from, upto));
+        }
 
-    private String pharmaLetterPdfFileName(String from, String upto) {
-        return String.format("shohousen-pharma-letter-%s-%s.pdf", from, upto);
-    }
+        private String pharmaLetterPdfFileName (String from, String upto){
+            return String.format("shohousen-pharma-letter-%s-%s.pdf", from, upto);
+        }
 
-    private GlobalService.AppFileToken pharmaLetterPdf(String from, String upto) {
-        return groupDir(from, upto).toFileToken(pharmaLetterPdfFileName(from, upto));
-    }
+        private GlobalService.AppFileToken pharmaLetterPdf (String from, String upto){
+            return groupDir(from, upto).toFileToken(pharmaLetterPdfFileName(from, upto));
+        }
 
-    private String pharmaLetterTextFileName(String from, String upto) {
-        return String.format("shohousen-pharma-letter-%s-%s.txt", from, upto);
-    }
+        private String pharmaLetterTextFileName (String from, String upto){
+            return String.format("shohousen-pharma-letter-%s-%s.txt", from, upto);
+        }
 
-    private ShohousenData shohousenTextToData(dev.myclinic.vertx.prescfax.Text text) {
-        ShohousenData data = new ShohousenData();
-        data.clinicAddress = text.clinicAddress;
-        data.clinicName = text.clinicName;
-        data.clinicPhone = text.clinicPhone;
-        data.kikancode = text.kikancode;
-        data.doctorName = text.doctorName;
-        data.hokenshaBangou = text.hokenshaBangou;
-        data.hihokensha = text.hihokensha;
-        data.futansha = text.futansha;
-        data.jukyuusha = text.jukyuusha;
-        data.futansha2 = text.futansha2;
-        data.jukyuusha2 = text.jukyuusha2;
-        data.shimei = text.shimei;
-        data.birthday = text.birthday != null ? LocalDate.parse(text.birthday) : null;
-        data.sex = text.sex;
-        data.honnin = text.honnin;
-        data.futanWari = text.futanWari;
-        data.koufuDate = text.koufuDate != null ? LocalDate.parse(text.koufuDate) : null;
+        private ShohousenData shohousenTextToData (dev.myclinic.vertx.prescfax.Text text){
+            ShohousenData data = new ShohousenData();
+            data.clinicAddress = text.clinicAddress;
+            data.clinicName = text.clinicName;
+            data.clinicPhone = text.clinicPhone;
+            data.kikancode = text.kikancode;
+            data.doctorName = text.doctorName;
+            data.hokenshaBangou = text.hokenshaBangou;
+            data.hihokensha = text.hihokensha;
+            data.futansha = text.futansha;
+            data.jukyuusha = text.jukyuusha;
+            data.futansha2 = text.futansha2;
+            data.jukyuusha2 = text.jukyuusha2;
+            data.shimei = text.shimei;
+            data.birthday = text.birthday != null ? LocalDate.parse(text.birthday) : null;
+            data.sex = text.sex;
+            data.honnin = text.honnin;
+            data.futanWari = text.futanWari;
+            data.koufuDate = text.koufuDate != null ? LocalDate.parse(text.koufuDate) : null;
 //        if(  text.validUptoDate != null && !text.validUptoDate.equals("") ){
 //            data.validUptoDate = LocalDate.parse(text.validUptoDate);
 //        }
-        data.setDrugs(text.content);
-        data.pharmacyName = text.pharmacyName;
-        return data;
-    }
+            data.setDrugs(text.content);
+            data.pharmacyName = text.pharmacyName;
+            return data;
+        }
 
-}
+    }

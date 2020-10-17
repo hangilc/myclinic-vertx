@@ -196,6 +196,7 @@
         <module>presc-fax</module>
         <module>master-lib</module>
         <module>master-cli</module>
+        <module>multi-drawer</module>
     </modules>
 
 </project>

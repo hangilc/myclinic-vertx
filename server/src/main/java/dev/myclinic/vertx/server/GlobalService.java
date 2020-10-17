@@ -227,6 +227,14 @@ public final class GlobalService {
             }
         }
 
+        public String read(){
+            try(InputStream is = openInputStream()){
+                return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            } catch(Exception e){
+                throw new RuntimeException(e);
+            }
+        }
+
         public static void move(AppFileToken src, AppFileToken dst) {
             Path srcPath = src.resolve();
             Path dstPath = dst.resolve();

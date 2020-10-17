@@ -582,48 +582,75 @@ public class FaxedShohousenHandler {
         String uptoDate = ctx.queryParam("upto").get(0);
         String from = fromDate.replace("-", "");
         String upto = uptoDate.replace("-", "");
-        vertx.<String>executeBlocking(promise -> {
+        GlobalService.getInstance().executorService.execute(() -> {
             try {
-                Path apiDir = getMyclinicApiProjectDir();
                 Path groupDir = groupDir(from, upto).resolve();
-                //noinspection ResultOfMethodCallIgnored
-                groupDir.toFile().mkdir();
                 String dataFileName = dataFileName(from, upto);
                 Path dataFile = groupDir.resolve(dataFileName);
+                dev.myclinic.vertx.prescfax.Data data = mapper.readValue(dataFile.toFile(),
+                        dev.myclinic.vertx.prescfax.Data.class);
+                List<dev.myclinic.vertx.prescfax.Text> texts =
+                        dev.myclinic.vertx.prescfax.Text.createFromData(data);
                 String textFileName = shohousenTextFileName(from, upto);
                 Path textFile = groupDir.resolve(textFileName);
-                ProcessBuilder pb = new ProcessBuilder("python",
-                        "presc.py", "print",
-                        "-i", dataFile.toFile().getAbsolutePath(),
-                        "-o", textFile.toFile().getAbsolutePath())
-                        .directory(apiDir.toFile());
-                Map<String, String> env = pb.environment();
-                env.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
-                Process process = pb.start();
-                InputStream is = process.getInputStream();
-                InputStream es = process.getErrorStream();
-                String stdErr = readInputStream(es);
-                boolean isSuccess = process.exitValue() == 0;
+                mapper.writeValue(textFile.toFile(), texts);
                 Map<String, Object> map = new HashMap<>();
-                map.put("success", isSuccess);
-                if (isSuccess) {
-                    reportFileStatus(map, textFile, "shohousenTextFile");
-                } else {
-                    map.put("errorMessage", stdErr);
-                }
-                promise.complete(mapper.writeValueAsString(map));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }, ar -> {
-            if (ar.succeeded()) {
-                ctx.response().putHeader("content-type", "application/json; charset=UTF-8")
-                        .end(ar.result());
-            } else {
-                ctx.fail(ar.cause());
+                map.put("success", true);
+                reportFileStatus(map, textFile, "shohousenTextFile");
+                ctx.response().end(mapper.writeValueAsString(map));
+            } catch(Exception e){
+                ctx.fail(e);
             }
         });
     }
+
+//    private void handleCreateShohousenText(RoutingContext ctx) {
+//        String fromDate = ctx.queryParam("from").get(0);
+//        String uptoDate = ctx.queryParam("upto").get(0);
+//        String from = fromDate.replace("-", "");
+//        String upto = uptoDate.replace("-", "");
+//        vertx.<String>executeBlocking(promise -> {
+//            try {
+//                Path apiDir = getMyclinicApiProjectDir();
+//                Path groupDir = groupDir(from, upto).resolve();
+//                //noinspection ResultOfMethodCallIgnored
+//                groupDir.toFile().mkdir();
+//                String dataFileName = dataFileName(from, upto);
+//                Path dataFile = groupDir.resolve(dataFileName);
+//                String textFileName = shohousenTextFileName(from, upto);
+//                Path textFile = groupDir.resolve(textFileName);
+//                ProcessBuilder pb = new ProcessBuilder("python",
+//                        "presc.py", "print",
+//                        "-i", dataFile.toFile().getAbsolutePath(),
+//                        "-o", textFile.toFile().getAbsolutePath())
+//                        .directory(apiDir.toFile());
+//                Map<String, String> env = pb.environment();
+//                env.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+//                Process process = pb.start();
+//                InputStream is = process.getInputStream();
+//                InputStream es = process.getErrorStream();
+//                String stdErr = readInputStream(es);
+//                boolean isSuccess = process.exitValue() == 0;
+//                Map<String, Object> map = new HashMap<>();
+//                map.put("success", isSuccess);
+//                if (isSuccess) {
+//                    reportFileStatus(map, textFile, "shohousenTextFile");
+//                } else {
+//                    map.put("errorMessage", stdErr);
+//                }
+//                promise.complete(mapper.writeValueAsString(map));
+//            } catch (Exception e) {
+//                throw new RuntimeException(e);
+//            }
+//        }, ar -> {
+//            if (ar.succeeded()) {
+//                ctx.response().putHeader("content-type", "application/json; charset=UTF-8")
+//                        .end(ar.result());
+//            } else {
+//                ctx.fail(ar.cause());
+//            }
+//        });
+//    }
 
     private void handleGetGroup(RoutingContext ctx) {
         String from = ctx.queryParam("from").get(0).replace("-", "");

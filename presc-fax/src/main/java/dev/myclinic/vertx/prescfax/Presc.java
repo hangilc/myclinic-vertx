@@ -21,7 +21,11 @@ public class Presc {
     public final HokenDTO hoken;
     public final PatientDTO patient;
 
-    public Presc(VisitDTO visit, String prescContent, String fax, HokenDTO hoken, PatientDTO patient) {
+    public Presc(@JsonProperty("visit") VisitDTO visit,
+                 @JsonProperty("presc_content") String prescContent,
+                 @JsonProperty("fax") String fax,
+                 @JsonProperty("hoken") HokenDTO hoken,
+                 @JsonProperty("patient") PatientDTO patient) {
         this.visit = visit;
         this.prescContent = prescContent;
         this.fax = fax;

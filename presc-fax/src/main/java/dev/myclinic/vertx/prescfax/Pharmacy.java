@@ -1,9 +1,12 @@
 package dev.myclinic.vertx.prescfax;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,14 +21,15 @@ public class Pharmacy {
     public final String name;
     public final String tel;
     public final String fax;
-    public final String postalCode;
-    public final String addr;
+    public final String[] addr;
 
-    public Pharmacy(String name, String tel, String fax, String postalCode, String addr) {
+    public Pharmacy(@JsonProperty("name") String name,
+                    @JsonProperty("tel") String tel,
+                    @JsonProperty("fax") String fax,
+                    @JsonProperty("addr") String[] addr) {
         this.name = name;
         this.tel = tel;
         this.fax = fax;
-        this.postalCode = postalCode;
         this.addr = addr;
     }
 
@@ -35,8 +39,7 @@ public class Pharmacy {
                 "name='" + name + '\'' +
                 ", tel='" + tel + '\'' +
                 ", fax='" + fax + '\'' +
-                ", postalCode='" + postalCode + '\'' +
-                ", addr='" + addr + '\'' +
+                ", addr=" + Arrays.toString(addr) +
                 '}';
     }
 
@@ -64,7 +67,7 @@ public class Pharmacy {
             if (sAddr == null) {
                 throw new RuntimeException("Missing pharmacy address.");
             }
-            list.add(new Pharmacy(sName, sTel, sFax, sPostalCode, sAddr));
+            list.add(new Pharmacy(sName, sTel, sFax, new String[]{ sPostalCode, sAddr }));
             this.sName = null;
             this.sTel = null;
             this.sFax = null;

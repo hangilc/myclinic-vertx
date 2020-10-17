@@ -20,13 +20,16 @@ public class ShohousenClinicInfo {
         return new ShohousenClinicInfo(address, c.name, phone, kikancode, c.doctorName);
     }
 
-    public ShohousenClinicInfo(String address, String name, String phone, String kikancode,
-                               String doctor_name) {
+    public ShohousenClinicInfo(@JsonProperty("address") String address,
+                               @JsonProperty("name") String name,
+                               @JsonProperty("phone") String phone,
+                               @JsonProperty("kikancode")String kikancode,
+                               @JsonProperty("doctor_name") String doctorName) {
         this.address = address;
         this.name = name;
         this.phone = phone;
         this.kikancode = kikancode;
-        this.doctorName = doctor_name;
+        this.doctorName = doctorName;
     }
 
     @Override

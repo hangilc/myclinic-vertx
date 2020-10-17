@@ -20,7 +20,10 @@ public class Data {
     public final ShohousenClinicInfo clinicInfo;
     public final List<ShohousenGroup> groups;
 
-    public Data(String dateFrom, String dateUpto, ShohousenClinicInfo clinicInfo, List<ShohousenGroup> groups) {
+    public Data(@JsonProperty("date_from") String dateFrom,
+                @JsonProperty("date_upto") String dateUpto,
+                @JsonProperty("clinic_info") ShohousenClinicInfo clinicInfo,
+                @JsonProperty("groups") List<ShohousenGroup> groups) {
         this.dateFrom = dateFrom;
         this.dateUpto = dateUpto;
         this.clinicInfo = clinicInfo;

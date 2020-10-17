@@ -1,10 +1,15 @@
 package dev.myclinic.vertx.server.integration;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.drawer.Op;
+import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
 import dev.myclinic.vertx.prescfax.Data;
 import dev.myclinic.vertx.server.GlobalService;
+import dev.myclinic.vertx.shohousendrawer.ShohousenData;
+import dev.myclinic.vertx.shohousendrawer.ShohousenDrawer;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
@@ -511,71 +516,172 @@ public class FaxedShohousenHandler {
         String uptoDate = ctx.queryParam("upto").get(0);
         String from = fromDate.replace("-", "");
         String upto = uptoDate.replace("-", "");
-        vertx.<String>executeBlocking(promise -> {
-            Path tempFile = null;
+        GlobalService.getInstance().executorService.execute(() -> {
             try {
-                String tmpFileToken = GlobalService.getInstance().createTempAppFilePath(
-                        GlobalService.getInstance().portalTmpDirToken,
-                        "myclinic-", "-shohousen.txt");
-                tempFile = GlobalService.getInstance().resolveAppPath(tmpFileToken);
-                //tempFile = Files.createTempFile("myclinic-", "-shohousen.txt");
-                Path springDir = getMyclinicSpringProjectDir();
                 Path groupDir = groupDir(from, upto).resolve();
                 String shohousenTextFileName = shohousenTextFileName(from, upto);
                 Path textFile = groupDir.resolve(shohousenTextFileName);
-                ProcessBuilder pb1 = new ProcessBuilder(
-                        "java", "-jar",
-                        "shohousen-drawer\\target\\shohousen-drawer-1.0.0-SNAPSHOT.jar",
-                        "-i", textFile.toFile().getAbsolutePath(),
-                        "-o", tempFile.toFile().getAbsolutePath())
-                        .directory(springDir.toFile());
-                Map<String, String> env1 = pb1.environment();
-                env1.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
-                Map<String, Object> result1 = execOld(pb1);
-                if (!result1.get("success").equals(true)) {
-                    System.err.println(result1.get("stdErr"));
-                    promise.complete(mapper.writeValueAsString(result1.get("stdErr")));
-                    return;
+                List<dev.myclinic.vertx.prescfax.Text> texts =
+                        mapper.readValue(textFile.toFile(),
+                                new TypeReference<>() {
+                                });
+                List<ShohousenData> dataList = texts.stream().map(this::shohousenTextToData)
+                        .collect(Collectors.toList());
+                List<List<Op>> pages = new ArrayList<>();
+                for (ShohousenData data : dataList) {
+                    ShohousenDrawer drawer = new ShohousenDrawer();
+                    drawer.init();
+                    data.applyTo(drawer);
+                    List<Op> ops = drawer.getOps();
+                    pages.add(ops);
                 }
                 String pdfFileName = shohousenPdfFileName(from, upto);
                 Path pdfFile = groupDir.resolve(pdfFileName);
-                ProcessBuilder pb2 = new ProcessBuilder(
-                        "java", "-jar",
-                        "drawer-printer\\target\\drawer-printer-1.0.0-SNAPSHOT.jar",
-                        "--pdf-page-size", "A5",
-                        "--pdf-shrink", "2",
-                        "-i", tempFile.toFile().getAbsolutePath(),
-                        "--pdf", pdfFile.toFile().getAbsolutePath())
-                        .directory(springDir.toFile());
-                Map<String, String> env2 = pb1.environment();
-                env2.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
-                Map<String, Object> result2 = execOld(pb2);
-                if (result2.get("success").equals(true)) {
-                    reportFileStatus(result2, pdfFile, "shohousenPdfFile");
-                } else {
-                    System.err.println(result2.get("stdErr"));
-                    promise.complete(mapper.writeValueAsString(result2.get("stdErr")));
-                }
-                promise.complete(mapper.writeValueAsString(result2));
+                PdfPrinter pdfPrinter = new PdfPrinter("A5");
+                pdfPrinter.print(pages, pdfFile.toString());
+                Map<String, Object> result2 = new HashMap<>();
+                reportFileStatus(result2, pdfFile, "shohousenPdfFile");
+                ctx.response().end(mapper.writeValueAsString(result2));
             } catch (Exception e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            } finally {
-                if (tempFile != null) {
-                    //noinspection ResultOfMethodCallIgnored
-                    tempFile.toFile().delete();
-                }
-            }
-        }, ar -> {
-            if (ar.succeeded()) {
-                ctx.response().putHeader("content-type", "application/json; charset=UTF-8")
-                        .end(ar.result());
-            } else {
-                ar.cause().printStackTrace();
-                ctx.fail(ar.cause());
+                ctx.fail(e);
             }
         });
+//        vertx.<String>executeBlocking(promise -> {
+//            Path tempFile = null;
+//            try {
+//                String tmpFileToken = GlobalService.getInstance().createTempAppFilePath(
+//                        GlobalService.getInstance().portalTmpDirToken,
+//                        "myclinic-", "-shohousen.txt");
+//                tempFile = GlobalService.getInstance().resolveAppPath(tmpFileToken);
+//                //tempFile = Files.createTempFile("myclinic-", "-shohousen.txt");
+//                Path springDir = getMyclinicSpringProjectDir();
+//                Path groupDir = groupDir(from, upto).resolve();
+//                String shohousenTextFileName = shohousenTextFileName(from, upto);
+//                Path textFile = groupDir.resolve(shohousenTextFileName);
+//                ProcessBuilder pb1 = new ProcessBuilder(
+//                        "java", "-jar",
+//                        "shohousen-drawer\\target\\shohousen-drawer-1.0.0-SNAPSHOT.jar",
+//                        "-i", textFile.toFile().getAbsolutePath(),
+//                        "-o", tempFile.toFile().getAbsolutePath())
+//                        .directory(springDir.toFile());
+//                Map<String, String> env1 = pb1.environment();
+//                env1.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+//                Map<String, Object> result1 = execOld(pb1);
+//                if (!result1.get("success").equals(true)) {
+//                    System.err.println(result1.get("stdErr"));
+//                    promise.complete(mapper.writeValueAsString(result1.get("stdErr")));
+//                    return;
+//                }
+//                String pdfFileName = shohousenPdfFileName(from, upto);
+//                Path pdfFile = groupDir.resolve(pdfFileName);
+//                ProcessBuilder pb2 = new ProcessBuilder(
+//                        "java", "-jar",
+//                        "drawer-printer\\target\\drawer-printer-1.0.0-SNAPSHOT.jar",
+//                        "--pdf-page-size", "A5",
+//                        "--pdf-shrink", "2",
+//                        "-i", tempFile.toFile().getAbsolutePath(),
+//                        "--pdf", pdfFile.toFile().getAbsolutePath())
+//                        .directory(springDir.toFile());
+//                Map<String, String> env2 = pb1.environment();
+//                env2.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+//                Map<String, Object> result2 = execOld(pb2);
+//                if (result2.get("success").equals(true)) {
+//                    reportFileStatus(result2, pdfFile, "shohousenPdfFile");
+//                } else {
+//                    System.err.println(result2.get("stdErr"));
+//                    promise.complete(mapper.writeValueAsString(result2.get("stdErr")));
+//                }
+//                promise.complete(mapper.writeValueAsString(result2));
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                throw new RuntimeException(e);
+//            } finally {
+//                if (tempFile != null) {
+//                    //noinspection ResultOfMethodCallIgnored
+//                    tempFile.toFile().delete();
+//                }
+//            }
+//        }, ar -> {
+//            if (ar.succeeded()) {
+//                ctx.response().putHeader("content-type", "application/json; charset=UTF-8")
+//                        .end(ar.result());
+//            } else {
+//                ar.cause().printStackTrace();
+//                ctx.fail(ar.cause());
+//            }
+//        });
     }
+
+//    private void handleCreateShohousenPdf(RoutingContext ctx) {
+//        String fromDate = ctx.queryParam("from").get(0);
+//        String uptoDate = ctx.queryParam("upto").get(0);
+//        String from = fromDate.replace("-", "");
+//        String upto = uptoDate.replace("-", "");
+//        vertx.<String>executeBlocking(promise -> {
+//            Path tempFile = null;
+//            try {
+//                String tmpFileToken = GlobalService.getInstance().createTempAppFilePath(
+//                        GlobalService.getInstance().portalTmpDirToken,
+//                        "myclinic-", "-shohousen.txt");
+//                tempFile = GlobalService.getInstance().resolveAppPath(tmpFileToken);
+//                //tempFile = Files.createTempFile("myclinic-", "-shohousen.txt");
+//                Path springDir = getMyclinicSpringProjectDir();
+//                Path groupDir = groupDir(from, upto).resolve();
+//                String shohousenTextFileName = shohousenTextFileName(from, upto);
+//                Path textFile = groupDir.resolve(shohousenTextFileName);
+//                ProcessBuilder pb1 = new ProcessBuilder(
+//                        "java", "-jar",
+//                        "shohousen-drawer\\target\\shohousen-drawer-1.0.0-SNAPSHOT.jar",
+//                        "-i", textFile.toFile().getAbsolutePath(),
+//                        "-o", tempFile.toFile().getAbsolutePath())
+//                        .directory(springDir.toFile());
+//                Map<String, String> env1 = pb1.environment();
+//                env1.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+//                Map<String, Object> result1 = execOld(pb1);
+//                if (!result1.get("success").equals(true)) {
+//                    System.err.println(result1.get("stdErr"));
+//                    promise.complete(mapper.writeValueAsString(result1.get("stdErr")));
+//                    return;
+//                }
+//                String pdfFileName = shohousenPdfFileName(from, upto);
+//                Path pdfFile = groupDir.resolve(pdfFileName);
+//                ProcessBuilder pb2 = new ProcessBuilder(
+//                        "java", "-jar",
+//                        "drawer-printer\\target\\drawer-printer-1.0.0-SNAPSHOT.jar",
+//                        "--pdf-page-size", "A5",
+//                        "--pdf-shrink", "2",
+//                        "-i", tempFile.toFile().getAbsolutePath(),
+//                        "--pdf", pdfFile.toFile().getAbsolutePath())
+//                        .directory(springDir.toFile());
+//                Map<String, String> env2 = pb1.environment();
+//                env2.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+//                Map<String, Object> result2 = execOld(pb2);
+//                if (result2.get("success").equals(true)) {
+//                    reportFileStatus(result2, pdfFile, "shohousenPdfFile");
+//                } else {
+//                    System.err.println(result2.get("stdErr"));
+//                    promise.complete(mapper.writeValueAsString(result2.get("stdErr")));
+//                }
+//                promise.complete(mapper.writeValueAsString(result2));
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                throw new RuntimeException(e);
+//            } finally {
+//                if (tempFile != null) {
+//                    //noinspection ResultOfMethodCallIgnored
+//                    tempFile.toFile().delete();
+//                }
+//            }
+//        }, ar -> {
+//            if (ar.succeeded()) {
+//                ctx.response().putHeader("content-type", "application/json; charset=UTF-8")
+//                        .end(ar.result());
+//            } else {
+//                ar.cause().printStackTrace();
+//                ctx.fail(ar.cause());
+//            }
+//        });
+//    }
 
     private void handleCreateShohousenText(RoutingContext ctx) {
         String fromDate = ctx.queryParam("from").get(0);
@@ -598,7 +704,7 @@ public class FaxedShohousenHandler {
                 map.put("success", true);
                 reportFileStatus(map, textFile, "shohousenTextFile");
                 ctx.response().end(mapper.writeValueAsString(map));
-            } catch(Exception e){
+            } catch (Exception e) {
                 ctx.fail(e);
             }
         });
@@ -933,6 +1039,33 @@ public class FaxedShohousenHandler {
 
     private String pharmaLetterTextFileName(String from, String upto) {
         return String.format("shohousen-pharma-letter-%s-%s.txt", from, upto);
+    }
+
+    private ShohousenData shohousenTextToData(dev.myclinic.vertx.prescfax.Text text) {
+        ShohousenData data = new ShohousenData();
+        data.clinicAddress = text.clinicAddress;
+        data.clinicName = text.clinicName;
+        data.clinicPhone = text.clinicPhone;
+        data.kikancode = text.kikancode;
+        data.doctorName = text.doctorName;
+        data.hokenshaBangou = text.hokenshaBangou;
+        data.hihokensha = text.hihokensha;
+        data.futansha = text.futansha;
+        data.jukyuusha = text.jukyuusha;
+        data.futansha2 = text.futansha2;
+        data.jukyuusha2 = text.jukyuusha2;
+        data.shimei = text.shimei;
+        data.birthday = text.birthday != null ? LocalDate.parse(text.birthday) : null;
+        data.sex = text.sex;
+        data.honnin = text.honnin;
+        data.futanWari = text.futanWari;
+        data.koufuDate = text.koufuDate != null ? LocalDate.parse(text.koufuDate) : null;
+//        if(  text.validUptoDate != null && !text.validUptoDate.equals("") ){
+//            data.validUptoDate = LocalDate.parse(text.validUptoDate);
+//        }
+        data.setDrugs(text.content);
+        data.pharmacyName = text.pharmacyName;
+        return data;
     }
 
 }

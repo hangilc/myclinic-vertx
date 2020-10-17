@@ -44,7 +44,11 @@ public class ShahokokuhoUtil {
 	}
 
 	public static String hokenshaBangouRep(int hokenshaBangou){
-		return String.format("%08d", hokenshaBangou);
+		if( hokenshaBangou <= 999999 ){
+			return String.format("%06d", hokenshaBangou);
+		} else {
+			return String.format("%08d", hokenshaBangou);
+		}
 	}
 
 	public static String hihokenshaRep(ShahokokuhoDTO shahokokuho){

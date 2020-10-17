@@ -3,6 +3,7 @@ package dev.myclinic.vertx.server;
 import dev.myclinic.vertx.client2.Client;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -206,6 +207,14 @@ public final class GlobalService {
             try {
                 return new FileOutputStream(resolve().toFile());
             } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public void write(String fileContent){
+            try(OutputStream os = openOutputStream()){
+                os.write(fileContent.getBytes(StandardCharsets.UTF_8));
+            } catch(Exception e){
                 throw new RuntimeException(e);
             }
         }

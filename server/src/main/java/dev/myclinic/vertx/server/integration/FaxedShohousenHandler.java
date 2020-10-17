@@ -464,38 +464,65 @@ public class FaxedShohousenHandler {
         String uptoDate = ctx.queryParam("upto").get(0);
         String from = fromDate.replace("-", "");
         String upto = uptoDate.replace("-", "");
-        vertx.<String>executeBlocking(promise -> {
+        GlobalService.getInstance().executorService.execute(() -> {
             try {
-                Path apiDir = getMyclinicApiProjectDir();
-                Path groupDir = groupDir(from, upto).resolve();
+                GlobalService.AppDirToken groupDir = groupDir(from, upto);
                 String dataFileName = dataFileName(from, upto);
-                Path dataFile = groupDir.resolve(dataFileName);
+                Path dataFile = groupDir.toFileToken(dataFileName).resolve();
+                dev.myclinic.vertx.prescfax.Data data =
+                        mapper.readValue(dataFile.toFile(),
+                                dev.myclinic.vertx.prescfax.Data.class);
                 String textFileName = pharmaLetterTextFileName(from, upto);
-                Path textFile = groupDir.resolve(textFileName);
-                ProcessBuilder pb = new ProcessBuilder("python",
-                        "presc.py", "pharma-letter",
-                        "-i", dataFile.toFile().getAbsolutePath(),
-                        "-o", textFile.toFile().getAbsolutePath())
-                        .directory(apiDir.toFile());
-                Map<String, String> env = pb.environment();
-                env.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
-                Map<String, Object> result = execOld(pb);
-                boolean isSuccess = result.get("success").equals(true);
-                if (isSuccess) {
-                    reportFileStatus(result, textFile, "pharmaLetterTextFile");
-                }
-                promise.complete(mapper.writeValueAsString(result));
+                GlobalService.AppFileToken textFile = groupDir.toFileToken(textFileName);
+                String letterText = dev.myclinic.vertx.prescfax.PharmaLetterText.createFromData(data);
+                textFile.write(letterText);
+                Map<String, Object> result = new HashMap<>();
+                result.put("success", true);
+                reportFileStatus(result, textFile.resolve(), "pharmaLetterTextFile");
+                ctx.response().end(mapper.writeValueAsString(result));
             } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }, ar -> {
-            if (ar.succeeded()) {
-                ctx.response().end(ar.result());
-            } else {
-                ctx.fail(ar.cause());
+                ctx.fail(e);
             }
         });
     }
+
+//    private void handleCreatePharmaLetterText(RoutingContext ctx) {
+//        String fromDate = ctx.queryParam("from").get(0);
+//        String uptoDate = ctx.queryParam("upto").get(0);
+//        String from = fromDate.replace("-", "");
+//        String upto = uptoDate.replace("-", "");
+//        vertx.<String>executeBlocking(promise -> {
+//            try {
+//                Path apiDir = getMyclinicApiProjectDir();
+//                Path groupDir = groupDir(from, upto).resolve();
+//                String dataFileName = dataFileName(from, upto);
+//                Path dataFile = groupDir.resolve(dataFileName);
+//                String textFileName = pharmaLetterTextFileName(from, upto);
+//                Path textFile = groupDir.resolve(textFileName);
+//                ProcessBuilder pb = new ProcessBuilder("python",
+//                        "presc.py", "pharma-letter",
+//                        "-i", dataFile.toFile().getAbsolutePath(),
+//                        "-o", textFile.toFile().getAbsolutePath())
+//                        .directory(apiDir.toFile());
+//                Map<String, String> env = pb.environment();
+//                env.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
+//                Map<String, Object> result = execOld(pb);
+//                boolean isSuccess = result.get("success").equals(true);
+//                if (isSuccess) {
+//                    reportFileStatus(result, textFile, "pharmaLetterTextFile");
+//                }
+//                promise.complete(mapper.writeValueAsString(result));
+//            } catch (Exception e) {
+//                throw new RuntimeException(e);
+//            }
+//        }, ar -> {
+//            if (ar.succeeded()) {
+//                ctx.response().end(ar.result());
+//            } else {
+//                ctx.fail(ar.cause());
+//            }
+//        });
+//    }
 
     private Map<String, Object> execOld(ProcessBuilder pb) throws IOException {
         Process process = pb.start();
@@ -540,6 +567,7 @@ public class FaxedShohousenHandler {
                 PdfPrinter pdfPrinter = new PdfPrinter("A5");
                 pdfPrinter.print(pages, pdfFile.toString());
                 Map<String, Object> result2 = new HashMap<>();
+                result2.put("success", true);
                 reportFileStatus(result2, pdfFile, "shohousenPdfFile");
                 ctx.response().end(mapper.writeValueAsString(result2));
             } catch (Exception e) {

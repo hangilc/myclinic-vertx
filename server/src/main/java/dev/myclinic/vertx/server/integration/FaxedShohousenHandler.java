@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
+import dev.myclinic.vertx.dto.ClinicInfoDTO;
 import dev.myclinic.vertx.multidrawer.seal8x3.Seal8x3Data;
 import dev.myclinic.vertx.multidrawer.seal8x3.Seal8x3Drawer;
 import dev.myclinic.vertx.multidrawer.text.TextDrawer;
@@ -129,76 +130,113 @@ public class FaxedShohousenHandler {
         String uptoDate = ctx.queryParam("upto").get(0);
         String from = fromDate.replace("-", "");
         String upto = uptoDate.replace("-", "");
-        Optional<Integer> optRow = getOptionalIntParam(ctx, "row");
-        Optional<Integer> optCol = getOptionalIntParam(ctx, "col");
+        int row = getOptionalIntParam(ctx, "row").orElse(1);
+        int col = getOptionalIntParam(ctx, "col").orElse(1);
         int n = getIntParam(ctx, "n");
-        vertx.<String>executeBlocking(promise -> {
-            Path tempFile1 = null;
-            Path tempFile2 = null;
+        GlobalService.getInstance().executorService.execute(() -> {
             try {
-                tempFile1 = Files.createTempFile("myclinic-", "-clinic-label.txt");
-                ArrayList<String> commands = new ArrayList<>(List.of(
-                        "python", "presc.py", "clinic-label",
-                        "-n", String.format("%d", n),
-                        "-o", tempFile1.toFile().getAbsolutePath()
-                ));
-                ExecResult result = execInMyclinicApi(commands);
-                if (result.isError()) {
-                    promise.complete(result.errorAsJson(mapper));
-                    return;
-                }
-                tempFile2 = Files.createTempFile("myclinic-", "-clinic-label-drawer.txt");
-                commands.clear();
-                commands.addAll(new ArrayList<>(List.of(
-                        "java", "-jar", jarFile("multi-drawer-cli"), "seal8x3",
-                        "-i", tempFile1.toFile().getAbsolutePath(),
-                        "-o", tempFile2.toFile().getAbsolutePath()
-                )));
-                optRow.ifPresent(row -> commands.addAll(List.of("-r", String.format("%d", row))));
-                optCol.ifPresent(col -> commands.addAll(List.of("-c", String.format("%d", col))));
-                result = execInMyclinicSpring(commands);
-                if (result.isError()) {
-                    promise.complete(result.errorAsJson(mapper));
-                    return;
-                }
+                ClinicInfoDTO clinicInfo = GlobalService.getInstance().client.getClinicInfo();
+                List<String> label = List.of(
+                        clinicInfo.postalCode,
+                        clinicInfo.address,
+                        clinicInfo.name
+                );
+                Seal8x3Data data = new Seal8x3Data();
+                data.labels = Collections.nCopies(n, label);
+                data.startRow = row;
+                data.startColumn = col;
+                Seal8x3Drawer drawer = new Seal8x3Drawer();
+                List<List<Op>> pages = drawer.draw(data);
                 Path groupDir = groupDir(from, upto).resolve();
                 String pdfFileName = clinicLabelPdfFileName(from, upto);
                 Path pdfFile = groupDir.resolve(pdfFileName);
-                commands.clear();
-                commands.addAll(List.of(
-                        "java", "-jar", jarFile("drawer-printer"),
-                        "-i", tempFile2.toFile().getAbsolutePath(),
-                        "--pdf", pdfFile.toFile().getAbsolutePath()
-                ));
-                result = execInMyclinicSpring(commands);
-                if (result.isError()) {
-                    promise.complete(result.errorAsJson(mapper));
-                } else {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("success", true);
-                    reportFileStatus(map, pdfFile, "clinicLabelPdfFile");
-                    promise.complete(mapper.writeValueAsString(map));
-                }
-            } catch (Exception e) {
+                PdfPrinter pdfPrinter = new PdfPrinter("A4");
+                pdfPrinter.print(pages, pdfFile.toString());
+                Map<String, Object> result = new HashMap<>();
+                result.put("success", true);
+                reportFileStatus(result, pdfFile, "clinicLabelPdfFile");
+                ctx.response().end(mapper.writeValueAsString(result));
+            } catch(Exception e){
                 ctx.fail(e);
-            } finally {
-                if (tempFile1 != null) {
-                    //noinspection ResultOfMethodCallIgnored
-                    tempFile1.toFile().delete();
-                }
-                if (tempFile2 != null) {
-                    //noinspection ResultOfMethodCallIgnored
-                    tempFile2.toFile().delete();
-                }
-            }
-        }, ar -> {
-            if (ar.succeeded()) {
-                ctx.response().end(ar.result());
-            } else {
-                ctx.fail(ar.cause());
             }
         });
     }
+
+//    private void handleCreateClinicLabelPdf(RoutingContext ctx) {
+//        String fromDate = ctx.queryParam("from").get(0);
+//        String uptoDate = ctx.queryParam("upto").get(0);
+//        String from = fromDate.replace("-", "");
+//        String upto = uptoDate.replace("-", "");
+//        Optional<Integer> optRow = getOptionalIntParam(ctx, "row");
+//        Optional<Integer> optCol = getOptionalIntParam(ctx, "col");
+//        int n = getIntParam(ctx, "n");
+//        vertx.<String>executeBlocking(promise -> {
+//            Path tempFile1 = null;
+//            Path tempFile2 = null;
+//            try {
+//                tempFile1 = Files.createTempFile("myclinic-", "-clinic-label.txt");
+//                ArrayList<String> commands = new ArrayList<>(List.of(
+//                        "python", "presc.py", "clinic-label",
+//                        "-n", String.format("%d", n),
+//                        "-o", tempFile1.toFile().getAbsolutePath()
+//                ));
+//                ExecResult result = execInMyclinicApi(commands);
+//                if (result.isError()) {
+//                    promise.complete(result.errorAsJson(mapper));
+//                    return;
+//                }
+//                tempFile2 = Files.createTempFile("myclinic-", "-clinic-label-drawer.txt");
+//                commands.clear();
+//                commands.addAll(new ArrayList<>(List.of(
+//                        "java", "-jar", jarFile("multi-drawer-cli"), "seal8x3",
+//                        "-i", tempFile1.toFile().getAbsolutePath(),
+//                        "-o", tempFile2.toFile().getAbsolutePath()
+//                )));
+//                optRow.ifPresent(row -> commands.addAll(List.of("-r", String.format("%d", row))));
+//                optCol.ifPresent(col -> commands.addAll(List.of("-c", String.format("%d", col))));
+//                result = execInMyclinicSpring(commands);
+//                if (result.isError()) {
+//                    promise.complete(result.errorAsJson(mapper));
+//                    return;
+//                }
+//                Path groupDir = groupDir(from, upto).resolve();
+//                String pdfFileName = clinicLabelPdfFileName(from, upto);
+//                Path pdfFile = groupDir.resolve(pdfFileName);
+//                commands.clear();
+//                commands.addAll(List.of(
+//                        "java", "-jar", jarFile("drawer-printer"),
+//                        "-i", tempFile2.toFile().getAbsolutePath(),
+//                        "--pdf", pdfFile.toFile().getAbsolutePath()
+//                ));
+//                result = execInMyclinicSpring(commands);
+//                if (result.isError()) {
+//                    promise.complete(result.errorAsJson(mapper));
+//                } else {
+//                    Map<String, Object> map = new HashMap<>();
+//                    map.put("success", true);
+//                    reportFileStatus(map, pdfFile, "clinicLabelPdfFile");
+//                    promise.complete(mapper.writeValueAsString(map));
+//                }
+//            } catch (Exception e) {
+//                ctx.fail(e);
+//            } finally {
+//                if (tempFile1 != null) {
+//                    //noinspection ResultOfMethodCallIgnored
+//                    tempFile1.toFile().delete();
+//                }
+//                if (tempFile2 != null) {
+//                    //noinspection ResultOfMethodCallIgnored
+//                    tempFile2.toFile().delete();
+//                }
+//            }
+//        }, ar -> {
+//            if (ar.succeeded()) {
+//                ctx.response().end(ar.result());
+//            } else {
+//                ctx.fail(ar.cause());
+//            }
+//        });
+//    }
 
     private String jarFile(String module) {
         return String.format("%s\\target\\%s-1.0.0-SNAPSHOT.jar", module, module);

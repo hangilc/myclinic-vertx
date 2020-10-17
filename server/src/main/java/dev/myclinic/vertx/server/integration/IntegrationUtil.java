@@ -1,31 +1,14 @@
 package dev.myclinic.vertx.server.integration;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.myclinic.vertx.server.GlobalService;
 import io.vertx.ext.web.RoutingContext;
 
-import javax.imageio.IIOException;
-import java.io.*;
-import java.nio.charset.Charset;
+import java.io.File;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
 class IntegrationUtil {
-
-//    public static String getConfigDir() {
-//        return GlobalService.getInstance().resolveAppPath(
-//                GlobalService.getInstance().configDirToken
-//        ).toString();
-//    }
-
-    public static Path getMyclinicSpringProjectDir() {
-        return GlobalService.getInstance().resolveAppPath(
-                GlobalService.getInstance().myclinicSpringProjectDirToken
-        );
-    }
 
     public static int getIntParam(RoutingContext ctx, String name) {
         List<String> list = ctx.queryParam(name);
@@ -56,9 +39,9 @@ class IntegrationUtil {
             return retCode != 0;
         }
 
-        String getErrorMessage(){
+        String getErrorMessage() {
             String msg = "";
-            if( stdErr != null ){
+            if (stdErr != null) {
                 msg = new String(stdErr, StandardCharsets.UTF_8);
             }
             return msg;
@@ -86,7 +69,7 @@ class IntegrationUtil {
         }
         try {
             Process process = pb.start();
-            if( req.stdIn != null ){
+            if (req.stdIn != null) {
                 process.getOutputStream().write(req.stdIn);
                 process.getOutputStream().close();
             }
@@ -98,7 +81,7 @@ class IntegrationUtil {
             er.stdOut = stdOut;
             er.stdErr = stdErr;
             return er;
-        } catch(Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

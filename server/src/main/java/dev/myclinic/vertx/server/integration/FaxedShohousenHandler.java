@@ -156,97 +156,16 @@ public class FaxedShohousenHandler {
                 result.put("success", true);
                 reportFileStatus(result, pdfFile, "clinicLabelPdfFile");
                 ctx.response().end(mapper.writeValueAsString(result));
-            } catch(Exception e){
+            } catch (Exception e) {
                 ctx.fail(e);
             }
         });
-    }
-
-//    private void handleCreateClinicLabelPdf(RoutingContext ctx) {
-//        String fromDate = ctx.queryParam("from").get(0);
-//        String uptoDate = ctx.queryParam("upto").get(0);
-//        String from = fromDate.replace("-", "");
-//        String upto = uptoDate.replace("-", "");
-//        Optional<Integer> optRow = getOptionalIntParam(ctx, "row");
-//        Optional<Integer> optCol = getOptionalIntParam(ctx, "col");
-//        int n = getIntParam(ctx, "n");
-//        vertx.<String>executeBlocking(promise -> {
-//            Path tempFile1 = null;
-//            Path tempFile2 = null;
-//            try {
-//                tempFile1 = Files.createTempFile("myclinic-", "-clinic-label.txt");
-//                ArrayList<String> commands = new ArrayList<>(List.of(
-//                        "python", "presc.py", "clinic-label",
-//                        "-n", String.format("%d", n),
-//                        "-o", tempFile1.toFile().getAbsolutePath()
-//                ));
-//                ExecResult result = execInMyclinicApi(commands);
-//                if (result.isError()) {
-//                    promise.complete(result.errorAsJson(mapper));
-//                    return;
-//                }
-//                tempFile2 = Files.createTempFile("myclinic-", "-clinic-label-drawer.txt");
-//                commands.clear();
-//                commands.addAll(new ArrayList<>(List.of(
-//                        "java", "-jar", jarFile("multi-drawer-cli"), "seal8x3",
-//                        "-i", tempFile1.toFile().getAbsolutePath(),
-//                        "-o", tempFile2.toFile().getAbsolutePath()
-//                )));
-//                optRow.ifPresent(row -> commands.addAll(List.of("-r", String.format("%d", row))));
-//                optCol.ifPresent(col -> commands.addAll(List.of("-c", String.format("%d", col))));
-//                result = execInMyclinicSpring(commands);
-//                if (result.isError()) {
-//                    promise.complete(result.errorAsJson(mapper));
-//                    return;
-//                }
-//                Path groupDir = groupDir(from, upto).resolve();
-//                String pdfFileName = clinicLabelPdfFileName(from, upto);
-//                Path pdfFile = groupDir.resolve(pdfFileName);
-//                commands.clear();
-//                commands.addAll(List.of(
-//                        "java", "-jar", jarFile("drawer-printer"),
-//                        "-i", tempFile2.toFile().getAbsolutePath(),
-//                        "--pdf", pdfFile.toFile().getAbsolutePath()
-//                ));
-//                result = execInMyclinicSpring(commands);
-//                if (result.isError()) {
-//                    promise.complete(result.errorAsJson(mapper));
-//                } else {
-//                    Map<String, Object> map = new HashMap<>();
-//                    map.put("success", true);
-//                    reportFileStatus(map, pdfFile, "clinicLabelPdfFile");
-//                    promise.complete(mapper.writeValueAsString(map));
-//                }
-//            } catch (Exception e) {
-//                ctx.fail(e);
-//            } finally {
-//                if (tempFile1 != null) {
-//                    //noinspection ResultOfMethodCallIgnored
-//                    tempFile1.toFile().delete();
-//                }
-//                if (tempFile2 != null) {
-//                    //noinspection ResultOfMethodCallIgnored
-//                    tempFile2.toFile().delete();
-//                }
-//            }
-//        }, ar -> {
-//            if (ar.succeeded()) {
-//                ctx.response().end(ar.result());
-//            } else {
-//                ctx.fail(ar.cause());
-//            }
-//        });
-//    }
-
-    private String jarFile(String module) {
-        return String.format("%s\\target\\%s-1.0.0-SNAPSHOT.jar", module, module);
     }
 
     private String getConfigDir() {
         return GlobalService.getInstance().resolveAppPath(
                 GlobalService.getInstance().configDirToken
         ).toString();
-//        return System.getenv("MYCLINIC_CONFIG_DIR");
     }
 
     private Optional<Integer> getOptionalIntParam(RoutingContext ctx, String name) {
@@ -282,59 +201,6 @@ public class FaxedShohousenHandler {
         }
     }
 
-    private static class ExecResult {
-        int retCode;
-        String stdOut;
-        String stdErr;
-
-        ExecResult(int retCode, String stdOut, String stdErr) {
-            this.retCode = retCode;
-            this.stdOut = stdOut;
-            this.stdErr = stdErr;
-        }
-
-        boolean isError() {
-            return retCode != 0;
-        }
-
-        String errorAsJson(ObjectMapper mapper) throws JsonProcessingException {
-            Map<String, Object> m = Map.of("success", !isError(), "errorMessage", stdErr);
-            return mapper.writeValueAsString(m);
-        }
-    }
-
-    private ExecResult exec(List<String> commands, File directory, Map<String, String> env)
-            throws IOException {
-        ProcessBuilder pb = new ProcessBuilder(commands);
-        if (directory != null) {
-            pb.directory(directory);
-        }
-        if (env != null) {
-            Map<String, String> penv = pb.environment();
-            for (String key : env.keySet()) {
-                penv.put(key, env.get(key));
-            }
-        }
-        Process process = pb.start();
-        InputStream os = process.getInputStream();
-        InputStream es = process.getErrorStream();
-        String stdOut = readInputStream(os);
-        String stdErr = readInputStream(es);
-        return new ExecResult(process.exitValue(), stdOut, stdErr);
-    }
-
-    private ExecResult execInMyclinicApi(List<String> commands) throws IOException {
-        Path apiDir = getMyclinicApiProjectDir();
-        Map<String, String> env = Map.of("MYCLINIC_CONFIG", getConfigDir());
-        return exec(commands, apiDir.toFile(), env);
-    }
-
-    private ExecResult execInMyclinicSpring(List<String> commands) throws IOException {
-        Path springDir = getMyclinicSpringProjectDir();
-        Map<String, String> env = Map.of("MYCLINIC_CONFIG", getConfigDir());
-        return exec(commands, springDir.toFile(), env);
-    }
-
     public static class PharmaAddrNotFoundException extends Exception {
         public List<String> missing;
 
@@ -346,58 +212,25 @@ public class FaxedShohousenHandler {
     private List<List<String>> createPharmaLabelText(GlobalService.AppFileToken dataFile)
             throws PharmaAddrNotFoundException, IOException {
         Map<String, String> pharmaAddr = mapper.readValue(pharmaAddrFile().resolve().toFile(),
-            new TypeReference<>(){});
+                new TypeReference<>() {
+                });
         dev.myclinic.vertx.prescfax.Data data = mapper.readValue(dataFile.resolve().toFile(),
                 dev.myclinic.vertx.prescfax.Data.class);
         List<String> missing = new ArrayList<>();
         List<List<String>> result = new ArrayList<>();
-        for(ShohousenGroup group: data.groups){
+        for (ShohousenGroup group : data.groups) {
             String addrValue = pharmaAddr.get(group.pharmacy.fax);
-            if( addrValue == null ){
+            if (addrValue == null) {
                 missing.add(String.format("%s:%s", group.pharmacy.name, group.pharmacy.fax));
             } else {
                 List<String> lines = Arrays.asList(addrValue.split("\n"));
                 result.add(lines);
             }
         }
-        if( missing.size() > 0 ){
+        if (missing.size() > 0) {
             throw new PharmaAddrNotFoundException(missing);
         }
         return result;
-    }
-
-    private Map<String, Object> createPharmaLabelDrawerFile(File textFile, File outFile,
-                                                            int row, int col) throws IOException {
-        Path sprintDir = getMyclinicSpringProjectDir();
-        ProcessBuilder pb1 = new ProcessBuilder(
-                "java", "-jar",
-                "multi-drawer-cli\\target\\multi-drawer-cli-1.0.0-SNAPSHOT.jar",
-                "seal8x3",
-                "-r", String.format("%d", row),
-                "-c", String.format("%d", col),
-                "-i", textFile.getAbsolutePath(),
-                "-o", outFile.getAbsolutePath())
-                .directory(sprintDir.toFile());
-        Map<String, String> env1 = pb1.environment();
-        env1.put("MYCLINIC_CONFIG", System.getenv("MYCLINIC_CONFIG_DIR"));
-        return execOld(pb1);
-    }
-
-    private Map<String, Object> createPdfFile(File drawerFile, File outFile, List<String> opts) throws IOException {
-        Path sprintDir = getMyclinicSpringProjectDir();
-        List<String> commands;
-        commands = new ArrayList<>(List.of(
-                "java",
-                "-jar", "drawer-printer\\target\\drawer-printer-1.0.0-SNAPSHOT.jar",
-                "-i", drawerFile.getAbsolutePath(),
-                "--pdf", outFile.getAbsolutePath()));
-        if (opts != null) {
-            commands.addAll(opts);
-        }
-        ProcessBuilder pb = new ProcessBuilder(commands).directory(sprintDir.toFile());
-        Map<String, String> env = pb.environment();
-        env.put("MYCLINIC_CONFIG", getConfigDir());
-        return execOld(pb);
     }
 
     private void handleCreatePharmaLabelPdf(RoutingContext ctx) {
@@ -427,7 +260,7 @@ public class FaxedShohousenHandler {
                 result.put("success", true);
                 reportFileStatus(result, pharmaLabelPdfFile, "pharmaLabelPdfFile");
                 ctx.response().end(mapper.writeValueAsString(result));
-            } catch(PharmaAddrNotFoundException e){
+            } catch (PharmaAddrNotFoundException e) {
                 Map<String, Object> result = new HashMap<>();
                 result.put("success", false);
                 result.put("error", "missing-pharma-addr");
@@ -437,59 +270,10 @@ public class FaxedShohousenHandler {
                 } catch (JsonProcessingException jsonProcessingException) {
                     ctx.fail(e);
                 }
-            } catch(Exception e){
+            } catch (Exception e) {
                 ctx.fail(e);
             }
         });
-//        vertx.<String>executeBlocking(promise -> {
-//            Path tempFile1 = null;
-//            Path tempFile2 = null;
-//            try {
-//                tempFile1 = Files.createTempFile("myclinic-", "-pharma-label.txt");
-//                Path groupDir = groupDir(from, upto).resolve();
-//                String dataFileName = dataFileName(from, upto);
-//                Path dataFile = groupDir.resolve(dataFileName);
-//                Map<String, Object> result = createPharmaLabelTextFile(dataFile.toFile(), tempFile1.toFile());
-//                if (!result.get("success").equals(true)) {
-//                    promise.complete(mapper.writeValueAsString(result));
-//                    return;
-//                }
-//                tempFile2 = Files.createTempFile("myclinic-", "-pharma-label-drawer.txt");
-//                result = createPharmaLabelDrawerFile(tempFile1.toFile(), tempFile2.toFile(),
-//                        row, col);
-//                if (!result.get("success").equals(true)) {
-//                    promise.complete(mapper.writeValueAsString(result));
-//                    return;
-//                }
-//                String pharmaLabelPdfFileName = pharmaLabelPdfFileName(from, upto);
-//                Path pharmaLabelPdfFile = groupDir.resolve(pharmaLabelPdfFileName);
-//                result = createPdfFile(tempFile2.toFile(), pharmaLabelPdfFile.toFile(), null);
-//                if (!result.get("success").equals(true)) {
-//                    promise.complete(mapper.writeValueAsString(result));
-//                    return;
-//                } else {
-//                    reportFileStatus(result, pharmaLabelPdfFile, "pharmaLabelPdfFile");
-//                }
-//                promise.complete(mapper.writeValueAsString(result));
-//            } catch (Exception e) {
-//                ctx.fail(e);
-//            } finally {
-//                if (tempFile1 != null) {
-//                    //noinspection ResultOfMethodCallIgnored
-//                    tempFile1.toFile().delete();
-//                }
-//                if (tempFile2 != null) {
-//                    //noinspection ResultOfMethodCallIgnored
-//                    tempFile2.toFile().delete();
-//                }
-//            }
-//        }, ar -> {
-//            if (ar.succeeded()) {
-//                ctx.response().end(ar.result());
-//            } else {
-//                ctx.fail(ar.cause());
-//            }
-//        });
     }
 
     private void handleCreatePharmaLetterPdf(RoutingContext ctx) {
@@ -545,20 +329,6 @@ public class FaxedShohousenHandler {
                 ctx.fail(e);
             }
         });
-    }
-
-    private Map<String, Object> execOld(ProcessBuilder pb) throws IOException {
-        Process process = pb.start();
-        InputStream os = process.getInputStream();
-        InputStream es = process.getErrorStream();
-        String stdOut = readInputStream(os);
-        String stdErr = readInputStream(es);
-        boolean isSuccess = process.exitValue() == 0;
-        Map<String, Object> result = new HashMap<>();
-        result.put("success", isSuccess);
-        result.put("stdOut", stdOut);
-        result.put("stdErr", stdErr);
-        return result;
     }
 
     private void handleCreateShohousenPdf(RoutingContext ctx) {
@@ -783,29 +553,11 @@ public class FaxedShohousenHandler {
         return result;
     }
 
-    private Path getMyclinicApiProjectDir() {
-        return GlobalService.getInstance().resolveAppPath(
-                GlobalService.getInstance().myclinicApiProjectDirToken
-        );
-    }
-
-    private Path getMyclinicSpringProjectDir() {
-        return GlobalService.getInstance().resolveAppPath(
-                GlobalService.getInstance().myclinicSpringProjectDirToken
-        );
-    }
-
     private GlobalService.AppDirToken getManagementRootDir() {
         return new GlobalService.AppDirToken(
                 GlobalService.getInstance().shohousenFaxManagementDirToken,
                 Collections.emptyList()
         );
-    }
-
-    private String readInputStream(InputStream is) {
-        InputStreamReader streamReader = new InputStreamReader(is);
-        BufferedReader reader = new BufferedReader(streamReader);
-        return reader.lines().collect(Collectors.joining("\n"));
     }
 
     private String groupDirName(String from, String upto) {

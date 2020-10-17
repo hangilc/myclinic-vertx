@@ -22,8 +22,6 @@ public final class GlobalService {
     public final String paperScanDirToken = "[paper-scan]";
     public final String shohousenFaxDirToken = "[shohousen-fax]";
     public final String shohousenFaxManagementDirToken = "[shohousen-fax-management]";
-    public final String myclinicApiProjectDirToken = "[myclinic-api-proj]";
-    public final String myclinicSpringProjectDirToken = "[myclinic-spring-proj]";
     public final String configDirToken = "[config]";
 
     public final Client client;
@@ -36,8 +34,6 @@ public final class GlobalService {
         addDirTokenFromEnv(paperScanDirToken, "MYCLINIC_PAPER_SCAN_DIR");
         addDirTokenFromEnv(shohousenFaxDirToken, "MYCLINIC_SHOHOUSEN_DIR");
         addDirTokenFromEnv(shohousenFaxManagementDirToken, "MYCLINIC_FAXED_SHOHOUSEN_DATA_DIR");
-        addDirTokenFromEnv(myclinicApiProjectDirToken, "MYCLINIC_API_PROJECT_DIR");
-        addDirTokenFromEnv(myclinicSpringProjectDirToken, "MYCLINIC_SPRING_PROJECT_DIR");
         addDirTokenFromEnv(configDirToken, "MYCLINIC_CONFIG_DIR");
         this.client = new Client(System.getenv("MYCLINIC_SERVICE"));
         this.executorService = Executors.newFixedThreadPool(6);

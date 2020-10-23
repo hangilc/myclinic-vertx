@@ -197,6 +197,7 @@
         <module>master-lib</module>
         <module>master-cli</module>
         <module>multi-drawer</module>
+        <module>ad-hoc</module>
     </modules>
 
 </project>

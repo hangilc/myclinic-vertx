@@ -445,6 +445,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         if (srcFile == null) {
             throw new RuntimeException("Missing parameter: src-file");
         }
+        String paraPage = ctx.request().getParam("page");
         Path srcPath = GlobalService.getInstance().resolveAppPath(srcFile);
         String stamp = ctx.request().getParam("stamp");
         if (stamp == null) {
@@ -464,8 +465,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 opt.scale = stampInfo.scale;
                 opt.stampCenterRelative = stampInfo.isImageCenterRelative;
                 Stamper stamper = new Stamper();
-                stamper.putStamp(srcPath.toString(), stampInfo.imageFile,
-                        dstPath.toString(), opt);
+                if( paraPage == null ){
+                    stamper.putStampAtLastPage(srcPath.toString(), stampInfo.imageFile,
+                            dstPath.toString(), opt);
+                } else {
+                    int page = Integer.parseInt(paraPage);
+                    stamper.putStampAtPage(srcPath.toString(), stampInfo.imageFile,
+                            dstPath.toString(), opt, page);
+                }
                 promise.complete();
             } catch (Exception e) {
                 promise.fail(e);

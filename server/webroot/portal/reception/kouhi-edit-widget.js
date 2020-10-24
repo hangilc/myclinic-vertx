@@ -6,6 +6,7 @@ import {RadioInput} from "./radio-input.js";
 export class KouhiEditWidget extends Widget {
     constructor(ele, map, rest){
         super(ele, map, rest);
+        console.log(map.form);
         let formMap = Object.assign({}, map.form, {
             validFrom: new DateInput(map.form.validFrom),
             validUpto: (new DateInput(map.form.validUpto)).allowEmpty()

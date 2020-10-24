@@ -1,12 +1,35 @@
 import * as kanjidate from "../js/kanjidate.js";
+import {parseElement} from "../js/parse-element.js";
+
+let html = `
+    <select class="x-gengou form-control">
+        <option>令和</option>
+        <option>平成</option>
+        <option selected>昭和</option>
+        <option>大正</option>
+        <option>明治</option>
+    </select>
+    <input type="text" class="x-nen form-control ml-2" size="3"/> 年
+    <input type="text" class="x-month form-control ml-2" size="3"/> 月
+    <input type="text" class="x-day form-control ml-2" size="3"/> 日
+`;
 
 export class DateInput {
-    constructor(map){
-        this.map = map;
-        this.gengouElement = map.gengou;
-        this.nenElement = map.nen;
-        this.monthElement = map.month;
-        this.dayElement = map.day;
+    constructor(ele){
+        if( !ele ){
+            ele = $("<div>");
+        } else {
+            ele = $(ele);
+        }
+        if( ele.children().length === 0 ){
+            ele.html(html);
+        }
+        this.ele = ele;
+        this.map = parseElement(ele);
+        this.gengouElement = this.map.gengou;
+        this.nenElement = this.map.nen;
+        this.monthElement = this.map.month;
+        this.dayElement = this.map.day;
         this.error = null;
     }
 

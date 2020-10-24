@@ -59,6 +59,7 @@ export class KouhiForm {
         }
         let validFrom = this.validFromElement.val();
         if( !validFrom ){
+            console.log(this.validFromElement.getError());
             this.error = "開始日の入力が不適切です。";
             return undefined;
         }

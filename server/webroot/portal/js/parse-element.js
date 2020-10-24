@@ -13,7 +13,7 @@ function probeXClass(e) {
         for (let cls of attrClass.split(/\s+/)) {
             if (cls.startsWith("x-")) {
                 e.removeClass(cls);
-                return hyphenToCamel(cls.substring(2));
+                return cls.substring(2);
             }
         }
     }
@@ -26,16 +26,24 @@ function parseElementIter(ele, map) {
         let name = probeXClass(ele);
         if (name) {
             if( ele.prop("tagName") === "TEMPLATE" ){
+                name = hyphenToCamel(name);
                 map[name] = ele;
             } else {
-                map[name] = ele;
-                if (name.endsWith("_")) {
+                if( name.endsWith("-") ){
                     name = name.substring(0, name.length - 1);
-                    let submap = {};
-                    parseElementIter(ele.children(), submap);
-                    map[name] = submap;
+                    name = hyphenToCamel(name);
+                    map[name] = ele;
                 } else {
-                    parseElementIter(ele.children(), map);
+                    name = hyphenToCamel(name);
+                    map[name] = ele;
+                    if (name.endsWith("_")) {
+                        name = name.substring(0, name.length - 1);
+                        let submap = {};
+                        parseElementIter(ele.children(), submap);
+                        map[name] = submap;
+                    } else {
+                        parseElementIter(ele.children(), map);
+                    }
                 }
             }
         } else {

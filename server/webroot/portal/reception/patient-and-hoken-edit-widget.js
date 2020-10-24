@@ -180,6 +180,9 @@ export class PatientAndHokenEditWidget extends Widget {
                 editWidget.remove();
                 this.disp.set(updatedPatient);
             });
+            editWidget.onClose(() => {
+                this.patientEditWidget = null;
+            });
             editWidget.prependTo(this.workareaElement);
         }
     }

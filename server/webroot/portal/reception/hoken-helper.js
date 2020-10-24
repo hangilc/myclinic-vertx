@@ -19,7 +19,6 @@ export class HokenHelper {
     }
 
     async extendHokenList(hokenList){
-        console.log("hokenList", hokenList);
         for(let shahokokuho of hokenList.shahokokuhoList){
             shahokokuho.rep = await this.rest.shahokokuhoRep(shahokokuho);
         }

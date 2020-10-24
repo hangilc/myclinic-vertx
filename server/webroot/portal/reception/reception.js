@@ -198,69 +198,7 @@ let html = `
             <div><span class="font-weight-bold x-widget-close"
                        style="cursor: pointer;">&times;</span></div>
         </div>
-        <div class="x-form_ mt-2">
-            <div class="row">
-                <div class="col-sm-2 d-flex justify-content-end">患者番号</div>
-                <div class="x-patient-id col-md-10"></div>
-            </div>
-
-            <div class="row mt-2">
-                <div class="col-sm-2 d-flex justify-content-end">氏名</div>
-                <div class="col-sm-10 form-inline">
-                    <input type="text" class="x-last-name form-control"/>
-                    <input type="text" class="x-first-name form-control ml-2"/>
-                </div>
-            </div>
-
-            <div class="row mt-2">
-                <div class="col-sm-2 d-flex justify-content-end mt-2">よみ</div>
-                <div class="col-sm-10 form-inline">
-                    <input type="text" class="x-last-name-yomi form-control"/>
-                    <input type="text" class="x-first-name-yomi form-control ml-2"/>
-                </div>
-            </div>
-
-            <div class="row mt-2">
-                <div class="col-sm-2 d-flex justify-content-end mt-2">生年月日</div>
-                <div class="col-sm-10 form-inline x-birthday_">
-                    <select class="x-gengou form-control">
-                        <option>令和</option>
-                        <option>平成</option>
-                        <option selected>昭和</option>
-                        <option>大正</option>
-                        <option>明治</option>
-                    </select>
-                    <input type="text" class="x-nen form-control ml-2" size="3"/> 年
-                    <input type="text" class="x-month form-control ml-2" size="3"/> 月
-                    <input type="text" class="x-day form-control ml-2" size="3"/> 日
-                </div>
-            </div>
-
-            <div class="row mt-2">
-                <div class="col-sm-2 d-flex justify-content-end mt-2">性別</div>
-                <div class="col-sm-10">
-                    <form class="form-inline x-sex" onsubmit="return false">
-                        <input type="radio" name="sex" value="M"> 男
-                        <input type="radio" name="sex" value="F" checked class="ml-2"> 女
-                    </form>
-                </div>
-            </div>
-
-            <div class="row mt-2">
-                <div class="col-sm-2 d-flex justify-content-end mt-2">住所</div>
-                <div class="col-sm-10 form-inline">
-                    <input type="text" class="x-address form-control" size="50"/>
-                </div>
-            </div>
-
-            <div class="row mt-2">
-                <div class="col-sm-2 d-flex justify-content-end mt-2">電話番号</div>
-                <div class="col-sm-10 form-inline">
-                    <input type="text" class="x-phone form-control"/>
-                </div>
-
-            </div>
-        </div>
+        <div class="x-form- mt-2"></div>
         <div class="mt-2 d-flex justify-content-end">
             <button type="button" class="x-enter btn btn-secondary">入力</button>
             <button type="button" class="x-close btn btn-secondary ml-2">閉じる</button>
@@ -306,7 +244,7 @@ let html = `
                 </div>
                 <div class="form-group row">
                     <div class="col-sm-2 col-form-label d-flex justify-content-end">開始日</div>
-                    <div class="col-sm-10 form-inline x-valid-from_">
+                    <div class="col-sm-10 form-inline x-valid-from-">
                         <select class="x-gengou form-control">
                             <option selected>令和</option>
                             <option>平成</option>
@@ -318,7 +256,7 @@ let html = `
                 </div>
                 <div class="form-group row">
                     <div class="col-sm-2 col-form-label d-flex justify-content-end">終了日</div>
-                    <div class="col-sm-10 form-inline x-valid-upto_">
+                    <div class="col-sm-10 form-inline x-valid-upto-">
                         <select class="x-gengou form-control">
                             <option selected>令和</option>
                             <option>平成</option>
@@ -472,7 +410,7 @@ let html = `
                 </div>
                 <div class="form-group row">
                     <div class="col-sm-2 col-form-label d-flex justify-content-end">開始日</div>
-                    <div class="col-sm-10 form-inline x-valid-from_">
+                    <div class="col-sm-10 form-inline x-valid-from-">
                         <select class="x-gengou form-control">
                             <option selected>令和</option>
                             <option>平成</option>
@@ -484,7 +422,7 @@ let html = `
                 </div>
                 <div class="form-group row">
                     <div class="col-sm-2 col-form-label d-flex justify-content-end">終了日</div>
-                    <div class="col-sm-10 form-inline x-valid-upto_">
+                    <div class="col-sm-10 form-inline x-valid-upto-">
                         <select class="x-gengou form-control">
                             <option selected>令和</option>
                             <option>平成</option>
@@ -544,7 +482,7 @@ let html = `
                 </div>
                 <div class="form-group row">
                     <div class="col-sm-2 col-form-label d-flex justify-content-end">開始日</div>
-                    <div class="col-sm-10 form-inline x-valid-from_">
+                    <div class="col-sm-10 form-inline x-valid-from-">
                         <select class="x-gengou form-control">
                             <option selected>令和</option>
                             <option>平成</option>
@@ -556,7 +494,7 @@ let html = `
                 </div>
                 <div class="form-group row">
                     <div class="col-sm-2 col-form-label d-flex justify-content-end">終了日</div>
-                    <div class="col-sm-10 form-inline x-valid-upto_">
+                    <div class="col-sm-10 form-inline x-valid-upto-">
                         <select class="x-gengou form-control">
                             <option selected>令和</option>
                             <option>平成</option>
@@ -616,7 +554,7 @@ let html = `
                 </div>
                 <div class="form-group row">
                     <div class="col-sm-2 col-form-label d-flex justify-content-end">開始日</div>
-                    <div class="col-sm-10 form-inline x-valid-from_">
+                    <div class="col-sm-10 form-inline x-valid-from-">
                         <select class="x-gengou form-control">
                             <option selected>令和</option>
                             <option>平成</option>
@@ -628,7 +566,7 @@ let html = `
                 </div>
                 <div class="form-group row">
                     <div class="col-sm-2 col-form-label d-flex justify-content-end">終了日</div>
-                    <div class="col-sm-10 form-inline x-valid-upto_">
+                    <div class="col-sm-10 form-inline x-valid-upto-">
                         <select class="x-gengou form-control">
                             <option selected>令和</option>
                             <option>平成</option>
@@ -671,7 +609,7 @@ let html = `
                 </div>
                 <div class="form-group row">
                     <div class="col-sm-2 col-form-label d-flex justify-content-end">開始日</div>
-                    <div class="col-sm-10 form-inline x-valid-from_">
+                    <div class="col-sm-10 form-inline x-valid-from-">
                         <select class="x-gengou form-control">
                             <option selected>令和</option>
                             <option>平成</option>
@@ -683,7 +621,7 @@ let html = `
                 </div>
                 <div class="form-group row">
                     <div class="col-sm-2 col-form-label d-flex justify-content-end">終了日</div>
-                    <div class="col-sm-10 form-inline x-valid-upto_">
+                    <div class="col-sm-10 form-inline x-valid-upto-">
                         <select class="x-gengou form-control">
                             <option selected>令和</option>
                             <option>平成</option>
@@ -859,7 +797,7 @@ let html = `
 </template>
 `;
 
-export function getHtml(){
+export function getHtml() {
     return html;
 }
 
@@ -1089,7 +1027,7 @@ export async function initReception(pane) {
     })();
 
     class CashierDialogFactory {
-        create(meisai, visitId, chargeValue, payments){
+        create(meisai, visitId, chargeValue, payments) {
             let html = $("template#reception-cashier-dialog-template").html();
             let ele = $(html);
             let map = parseElement(ele);
@@ -1104,7 +1042,8 @@ export async function initReception(pane) {
         constructor() {
             this.cashierDialogFactory = new CashierDialogFactory();
         }
-        create(){
+
+        create() {
             let ele = $("#reception-wqueue-table");
             let map = parseElement(ele);
             let comp = new WqueueTable(ele, map, rest);
@@ -1117,7 +1056,7 @@ export async function initReception(pane) {
     let wqueueTable = (new WqueueTableFactory()).create();
     wqueueTable.onChanged(() => refreshWqueueTable());
 
-    async function refreshWqueueTable(){
+    async function refreshWqueueTable() {
         let wqueueFulls = await rest.listWqueueFull();
         wqueueTable.set(wqueueFulls);
     }

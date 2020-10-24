@@ -47,7 +47,9 @@ export class KoukikoureiNewWidget extends Widget {
         let data = this.form.get(0, patientId);
         if( !data ){
             let err = this.form.getError();
-            alert(err);
+            if( err ){
+                alert(err);
+            }
             return;
         }
         let koukikoureiId = await this.rest.enterKoukikourei(data);

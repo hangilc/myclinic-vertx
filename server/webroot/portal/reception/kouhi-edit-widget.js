@@ -8,8 +8,8 @@ export class KouhiEditWidget extends Widget {
         super(ele, map, rest);
         console.log(map.form);
         let formMap = Object.assign({}, map.form, {
-            validFrom: new DateInput(map.form.validFrom),
-            validUpto: (new DateInput(map.form.validUpto)).allowEmpty()
+            validFrom: new DateInput(map.form.validFrom.get(0)),
+            validUpto: (new DateInput(map.form.validUpto.get(0))).allowEmpty()
         });
         this.form = new KouhiForm(formMap);
         this.closeElement = map.close;

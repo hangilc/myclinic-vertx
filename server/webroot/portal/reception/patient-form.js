@@ -2,7 +2,7 @@ import {parseElement} from "../js/parse-element.js";
 import {DateInput} from "./date-input.js";
 
 let html = `
-    <div class="row">
+    <div class="row x-patient-id-row">
         <div class="col-sm-2 d-flex justify-content-end">患者番号</div>
         <div class="x-patient-id col-md-10"></div>
     </div>
@@ -68,31 +68,31 @@ let html = `
 export class PatientForm {
     constructor(ele) {
         if( !ele ){
-            ele = $("<div>");
-        } else {
-            ele = $(ele);
+            ele = document.createElement("div");
         }
-        if( ele.html().trim() === "" ){
-            ele.html(html);
+        if( ele.children.length === 0 ){
+            ele.innerHTML = html;
         }
         this.ele = ele;
         let map = parseElement(ele);
         this.map = map
+        this.patientIdRowElement = map.patientIdRow;
         this.patientIdElement = map.patientId;
         this.lastNameElement = map.lastName;
         this.firstNameElement = map.firstName;
         this.lastNameYomiElement = map.lastNameYomi;
         this.firstNameYomiElement = map.firstNameYomi;
-        this.birthdayElement = new DateInput(map.birthday);
+        this.birthdayElement = new DateInput(map.birthday.get(0));
         this.sexElement = map.sex;
         this.addressElement = map.address;
         this.phoneElement = map.phone;
         this.error = null;
     }
 
-    init(){
-
+    hidePatientId(){
+        this.patientIdRowElement.get(0).style.display = "none";
     }
+
 
     set(patient){
         if( patient ){

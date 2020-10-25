@@ -8,8 +8,8 @@ export class ShahokokuhoEditWidget extends Widget {
         super(ele, map, rest);
         let formMap = Object.assign({}, map.form, {
             honnin: new RadioInput(map.form_, "honnin"),
-            validFrom: new DateInput(map.form.validFrom),
-            validUpto: (new DateInput(map.form.validUpto)).allowEmpty(),
+            validFrom: new DateInput(map.form.validFrom.get(0)),
+            validUpto: (new DateInput(map.form.validUpto.get(0))).allowEmpty(),
             kourei: new RadioInput(map.form_, "kourei")
         });
         this.form = new ShahokokuhoForm(formMap);

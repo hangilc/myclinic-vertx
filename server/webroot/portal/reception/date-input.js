@@ -1,5 +1,5 @@
 import * as kanjidate from "../js/kanjidate.js";
-import {parseElement} from "../js/parse-element.js";
+import {parseElement} from "../js/parse-node.js";
 
 let html = `
     <select class="x-gengou form-control">
@@ -17,12 +17,10 @@ let html = `
 export class DateInput {
     constructor(ele){
         if( !ele ){
-            ele = $("<div>");
-        } else {
-            ele = $(ele);
+            ele = document.createElement("div");
         }
-        if( ele.children().length === 0 ){
-            ele.html(html);
+        if( ele.children && ele.children.length === 0 ){
+            ele.innerHTML = html;
         }
         this.ele = ele;
         this.map = parseElement(ele);
@@ -30,67 +28,64 @@ export class DateInput {
         this.nenElement = this.map.nen;
         this.monthElement = this.map.month;
         this.dayElement = this.map.day;
+        this.isAllowEmpty = false;
         this.error = null;
-    }
-
-    init(){
-        return this;
     }
 
     set(sqldate){
         if( sqldate && sqldate !== "0000-00-00" ){
             let data = kanjidate.sqldatetimeToData(sqldate);
-            this.gengouElement.val(data.gengou.name);
-            this.nenElement.val(data.nen);
-            this.monthElement.val(data.month);
-            this.dayElement.val(data.day);
+            this.gengouElement.value = data.gengou.name;
+            this.nenElement.value = data.nen;
+            this.monthElement.value = data.month;
+            this.dayElement.value = data.day;
         } else {
-            this.nenElement.val("");
-            this.monthElement.val("");
-            this.dayElement.val("");
+            this.nenElement.value = "";
+            this.monthElement.value = "";
+            this.dayElement.value = "";
         }
         return this;
     }
 
     allowEmpty(emptyValue="0000-00-00"){
-        this.allowEmpty = true;
+        this.isAllowEmpty = true;
         this.emptyValue = emptyValue;
         return this;
     }
 
     get(){
         if( this.isEmpty() ){
-            if( this.allowEmpty ){
+            if( this.isAllowEmpty ){
                 return this.emptyValue;
             } else {
                 this.error = "入力されていません。";
                 return undefined;
             }
         }
-        let gengou = this.gengouElement.val();
-        if( this.nenElement.val() === "" ){
+        let gengou = this.gengouElement.value;
+        if( this.nenElement.value === "" ){
             this.error = "年が入力されていません。";
             return undefined;
         }
-        let nen = parseInt(this.nenElement.val());
+        let nen = parseInt(this.nenElement.value);
         if( isNaN(nen) ){
             this.error ="年の入力が不適切です。";
             return undefined;
         }
-        if( this.monthElement.val() === "" ){
+        if( this.monthElement.value === "" ){
             this.error = "月が入力されていません。";
             return undefined;
         }
-        let month = parseInt(this.monthElement.val());
+        let month = parseInt(this.monthElement.value);
         if( isNaN(nen) ){
             this.error ="月の入力が不適切です。";
             return undefined;
         }
-        if( this.dayElement.val() === "" ){
+        if( this.dayElement.value === "" ){
             this.error = "日が入力されていません。";
             return undefined;
         }
-        let day = parseInt(this.dayElement.val());
+        let day = parseInt(this.dayElement.value);
         if( isNaN(nen) ){
             this.error ="日の入力が不適切です。";
             return undefined;
@@ -100,8 +95,8 @@ export class DateInput {
     }
 
     isEmpty(){
-        return this.nenElement.val() === "" && this.monthElement.val() === "" &&
-            this.dayElement.val() === "";
+        return this.nenElement.value === "" && this.monthElement.value === "" &&
+            this.dayElement.value === "";
     }
 
     getError(){

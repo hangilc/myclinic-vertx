@@ -820,6 +820,7 @@ export async function initReception(pane) {
     let {WqueueTable} = await import("./wqueue-table.js");
     let {CashierDialog} = await import("./cashier-dialog.js");
     let {Broadcaster} = await import("./broadcaster.js");
+    let {PatientNewWidget} = await import("./patient-new-widget.js");
 
     let receptionWorkarea = $("#reception-workarea");
     let broadcaster = new Broadcaster();
@@ -998,8 +999,9 @@ export async function initReception(pane) {
         let koukikoureiEditWidgetFactory = new KoukikoureiEditWidgetFactory();
         let kouhiEditWidgetFactory = new KouhiEditWidgetFactory();
 
-        map.newPatient.on("click", event => {
-            alert("new patient: not supported");
+        map.newPatient.on("click", async event => {
+            let w = new PatientNewWidget();
+            receptionWorkarea.get(0).prepend(w.ele);
         });
 
         map.searchPatient.on("click", async event => {

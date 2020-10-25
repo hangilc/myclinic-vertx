@@ -4,7 +4,7 @@ import {PatientForm} from "./patient-form.js";
 export class PatientEditWidget extends Widget {
     constructor(ele, map, rest) {
         super(ele, map, rest);
-        this.form = new PatientForm(map.form);
+        this.form = new PatientForm(map.form.get(0));
         this.closeElement = map.close;
         this.enterElement = map.enter;
     }

@@ -1000,7 +1000,10 @@ export async function initReception(pane) {
         let kouhiEditWidgetFactory = new KouhiEditWidgetFactory();
 
         map.newPatient.on("click", async event => {
-            let w = new PatientNewWidget();
+            let w = new PatientNewWidget(rest);
+            w.onEntered(patient => {
+                console.log(patient);
+            });
             receptionWorkarea.get(0).prepend(w.ele);
         });
 

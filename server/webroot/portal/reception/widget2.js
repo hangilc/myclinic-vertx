@@ -7,11 +7,13 @@ let tmpl = `
                    style="cursor: pointer;">Ｘ</span></div>
     </div>
     <div class="x-content mt-4"></div>
+    <div class="mt-2 d-flex justify-content-end x-commands"></div>
 `;
 
 let symTitle = Symbol("title");
-let symClosing = Symbol("closing");
 let symContent = Symbol("content");
+let symCommands = Symbol("command");
+let symClosing = Symbol("closing");
 
 export class Widget {
     constructor(){
@@ -22,6 +24,7 @@ export class Widget {
         map.close.addEventListener("click", event => this.close());
         this[symTitle] = map.title;
         this[symContent] = map.content;
+        this[symCommands] = map.commands;
         this.ele = ele;
     }
 
@@ -40,6 +43,10 @@ export class Widget {
 
     getContentElement(){
         return this[symContent];
+    }
+
+    getCommandsElement(){
+        return this[symCommands];
     }
 
     onClosing(cb){

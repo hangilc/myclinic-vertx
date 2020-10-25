@@ -1,5 +1,6 @@
 import {parseElement} from "../js/parse-element.js";
 import {DateInput} from "./date-input.js";
+import {SexInput} from "./sex-input.js";
 
 let html = `
     <div class="row x-patient-id-row">
@@ -41,12 +42,7 @@ let html = `
 
     <div class="row mt-2">
         <div class="col-sm-2 d-flex justify-content-end mt-2">性別</div>
-        <div class="col-sm-10">
-            <form class="form-inline x-sex" onsubmit="return false">
-                <input type="radio" name="sex" value="M"> 男
-                <input type="radio" name="sex" value="F" checked class="ml-2"> 女
-            </form>
-        </div>
+        <div class="col-sm-10 x-sex"></div>
     </div>
 
     <div class="row mt-2">
@@ -83,7 +79,7 @@ export class PatientForm {
         this.lastNameYomiElement = map.lastNameYomi;
         this.firstNameYomiElement = map.firstNameYomi;
         this.birthdayElement = new DateInput(map.birthday.get(0));
-        this.sexElement = map.sex;
+        this.sexElement = new SexInput(map.sex.get(0));
         this.addressElement = map.address;
         this.phoneElement = map.phone;
         this.error = null;
@@ -105,7 +101,7 @@ export class PatientForm {
             this.lastNameYomiElement.val(patient.lastNameYomi);
             this.firstNameYomiElement.val(patient.firstNameYomi);
             this.birthdayElement.val(patient.birthday);
-            this.sexElement.val(patient.sex);
+            this.sexElement.set(patient.sex);
             this.addressElement.val(patient.address);
             this.phoneElement.val(patient.phone);
         } else {
@@ -117,7 +113,7 @@ export class PatientForm {
             this.lastNameYomiElement.val(null);
             this.firstNameYomiElement.val(null);
             this.birthdayElement.val(null);
-            this.sexElement.val(null);
+            //this.sexElement.val(null);
             this.addressElement.val(null);
             this.phoneElement.val(null);
         }
@@ -156,7 +152,7 @@ export class PatientForm {
             this.error = "生年月日の入力が不適切です。";
             return undefined;
         }
-        let sex = this.sexElement.val();
+        let sex = this.sexElement.get();
         if( !sex ){
             this.error = "性の入力が不適切です。";
             return undefined;

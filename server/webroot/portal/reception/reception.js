@@ -125,7 +125,7 @@ let html = `
 <template id="reception-patient-and-hoken-edit-widget-template">
     <div class="mb-3 border border-secondary rounded p-3">
         <div class="d-flex p-2" style="background-color: #ccc;">
-            <div class="font-weight-bold flex-grow-1">患者情報編集</div>
+            <div class="font-weight-bold flex-grow-1">患者情報・保険情報編集</div>
             <div><span class="font-weight-bold x-widget-close"
                        style="cursor: pointer;">&times;</span></div>
         </div>
@@ -189,22 +189,6 @@ let html = `
         </div>
         <div class="x-workarea mt-3"></div>
     </div>
-</template>
-
-<template id="reception-patient-edit-widget-template">
-    <div class="mb-3 border border-secondary rounded p-3">
-        <div class="d-flex p-2" style="background-color: #ccc;">
-            <div class="font-weight-bold flex-grow-1">患者情報編集</div>
-            <div><span class="font-weight-bold x-widget-close"
-                       style="cursor: pointer;">&times;</span></div>
-        </div>
-        <div class="x-form- mt-2"></div>
-        <div class="mt-2 d-flex justify-content-end">
-            <button type="button" class="x-enter btn btn-secondary">入力</button>
-            <button type="button" class="x-close btn btn-secondary ml-2">閉じる</button>
-        </div>
-    </div>
-
 </template>
 
 <template id="reception-shahokokuho-new-widget-template">
@@ -805,7 +789,6 @@ export async function initReception(pane) {
     let {parseElement} = await import("../js/parse-element.js");
     let {PatientSearchDialog} = await import("./patient-search-dialog.js");
     let {PatientAndHokenEditWidget} = await import("./patient-and-hoken-edit-widget.js");
-    let {PatientEditWidget} = await import("./patient-edit-widget.js");
     let {ShahokokuhoNewWidget} = await import("./shahokokuho-new-widget.js");
     let {KoukikoureiNewWidget} = await import("./koukikourei-new-widget.js");
     let {KouhiNewWidget} = await import("./kouhi-new-widget.js");
@@ -831,7 +814,7 @@ export async function initReception(pane) {
     broadcaster.listen("visit-deleted", visitId => refreshWqueueTable());
 
     class PatientAndHokenWidgetFactory {
-        create(patient, currentHokenList, patientEditWidgetFactory, shahokokuhoNewWidgetFactory,
+        create(patient, currentHokenList, shahokokuhoNewWidgetFactory,
                koukikoureiNewWidgetFactory, kouhiNewWidgetFactory, shahokokuhoDispWidgetFactory,
                koukikoureiDispWidgetFactory, roujinDispWidgetFactory, kouhiDispWidgetFactory,
                shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory,
@@ -840,24 +823,12 @@ export async function initReception(pane) {
             let ele = $(html);
             let map = parseElement(ele);
             let widget = new PatientAndHokenEditWidget(ele, map, rest);
-            widget.init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory,
+            widget.init(shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory,
                 kouhiNewWidgetFactory, shahokokuhoDispWidgetFactory,
                 koukikoureiDispWidgetFactory, roujinDispWidgetFactory, kouhiDispWidgetFactory,
                 shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory, kouhiEditWidgetFactory,
                 broadcaster);
             widget.set(patient, currentHokenList);
-            return widget;
-        }
-    }
-
-    class PatientEditWidgetFactory {
-        create(patient) {
-            let html = $("template#reception-patient-edit-widget-template").html();
-            let ele = $(html);
-            let map = parseElement(ele);
-            let widget = new PatientEditWidget(ele, map, rest);
-            widget.init();
-            widget.set(patient);
             return widget;
         }
     }
@@ -987,7 +958,6 @@ export async function initReception(pane) {
         let map = parseElement(ele);
         let hokenHelper = new HokenHelper(rest);
         let patientAndHokenWidgetFactory = new PatientAndHokenWidgetFactory();
-        let patientEditWidgetFactory = new PatientEditWidgetFactory();
         let shahokokuhoNewWidgetFactory = new ShahokokuhoNewWidgetFactory();
         let koukikoureiNewWidgetFactory = new KoukikoureiNewWidgetFactory();
         let kouhiNewWidgetFactory = new KouhiNewWidgetFactory();
@@ -1005,7 +975,7 @@ export async function initReception(pane) {
                 let hokenList = await hokenHelper.fetchAvailableHoken(patient.patientId,
                     kanjidate.todayAsSqldate());
                 let editWidget = patientAndHokenWidgetFactory.create(patient, hokenList,
-                    patientEditWidgetFactory, shahokokuhoNewWidgetFactory,
+                    shahokokuhoNewWidgetFactory,
                     koukikoureiNewWidgetFactory, kouhiNewWidgetFactory,
                     shahokokuhoDispWidgetFactory, koukikoureiDispWidgetFactory,
                     roujinDispWidgetFactory, kouhiDispWidgetFactory,
@@ -1029,7 +999,7 @@ export async function initReception(pane) {
                 let hokenList = await hokenHelper.fetchAvailableHoken(patient.patientId,
                     kanjidate.todayAsSqldate());
                 let editWidget = patientAndHokenWidgetFactory.create(patient, hokenList,
-                    patientEditWidgetFactory, shahokokuhoNewWidgetFactory,
+                    shahokokuhoNewWidgetFactory,
                     koukikoureiNewWidgetFactory, kouhiNewWidgetFactory,
                     shahokokuhoDispWidgetFactory, koukikoureiDispWidgetFactory,
                     roujinDispWidgetFactory, kouhiDispWidgetFactory,

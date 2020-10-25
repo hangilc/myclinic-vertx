@@ -22,7 +22,6 @@ export class Widget extends Component {
     }
 
     close(){
-        console.log("close");
         if( this.onCloseCallback ){
             let response = this.onCloseCallback();
             if( response === false ){

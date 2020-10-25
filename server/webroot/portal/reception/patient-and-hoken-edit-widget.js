@@ -5,6 +5,7 @@ import {compareBy} from "../js/general-util.js";
 import * as kanjidate from "../js/kanjidate.js";
 import {HokenHelper} from "./hoken-helper.js";
 import {UploadImageDialog} from "./upload-image-dialog.js";
+import {PatientEditWidget} from "./patient-edit-widget.js";
 
 let tableRowHtml = `
 <tr>
@@ -37,13 +38,12 @@ export class PatientAndHokenEditWidget extends Widget {
         this.patientEditWidget = null;
     }
 
-    init(patientEditWidgetFactory, shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory,
+    init(shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory,
          kouhiNewWidgetFactory, shahokokuhoDispWidgetFactory,
          koukikoureiDispWidgetFactory, roujinDispWidgetFactory,kouhiDispWidgetFactory,
          shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory, kouhiEditWidgetFactory,
          broadcaster){
         super.init();
-        this.patientEditWidgetFactory = patientEditWidgetFactory;
         this.shahokokuhoNewWidgetFactory = shahokokuhoNewWidgetFactory;
         this.koukikoureiNewWidgetFactory = koukikoureiNewWidgetFactory;
         this.kouhiNewWidgetFactory = kouhiNewWidgetFactory;
@@ -172,18 +172,22 @@ export class PatientAndHokenEditWidget extends Widget {
 
     doEditBasic(){
         if( this.patientEditWidget ){
-            this.patientEditWidget.detach().prependTo(this.workareaElement);
+            let w = this.patientEditWidget;
+            let p = this.workareaElement.get(0);
+            p.removeChild(w);
+            p.prepend(w);
         } else {
-            let editWidget = this.patientEditWidgetFactory.create(this.patient);
-            this.patientEditWidget = editWidget;
+            let editWidget = new PatientEditWidget(this.patient, this.rest);
+            this.patientEditWidget = editWidget.ele;
             editWidget.onUpdated(updatedPatient => {
-                editWidget.remove();
+                editWidget.close();
+                this.patient = updatedPatient;
                 this.disp.set(updatedPatient);
             });
-            editWidget.onClose(() => {
+            editWidget.onClosed(() => {
                 this.patientEditWidget = null;
             });
-            editWidget.prependTo(this.workareaElement);
+            this.workareaElement.get(0).prepend(editWidget.ele);
         }
     }
 

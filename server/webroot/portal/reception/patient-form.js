@@ -62,13 +62,9 @@ let html = `
 `;
 
 export class PatientForm {
-    constructor(ele) {
-        if( !ele ){
-            ele = document.createElement("div");
-        }
-        if( ele.children.length === 0 ){
-            ele.innerHTML = html;
-        }
+    constructor() {
+        let ele = document.createElement("div");
+        ele.innerHTML = html;
         this.ele = ele;
         let map = parseElement(ele);
         this.map = map

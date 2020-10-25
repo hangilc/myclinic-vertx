@@ -23,8 +23,9 @@ export class SexInput {
     }
 
     set(sex){
+        console.log("setting", sex);
         let form = this[symForm];
-        form.querySelector(`input[name=sex][value=${sex}]`).style.checked = true;
+        form.querySelector(`input[name=sex][value=${sex}]`).checked = true;
     }
 
     get(){

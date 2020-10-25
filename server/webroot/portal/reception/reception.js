@@ -1001,8 +1001,17 @@ export async function initReception(pane) {
 
         map.newPatient.on("click", async event => {
             let w = new PatientNewWidget(rest);
-            w.onEntered(patient => {
-                console.log(patient);
+            w.onEntered(async patient => {
+                let hokenList = await hokenHelper.fetchAvailableHoken(patient.patientId,
+                    kanjidate.todayAsSqldate());
+                let editWidget = patientAndHokenWidgetFactory.create(patient, hokenList,
+                    patientEditWidgetFactory, shahokokuhoNewWidgetFactory,
+                    koukikoureiNewWidgetFactory, kouhiNewWidgetFactory,
+                    shahokokuhoDispWidgetFactory, koukikoureiDispWidgetFactory,
+                    roujinDispWidgetFactory, kouhiDispWidgetFactory,
+                    shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory,
+                    kouhiEditWidgetFactory);
+                editWidget.prependTo(receptionWorkarea);
             });
             receptionWorkarea.get(0).prepend(w.ele);
         });

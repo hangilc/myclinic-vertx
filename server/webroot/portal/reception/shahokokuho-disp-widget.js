@@ -1,12 +1,21 @@
-import {Widget} from "./widget.js";
+import {Widget} from "./widget2.js";
 import {ShahokokuhoDisp} from "./shahokokuho-disp.js";
 import * as kanjidate from "../js/kanjidate.js";
 
+let commandsTmpl = `
+    <button type="button" class="x-close btn btn-secondary ml-2">閉じる</button>
+`;
+
 export class ShahokokuhoDispWidget extends Widget {
-    constructor(ele, map, rest){
-        super(ele, map, rest);
-        this.disp = new ShahokokuhoDisp(map.disp);
-        this.closeElement = map.close;
+    constructor(shahokokuho){
+        super();
+        this.setTitle("社保国保データ");
+        let disp = new ShahokokuhoDisp(this.getContentElement());
+        disp.set(shahokokuho);
+        let cmap = this.setCommands(commandsTmpl);
+        cmap.close.addEventListener("click", event => this.close());
+        // this.disp = new ShahokokuhoDisp(map.disp);
+        // this.closeElement = map.close;
     }
 
     init(){

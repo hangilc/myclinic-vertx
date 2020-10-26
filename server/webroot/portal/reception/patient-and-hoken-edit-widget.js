@@ -220,7 +220,7 @@ export class PatientAndHokenEditWidget extends Widget {
         if( !dispWidget ){
             dispWidget = this.shahokokuhoDispWidgetFactory.create(shahokokuho);
             dispWidget.prependTo(this.workareaElement);
-            dispWidget.onClose(() => { delete this.shahokokuhoDispWidgetMap[shahokokuho.shahokokuhoId]; });
+            dispWidget.onClosed(() => { delete this.shahokokuhoDispWidgetMap[shahokokuho.shahokokuhoId]; });
             this.shahokokuhoDispWidgetMap[shahokokuho.shahokokuhoId] = dispWidget;
         } else {
             dispWidget.detach();

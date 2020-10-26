@@ -789,7 +789,6 @@ export async function initReception(pane) {
     let {parseElement} = await import("../js/parse-element.js");
     let {PatientSearchDialog} = await import("./patient-search-dialog.js");
     let {PatientAndHokenEditWidget} = await import("./patient-and-hoken-edit-widget.js");
-    let {ShahokokuhoNewWidget} = await import("./shahokokuho-new-widget.js");
     let {KoukikoureiNewWidget} = await import("./koukikourei-new-widget.js");
     let {KouhiNewWidget} = await import("./kouhi-new-widget.js");
     let {ShahokokuhoDispWidget} = await import("./shahokokuho-disp-widget.js");
@@ -833,12 +832,6 @@ export async function initReception(pane) {
         }
     }
 
-    // class ShahokokuhoNewWidgetFactory {
-    //     create(patientId) {
-    //         return new ShahokokuhoNewWidget(patientId, rest);
-    //     }
-    // }
-
     class KoukikoureiNewWidgetFactory {
         create(patientId) {
             let html = $("template#reception-koukikourei-new-widget-template").html();
@@ -865,13 +858,14 @@ export async function initReception(pane) {
 
     class ShahokokuhoDispWidgetFactory {
         create(shahokokuho) {
-            let html = $("template#reception-shahokokuho-disp-widget-template").html();
-            let ele = $(html);
-            let map = parseElement(ele);
-            let widget = new ShahokokuhoDispWidget(ele, map, rest);
-            widget.init();
-            widget.set(shahokokuho);
-            return widget;
+            return new ShahokokuhoDispWidget(shahokokuho);
+            // let html = $("template#reception-shahokokuho-disp-widget-template").html();
+            // let ele = $(html);
+            // let map = parseElement(ele);
+            // let widget = new ShahokokuhoDispWidget(ele, map, rest);
+            // widget.init();
+            // widget.set(shahokokuho);
+            // return widget;
         }
     }
 

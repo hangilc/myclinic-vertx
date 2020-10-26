@@ -67,6 +67,10 @@ export class Widget {
         this.ele.remove();
     }
 
+    detach(){
+        this.remove();
+    }
+
     prependTo(parent){
         parent.prepend(this.ele);
     }

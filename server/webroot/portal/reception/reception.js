@@ -191,78 +191,6 @@ let html = `
     </div>
 </template>
 
-<template id="reception-koukikourei-edit-widget-template">
-    <div class="mb-3 border border-secondary rounded p-3">
-        <div class="d-flex p-2" style="background-color: #ccc;">
-            <div class="font-weight-bold flex-grow-1">後期高齢保険編集</div>
-            <div><span class="font-weight-bold x-widget-close"
-                       style="cursor: pointer;">&times;</span></div>
-        </div>
-        <div class="x-form_ mt-4">
-            <form>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">保険者番号</div>
-                    <div class="col-sm-10 form-inline">
-                        <input type="text" class="form-control x-hokensha-bangou"/>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">被保険者番号</div>
-                    <div class="col-sm-10 form-inline">
-                        <input type="text" class="form-control x-hihokensha-bangou"/>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">開始日</div>
-                    <div class="col-sm-10 form-inline x-valid-from-">
-                        <select class="x-gengou form-control">
-                            <option selected>令和</option>
-                            <option>平成</option>
-                        </select>
-                        <input type="text" class="x-nen form-control ml-2 mr-1" size="3"/>年
-                        <input type="text" class="x-month form-control ml-2 mr-1" size="3"/> 月
-                        <input type="text" class="x-day form-control ml-2 mr-1" size="3"/> 日
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">終了日</div>
-                    <div class="col-sm-10 form-inline x-valid-upto-">
-                        <select class="x-gengou form-control">
-                            <option selected>令和</option>
-                            <option>平成</option>
-                        </select>
-                        <input type="text" class="x-nen form-control ml-2 mr-1" size="3"/>年
-                        <input type="text" class="x-month form-control ml-2 mr-1" size="3"/> 月
-                        <input type="text" class="x-day form-control ml-2 mr-1" size="3"/> 日
-                        <a href="javascript:void(0)" class="x-clear-valid-upto ml-2">クリア</a>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">負担割</div>
-                    <div class="col-sm-10 form-inline">
-                        <div class="form-check form-check-inline">
-                            <input type="radio" class="form-check-input" name="futan-wari" value="1" checked/>
-                            <div class="form-check-label">１割</div>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input type="radio" class="form-check-input" name="futan-wari" value="2"/>
-                            <div class="form-check-label">２割</div>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input type="radio" class="form-check-input" name="futan-wari" value="3"/>
-                            <div class="form-check-label">３割</div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <div class="mt-2 d-flex justify-content-end">
-            <button type="button" class="x-enter btn btn-secondary">入力</button>
-            <button type="button" class="x-close btn btn-secondary ml-2">キャンセル</button>
-        </div>
-    </div>
-</template>
-
 <template id="reception-kouhi-new-widget-template">
     <div class="mb-3 border border-secondary rounded p-3">
         <div class="d-flex p-2" style="background-color: #ccc;">
@@ -511,7 +439,6 @@ export async function initReception(pane) {
     let {KouhiNewWidget} = await import("./kouhi-new-widget.js");
     let {RoujinDispWidget} = await import("./roujin-disp-widget.js");
     let {KouhiDispWidget} = await import("./kouhi-disp-widget.js");
-    let {KoukikoureiEditWidget} = await import("./koukikourei-edit-widget.js");
     let {KouhiEditWidget} = await import("./kouhi-edit-widget.js");
     let {HokenHelper} = await import("./hoken-helper.js");
     let {WqueueTable} = await import("./wqueue-table.js");
@@ -531,7 +458,6 @@ export async function initReception(pane) {
         create(patient, currentHokenList,
                kouhiNewWidgetFactory,
                roujinDispWidgetFactory, kouhiDispWidgetFactory,
-               koukikoureiEditWidgetFactory,
                kouhiEditWidgetFactory) {
             let html = $("template#reception-patient-and-hoken-edit-widget-template").html();
             let ele = $(html);
@@ -539,7 +465,7 @@ export async function initReception(pane) {
             let widget = new PatientAndHokenEditWidget(ele, map, rest);
             widget.init(kouhiNewWidgetFactory,
                 roujinDispWidgetFactory, kouhiDispWidgetFactory,
-                koukikoureiEditWidgetFactory, kouhiEditWidgetFactory,
+                kouhiEditWidgetFactory,
                 broadcaster);
             widget.set(patient, currentHokenList);
             return widget;
@@ -582,18 +508,6 @@ export async function initReception(pane) {
         }
     }
 
-    class KoukikoureiEditWidgetFactory {
-        create(koukikourei) {
-            let html = $("template#reception-koukikourei-edit-widget-template").html();
-            let ele = $(html);
-            let map = parseElement(ele);
-            let widget = new KoukikoureiEditWidget(ele, map, rest);
-            widget.init();
-            widget.set(koukikourei);
-            return widget;
-        }
-    }
-
     class KouhiEditWidgetFactory {
         create(kouhi) {
             let html = $("template#reception-kouhi-edit-widget-template").html();
@@ -611,7 +525,6 @@ export async function initReception(pane) {
     let kouhiNewWidgetFactory = new KouhiNewWidgetFactory();
     let roujinDispWidgetFactory = new RoujinDispWidgetFactory();
     let kouhiDispWidgetFactory = new KouhiDispWidgetFactory();
-    let koukikoureiEditWidgetFactory = new KoukikoureiEditWidgetFactory();
     let kouhiEditWidgetFactory = new KouhiEditWidgetFactory();
 
     async function createPatientAndHokenWidget(patient){
@@ -620,7 +533,6 @@ export async function initReception(pane) {
         return patientAndHokenWidgetFactory.create(patient, hokenList,
             kouhiNewWidgetFactory,
             roujinDispWidgetFactory, kouhiDispWidgetFactory,
-            koukikoureiEditWidgetFactory,
             kouhiEditWidgetFactory);
     }
 

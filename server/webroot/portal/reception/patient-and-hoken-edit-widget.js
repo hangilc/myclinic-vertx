@@ -11,6 +11,7 @@ import {ShahokokuhoDispWidget} from "./shahokokuho-disp-widget.js";
 import {ShahokokuhoEditWidget} from "./shahokokuho-edit-widget.js";
 import {KoukikoureiNewWidget} from "./koukikourei-new-widget.js";
 import {KoukikoureiDispWidget} from "./koukikourei-disp-widget.js";
+import {KoukikoureiEditWidget} from "./koukikourei-edit-widget.js";
 
 let tableRowHtml = `
 <tr>
@@ -45,13 +46,12 @@ export class PatientAndHokenEditWidget extends Widget {
 
     init(kouhiNewWidgetFactory,
          roujinDispWidgetFactory, kouhiDispWidgetFactory,
-         koukikoureiEditWidgetFactory, kouhiEditWidgetFactory,
+         kouhiEditWidgetFactory,
          broadcaster) {
         super.init();
         this.kouhiNewWidgetFactory = kouhiNewWidgetFactory;
         this.roujinDispWidgetFactory = roujinDispWidgetFactory;
         this.kouhiDispWidgetFactory = kouhiDispWidgetFactory;
-        this.koukikoureiEditWidgetFactory = koukikoureiEditWidgetFactory;
         this.kouhiEditWidgetFactory = kouhiEditWidgetFactory;
         this.broadcaster = broadcaster;
         this.disp.init();
@@ -163,12 +163,19 @@ export class PatientAndHokenEditWidget extends Widget {
     }
 
     doEditKoukikourei(koukikourei) {
-        let widget = this.koukikoureiEditWidgetFactory.create(koukikourei);
-        widget.onUpdated(updated => {
-            let promise = this.reloadHoken();
+        let widget = this.koukikoureiEditWidgetMap[koukikourei.koukikoureiId];
+        if (widget) {
             widget.remove();
-        })
-        widget.prependTo(this.workareaElement);
+        } else {
+            widget = new KoukikoureiEditWidget(koukikourei, this.rest);
+            this.koukikoureiEditWidgetMap[koukikourei.koukikoureiId] = widget;
+            widget.onUpdated(async updated => {
+                await this.reloadHoken();
+                widget.remove();
+                delete this.koukikoureiEditWidgetMap[koukikourei.koukikoureiId];
+            });
+        }
+        widget.prependTo(this.workareaElement.get(0));
     }
 
     doEditKouhi(kouhi) {

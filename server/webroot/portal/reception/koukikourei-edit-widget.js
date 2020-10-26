@@ -1,31 +1,24 @@
-import {Widget} from "./widget.js";
+import {Widget} from "./widget2.js";
 import {KoukikoureiForm} from "./koukikourei-form.js";
 import {RadioInput} from "./radio-input.js";
 import {DateInput} from "./date-input.js";
 
-export class KoukikoureiEditWidget extends Widget {
-    constructor(ele, map, rest){
-        super(ele, map, rest);
-        let formMap = Object.assign({}, map.form, {
-            validFrom: new DateInput(map.form.validFrom.get(0)),
-            validUpto: (new DateInput(map.form.validUpto.get(0))).allowEmpty(),
-            futanWari: new RadioInput(map.form_, "futan-wari")
-        });
-        this.form = new KoukikoureiForm(formMap);
-        this.closeElement = map.close;
-        this.enterElement = map.enter;
-        this.clearValidUptoElement = map.form.validUpto.clearValidUpto;
-    }
+let commandTmpl = `
+    <button type="button" class="x-enter btn btn-secondary">入力</button>
+    <button type="button" class="x-close btn btn-secondary ml-2">キャンセル</button>
+`;
 
-    init(){
-        super.init();
-        this.form.init();
-        this.enterElement.on("click", event => this.doEnter());
-        this.closeElement.on("click", event => this.close());
-        if( this.clearValidUptoElement ){
-            this.clearValidUptoElement.on("click", event => this.form.clearValidUpto());
-        }
-        return this;
+export class KoukikoureiEditWidget extends Widget {
+    constructor(koukikourei, rest){
+        super();
+        this.setTitle("後期高齢保険編集");
+        this.koukikourei = koukikourei;
+        this.rest = rest;
+        this.form = new KoukikoureiForm(this.getContentElement());
+        this.form.set(koukikourei);
+        let cmap = this.setCommands(commandTmpl);
+        cmap.enter.addEventListener("click", async event => await this.doEnter());
+        cmap.close.addEventListener("click", event => this.close());
     }
 
     set(koukikourei){
@@ -36,7 +29,7 @@ export class KoukikoureiEditWidget extends Widget {
     }
 
     onUpdated(cb){
-        this.on("updated", (event, updated) => cb(updated));
+        this.ele.addEventListener("updated", event => cb(event.detail));
     }
 
     async doEnter(){
@@ -58,6 +51,6 @@ export class KoukikoureiEditWidget extends Widget {
         }
         await this.rest.updateKoukikourei(data);
         let updated = await this.rest.getKoukikourei(koukikoureiId);
-        this.trigger("updated", updated);
+        this.ele.dispatchEvent(new CustomEvent("updated", { detail: updated }));
     }
 }

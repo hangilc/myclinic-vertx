@@ -8,6 +8,7 @@ import {UploadImageDialog} from "./upload-image-dialog.js";
 import {PatientEditWidget} from "./patient-edit-widget.js";
 import {ShahokokuhoNewWidget} from "./shahokokuho-new-widget.js";
 import {ShahokokuhoDispWidget} from "./shahokokuho-disp-widget.js";
+import {ShahokokuhoEditWidget} from "./shahokokuho-edit-widget.js";
 
 let tableRowHtml = `
 <tr>
@@ -43,7 +44,7 @@ export class PatientAndHokenEditWidget extends Widget {
     init(koukikoureiNewWidgetFactory,
          kouhiNewWidgetFactory,
          koukikoureiDispWidgetFactory, roujinDispWidgetFactory, kouhiDispWidgetFactory,
-         shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory, kouhiEditWidgetFactory,
+         koukikoureiEditWidgetFactory, kouhiEditWidgetFactory,
          broadcaster) {
         super.init();
         this.koukikoureiNewWidgetFactory = koukikoureiNewWidgetFactory;
@@ -51,7 +52,6 @@ export class PatientAndHokenEditWidget extends Widget {
         this.koukikoureiDispWidgetFactory = koukikoureiDispWidgetFactory;
         this.roujinDispWidgetFactory = roujinDispWidgetFactory;
         this.kouhiDispWidgetFactory = kouhiDispWidgetFactory;
-        this.shahokokuhoEditWidgetFactory = shahokokuhoEditWidgetFactory;
         this.koukikoureiEditWidgetFactory = koukikoureiEditWidgetFactory;
         this.kouhiEditWidgetFactory = kouhiEditWidgetFactory;
         this.broadcaster = broadcaster;
@@ -67,9 +67,13 @@ export class PatientAndHokenEditWidget extends Widget {
         this.newKoukikoureiElement.on("click", event => this.doNewKoukikourei());
         this.newKouhiElement.on("click", event => this.doNewKouhi());
         this.shahokokuhoDispWidgetMap = {};
+        this.shahokokuhoEditWidgetMap = {};
         this.koukikoureiDispWidgetMap = {};
+        this.koukikoureiEditWidgetMap = {};
         this.roujinDispWidgetMap = {};
+        this.roujinEditWidgetMap = {};
         this.kouhiDispWidgetMap = {};
+        this.kouhiKouhiWidgetMap = {};
         return this;
     }
 
@@ -144,12 +148,19 @@ export class PatientAndHokenEditWidget extends Widget {
     }
 
     doEditShahokokuho(shahokokuho) {
-        let widget = this.shahokokuhoEditWidgetFactory.create(shahokokuho);
-        widget.onUpdated(updated => {
-            let promise = this.reloadHoken();
+        let widget = this.shahokokuhoEditWidgetMap[shahokokuho.shahokokuhoId];
+        if (widget) {
             widget.remove();
-        })
-        widget.prependTo(this.workareaElement);
+        } else {
+            widget = new ShahokokuhoEditWidget(shahokokuho, this.rest);
+            this.shahokokuhoEditWidgetMap[shahokokuho.shahokokuhoId] = widget;
+            widget.onUpdated(async updated => {
+                await this.reloadHoken();
+                widget.remove();
+                delete this.shahokokuhoEditWidgetMap[shahokokuho.shahokokuhoId];
+            });
+        }
+        widget.prependTo(this.workareaElement.get(0));
     }
 
     doEditKoukikourei(koukikourei) {

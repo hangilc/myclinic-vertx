@@ -1,4 +1,5 @@
 import {parseElement} from "../js/parse-node.js";
+import * as kanjidate from "../js/kanjidate.js";
 
 let tmpl = `
     <div class="row">
@@ -45,8 +46,8 @@ export class ShahokokuhoDisp {
             this.hihokenshaKigouElement.innerText = shahokokuho.hihokenshaKigou;
             this.hihokenshaBangouElement.innerText = shahokokuho.hihokenshaBangou;
             this.honninElement.innerText = honninRep(shahokokuho.honnin);
-            this.validFromElement.innerText = shahokokuho.validFrom;
-            this.validUptoElement.innerText = shahokokuho.validUpto;
+            this.validFromElement.innerText = dateRep(shahokokuho.validFrom);
+            this.validUptoElement.innerText = dateRep(shahokokuho.validUpto);
             this.koureiElement.innerText = koureiRep(shahokokuho.kourei);
         } else {
             this.hokenshaBangouElement.innerText = "";
@@ -75,5 +76,12 @@ function koureiRep(kourei){
     } else {
         return kourei + "割";
     }
+}
+
+function dateRep(sqldate){
+    return kanjidate.sqldateToKanji(sqldate, {
+        zeroValue: "（なし）",
+        padZero: true
+    });
 }
 

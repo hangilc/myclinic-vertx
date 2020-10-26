@@ -94,21 +94,21 @@ export class ShahokokuhoForm {
 
     set(shahokokuho) {
         if (shahokokuho) {
-            this.hokenshaBangouElement.val(shahokokuho.hokenshaBangou);
-            this.hihokenshaKigouElement.val(shahokokuho.hihokenshaKigou);
-            this.hihokenshaBangouElement.val(shahokokuho.hihokenshaBangou);
-            this.honninElement.val(shahokokuho.honnin);
-            this.validFromElement.val(shahokokuho.validFrom);
-            this.validUptoElement.val(shahokokuho.validUpto);
-            this.koureiElement.val(shahokokuho.kourei);
+            this.hokenshaBangouElement.value = shahokokuho.hokenshaBangou;
+            this.hihokenshaKigouElement.value = shahokokuho.hihokenshaKigou;
+            this.hihokenshaBangouElement.value = shahokokuho.hihokenshaBangou;
+            this.honninElement.set(shahokokuho.honnin);
+            this.validFromElement.set(shahokokuho.validFrom);
+            this.validUptoElement.set(shahokokuho.validUpto);
+            this.koureiElement.set(shahokokuho.kourei);
         } else {
-            this.hokenshaBangouElement.val(null);
-            this.hihokenshaKigouElement.val(null);
-            this.hihokenshaBangouElement.val(null);
-            this.honninElement.val(null);
-            this.validFromElement.val(null);
-            this.validUptoElement.val(null);
-            this.koureiElement.val(null);
+            this.hokenshaBangouElement.value = null;
+            this.hihokenshaKigouElement.value = null;
+            this.hihokenshaBangouElement.value = null;
+            this.honninElement.value = 0;
+            this.validFromElement.clear();
+            this.validUptoElement.clear();
+            this.koureiElement.set(0);
         }
         return this;
     }

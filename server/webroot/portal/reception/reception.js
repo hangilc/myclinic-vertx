@@ -603,7 +603,7 @@ export async function initReception(pane) {
 
     class PatientAndHokenWidgetFactory {
         create(patient, currentHokenList,
-               koukikoureiNewWidgetFactory, kouhiNewWidgetFactory,
+               kouhiNewWidgetFactory,
                koukikoureiDispWidgetFactory, roujinDispWidgetFactory, kouhiDispWidgetFactory,
                koukikoureiEditWidgetFactory,
                kouhiEditWidgetFactory) {
@@ -611,24 +611,11 @@ export async function initReception(pane) {
             let ele = $(html);
             let map = parseElement(ele);
             let widget = new PatientAndHokenEditWidget(ele, map, rest);
-            widget.init(koukikoureiNewWidgetFactory,
-                kouhiNewWidgetFactory,
+            widget.init(kouhiNewWidgetFactory,
                 koukikoureiDispWidgetFactory, roujinDispWidgetFactory, kouhiDispWidgetFactory,
                 koukikoureiEditWidgetFactory, kouhiEditWidgetFactory,
                 broadcaster);
             widget.set(patient, currentHokenList);
-            return widget;
-        }
-    }
-
-    class KoukikoureiNewWidgetFactory {
-        create(patientId) {
-            let html = $("template#reception-koukikourei-new-widget-template").html();
-            let ele = $(html);
-            let map = parseElement(ele);
-            let widget = new KoukikoureiNewWidget(ele, map, rest);
-            widget.init(patientId);
-            widget.set();
             return widget;
         }
     }
@@ -707,7 +694,6 @@ export async function initReception(pane) {
 
     let hokenHelper = new HokenHelper(rest);
     let patientAndHokenWidgetFactory = new PatientAndHokenWidgetFactory();
-    let koukikoureiNewWidgetFactory = new KoukikoureiNewWidgetFactory();
     let kouhiNewWidgetFactory = new KouhiNewWidgetFactory();
     let koukikoureiDispWidgetFactory = new KoukikoureiDispWidgetFactory();
     let roujinDispWidgetFactory = new RoujinDispWidgetFactory();
@@ -719,7 +705,7 @@ export async function initReception(pane) {
         let hokenList = await hokenHelper.fetchAvailableHoken(patient.patientId,
             kanjidate.todayAsSqldate());
         return patientAndHokenWidgetFactory.create(patient, hokenList,
-            koukikoureiNewWidgetFactory, kouhiNewWidgetFactory,
+            kouhiNewWidgetFactory,
             koukikoureiDispWidgetFactory,
             roujinDispWidgetFactory, kouhiDispWidgetFactory,
             koukikoureiEditWidgetFactory,

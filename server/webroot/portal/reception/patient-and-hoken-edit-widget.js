@@ -10,6 +10,7 @@ import {ShahokokuhoNewWidget} from "./shahokokuho-new-widget.js";
 import {ShahokokuhoDispWidget} from "./shahokokuho-disp-widget.js";
 import {ShahokokuhoEditWidget} from "./shahokokuho-edit-widget.js";
 import {KoukikoureiNewWidget} from "./koukikourei-new-widget.js";
+import {KoukikoureiDispWidget} from "./koukikourei-disp-widget.js";
 
 let tableRowHtml = `
 <tr>
@@ -43,12 +44,11 @@ export class PatientAndHokenEditWidget extends Widget {
     }
 
     init(kouhiNewWidgetFactory,
-         koukikoureiDispWidgetFactory, roujinDispWidgetFactory, kouhiDispWidgetFactory,
+         roujinDispWidgetFactory, kouhiDispWidgetFactory,
          koukikoureiEditWidgetFactory, kouhiEditWidgetFactory,
          broadcaster) {
         super.init();
         this.kouhiNewWidgetFactory = kouhiNewWidgetFactory;
-        this.koukikoureiDispWidgetFactory = koukikoureiDispWidgetFactory;
         this.roujinDispWidgetFactory = roujinDispWidgetFactory;
         this.kouhiDispWidgetFactory = kouhiDispWidgetFactory;
         this.koukikoureiEditWidgetFactory = koukikoureiEditWidgetFactory;
@@ -243,9 +243,9 @@ export class PatientAndHokenEditWidget extends Widget {
     doKoukikoureiDetail(koukikourei) {
         let dispWidget = this.koukikoureiDispWidgetMap[koukikourei.koukikoureiId];
         if (!dispWidget) {
-            dispWidget = this.koukikoureiDispWidgetFactory.create(koukikourei);
+            dispWidget = new KoukikoureiDispWidget(koukikourei);
             dispWidget.prependTo(this.workareaElement);
-            dispWidget.onClose(() => {
+            dispWidget.onClosed(() => {
                 delete this.koukikoureiDispWidgetMap[koukikourei.koukikoureiId];
             });
             this.koukikoureiDispWidgetMap[koukikourei.koukikoureiId] = dispWidget;
@@ -260,7 +260,7 @@ export class PatientAndHokenEditWidget extends Widget {
         if (!dispWidget) {
             dispWidget = this.roujinDispWidgetFactory.create(roujin);
             dispWidget.prependTo(this.workareaElement);
-            dispWidget.onClose(() => {
+            dispWidget.onClosed(() => {
                 delete this.roujinDispWidgetMap[roujin.roujinId];
             });
             this.roujinDispWidgetMap[roujin.roujinId] = dispWidget;
@@ -275,7 +275,7 @@ export class PatientAndHokenEditWidget extends Widget {
         if (!dispWidget) {
             dispWidget = this.kouhiDispWidgetFactory.create(kouhi);
             dispWidget.prependTo(this.workareaElement);
-            dispWidget.onClose(() => {
+            dispWidget.onClosed(() => {
                 delete this.kouhiDispWidgetMap[kouhi.kouhiId];
             });
             this.kouhiDispWidgetMap[kouhi.kouhiId] = dispWidget;

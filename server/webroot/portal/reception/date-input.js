@@ -53,6 +53,18 @@ export class DateInput {
         return this;
     }
 
+    setGengouList(selectedGengou, gengouNames){
+        this.map.gengou.querySelectorAll("option").forEach(opt => {
+            let value = opt.value;
+            opt.selected = value === selectedGengou;
+            if( gengouNames.includes(opt.value) ){
+                opt.style.display = "block";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+    }
+
     get(){
         if( this.isEmpty() ){
             if( this.isAllowEmpty ){

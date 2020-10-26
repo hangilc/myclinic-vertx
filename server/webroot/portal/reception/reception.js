@@ -191,95 +191,95 @@ let html = `
     </div>
 </template>
 
-<template id="reception-shahokokuho-new-widget-template">
-    <div class="mb-3 border border-secondary rounded p-3">
-        <div class="d-flex p-2" style="background-color: #ccc;">
-            <div class="font-weight-bold flex-grow-1">新規社保国保入力</div>
-            <div><span class="font-weight-bold x-widget-close"
-                       style="cursor: pointer;">&times;</span></div>
-        </div>
-        <div class="x-form_ mt-4">
-            <form>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">保険者番号</div>
-                    <div class="col-sm-10 form-inline">
-                        <input type="text" class="form-control x-hokensha-bangou"/>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">被保険者</div>
-                    <div class="col-sm-10 form-inline">
-                        記号：<input type="text" class="form-control x-hihokensha-kigou mr-3"/>
-                        番号：<input type="text" class="form-control x-hihokensha-bangou"/>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">本人・家族</div>
-                    <div class="col-sm-10 form-inline">
-                        <div class="form-check form-check-inline">
-                            <input type="radio" name="honnin" class="form-check-input" value="1" checked/>
-                            <div class="form-check-label">本人</div>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input type="radio" name="honnin" class="form-check-input" value="0"/>
-                            <div class="form-check-label">家族</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">開始日</div>
-                    <div class="col-sm-10 form-inline x-valid-from-">
-                        <select class="x-gengou form-control">
-                            <option selected>令和</option>
-                            <option>平成</option>
-                        </select>
-                        <input type="text" class="x-nen form-control ml-2 mr-1" size="3"/>年
-                        <input type="text" class="x-month form-control ml-2 mr-1" size="3"/> 月
-                        <input type="text" class="x-day form-control ml-2 mr-1" size="3"/> 日
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">終了日</div>
-                    <div class="col-sm-10 form-inline x-valid-upto-">
-                        <select class="x-gengou form-control">
-                            <option selected>令和</option>
-                            <option>平成</option>
-                        </select>
-                        <input type="text" class="x-nen form-control ml-2 mr-1" size="3"/>年
-                        <input type="text" class="x-month form-control ml-2 mr-1" size="3"/> 月
-                        <input type="text" class="x-day form-control ml-2 mr-1" size="3"/> 日
-                        <a href="javascript:void(0)" class="x-clear-valid-upto ml-2">クリア</a>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">高齢</div>
-                    <div class="col-sm-10 form-inline">
-                        <div class="form-check form-check-inline">
-                            <input type="radio" class="form-check-input" checked name="kourei" value="0">
-                            <div class="form-check-label">高齢でない</div>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input type="radio" class="form-check-input" name="kourei" value="1"/>
-                            <div class="form-check-label">１割</div>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input type="radio" class="form-check-input" name="kourei" value="2"/>
-                            <div class="form-check-label">２割</div>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input type="radio" class="form-check-input" name="kourei" value="3"/>
-                            <div class="form-check-label">３割</div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <div class="mt-2 d-flex justify-content-end">
-            <button type="button" class="x-enter btn btn-secondary">入力</button>
-            <button type="button" class="x-close btn btn-secondary ml-2">キャンセル</button>
-        </div>
-    </div>
-</template>
+<!--<template id="reception-shahokokuho-new-widget-template">-->
+<!--    <div class="mb-3 border border-secondary rounded p-3">-->
+<!--        <div class="d-flex p-2" style="background-color: #ccc;">-->
+<!--            <div class="font-weight-bold flex-grow-1">新規社保国保入力</div>-->
+<!--            <div><span class="font-weight-bold x-widget-close"-->
+<!--                       style="cursor: pointer;">&times;</span></div>-->
+<!--        </div>-->
+<!--        <div class="x-form_ mt-4">-->
+<!--            <form>-->
+<!--                <div class="form-group row">-->
+<!--                    <div class="col-sm-2 col-form-label d-flex justify-content-end">保険者番号</div>-->
+<!--                    <div class="col-sm-10 form-inline">-->
+<!--                        <input type="text" class="form-control x-hokensha-bangou"/>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="form-group row">-->
+<!--                    <div class="col-sm-2 col-form-label d-flex justify-content-end">被保険者</div>-->
+<!--                    <div class="col-sm-10 form-inline">-->
+<!--                        記号：<input type="text" class="form-control x-hihokensha-kigou mr-3"/>-->
+<!--                        番号：<input type="text" class="form-control x-hihokensha-bangou"/>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="form-group row">-->
+<!--                    <div class="col-sm-2 col-form-label d-flex justify-content-end">本人・家族</div>-->
+<!--                    <div class="col-sm-10 form-inline">-->
+<!--                        <div class="form-check form-check-inline">-->
+<!--                            <input type="radio" name="honnin" class="form-check-input" value="1" checked/>-->
+<!--                            <div class="form-check-label">本人</div>-->
+<!--                        </div>-->
+<!--                        <div class="form-check form-check-inline">-->
+<!--                            <input type="radio" name="honnin" class="form-check-input" value="0"/>-->
+<!--                            <div class="form-check-label">家族</div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="form-group row">-->
+<!--                    <div class="col-sm-2 col-form-label d-flex justify-content-end">開始日</div>-->
+<!--                    <div class="col-sm-10 form-inline x-valid-from-">-->
+<!--                        <select class="x-gengou form-control">-->
+<!--                            <option selected>令和</option>-->
+<!--                            <option>平成</option>-->
+<!--                        </select>-->
+<!--                        <input type="text" class="x-nen form-control ml-2 mr-1" size="3"/>年-->
+<!--                        <input type="text" class="x-month form-control ml-2 mr-1" size="3"/> 月-->
+<!--                        <input type="text" class="x-day form-control ml-2 mr-1" size="3"/> 日-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="form-group row">-->
+<!--                    <div class="col-sm-2 col-form-label d-flex justify-content-end">終了日</div>-->
+<!--                    <div class="col-sm-10 form-inline x-valid-upto-">-->
+<!--                        <select class="x-gengou form-control">-->
+<!--                            <option selected>令和</option>-->
+<!--                            <option>平成</option>-->
+<!--                        </select>-->
+<!--                        <input type="text" class="x-nen form-control ml-2 mr-1" size="3"/>年-->
+<!--                        <input type="text" class="x-month form-control ml-2 mr-1" size="3"/> 月-->
+<!--                        <input type="text" class="x-day form-control ml-2 mr-1" size="3"/> 日-->
+<!--                        <a href="javascript:void(0)" class="x-clear-valid-upto ml-2">クリア</a>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="form-group row">-->
+<!--                    <div class="col-sm-2 col-form-label d-flex justify-content-end">高齢</div>-->
+<!--                    <div class="col-sm-10 form-inline">-->
+<!--                        <div class="form-check form-check-inline">-->
+<!--                            <input type="radio" class="form-check-input" checked name="kourei" value="0">-->
+<!--                            <div class="form-check-label">高齢でない</div>-->
+<!--                        </div>-->
+<!--                        <div class="form-check form-check-inline">-->
+<!--                            <input type="radio" class="form-check-input" name="kourei" value="1"/>-->
+<!--                            <div class="form-check-label">１割</div>-->
+<!--                        </div>-->
+<!--                        <div class="form-check form-check-inline">-->
+<!--                            <input type="radio" class="form-check-input" name="kourei" value="2"/>-->
+<!--                            <div class="form-check-label">２割</div>-->
+<!--                        </div>-->
+<!--                        <div class="form-check form-check-inline">-->
+<!--                            <input type="radio" class="form-check-input" name="kourei" value="3"/>-->
+<!--                            <div class="form-check-label">３割</div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </form>-->
+<!--        </div>-->
+<!--        <div class="mt-2 d-flex justify-content-end">-->
+<!--            <button type="button" class="x-enter btn btn-secondary">入力</button>-->
+<!--            <button type="button" class="x-close btn btn-secondary ml-2">キャンセル</button>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</template>-->
 
 <template id="reception-shahokokuho-edit-widget-template">
     <div class="mb-3 border border-secondary rounded p-3">
@@ -814,7 +814,7 @@ export async function initReception(pane) {
     broadcaster.listen("visit-deleted", visitId => refreshWqueueTable());
 
     class PatientAndHokenWidgetFactory {
-        create(patient, currentHokenList, shahokokuhoNewWidgetFactory,
+        create(patient, currentHokenList,
                koukikoureiNewWidgetFactory, kouhiNewWidgetFactory, shahokokuhoDispWidgetFactory,
                koukikoureiDispWidgetFactory, roujinDispWidgetFactory, kouhiDispWidgetFactory,
                shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory,
@@ -823,7 +823,7 @@ export async function initReception(pane) {
             let ele = $(html);
             let map = parseElement(ele);
             let widget = new PatientAndHokenEditWidget(ele, map, rest);
-            widget.init(shahokokuhoNewWidgetFactory, koukikoureiNewWidgetFactory,
+            widget.init(koukikoureiNewWidgetFactory,
                 kouhiNewWidgetFactory, shahokokuhoDispWidgetFactory,
                 koukikoureiDispWidgetFactory, roujinDispWidgetFactory, kouhiDispWidgetFactory,
                 shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory, kouhiEditWidgetFactory,
@@ -833,17 +833,11 @@ export async function initReception(pane) {
         }
     }
 
-    class ShahokokuhoNewWidgetFactory {
-        create(patientId) {
-            let html = $("template#reception-shahokokuho-new-widget-template").html();
-            let ele = $(html);
-            let map = parseElement(ele);
-            let widget = new ShahokokuhoNewWidget(ele, map, rest);
-            widget.init(patientId);
-            widget.set();
-            return widget;
-        }
-    }
+    // class ShahokokuhoNewWidgetFactory {
+    //     create(patientId) {
+    //         return new ShahokokuhoNewWidget(patientId, rest);
+    //     }
+    // }
 
     class KoukikoureiNewWidgetFactory {
         create(patientId) {
@@ -953,34 +947,37 @@ export async function initReception(pane) {
         }
     }
 
+    let hokenHelper = new HokenHelper(rest);
+    let patientAndHokenWidgetFactory = new PatientAndHokenWidgetFactory();
+    let koukikoureiNewWidgetFactory = new KoukikoureiNewWidgetFactory();
+    let kouhiNewWidgetFactory = new KouhiNewWidgetFactory();
+    let shahokokuhoDispWidgetFactory = new ShahokokuhoDispWidgetFactory();
+    let koukikoureiDispWidgetFactory = new KoukikoureiDispWidgetFactory();
+    let roujinDispWidgetFactory = new RoujinDispWidgetFactory();
+    let kouhiDispWidgetFactory = new KouhiDispWidgetFactory();
+    let shahokokuhoEditWidgetFactory = new ShahokokuhoEditWidgetFactory();
+    let koukikoureiEditWidgetFactory = new KoukikoureiEditWidgetFactory();
+    let kouhiEditWidgetFactory = new KouhiEditWidgetFactory();
+
+    async function createPatientAndHokenWidget(patient){
+        let hokenList = await hokenHelper.fetchAvailableHoken(patient.patientId,
+            kanjidate.todayAsSqldate());
+        return patientAndHokenWidgetFactory.create(patient, hokenList,
+            koukikoureiNewWidgetFactory, kouhiNewWidgetFactory,
+            shahokokuhoDispWidgetFactory, koukikoureiDispWidgetFactory,
+            roujinDispWidgetFactory, kouhiDispWidgetFactory,
+            shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory,
+            kouhiEditWidgetFactory);
+    }
+
     (function () {
         let ele = $("#reception-main-commands");
         let map = parseElement(ele);
-        let hokenHelper = new HokenHelper(rest);
-        let patientAndHokenWidgetFactory = new PatientAndHokenWidgetFactory();
-        let shahokokuhoNewWidgetFactory = new ShahokokuhoNewWidgetFactory();
-        let koukikoureiNewWidgetFactory = new KoukikoureiNewWidgetFactory();
-        let kouhiNewWidgetFactory = new KouhiNewWidgetFactory();
-        let shahokokuhoDispWidgetFactory = new ShahokokuhoDispWidgetFactory();
-        let koukikoureiDispWidgetFactory = new KoukikoureiDispWidgetFactory();
-        let roujinDispWidgetFactory = new RoujinDispWidgetFactory();
-        let kouhiDispWidgetFactory = new KouhiDispWidgetFactory();
-        let shahokokuhoEditWidgetFactory = new ShahokokuhoEditWidgetFactory();
-        let koukikoureiEditWidgetFactory = new KoukikoureiEditWidgetFactory();
-        let kouhiEditWidgetFactory = new KouhiEditWidgetFactory();
 
-        map.newPatient.on("click", async event => {
+        map.newPatient.on("click", event => {
             let w = new PatientNewWidget(rest);
             w.onEntered(async patient => {
-                let hokenList = await hokenHelper.fetchAvailableHoken(patient.patientId,
-                    kanjidate.todayAsSqldate());
-                let editWidget = patientAndHokenWidgetFactory.create(patient, hokenList,
-                    shahokokuhoNewWidgetFactory,
-                    koukikoureiNewWidgetFactory, kouhiNewWidgetFactory,
-                    shahokokuhoDispWidgetFactory, koukikoureiDispWidgetFactory,
-                    roujinDispWidgetFactory, kouhiDispWidgetFactory,
-                    shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory,
-                    kouhiEditWidgetFactory);
+                let editWidget = await createPatientAndHokenWidget(patient);
                 editWidget.prependTo(receptionWorkarea);
             });
             receptionWorkarea.get(0).prepend(w.ele);
@@ -996,15 +993,7 @@ export async function initReception(pane) {
             let result = await dialog.open();
             if (result && result.action === "edit") {
                 let patient = result.patient;
-                let hokenList = await hokenHelper.fetchAvailableHoken(patient.patientId,
-                    kanjidate.todayAsSqldate());
-                let editWidget = patientAndHokenWidgetFactory.create(patient, hokenList,
-                    shahokokuhoNewWidgetFactory,
-                    koukikoureiNewWidgetFactory, kouhiNewWidgetFactory,
-                    shahokokuhoDispWidgetFactory, koukikoureiDispWidgetFactory,
-                    roujinDispWidgetFactory, kouhiDispWidgetFactory,
-                    shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory,
-                    kouhiEditWidgetFactory);
+                let editWidget = await createPatientAndHokenWidget(patient);
                 editWidget.prependTo(receptionWorkarea);
             }
         });

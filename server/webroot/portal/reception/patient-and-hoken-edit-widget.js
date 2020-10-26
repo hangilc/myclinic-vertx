@@ -7,6 +7,7 @@ import {HokenHelper} from "./hoken-helper.js";
 import {UploadImageDialog} from "./upload-image-dialog.js";
 import {PatientEditWidget} from "./patient-edit-widget.js";
 import {ShahokokuhoNewWidget} from "./shahokokuho-new-widget.js";
+import {ShahokokuhoDispWidget} from "./shahokokuho-disp-widget.js";
 
 let tableRowHtml = `
 <tr>
@@ -23,7 +24,7 @@ let tableRowHtml = `
 `;
 
 export class PatientAndHokenEditWidget extends Widget {
-    constructor(ele, map, rest){
+    constructor(ele, map, rest) {
         super(ele, map, rest);
         this.disp = new PatientDisp(map.disp_, map.disp, rest);
         this.hokenListElement = map.hokenList;
@@ -40,14 +41,13 @@ export class PatientAndHokenEditWidget extends Widget {
     }
 
     init(koukikoureiNewWidgetFactory,
-         kouhiNewWidgetFactory, shahokokuhoDispWidgetFactory,
-         koukikoureiDispWidgetFactory, roujinDispWidgetFactory,kouhiDispWidgetFactory,
+         kouhiNewWidgetFactory,
+         koukikoureiDispWidgetFactory, roujinDispWidgetFactory, kouhiDispWidgetFactory,
          shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory, kouhiEditWidgetFactory,
-         broadcaster){
+         broadcaster) {
         super.init();
         this.koukikoureiNewWidgetFactory = koukikoureiNewWidgetFactory;
         this.kouhiNewWidgetFactory = kouhiNewWidgetFactory;
-        this.shahokokuhoDispWidgetFactory = shahokokuhoDispWidgetFactory;
         this.koukikoureiDispWidgetFactory = koukikoureiDispWidgetFactory;
         this.roujinDispWidgetFactory = roujinDispWidgetFactory;
         this.kouhiDispWidgetFactory = kouhiDispWidgetFactory;
@@ -73,7 +73,7 @@ export class PatientAndHokenEditWidget extends Widget {
         return this;
     }
 
-    set(patient, currentHokenList){
+    set(patient, currentHokenList) {
         super.set();
         this.patient = patient;
         this.disp.set(patient);
@@ -81,17 +81,17 @@ export class PatientAndHokenEditWidget extends Widget {
         return this;
     }
 
-    isCurrentOnly(){
+    isCurrentOnly() {
         return this.currentOnlyElement.is(":checked");
     }
 
-    getPatientId(){
+    getPatientId() {
         return this.patient ? this.patient.patientId : 0;
     }
 
-    async reloadHoken(){
+    async reloadHoken() {
         let helper = new HokenHelper(this.rest);
-        if( this.isCurrentOnly() ){
+        if (this.isCurrentOnly()) {
             let hokenList = await helper.fetchAvailableHoken(this.patient.patientId, kanjidate.todayAsSqldate());
             this.setHokenList(hokenList);
         } else {
@@ -100,23 +100,23 @@ export class PatientAndHokenEditWidget extends Widget {
         }
     }
 
-    async doRegisterForExam(){
+    async doRegisterForExam() {
         let patientId = this.getPatientId();
-        if( patientId > 0 ){
+        if (patientId > 0) {
             let visitId = await this.rest.startVisit(patientId);
             this.broadcaster.broadcast("visit-created", visitId);
             alert("診療が受け付けられました。");
         }
     }
 
-    async doUploadImage(){
+    async doUploadImage() {
         let patientId = this.getPatientId();
-        if( patientId > 0 ){
+        if (patientId > 0) {
             await (new UploadImageDialog(patientId)).open();
         }
     }
 
-    doNewShahokokuho(){
+    doNewShahokokuho() {
         let widget = new ShahokokuhoNewWidget(this.patient.patientId, this.rest);
         widget.onEntered(async entered => {
             await this.reloadHoken();
@@ -125,7 +125,7 @@ export class PatientAndHokenEditWidget extends Widget {
         widget.prependTo(this.workareaElement.get(0));
     }
 
-    doNewKoukikourei(){
+    doNewKoukikourei() {
         let widget = this.koukikoureiNewWidgetFactory.create(this.patient.patientId);
         widget.onEntered(entered => {
             let promise = this.reloadHoken();
@@ -134,7 +134,7 @@ export class PatientAndHokenEditWidget extends Widget {
         widget.prependTo(this.workareaElement);
     }
 
-    doNewKouhi(){
+    doNewKouhi() {
         let widget = this.kouhiNewWidgetFactory.create(this.patient.patientId);
         widget.onEntered(entered => {
             let promise = this.reloadHoken();
@@ -143,7 +143,7 @@ export class PatientAndHokenEditWidget extends Widget {
         widget.prependTo(this.workareaElement);
     }
 
-    doEditShahokokuho(shahokokuho){
+    doEditShahokokuho(shahokokuho) {
         let widget = this.shahokokuhoEditWidgetFactory.create(shahokokuho);
         widget.onUpdated(updated => {
             let promise = this.reloadHoken();
@@ -152,7 +152,7 @@ export class PatientAndHokenEditWidget extends Widget {
         widget.prependTo(this.workareaElement);
     }
 
-    doEditKoukikourei(koukikourei){
+    doEditKoukikourei(koukikourei) {
         let widget = this.koukikoureiEditWidgetFactory.create(koukikourei);
         widget.onUpdated(updated => {
             let promise = this.reloadHoken();
@@ -161,7 +161,7 @@ export class PatientAndHokenEditWidget extends Widget {
         widget.prependTo(this.workareaElement);
     }
 
-    doEditKouhi(kouhi){
+    doEditKouhi(kouhi) {
         let widget = this.kouhiEditWidgetFactory.create(kouhi);
         widget.onUpdated(updated => {
             let promise = this.reloadHoken();
@@ -170,8 +170,8 @@ export class PatientAndHokenEditWidget extends Widget {
         widget.prependTo(this.workareaElement);
     }
 
-    doEditBasic(){
-        if( this.patientEditWidget ){
+    doEditBasic() {
+        if (this.patientEditWidget) {
             let w = this.patientEditWidget;
             let p = this.workareaElement.get(0);
             p.removeChild(w);
@@ -191,9 +191,9 @@ export class PatientAndHokenEditWidget extends Widget {
         }
     }
 
-    async doCurrentOnlyChanged(checked){
+    async doCurrentOnlyChanged(checked) {
         let helper = new HokenHelper(this.rest);
-        if( checked ){
+        if (checked) {
             let result = await helper.fetchAvailableHoken(this.patient.patientId, kanjidate.todayAsSqldate());
             this.setHokenList(result);
         } else {
@@ -202,7 +202,7 @@ export class PatientAndHokenEditWidget extends Widget {
         }
     }
 
-    createTableRow(rep, validFrom, validUpto, honninKazoku, detailFun, editFun, deleteFun){
+    createTableRow(rep, validFrom, validUpto, honninKazoku, detailFun, editFun, deleteFun) {
         let ele = $(tableRowHtml);
         let map = parseElement(ele);
         map.rep.text(rep);
@@ -215,12 +215,14 @@ export class PatientAndHokenEditWidget extends Widget {
         return ele;
     }
 
-    doShahokokuhoDetail(shahokokuho){
+    doShahokokuhoDetail(shahokokuho) {
         let dispWidget = this.shahokokuhoDispWidgetMap[shahokokuho.shahokokuhoId];
-        if( !dispWidget ){
-            dispWidget = this.shahokokuhoDispWidgetFactory.create(shahokokuho);
+        if (!dispWidget) {
+            dispWidget = new ShahokokuhoDispWidget(shahokokuho);
             dispWidget.prependTo(this.workareaElement);
-            dispWidget.onClosed(() => { delete this.shahokokuhoDispWidgetMap[shahokokuho.shahokokuhoId]; });
+            dispWidget.onClosed(() => {
+                delete this.shahokokuhoDispWidgetMap[shahokokuho.shahokokuhoId];
+            });
             this.shahokokuhoDispWidgetMap[shahokokuho.shahokokuhoId] = dispWidget;
         } else {
             dispWidget.detach();
@@ -228,12 +230,14 @@ export class PatientAndHokenEditWidget extends Widget {
         }
     }
 
-    doKoukikoureiDetail(koukikourei){
+    doKoukikoureiDetail(koukikourei) {
         let dispWidget = this.koukikoureiDispWidgetMap[koukikourei.koukikoureiId];
-        if( !dispWidget ){
+        if (!dispWidget) {
             dispWidget = this.koukikoureiDispWidgetFactory.create(koukikourei);
             dispWidget.prependTo(this.workareaElement);
-            dispWidget.onClose(() => { delete this.koukikoureiDispWidgetMap[koukikourei.koukikoureiId]; });
+            dispWidget.onClose(() => {
+                delete this.koukikoureiDispWidgetMap[koukikourei.koukikoureiId];
+            });
             this.koukikoureiDispWidgetMap[koukikourei.koukikoureiId] = dispWidget;
         } else {
             dispWidget.detach();
@@ -241,12 +245,14 @@ export class PatientAndHokenEditWidget extends Widget {
         }
     }
 
-    doRoujinDetail(roujin){
+    doRoujinDetail(roujin) {
         let dispWidget = this.roujinDispWidgetMap[roujin.roujinId];
-        if( !dispWidget ){
+        if (!dispWidget) {
             dispWidget = this.roujinDispWidgetFactory.create(roujin);
             dispWidget.prependTo(this.workareaElement);
-            dispWidget.onClose(() => { delete this.roujinDispWidgetMap[roujin.roujinId]; });
+            dispWidget.onClose(() => {
+                delete this.roujinDispWidgetMap[roujin.roujinId];
+            });
             this.roujinDispWidgetMap[roujin.roujinId] = dispWidget;
         } else {
             dispWidget.detach();
@@ -254,12 +260,14 @@ export class PatientAndHokenEditWidget extends Widget {
         }
     }
 
-    doKouhiDetail(kouhi){
+    doKouhiDetail(kouhi) {
         let dispWidget = this.kouhiDispWidgetMap[kouhi.kouhiId];
-        if( !dispWidget ){
+        if (!dispWidget) {
             dispWidget = this.kouhiDispWidgetFactory.create(kouhi);
             dispWidget.prependTo(this.workareaElement);
-            dispWidget.onClose(() => { delete this.kouhiDispWidgetMap[kouhi.kouhiId]; });
+            dispWidget.onClose(() => {
+                delete this.kouhiDispWidgetMap[kouhi.kouhiId];
+            });
             this.kouhiDispWidgetMap[kouhi.kouhiId] = dispWidget;
         } else {
             dispWidget.detach();
@@ -267,8 +275,8 @@ export class PatientAndHokenEditWidget extends Widget {
         }
     }
 
-    async doShahokokuhoDelete(shahokokuho){
-        if( confirm("この社保国保を削除しますか？") ){
+    async doShahokokuhoDelete(shahokokuho) {
+        if (confirm("この社保国保を削除しますか？")) {
             let data = Object.assign({}, shahokokuho);
             delete data.rep;
             await this.rest.deleteShahokokuho(data);
@@ -276,8 +284,8 @@ export class PatientAndHokenEditWidget extends Widget {
         }
     }
 
-    async doKoukikoureiDelete(koukikourei){
-        if( confirm("この後期高齢保険を削除しますか？") ){
+    async doKoukikoureiDelete(koukikourei) {
+        if (confirm("この後期高齢保険を削除しますか？")) {
             let data = Object.assign({}, koukikourei);
             delete data.rep;
             await this.rest.deleteKoukikourei(data);
@@ -285,8 +293,8 @@ export class PatientAndHokenEditWidget extends Widget {
         }
     }
 
-    async doRoujinDelete(roujin){
-        if( confirm("この老人保険を削除しますか？") ){
+    async doRoujinDelete(roujin) {
+        if (confirm("この老人保険を削除しますか？")) {
             let data = Object.assign({}, roujin);
             delete data.rep;
             await this.rest.deleteRoujin(data);
@@ -294,8 +302,8 @@ export class PatientAndHokenEditWidget extends Widget {
         }
     }
 
-    async doKouhiDelete(kouhi){
-        if( confirm("この高位負担を削除しますか？") ){
+    async doKouhiDelete(kouhi) {
+        if (confirm("この高位負担を削除しますか？")) {
             let data = Object.assign({}, kouhi);
             delete data.rep;
             await this.rest.deleteKouhi(data);
@@ -303,11 +311,11 @@ export class PatientAndHokenEditWidget extends Widget {
         }
     }
 
-    setHokenList(hokenList){
+    setHokenList(hokenList) {
         let tbody = this.hokenListElement.find("tbody").html("");
         let cmp = compareBy("-validFrom");
         hokenList.shahokokuhoList.sort(cmp);
-        for(let shahokokuho of hokenList.shahokokuhoList){
+        for (let shahokokuho of hokenList.shahokokuhoList) {
             let tr = this.createTableRow(shahokokuho.rep, formatDate(shahokokuho.validFrom),
                 formatDate(shahokokuho.validUpto), honninToKanji(shahokokuho.honnin),
                 () => this.doShahokokuhoDetail(shahokokuho),
@@ -316,7 +324,7 @@ export class PatientAndHokenEditWidget extends Widget {
             tbody.append(tr);
         }
         hokenList.koukikoureiList.sort(cmp);
-        for(let koukikourei of hokenList.koukikoureiList){
+        for (let koukikourei of hokenList.koukikoureiList) {
             let tr = this.createTableRow(koukikourei.rep, formatDate(koukikourei.validFrom),
                 formatDate(koukikourei.validUpto), "",
                 () => this.doKoukikoureiDetail(koukikourei),
@@ -325,16 +333,18 @@ export class PatientAndHokenEditWidget extends Widget {
             tbody.append(tr);
         }
         hokenList.roujinList.sort(cmp);
-        for(let roujin of hokenList.roujinList){
+        for (let roujin of hokenList.roujinList) {
             let tr = this.createTableRow(roujin.rep, formatDate(roujin.validFrom),
                 formatDate(roujin.validUpto), "",
                 () => this.doRoujinDetail(roujin),
-                () => { alert("Not implemented."); },
+                () => {
+                    alert("Not implemented.");
+                },
                 () => this.doRoujinDelete(roujin));
             tbody.append(tr);
         }
         hokenList.kouhiList.sort(cmp);
-        for(let kouhi of hokenList.kouhiList){
+        for (let kouhi of hokenList.kouhiList) {
             let tr = this.createTableRow(kouhi.rep, formatDate(kouhi.validFrom),
                 formatDate(kouhi.validUpto), "",
                 () => this.doKouhiDetail(kouhi),
@@ -347,19 +357,19 @@ export class PatientAndHokenEditWidget extends Widget {
 
 }
 
-function honninToKanji(honnin){
+function honninToKanji(honnin) {
     return honnin ? "本人" : "家族";
 }
 
-function formatDate(sqldate){
-    if( !sqldate || sqldate === "0000-00-00" ){
+function formatDate(sqldate) {
+    if (!sqldate || sqldate === "0000-00-00") {
         return "";
     } else {
         return kanjidate.sqldateToKanji(sqldate, {padZero: true});
     }
 }
 
-function setupDispConverters(disp){
+function setupDispConverters(disp) {
     disp.setBirthdayConv(birthday => disp.birthdayAsKanji(birthday, {
         suffix: "生"
     }) + " " + disp.calcAge(birthday) + "才");

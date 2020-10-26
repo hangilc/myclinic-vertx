@@ -625,35 +625,6 @@ let html = `
     </div>
 </template>
 
-<template id="reception-shahokokuho-disp-widget-template">
-    <div class="mb-3 border border-secondary rounded p-3">
-        <div class="d-flex p-2 mb-2" style="background-color: #ccc;">
-            <div class="font-weight-bold flex-grow-1">社保国保データ</div>
-            <div><span class="font-weight-bold x-widget-close"
-                       style="cursor: pointer;">&times;</span></div>
-        </div>
-        <div class="row x-disp_">
-            <div class="col-sm-2 d-flex justify-content-end">保険者番号</div>
-            <div class="col-sm-10 x-hokensha-bangou"></div>
-            <div class="col-sm-2 d-flex justify-content-end">被保険者記号</div>
-            <div class="col-sm-10 x-hihokensha-kigou"></div>
-            <div class="col-sm-2 d-flex justify-content-end">被保険者番号</div>
-            <div class="col-sm-10 x-hihokensha-bangou"></div>
-            <div class="col-sm-2 d-flex justify-content-end">本人・家族</div>
-            <div class="col-sm-10 x-honnin"></div>
-            <div class="col-sm-2 d-flex justify-content-end">開始日</div>
-            <div class="col-sm-10 x-valid-from"></div>
-            <div class="col-sm-2 d-flex justify-content-end">終了日</div>
-            <div class="col-sm-10 x-valid-upto"></div>
-            <div class="col-sm-2 d-flex justify-content-end">高齢</div>
-            <div class="col-sm-10 x-kourei"></div>
-        </div>
-        <div class="mt-2 d-flex justify-content-end">
-            <button type="button" class="x-close btn btn-secondary ml-2">閉じる</button>
-        </div>
-    </div>
-</template>
-
 <template id="reception-koukikourei-disp-widget-template">
     <div class="mb-3 border border-secondary rounded p-3">
         <div class="d-flex p-2 mb-2" style="background-color: #ccc;">
@@ -791,7 +762,6 @@ export async function initReception(pane) {
     let {PatientAndHokenEditWidget} = await import("./patient-and-hoken-edit-widget.js");
     let {KoukikoureiNewWidget} = await import("./koukikourei-new-widget.js");
     let {KouhiNewWidget} = await import("./kouhi-new-widget.js");
-    let {ShahokokuhoDispWidget} = await import("./shahokokuho-disp-widget.js");
     let {KoukikoureiDispWidget} = await import("./koukikourei-disp-widget.js");
     let {RoujinDispWidget} = await import("./roujin-disp-widget.js");
     let {KouhiDispWidget} = await import("./kouhi-disp-widget.js");
@@ -814,7 +784,7 @@ export async function initReception(pane) {
 
     class PatientAndHokenWidgetFactory {
         create(patient, currentHokenList,
-               koukikoureiNewWidgetFactory, kouhiNewWidgetFactory, shahokokuhoDispWidgetFactory,
+               koukikoureiNewWidgetFactory, kouhiNewWidgetFactory,
                koukikoureiDispWidgetFactory, roujinDispWidgetFactory, kouhiDispWidgetFactory,
                shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory,
                kouhiEditWidgetFactory) {
@@ -823,7 +793,7 @@ export async function initReception(pane) {
             let map = parseElement(ele);
             let widget = new PatientAndHokenEditWidget(ele, map, rest);
             widget.init(koukikoureiNewWidgetFactory,
-                kouhiNewWidgetFactory, shahokokuhoDispWidgetFactory,
+                kouhiNewWidgetFactory,
                 koukikoureiDispWidgetFactory, roujinDispWidgetFactory, kouhiDispWidgetFactory,
                 shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory, kouhiEditWidgetFactory,
                 broadcaster);
@@ -853,19 +823,6 @@ export async function initReception(pane) {
             widget.init(patientId);
             widget.set();
             return widget;
-        }
-    }
-
-    class ShahokokuhoDispWidgetFactory {
-        create(shahokokuho) {
-            return new ShahokokuhoDispWidget(shahokokuho);
-            // let html = $("template#reception-shahokokuho-disp-widget-template").html();
-            // let ele = $(html);
-            // let map = parseElement(ele);
-            // let widget = new ShahokokuhoDispWidget(ele, map, rest);
-            // widget.init();
-            // widget.set(shahokokuho);
-            // return widget;
         }
     }
 
@@ -945,7 +902,6 @@ export async function initReception(pane) {
     let patientAndHokenWidgetFactory = new PatientAndHokenWidgetFactory();
     let koukikoureiNewWidgetFactory = new KoukikoureiNewWidgetFactory();
     let kouhiNewWidgetFactory = new KouhiNewWidgetFactory();
-    let shahokokuhoDispWidgetFactory = new ShahokokuhoDispWidgetFactory();
     let koukikoureiDispWidgetFactory = new KoukikoureiDispWidgetFactory();
     let roujinDispWidgetFactory = new RoujinDispWidgetFactory();
     let kouhiDispWidgetFactory = new KouhiDispWidgetFactory();
@@ -958,7 +914,7 @@ export async function initReception(pane) {
             kanjidate.todayAsSqldate());
         return patientAndHokenWidgetFactory.create(patient, hokenList,
             koukikoureiNewWidgetFactory, kouhiNewWidgetFactory,
-            shahokokuhoDispWidgetFactory, koukikoureiDispWidgetFactory,
+            koukikoureiDispWidgetFactory,
             roujinDispWidgetFactory, kouhiDispWidgetFactory,
             shahokokuhoEditWidgetFactory, koukikoureiEditWidgetFactory,
             kouhiEditWidgetFactory);

@@ -12,6 +12,9 @@ import {ShahokokuhoEditWidget} from "./shahokokuho-edit-widget.js";
 import {KoukikoureiNewWidget} from "./koukikourei-new-widget.js";
 import {KoukikoureiDispWidget} from "./koukikourei-disp-widget.js";
 import {KoukikoureiEditWidget} from "./koukikourei-edit-widget.js";
+import {KouhiNewWidget} from "./kouhi-new-widget.js";
+import {KouhiDispWidget} from "./kouhi-disp-widget.js";
+import {KouhiEditWidget} from "./kouhi-edit-widget.js";
 
 let tableRowHtml = `
 <tr>
@@ -44,12 +47,11 @@ export class PatientAndHokenEditWidget extends Widget {
         this.patientEditWidget = null;
     }
 
-    init(kouhiNewWidgetFactory,
+    init(
          roujinDispWidgetFactory, kouhiDispWidgetFactory,
          kouhiEditWidgetFactory,
          broadcaster) {
         super.init();
-        this.kouhiNewWidgetFactory = kouhiNewWidgetFactory;
         this.roujinDispWidgetFactory = roujinDispWidgetFactory;
         this.kouhiDispWidgetFactory = kouhiDispWidgetFactory;
         this.kouhiEditWidgetFactory = kouhiEditWidgetFactory;
@@ -138,9 +140,9 @@ export class PatientAndHokenEditWidget extends Widget {
     }
 
     doNewKouhi() {
-        let widget = this.kouhiNewWidgetFactory.create(this.patient.patientId);
-        widget.onEntered(entered => {
-            let promise = this.reloadHoken();
+        let widget = new KouhiNewWidget(this.patient.patientId, this.rest);
+        widget.onEntered(async entered => {
+            await this.reloadHoken();
             widget.remove();
         })
         widget.prependTo(this.workareaElement);

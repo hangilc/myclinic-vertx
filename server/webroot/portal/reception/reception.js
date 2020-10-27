@@ -436,7 +436,6 @@ export async function initReception(pane) {
     let {parseElement} = await import("../js/parse-element.js");
     let {PatientSearchDialog} = await import("./patient-search-dialog.js");
     let {PatientAndHokenEditWidget} = await import("./patient-and-hoken-edit-widget.js");
-    let {KouhiNewWidget} = await import("./kouhi-new-widget.js");
     let {RoujinDispWidget} = await import("./roujin-disp-widget.js");
     let {KouhiDispWidget} = await import("./kouhi-disp-widget.js");
     let {KouhiEditWidget} = await import("./kouhi-edit-widget.js");
@@ -456,14 +455,13 @@ export async function initReception(pane) {
 
     class PatientAndHokenWidgetFactory {
         create(patient, currentHokenList,
-               kouhiNewWidgetFactory,
                roujinDispWidgetFactory, kouhiDispWidgetFactory,
                kouhiEditWidgetFactory) {
             let html = $("template#reception-patient-and-hoken-edit-widget-template").html();
             let ele = $(html);
             let map = parseElement(ele);
             let widget = new PatientAndHokenEditWidget(ele, map, rest);
-            widget.init(kouhiNewWidgetFactory,
+            widget.init(
                 roujinDispWidgetFactory, kouhiDispWidgetFactory,
                 kouhiEditWidgetFactory,
                 broadcaster);

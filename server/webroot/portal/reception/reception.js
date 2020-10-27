@@ -191,61 +191,6 @@ let html = `
     </div>
 </template>
 
-<template id="reception-kouhi-new-widget-template">
-    <div class="mb-3 border border-secondary rounded p-3">
-        <div class="d-flex p-2" style="background-color: #ccc;">
-            <div class="font-weight-bold flex-grow-1">新規公費負担入力</div>
-            <div><span class="font-weight-bold x-widget-close"
-                       style="cursor: pointer;">&times;</span></div>
-        </div>
-        <div class="x-form_ mt-4">
-            <form>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">負担者番号</div>
-                    <div class="col-sm-10 form-inline">
-                        <input type="text" class="form-control x-futansha"/>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">受給者番号</div>
-                    <div class="col-sm-10 form-inline">
-                        <input type="text" class="form-control x-jukyuusha"/>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">開始日</div>
-                    <div class="col-sm-10 form-inline x-valid-from-">
-                        <select class="x-gengou form-control">
-                            <option selected>令和</option>
-                            <option>平成</option>
-                        </select>
-                        <input type="text" class="x-nen form-control ml-2 mr-1" size="3"/>年
-                        <input type="text" class="x-month form-control ml-2 mr-1" size="3"/> 月
-                        <input type="text" class="x-day form-control ml-2 mr-1" size="3"/> 日
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-2 col-form-label d-flex justify-content-end">終了日</div>
-                    <div class="col-sm-10 form-inline x-valid-upto-">
-                        <select class="x-gengou form-control">
-                            <option selected>令和</option>
-                            <option>平成</option>
-                        </select>
-                        <input type="text" class="x-nen form-control ml-2 mr-1" size="3"/>年
-                        <input type="text" class="x-month form-control ml-2 mr-1" size="3"/> 月
-                        <input type="text" class="x-day form-control ml-2 mr-1" size="3"/> 日
-                        <a href="javascript:void(0)" class="x-clear-valid-upto ml-2">クリア</a>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <div class="mt-2 d-flex justify-content-end">
-            <button type="button" class="x-enter btn btn-secondary">入力</button>
-            <button type="button" class="x-close btn btn-secondary ml-2">キャンセル</button>
-        </div>
-    </div>
-</template>
-
 <template id="reception-kouhi-edit-widget-template">
     <div class="mb-3 border border-secondary rounded p-3">
         <div class="d-flex p-2" style="background-color: #ccc;">
@@ -351,29 +296,6 @@ let html = `
     </div>
 </template>
 
-<template id="reception-kouhi-disp-widget-template">
-    <div class="mb-3 border border-secondary rounded p-3">
-        <div class="d-flex p-2 mb-2" style="background-color: #ccc;">
-            <div class="font-weight-bold flex-grow-1">公費負担データ</div>
-            <div><span class="font-weight-bold x-widget-close"
-                       style="cursor: pointer;">&times;</span></div>
-        </div>
-        <div class="row x-disp_">
-            <div class="col-sm-2 d-flex justify-content-end">負担者番号</div>
-            <div class="col-sm-10 x-futansha"></div>
-            <div class="col-sm-2 d-flex justify-content-end">受給者番号</div>
-            <div class="col-sm-10 x-jukyuusha"></div>
-            <div class="col-sm-2 d-flex justify-content-end">開始日</div>
-            <div class="col-sm-10 x-valid-from"></div>
-            <div class="col-sm-2 d-flex justify-content-end">終了日</div>
-            <div class="col-sm-10 x-valid-upto"></div>
-        </div>
-        <div class="mt-2 d-flex justify-content-end">
-            <button type="button" class="x-close btn btn-secondary ml-2">閉じる</button>
-        </div>
-    </div>
-</template>
-
 <template id="reception-widget-template">
     <div class="mb-3 border border-secondary rounded p-3">
         <div class="d-flex p-2 mb-2" style="background-color: #ccc;">
@@ -437,7 +359,6 @@ export async function initReception(pane) {
     let {PatientSearchDialog} = await import("./patient-search-dialog.js");
     let {PatientAndHokenEditWidget} = await import("./patient-and-hoken-edit-widget.js");
     let {RoujinDispWidget} = await import("./roujin-disp-widget.js");
-    let {KouhiDispWidget} = await import("./kouhi-disp-widget.js");
     let {KouhiEditWidget} = await import("./kouhi-edit-widget.js");
     let {HokenHelper} = await import("./hoken-helper.js");
     let {WqueueTable} = await import("./wqueue-table.js");
@@ -455,29 +376,17 @@ export async function initReception(pane) {
 
     class PatientAndHokenWidgetFactory {
         create(patient, currentHokenList,
-               roujinDispWidgetFactory, kouhiDispWidgetFactory,
+               roujinDispWidgetFactory,
                kouhiEditWidgetFactory) {
             let html = $("template#reception-patient-and-hoken-edit-widget-template").html();
             let ele = $(html);
             let map = parseElement(ele);
             let widget = new PatientAndHokenEditWidget(ele, map, rest);
             widget.init(
-                roujinDispWidgetFactory, kouhiDispWidgetFactory,
+                roujinDispWidgetFactory,
                 kouhiEditWidgetFactory,
                 broadcaster);
             widget.set(patient, currentHokenList);
-            return widget;
-        }
-    }
-
-    class KouhiNewWidgetFactory {
-        create(patientId) {
-            let html = $("template#reception-kouhi-new-widget-template").html();
-            let ele = $(html);
-            let map = parseElement(ele);
-            let widget = new KouhiNewWidget(ele, map, rest);
-            widget.init(patientId);
-            widget.set();
             return widget;
         }
     }
@@ -490,18 +399,6 @@ export async function initReception(pane) {
             let widget = new RoujinDispWidget(ele, map, rest);
             widget.init();
             widget.set(roujin);
-            return widget;
-        }
-    }
-
-    class KouhiDispWidgetFactory {
-        create(kouhi) {
-            let html = $("template#reception-kouhi-disp-widget-template").html();
-            let ele = $(html);
-            let map = parseElement(ele);
-            let widget = new KouhiDispWidget(ele, map, rest);
-            widget.init();
-            widget.set(kouhi);
             return widget;
         }
     }
@@ -520,17 +417,14 @@ export async function initReception(pane) {
 
     let hokenHelper = new HokenHelper(rest);
     let patientAndHokenWidgetFactory = new PatientAndHokenWidgetFactory();
-    let kouhiNewWidgetFactory = new KouhiNewWidgetFactory();
     let roujinDispWidgetFactory = new RoujinDispWidgetFactory();
-    let kouhiDispWidgetFactory = new KouhiDispWidgetFactory();
     let kouhiEditWidgetFactory = new KouhiEditWidgetFactory();
 
     async function createPatientAndHokenWidget(patient){
         let hokenList = await hokenHelper.fetchAvailableHoken(patient.patientId,
             kanjidate.todayAsSqldate());
         return patientAndHokenWidgetFactory.create(patient, hokenList,
-            kouhiNewWidgetFactory,
-            roujinDispWidgetFactory, kouhiDispWidgetFactory,
+            roujinDispWidgetFactory,
             kouhiEditWidgetFactory);
     }
 

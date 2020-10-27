@@ -1,5 +1,4 @@
 import {Widget} from "./widget2.js";
-import {DateInput} from "./date-input.js";
 import {KouhiForm} from "./kouhi-form.js";
 
 let commandsTmpl = `
@@ -8,7 +7,7 @@ let commandsTmpl = `
 `;
 
 export class KouhiNewWidget extends Widget {
-    constructor(patientId, rest){
+    constructor(patientId, rest) {
         super();
         this.patientId = patientId;
         this.rest = rest;
@@ -19,25 +18,25 @@ export class KouhiNewWidget extends Widget {
         cmap.close.addEventListener("click", event => this.close());
     }
 
-    onEntered(cb){
+    onEntered(cb) {
         this.ele.addEventListener("entered", event => cb(event.detail));
     }
 
-    async doEnter(){
+    async doEnter() {
         let patientId = this.patientId;
-        if( !(patientId > 0) ){
+        if (!(patientId > 0)) {
             this.error = "患者が設定されていません。";
             return undefined;
         }
         let data = this.form.get(0, patientId);
-        if( !data ){
+        if (!data) {
             let err = this.form.getError();
             alert(err);
             return;
         }
         let kouhiId = await this.rest.enterKouhi(data);
         let entered = await this.rest.getKouhi(kouhiId);
-        this.ele.dispatchEvent(new CustomEvent("entered", { detail: entered }));
+        this.ele.dispatchEvent(new CustomEvent("entered", {detail: entered}));
     }
 
 }

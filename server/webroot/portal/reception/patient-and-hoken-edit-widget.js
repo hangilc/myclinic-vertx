@@ -49,11 +49,9 @@ export class PatientAndHokenEditWidget extends Widget {
 
     init(
          roujinDispWidgetFactory,
-         kouhiEditWidgetFactory,
          broadcaster) {
         super.init();
         this.roujinDispWidgetFactory = roujinDispWidgetFactory;
-        this.kouhiEditWidgetFactory = kouhiEditWidgetFactory;
         this.broadcaster = broadcaster;
         this.disp.init();
         setupDispConverters(this.disp);
@@ -73,7 +71,7 @@ export class PatientAndHokenEditWidget extends Widget {
         this.roujinDispWidgetMap = {};
         this.roujinEditWidgetMap = {};
         this.kouhiDispWidgetMap = {};
-        this.kouhiKouhiWidgetMap = {};
+        this.kouhiEditWidgetMap = {};
         return this;
     }
 
@@ -180,12 +178,19 @@ export class PatientAndHokenEditWidget extends Widget {
     }
 
     doEditKouhi(kouhi) {
-        let widget = this.kouhiEditWidgetFactory.create(kouhi);
-        widget.onUpdated(updated => {
-            let promise = this.reloadHoken();
+        let widget = this.kouhiEditWidgetMap[kouhi.kouhiId];
+        if (widget) {
             widget.remove();
-        })
-        widget.prependTo(this.workareaElement);
+        } else {
+            widget = new KouhiEditWidget(kouhi, this.rest);
+            this.kouhiEditWidgetMap[kouhi.kouhiId] = widget;
+            widget.onUpdated(async updated => {
+                await this.reloadHoken();
+                widget.remove();
+                delete this.kouhiEditWidgetMap[kouhi.kouhiId];
+            });
+        }
+        widget.prependTo(this.workareaElement.get(0));
     }
 
     doEditBasic() {

@@ -191,31 +191,6 @@ let html = `
     </div>
 </template>
 
-<template id="reception-roujin-disp-widget-template">
-    <div class="mb-3 border border-secondary rounded p-3">
-        <div class="d-flex p-2 mb-2" style="background-color: #ccc;">
-            <div class="font-weight-bold flex-grow-1">老人保険データ</div>
-            <div><span class="font-weight-bold x-widget-close"
-                       style="cursor: pointer;">&times;</span></div>
-        </div>
-        <div class="row x-disp_">
-            <div class="col-sm-2 d-flex justify-content-end">市町村番号</div>
-            <div class="col-sm-10 x-shichouson"></div>
-            <div class="col-sm-2 d-flex justify-content-end">受給者番号</div>
-            <div class="col-sm-10 x-jukyuusha"></div>
-            <div class="col-sm-2 d-flex justify-content-end">開始日</div>
-            <div class="col-sm-10 x-valid-from"></div>
-            <div class="col-sm-2 d-flex justify-content-end">終了日</div>
-            <div class="col-sm-10 x-valid-upto"></div>
-            <div class="col-sm-2 d-flex justify-content-end">負担割</div>
-            <div class="col-sm-10 x-futan-wari"></div>
-        </div>
-        <div class="mt-2 d-flex justify-content-end">
-            <button type="button" class="x-close btn btn-secondary ml-2">閉じる</button>
-        </div>
-    </div>
-</template>
-
 <template id="reception-widget-template">
     <div class="mb-3 border border-secondary rounded p-3">
         <div class="d-flex p-2 mb-2" style="background-color: #ccc;">
@@ -278,7 +253,6 @@ export async function initReception(pane) {
     let {parseElement} = await import("../js/parse-element.js");
     let {PatientSearchDialog} = await import("./patient-search-dialog.js");
     let {PatientAndHokenEditWidget} = await import("./patient-and-hoken-edit-widget.js");
-    let {RoujinDispWidget} = await import("./roujin-disp-widget.js");
     let {HokenHelper} = await import("./hoken-helper.js");
     let {WqueueTable} = await import("./wqueue-table.js");
     let {CashierDialog} = await import("./cashier-dialog.js");
@@ -294,41 +268,24 @@ export async function initReception(pane) {
     broadcaster.listen("visit-deleted", visitId => refreshWqueueTable());
 
     class PatientAndHokenWidgetFactory {
-        create(patient, currentHokenList,
-               roujinDispWidgetFactory) {
+        create(patient, currentHokenList) {
             let html = $("template#reception-patient-and-hoken-edit-widget-template").html();
             let ele = $(html);
             let map = parseElement(ele);
             let widget = new PatientAndHokenEditWidget(ele, map, rest);
-            widget.init(
-                roujinDispWidgetFactory,
-                broadcaster);
+            widget.init(broadcaster);
             widget.set(patient, currentHokenList);
-            return widget;
-        }
-    }
-
-    class RoujinDispWidgetFactory {
-        create(roujin) {
-            let html = $("template#reception-roujin-disp-widget-template").html();
-            let ele = $(html);
-            let map = parseElement(ele);
-            let widget = new RoujinDispWidget(ele, map, rest);
-            widget.init();
-            widget.set(roujin);
             return widget;
         }
     }
 
     let hokenHelper = new HokenHelper(rest);
     let patientAndHokenWidgetFactory = new PatientAndHokenWidgetFactory();
-    let roujinDispWidgetFactory = new RoujinDispWidgetFactory();
 
     async function createPatientAndHokenWidget(patient){
         let hokenList = await hokenHelper.fetchAvailableHoken(patient.patientId,
             kanjidate.todayAsSqldate());
-        return patientAndHokenWidgetFactory.create(patient, hokenList,
-            roujinDispWidgetFactory);
+        return patientAndHokenWidgetFactory.create(patient, hokenList);
     }
 
     (function () {

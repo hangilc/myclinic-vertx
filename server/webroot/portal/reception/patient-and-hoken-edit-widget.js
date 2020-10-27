@@ -15,6 +15,7 @@ import {KoukikoureiEditWidget} from "./koukikourei-edit-widget.js";
 import {KouhiNewWidget} from "./kouhi-new-widget.js";
 import {KouhiDispWidget} from "./kouhi-disp-widget.js";
 import {KouhiEditWidget} from "./kouhi-edit-widget.js";
+import {RoujinDispWidget} from "./roujin-disp-widget.js";
 
 let tableRowHtml = `
 <tr>
@@ -47,11 +48,8 @@ export class PatientAndHokenEditWidget extends Widget {
         this.patientEditWidget = null;
     }
 
-    init(
-         roujinDispWidgetFactory,
-         broadcaster) {
+    init(broadcaster) {
         super.init();
-        this.roujinDispWidgetFactory = roujinDispWidgetFactory;
         this.broadcaster = broadcaster;
         this.disp.init();
         setupDispConverters(this.disp);
@@ -94,7 +92,8 @@ export class PatientAndHokenEditWidget extends Widget {
     async reloadHoken() {
         let helper = new HokenHelper(this.rest);
         if (this.isCurrentOnly()) {
-            let hokenList = await helper.fetchAvailableHoken(this.patient.patientId, kanjidate.todayAsSqldate());
+            let hokenList = await helper.fetchAvailableHoken(this.patient.patientId,
+                kanjidate.todayAsSqldate());
             this.setHokenList(hokenList);
         } else {
             let hokenList = await helper.fetchAllHoken(this.patient.patientId);
@@ -271,7 +270,7 @@ export class PatientAndHokenEditWidget extends Widget {
     doRoujinDetail(roujin) {
         let dispWidget = this.roujinDispWidgetMap[roujin.roujinId];
         if (!dispWidget) {
-            dispWidget = this.roujinDispWidgetFactory.create(roujin);
+            dispWidget = new RoujinDispWidget(roujin);
             dispWidget.prependTo(this.workareaElement);
             dispWidget.onClosed(() => {
                 delete this.roujinDispWidgetMap[roujin.roujinId];

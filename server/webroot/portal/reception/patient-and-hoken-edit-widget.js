@@ -232,8 +232,16 @@ export class PatientAndHokenEditWidget extends Widget {
         map.validUpto.text(validUpto);
         map.honnin.text(honninKazoku);
         map.detail.on("click", event => detailFun());
-        map.edit.on("click", event => editFun());
-        map.delete.on("click", event => deleteFun());
+        if( editFun ) {
+            map.edit.on("click", event => editFun());
+        } else {
+            map.edit.get(0).style.display = "none";
+        }
+        if( deleteFun ) {
+            map.delete.on("click", event => deleteFun());
+        } else {
+            map.delete.get(0).style.display = "none";
+        }
         return ele;
     }
 
@@ -359,10 +367,8 @@ export class PatientAndHokenEditWidget extends Widget {
             let tr = this.createTableRow(roujin.rep, formatDate(roujin.validFrom),
                 formatDate(roujin.validUpto), "",
                 () => this.doRoujinDetail(roujin),
-                () => {
-                    alert("Not implemented.");
-                },
-                () => this.doRoujinDelete(roujin));
+                null,
+                null);
             tbody.append(tr);
         }
         hokenList.kouhiList.sort(cmp);

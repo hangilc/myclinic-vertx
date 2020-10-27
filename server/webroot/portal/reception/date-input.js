@@ -47,10 +47,26 @@ export class DateInput {
         return this;
     }
 
+    clear(){
+        set(null);
+    }
+
     allowEmpty(emptyValue="0000-00-00"){
         this.isAllowEmpty = true;
         this.emptyValue = emptyValue;
         return this;
+    }
+
+    setGengouList(selectedGengou, gengouNames){
+        this.map.gengou.querySelectorAll("option").forEach(opt => {
+            let value = opt.value;
+            opt.selected = value === selectedGengou;
+            if( gengouNames.includes(opt.value) ){
+                opt.style.display = "block";
+            } else {
+                opt.style.display = "none";
+            }
+        });
     }
 
     get(){

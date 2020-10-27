@@ -49,6 +49,12 @@ export class Widget {
         return this[symCommands];
     }
 
+    setCommands(html){
+        let c = this.getCommandsElement();
+        c.innerHTML = html;
+        return parseElement(c);
+    }
+
     onClosing(cb){
         this[symClosing] = cb;
     }
@@ -57,4 +63,15 @@ export class Widget {
         this.ele.addEventListener("widget-closed", event => cb());
     }
 
+    remove(){
+        this.ele.remove();
+    }
+
+    detach(){
+        this.remove();
+    }
+
+    prependTo(parent){
+        parent.prepend(this.ele);
+    }
 }

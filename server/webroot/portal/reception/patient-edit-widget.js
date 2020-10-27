@@ -1,39 +1,44 @@
-import {Widget} from "./widget.js";
+import {Widget} from "./widget2.js";
 import {PatientForm} from "./patient-form.js";
+import {parseElement} from "../js/parse-node.js";
+
+let commandsHtml = `
+    <button type="button" class="x-enter btn btn-secondary">入力</button>
+    <button type="button" class="x-close btn btn-secondary ml-2">閉じる</button>
+`;
 
 export class PatientEditWidget extends Widget {
-    constructor(ele, map, rest) {
-        super(ele, map, rest);
-        this.form = new PatientForm(map.form.get(0));
-        this.closeElement = map.close;
-        this.enterElement = map.enter;
+    constructor(patient, rest) {
+        super();
+        this.setTitle("患者情報編集");
+        this.rest = rest;
+        this.form = new PatientForm();
+        this.form.set(patient);
+        this.getContentElement().append(this.form.ele);
+        this.getCommandsElement().innerHTML = commandsHtml;
+        let cmap = parseElement(this.getCommandsElement());
+        cmap.close.addEventListener("click", event => this.close());
+        cmap.enter.addEventListener("click", event => this.doEnter());
     }
 
-    init() {
-        super.init();
-        this.closeElement.on("click", event => this.close());
-        this.enterElement.on("click", event => this.doEnter());
-        return this;
-    }
-
-    onUpdated(cb) {
-        this.on("updated", (event, updated) => cb(updated));
+    onUpdated(cb) {  // cb: patient => {}
+        this.ele.addEventListener("updated", event => cb(event.detail));
     }
 
     async doEnter() {
         let data = this.form.get();
         if (data === undefined) {
-            alert("エラー：" + this.form.getError());
+            let err = this.form.getError();
+            if( err ){
+                alert(err);
+            }
+            return;
+        }
+        if( !data.patientId > 0 ){
+            alert("Missing patientId");
             return;
         }
         await this.rest.updatePatient(data);
-        let updated = await this.rest.getPatient(data.patientId);
-        this.trigger("updated", updated);
-    }
-
-    set(patient) {
-        super.set();
-        this.form.set(patient);
-        return this;
+        this.ele.dispatchEvent(new CustomEvent("updated", { detail: data }));
     }
 }

@@ -20,15 +20,22 @@ function probeXClass(e) {
 function parseElementIter(ele, map) {
     let name = probeXClass(ele);
     if (name) {
-        map[name] = ele;
         if (name.endsWith("_")) {
-            name = name.substring(0, name.length - 1);
-            let submap = {};
-            for(let child of ele.children){
-                parseElementIter(child, submap);
+            if( name.endsWith("__") ){
+                name = name.substring(0, name.length - 2);
+                map[name] = ele;
+            } else {
+                map[name] = ele;
+                name = name.substring(0, name.length - 1);
+                let submap = {};
+                for (let child of ele.children) {
+                    parseElementIter(child, submap);
+                }
+                map[name] = submap;
+                return;
             }
-            map[name] = submap;
-            return;
+        } else {
+            map[name] = ele;
         }
     }
     for(let child of ele.children){

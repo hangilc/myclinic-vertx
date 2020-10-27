@@ -14,7 +14,8 @@ export class PatientNewWidget extends Widget {
         super();
         this.setTitle("新規患者登録");
         this.rest = rest;
-        let form = new PatientForm(this.getContentElement());
+        let form = new PatientForm();
+        this.getContentElement().append(form.ele);
         this.form = form;
         form.hidePatientId();
         let commands = this.getCommandsElement();

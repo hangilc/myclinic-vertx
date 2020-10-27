@@ -59,10 +59,12 @@ export class PatientSearchDialog extends Dialog {
     }
 
     doEdit(){
-        this.close({
-            action: "edit",
-            patient: this.patient
-        });
+        if( this.patient ) {
+            this.close({
+                action: "edit",
+                patient: this.patient
+            });
+        }
     }
 
     async doRegister(){

@@ -1,42 +1,27 @@
-import {Widget} from "./widget.js";
+import {Widget} from "./widget2.js";
 import {DateInput} from "./date-input.js";
 import {ShahokokuhoForm} from "./shahokokuho-form.js";
 import {RadioInput} from "./radio-input.js";
 
+let commandsHtml = `
+    <button type="button" class="x-enter btn btn-secondary">入力</button>
+    <button type="button" class="x-close btn btn-secondary ml-2">キャンセル</button>
+`;
+
 export class ShahokokuhoNewWidget extends Widget {
-    constructor(ele, map, rest){
-        super(ele, map, rest);
-        let formMap = Object.assign({}, map.form, {
-            honnin: new RadioInput(map.form_, "honnin"),
-            validFrom: new DateInput(map.form.validFrom.get(0)),
-            validUpto: (new DateInput(map.form.validUpto.get(0))).allowEmpty(),
-            kourei: new RadioInput(map.form_, "kourei")
-        });
-        this.form = new ShahokokuhoForm(formMap);
-        this.closeElement = map.close;
-        this.enterElement = map.enter;
-        this.clearValidUptoElement = map.form.validUpto.clearValidUpto;
-    }
-
-    init(patientId){
-        super.init();
+    constructor(patientId, rest){
+        super();
         this.patientId = patientId;
-        this.form.init();
-        this.closeElement.on("click", event => this.close());
-        this.enterElement.on("click", event => this.doEnter());
-        if( this.clearValidUptoElement ){
-            this.clearValidUptoElement.on("click", event => this.form.clearValidUpto());
-        }
-        return this;
-    }
-
-    set(){
-        super.set();
-        return this;
+        this.rest = rest;
+        this.setTitle("新規社保国保入力");
+        this.form = new ShahokokuhoForm(this.getContentElement());
+        let cmap = this.setCommands(commandsHtml);
+        cmap.enter.addEventListener("click", async event => await this.doEnter());
+        cmap.close.addEventListener("click", event => this.close());
     }
 
     onEntered(cb){
-        this.on("entered", (event, entered) => cb(entered));
+        this.ele.addEventListener("entered", event => cb(event.detail));
     }
 
     async doEnter(){
@@ -52,6 +37,6 @@ export class ShahokokuhoNewWidget extends Widget {
         }
         let shahokokuhoId = await this.rest.enterShahokokuho(data);
         let entered = await this.rest.getShahokokuho(shahokokuhoId);
-        this.trigger("entered", entered);
+        this.ele.dispatchEvent(new CustomEvent("entered", { detail: entered }));
     }
 }

@@ -1,42 +1,28 @@
-import {Widget} from "./widget.js";
+import {Widget} from "./widget2.js";
 import {KouhiForm} from "./kouhi-form.js";
 import {DateInput} from "./date-input.js";
 import {RadioInput} from "./radio-input.js";
 
+let commandsTmpl = `
+    <button type="button" class="x-enter btn btn-secondary">入力</button>
+    <button type="button" class="x-close btn btn-secondary ml-2">キャンセル</button>
+`;
+
 export class KouhiEditWidget extends Widget {
-    constructor(ele, map, rest){
-        super(ele, map, rest);
-        console.log(map.form);
-        let formMap = Object.assign({}, map.form, {
-            validFrom: new DateInput(map.form.validFrom.get(0)),
-            validUpto: (new DateInput(map.form.validUpto.get(0))).allowEmpty()
-        });
-        this.form = new KouhiForm(formMap);
-        this.closeElement = map.close;
-        this.enterElement = map.enter;
-        this.clearValidUptoElement = map.form.validUpto.clearValidUpto;
-    }
-
-    init(){
-        super.init();
-        this.form.init();
-        this.enterElement.on("click", event => this.doEnter());
-        this.closeElement.on("click", event => this.close());
-        if( this.clearValidUptoElement ){
-            this.clearValidUptoElement.on("click", event => this.form.clearValidUpto());
-        }
-        return this;
-    }
-
-    set(kouhi){
-        super.set();
+    constructor(kouhi, rest){
+        super();
         this.kouhi = kouhi;
+        this.rest = rest;
+        this.setTitle("公費負担編集");
+        this.form = new KouhiForm(this.getContentElement());
         this.form.set(kouhi);
-        return this;
+        let cmap = this.setCommands(commandsTmpl);
+        cmap.enter.addEventListener("click", async event => await this.doEnter());
+        cmap.close.addEventListener("click", event => this.close());
     }
 
     onUpdated(cb){
-        this.on("updated", (event, updated) => cb(updated));
+        this.ele.addEventListener("updated", event => cb(event.detail));
     }
 
     async doEnter(){
@@ -58,6 +44,6 @@ export class KouhiEditWidget extends Widget {
         }
         await this.rest.updateKouhi(data);
         let updated = await this.rest.getKouhi(kouhiId);
-        this.trigger("updated", updated);
+        this.ele.dispatchEvent(new CustomEvent("updated", { detail: updated }));
     }
 }

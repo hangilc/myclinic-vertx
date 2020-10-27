@@ -1,55 +1,38 @@
-import {Widget} from "./widget.js";
+import {Widget} from "./widget2.js";
 import {ShahokokuhoForm} from "./shahokokuho-form.js";
-import {DateInput} from "./date-input.js";
-import {RadioInput} from "./radio-input.js";
+
+let commandsTmpl = `
+    <button type="button" class="x-enter btn btn-secondary">入力</button>
+    <button type="button" class="x-close btn btn-secondary ml-2">キャンセル</button>
+`;
 
 export class ShahokokuhoEditWidget extends Widget {
-    constructor(ele, map, rest){
-        super(ele, map, rest);
-        let formMap = Object.assign({}, map.form, {
-            honnin: new RadioInput(map.form_, "honnin"),
-            validFrom: new DateInput(map.form.validFrom.get(0)),
-            validUpto: (new DateInput(map.form.validUpto.get(0))).allowEmpty(),
-            kourei: new RadioInput(map.form_, "kourei")
-        });
-        this.form = new ShahokokuhoForm(formMap);
-        this.closeElement = map.close;
-        this.enterElement = map.enter;
-        this.clearValidUptoElement = map.form.validUpto.clearValidUpto;
-    }
-
-    init(){
-        super.init();
-        this.form.init();
-        this.closeElement.on("click", event => this.close());
-        this.enterElement.on("click", event => this.doEnter());
-        if( this.clearValidUptoElement ){
-            this.clearValidUptoElement.on("click", event => this.form.clearValidUpto());
-        }
-        return this;
-    }
-
-    set(shahokokuho){
-        super.set();
+    constructor(shahokokuho, rest) {
+        super();
+        this.setTitle("社保国保編集");
         this.shahokokuho = shahokokuho;
-        this.form.set(shahokokuho);
-        return this;
+        this.rest = rest;
+        let form = new ShahokokuhoForm(this.getContentElement());
+        form.set(shahokokuho);
+        this.form = form;
+        let cmap = this.setCommands(commandsTmpl);
+        cmap.enter.addEventListener("click", async event => await this.doEnter());
+        cmap.close.addEventListener("click", event => this.close());
     }
 
-    onUpdated(cb){
-        this.on("updated", (event, updated) => cb(updated));
+    onUpdated(cb) {
+        this.ele.addEventListener("updated", event => cb(event.detail));
     }
 
-    async doEnter(){
+    async doEnter() {
         let data = this.form.get(this.shahokokuho.shahokokuhoId, this.shahokokuho.patientId);
-        if( !data ){
+        if (!data) {
             let err = this.form.getError();
             alert(err);
             return;
         }
         await this.rest.updateShahokokuho(data);
         let updated = await this.rest.getShahokokuho(this.shahokokuho.shahokokuhoId);
-        this.trigger("updated", updated);
-
+        this.ele.dispatchEvent(new CustomEvent("updated", {detail: updated}));
     }
 }

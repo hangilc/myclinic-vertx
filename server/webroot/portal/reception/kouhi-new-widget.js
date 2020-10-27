@@ -1,57 +1,42 @@
-import {Widget} from "./widget.js";
-import {DateInput} from "./date-input.js";
+import {Widget} from "./widget2.js";
 import {KouhiForm} from "./kouhi-form.js";
 
+let commandsTmpl = `
+    <button type="button" class="x-enter btn btn-secondary">入力</button>
+    <button type="button" class="x-close btn btn-secondary ml-2">キャンセル</button>
+`;
+
 export class KouhiNewWidget extends Widget {
-    constructor(ele, map, rest){
-        super(ele, map, rest);
-        let formMap = Object.assign({}, map.form, {
-            validFrom: new DateInput(map.form.validFrom.get(0)),
-            validUpto: (new DateInput(map.form.validUpto.get(0))).allowEmpty()
-        });
-        this.form = new KouhiForm(formMap);
-        this.closeElement = map.close;
-        this.enterElement = map.enter;
-        this.clearValidUptoElement = map.form.validUpto.clearValidUpto;
-    }
-
-    init(patientId){
-        super.init();
+    constructor(patientId, rest) {
+        super();
         this.patientId = patientId;
-        this.form.init();
-        this.closeElement.on("click", event => this.close());
-        this.enterElement.on("click", event => this.doEnter());
-        if( this.clearValidUptoElement ){
-            this.clearValidUptoElement.on("click", event => this.form.clearValidUpto());
-        }
-        return this;
+        this.rest = rest;
+        this.setTitle("新規公費負担入力");
+        this.form = new KouhiForm(this.getContentElement());
+        let cmap = this.setCommands(commandsTmpl);
+        cmap.enter.addEventListener("click", async event => await this.doEnter());
+        cmap.close.addEventListener("click", event => this.close());
     }
 
-    set(){
-        super.set();
-        this.form.set();
-        return this;
+    onEntered(cb) {
+        this.ele.addEventListener("entered", event => cb(event.detail));
     }
 
-    onEntered(cb){
-        this.on("entered", (event, entered) => cb(entered));
-    }
-
-    async doEnter(){
+    async doEnter() {
         let patientId = this.patientId;
-        if( !(patientId > 0) ){
+        if (!(patientId > 0)) {
             this.error = "患者が設定されていません。";
             return undefined;
         }
         let data = this.form.get(0, patientId);
-        if( !data ){
+        if (!data) {
             let err = this.form.getError();
             alert(err);
             return;
         }
         let kouhiId = await this.rest.enterKouhi(data);
         let entered = await this.rest.getKouhi(kouhiId);
-        this.trigger("entered", entered);
+        this.ele.dispatchEvent(new CustomEvent("entered", {detail: entered}));
     }
 
 }

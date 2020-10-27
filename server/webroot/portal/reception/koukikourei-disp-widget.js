@@ -1,21 +1,21 @@
-import {Widget} from "./widget.js";
+import {Widget} from "./widget2.js";
 import {KoukikoureiDisp} from "./koukikourei-disp.js";
 import * as kanjidate from "../js/kanjidate.js";
 
+let cTmpl = `
+    <button type="button" class="x-close btn btn-secondary ml-2">閉じる</button>
+`;
+
 export class KoukikoureiDispWidget extends Widget {
-    constructor(ele, map, rest){
-        super(ele, map, rest);
-        this.disp = new KoukikoureiDisp(map.disp);
-        this.closeElement = map.close;
+    constructor(koukikourei){
+        super();
+        this.setTitle("後期高齢保険データ");
+        this.disp = new KoukikoureiDisp(koukikourei, this.getContentElement());
+        let cmap = this.setCommands(cTmpl);
+        cmap.close.addEventListener("click", event => this.close());
     }
 
-    init(){
-        super.init();
-        this.closeElement.on("click", event => this.close());
-        return this;
-    }
-
-    set(koukikourei){
+    _set(koukikourei){
         super.set();
         let data = Object.assign({}, koukikourei, {
             validFrom: kanjidate.sqldateToKanji(koukikourei.validFrom),

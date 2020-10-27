@@ -1,27 +1,19 @@
-import {Widget} from "./widget.js";
+import {Widget} from "./widget2.js";
 import {KouhiDisp} from "./kouhi-disp.js";
 import * as kanjidate from "../js/kanjidate.js";
 
+let commandsTmpl = `
+    <button type="button" class="x-close btn btn-secondary ml-2">閉じる</button>
+`;
+
 export class KouhiDispWidget extends Widget {
-    constructor(ele, map, rest){
-        super(ele, map, rest);
-        this.disp = new KouhiDisp(map.disp);
-        this.closeElement = map.close;
+    constructor(kouhi){
+        super();
+        this.setTitle("公費負担データ");
+        this.form = new KouhiDisp(this.getContentElement());
+        this.form.set(kouhi);
+        let cmap = this.setCommands(commandsTmpl);
+        cmap.close.addEventListener("click", event => this.close());
     }
 
-    init(){
-        super.init();
-        this.closeElement.on("click", event => this.close());
-        return this;
-    }
-
-    set(kouhi){
-        super.set();
-        let data = Object.assign({}, kouhi, {
-            validFrom: kanjidate.sqldateToKanji(kouhi.validFrom),
-            validUpto: kanjidate.sqldateToKanji(kouhi.validUpto, {zeroValue: ""})
-        });
-        this.disp.set(data);
-        return this;
-    }
 }

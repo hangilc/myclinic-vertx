@@ -677,8 +677,8 @@ class Rest extends Client {
         });
     }
 
-    async receiptDrawer(){
-        return await this.get("/receipt-drawer", {});
+    async receiptDrawer(req){
+        return await this.post("/receipt-drawer", req);
     }
 
 }

@@ -14,6 +14,7 @@ import dev.myclinic.vertx.drawer.hint.ParaHint;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
 import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawer;
 import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawerData;
+import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawerDataCreator;
 import dev.myclinic.vertx.drawerprinterwin.AuxSetting;
 import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
 import dev.myclinic.vertx.drawerform.FormCompiler;
@@ -326,11 +327,29 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("receipt-drawer", this::receiptDrawer);
     }
 
+    public static class ReceiptDrawerRequest {
+        public ClinicInfoDTO clinicInfo;
+    }
+
     private void receiptDrawer(RoutingContext ctx) {
-        ReceiptDrawerData data = new ReceiptDrawerData();
-        ReceiptDrawer drawer = new ReceiptDrawer(data);
-        List<Op> ops = drawer.getOps();
-        ctx.response().end(jsonEncode(ops));
+        try {
+            ReceiptDrawerRequest req = mapper.readValue(
+                    ctx.getBody().getBytes(),
+                    ReceiptDrawerRequest.class
+            );
+            ReceiptDrawerData data = ReceiptDrawerDataCreator.create(
+                    null,
+                    null,
+                    null,
+                    null,
+                    req.clinicInfo
+            );
+            ReceiptDrawer drawer = new ReceiptDrawer(data);
+            List<Op> ops = drawer.getOps();
+            ctx.response().end(jsonEncode(ops));
+        } catch(Exception e){
+            ctx.fail(e);
+        }
     }
 
     private void createPaperScanPath(RoutingContext ctx) {

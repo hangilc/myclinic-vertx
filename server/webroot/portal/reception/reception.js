@@ -321,8 +321,9 @@ export async function initReception(pane) {
 
     async function doPrintReceiptPaper(){
         console.log("enter doPrintReceiptPaper");
-        let ops = await rest.receiptDrawer();
-        console.log(ops);
+        let receiptReq = {};
+        receiptReq.clinicInfo = await rest.getClinicInfo();
+        let ops = await rest.receiptDrawer(receiptReq);
         let url = "http://127.0.0.1:48080/print";
         let req = {
             setup: [],

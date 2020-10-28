@@ -12,6 +12,8 @@ import dev.myclinic.vertx.drawer.hint.Hint;
 import dev.myclinic.vertx.drawer.hint.HintParser;
 import dev.myclinic.vertx.drawer.hint.ParaHint;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
+import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawer;
+import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawerData;
 import dev.myclinic.vertx.drawerprinterwin.AuxSetting;
 import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
 import dev.myclinic.vertx.drawerform.FormCompiler;
@@ -53,10 +55,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.util.stream.Collectors.toList;
-
-//import dev.myclinic.vertx.drawerform.Box;
-//import dev.myclinic.vertx.drawerform.referform.ReferData;
-//import dev.myclinic.vertx.drawerform.referform.ReferForm;
 
 class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingContext> {
 
@@ -291,11 +289,8 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("print-drawer", this::printDrawer);
         noDatabaseFuncMap.put("save-drawer-as-pdf", this::saveDrawerAsPdf);
         noDatabaseFuncMap.put("view-drawer-as-pdf", this::viewDrawerAsPdf);
-        //noDatabaseFuncMap.put("save-shohousen-pdf", this::saveShohousenPdf);
         noDatabaseFuncMap.put("get-shohousen-save-pdf-path", this::getShohousenSavePdfPath);
         noDatabaseFuncMap.put("convert-to-romaji", this::convertToRomaji);
-        //noDatabaseFuncMap.put("shohousen-gray-stamp-info", this::shohousenGrayStampInfo);
-        //noDatabaseFuncMap.put("refer-stamp-info", this::referStampInfo);
         noDatabaseFuncMap.put("send-fax", this::sendFax);
         noDatabaseFuncMap.put("poll-fax", this::pollFax);
         noDatabaseFuncMap.put("probe-shohousen-fax-image", this::probeShohousenFaxImage);
@@ -313,7 +308,6 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("get-printer-json-setting", this::getPrinterJsonSetting);
         noDatabaseFuncMap.put("save-printer-json-setting", this::savePrinterJsonSetting);
         noDatabaseFuncMap.put("print-refer", this::printRefer);
-        //noDatabaseFuncMap.put("refer-drawer", this::referDrawer);
         noDatabaseFuncMap.put("save-refer", this::saveRefer);
         noDatabaseFuncMap.put("list-refer", this::listRefer);
         noDatabaseFuncMap.put("get-refer", this::getRefer);
@@ -329,6 +323,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("put-stamp-on-pdf", this::putStampOnPdf);
         noDatabaseFuncMap.put("render-medcert", this::renderMedCert);
         noDatabaseFuncMap.put("create-paper-scan-path", this::createPaperScanPath);
+        noDatabaseFuncMap.put("receipt-drawer", this::receiptDrawer);
+    }
+
+    private void receiptDrawer(RoutingContext ctx) {
+        ReceiptDrawerData data = new ReceiptDrawerData();
+        ReceiptDrawer drawer = new ReceiptDrawer(data);
+        List<Op> ops = drawer.getOps();
+        ctx.response().end(jsonEncode(ops));
     }
 
     private void createPaperScanPath(RoutingContext ctx) {

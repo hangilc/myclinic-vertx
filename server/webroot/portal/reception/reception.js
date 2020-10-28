@@ -321,10 +321,12 @@ export async function initReception(pane) {
 
     async function doPrintReceiptPaper(){
         console.log("enter doPrintReceiptPaper");
+        let ops = await rest.receiptDrawer();
+        console.log(ops);
         let url = "http://127.0.0.1:48080/print";
         let req = {
             setup: [],
-            pages: []
+            pages: [ops]
         };
         let xhr = new XMLHttpRequest();
         xhr.open("POST", url);

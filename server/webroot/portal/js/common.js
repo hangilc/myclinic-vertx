@@ -677,6 +677,10 @@ class Rest extends Client {
         });
     }
 
+    async receiptDrawer(){
+        return await this.get("/receipt-drawer", {});
+    }
+
 }
 
 class Integration extends Client {

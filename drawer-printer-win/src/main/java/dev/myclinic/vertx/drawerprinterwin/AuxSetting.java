@@ -1,8 +1,5 @@
-package dev.myclinic.vertx.drawer.printer;
+package dev.myclinic.vertx.drawerprinterwin;
 
-/**
- * Created by hangil on 2017/05/24.
- */
 public class AuxSetting {
 
     private double dx = 0.0;

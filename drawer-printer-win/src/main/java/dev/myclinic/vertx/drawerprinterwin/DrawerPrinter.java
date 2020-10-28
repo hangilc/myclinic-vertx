@@ -1,4 +1,4 @@
-package dev.myclinic.vertx.drawer.printer;
+package dev.myclinic.vertx.drawerprinterwin;
 
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
@@ -11,7 +11,6 @@ import com.sun.jna.platform.win32.WinNT.HANDLE;
 import com.sun.jna.platform.win32.WinNT.HRESULT;
 import com.sun.jna.platform.win32.WinUser.WNDCLASSEX;
 import com.sun.jna.platform.win32.WinUser.WindowProc;
-import dev.myclinic.vertx.drawer.*;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -19,8 +18,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static dev.myclinic.vertx.drawer.printer.PrinterConsts.*;
+import static dev.myclinic.vertx.drawerprinterwin.PrinterConsts.*;
 import static java.util.stream.Collectors.toList;
+
+import dev.myclinic.vertx.drawer.*;
 
 public class DrawerPrinter {
 
@@ -115,7 +116,7 @@ public class DrawerPrinter {
     public static final int PD_RESULT_APPLY = 0x2;
     public static final int START_PAGE_GENERAL = 0xFFFFFFFF;
 
-    private static class NopWindowProc implements WinDef, WinUser.WindowProc {
+    private static class NopWindowProc implements WinDef, WindowProc {
         public LRESULT callback(HWND hwnd, int uMsg, WPARAM wParam, LPARAM lParam) {
             return User32.INSTANCE.DefWindowProc(hwnd, uMsg, wParam, lParam);
         }
@@ -152,7 +153,7 @@ public class DrawerPrinter {
         }
     }
 
-    public DialogResult printDialog(WinDef.HWND owner, byte[] devmodeBase, byte[] devnamesBase) {
+    public DialogResult printDialog(HWND owner, byte[] devmodeBase, byte[] devnamesBase) {
         PRINTDLGEX pd = new PRINTDLGEX();
         pd.hwndOwner = owner;
         pd.Flags.setValue(PD_NOPAGENUMS);
@@ -184,13 +185,13 @@ public class DrawerPrinter {
     }
 
     public DialogResult printDialog(Component owner, byte[] devmodeBase, byte[] devnamesBase) {
-        WinDef.HWND hwnd = new WinDef.HWND();
+        HWND hwnd = new HWND();
         hwnd.setPointer(Native.getComponentPointer(owner));
         return printDialog(hwnd, devmodeBase, devnamesBase);
     }
 
     public DialogResult printDialog(byte[] devmodeBase, byte[] devnamesBase) {
-        WinDef.HWND hwnd = createWindow();
+        HWND hwnd = createWindow();
         if (hwnd == null) {
             throw new RuntimeException("Printer.createWindow failed");
         }
@@ -208,7 +209,7 @@ public class DrawerPrinter {
 
     private HANDLE allocHandle(byte[] data) {
         UINT flag = new UINT(MyKernel32.GMEM_MOVEABLE);
-        BaseTSD.SIZE_T size = new SIZE_T(data.length);
+        SIZE_T size = new SIZE_T(data.length);
         HANDLE handle = MyKernel32.INSTANCE.GlobalAlloc(flag, size);
         Pointer ptr = MyKernel32.INSTANCE.GlobalLock(handle);
         ptr.write(0, data, 0, data.length);
@@ -315,8 +316,8 @@ public class DrawerPrinter {
         LOGFONT logfont = new LOGFONT();
         logfont.lfHeight = new LONG(size);
         logfont.lfWeight = new LONG(weight);
-        logfont.lfItalic = new WinDef.BYTE(italic ? 1 : 0);
-        logfont.lfCharSet = new WinDef.BYTE(PrinterConsts.DEFAULT_CHARSET);
+        logfont.lfItalic = new BYTE(italic ? 1 : 0);
+        logfont.lfCharSet = new BYTE(PrinterConsts.DEFAULT_CHARSET);
         if (fontName.length() >= PrinterConsts.LF_FACESIZE) {
             throw new RuntimeException("Too long font name");
         }

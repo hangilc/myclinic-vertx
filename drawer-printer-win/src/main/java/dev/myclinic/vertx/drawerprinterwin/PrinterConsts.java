@@ -1,4 +1,4 @@
-package dev.myclinic.vertx.drawer.printer;
+package dev.myclinic.vertx.drawerprinterwin;
 
 public class PrinterConsts {
     public static final int PORTRAIT  = 1;

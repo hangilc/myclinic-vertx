@@ -1,6 +1,5 @@
 package dev.myclinic.vertx.client2;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.dto.*;
@@ -12,20 +11,23 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 public class Client {
 
     private final String serviceUrl;
     private final HttpClient httpClient;
-    private final ObjectMapper mapper;
+    private final static ObjectMapper mapper;
+    static {
+        mapper = new ObjectMapper();
+    }
 
     public Client(String serviceUrl) {
         this.serviceUrl = serviceUrl.replaceAll("/$", "");
         this.httpClient = HttpClient.newHttpClient();
-        ObjectMapper mapper = new ObjectMapper();
-        this.mapper = mapper;
     }
 
     protected String param(String key, String value) {
@@ -42,15 +44,19 @@ public class Client {
         return String.format("%s=%d", URLEncoder.encode(key, StandardCharsets.UTF_8), value);
     }
 
-    protected URI createURI(String path, String... params) {
+    private static URI doCreateURI(String serverPath, String... params){
         if (params.length == 0) {
-            return URI.create(serviceUrl + path);
+            return URI.create(serverPath);
         } else {
-            return URI.create(serviceUrl + path + "?" + String.join("&", params));
+            return URI.create(serverPath + "?" + String.join("&", params));
         }
     }
 
-    private HttpRequest createGetReq(String path, String[] params){
+    protected URI createURI(String path, String... params) {
+        return doCreateURI(serviceUrl + path, params);
+    }
+
+    private HttpRequest createGetReq(String path, String[] params) {
         return HttpRequest.newBuilder()
                 .uri(createURI(path, params))
                 .GET()
@@ -75,6 +81,20 @@ public class Client {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static <T> T postAlt(Class<T> cls, String url, byte[] body, String... params)
+            throws IOException, InterruptedException {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .connectTimeout(Duration.of(3, ChronoUnit.SECONDS))
+                .build();
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(doCreateURI(url, params))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(body))
+                .build();
+        HttpResponse<String> response = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        return mapper.readValue(response.body(), cls);
     }
 
     // Patient //////////////////////////////////////////////////////////////////////////////////
@@ -110,7 +130,7 @@ public class Client {
 
     // Misc ///////////////////////////////////////////////////////////////////////////////////////
 
-    public ClinicInfoDTO getClinicInfo(){
+    public ClinicInfoDTO getClinicInfo() {
         return get(ClinicInfoDTO.class, "/get-clinic-info");
     }
 

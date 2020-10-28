@@ -1,6 +1,7 @@
-package dev.myclinic.vertx.drawer.printer;
+package dev.myclinic.vertx.drawerprinterwin;
 
-import com.sun.jna.*;
+import com.sun.jna.Pointer;
+import com.sun.jna.Structure;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinUser;
 

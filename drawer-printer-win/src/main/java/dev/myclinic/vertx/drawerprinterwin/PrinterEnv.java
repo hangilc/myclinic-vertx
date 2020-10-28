@@ -1,4 +1,4 @@
-package dev.myclinic.vertx.drawer.printer;
+package dev.myclinic.vertx.drawerprinterwin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.drawer.Op;

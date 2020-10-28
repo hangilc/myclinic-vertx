@@ -5,7 +5,7 @@ let html = `
     <button type="button" class="btn btn-secondary x-new-patient">新規患者</button>
     <button type="button" class="btn btn-secondary x-search-patient ml-2">患者検索</button>
     <button type="button" class="btn btn-link x-search-payment ml-2">会計検索</button>
-    <button type="button" class="btn btn-link x-search-receipt-paper ml-2">領収書用紙</button>
+    <button type="button" class="btn btn-link x-print-receipt-paper ml-2">領収書用紙</button>
 </div>
 
 <div id="reception-commands-second-row">
@@ -315,7 +315,21 @@ export async function initReception(pane) {
                 editWidget.prependTo(receptionWorkarea);
             }
         });
+
+        map.printReceiptPaper.on("click", async event => await doPrintReceiptPaper());
     })();
+
+    async function doPrintReceiptPaper(){
+        console.log("enter doPrintReceiptPaper");
+        let url = "http://127.0.0.1:48080/print";
+        let req = {
+            setup: [],
+            pages: []
+        };
+        let xhr = new XMLHttpRequest();
+        xhr.open("POST", url);
+        xhr.send(JSON.stringify(req));
+    }
 
     class CashierDialogFactory {
         create(meisai, visitId, chargeValue, payments) {

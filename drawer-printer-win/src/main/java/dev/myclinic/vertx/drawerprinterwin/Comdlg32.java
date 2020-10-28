@@ -1,4 +1,4 @@
-package dev.myclinic.vertx.drawer.printer;
+package dev.myclinic.vertx.drawerprinterwin;
 
 import com.sun.jna.Native;
 import com.sun.jna.platform.win32.WinNT;

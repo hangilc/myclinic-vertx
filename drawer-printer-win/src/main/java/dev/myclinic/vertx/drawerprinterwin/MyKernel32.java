@@ -1,8 +1,7 @@
-package dev.myclinic.vertx.drawer.printer;
+package dev.myclinic.vertx.drawerprinterwin;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
-import com.sun.jna.platform.win32.BaseTSD.SIZE_T;
 import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.platform.win32.WinUser;
 import com.sun.jna.win32.StdCallLibrary;

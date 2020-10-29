@@ -681,6 +681,10 @@ class Rest extends Client {
         return await this.post("/receipt-drawer", req);
     }
 
+    async listPrintSetting(){
+        return await this.get("/list-print-setting", {});
+    }
+
 }
 
 class Integration extends Client {

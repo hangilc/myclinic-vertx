@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -30,15 +32,31 @@ public class Main {
             replyText(exchange, "pong");
         });
         server.createContext("/print", exchange -> {
-            System.err.printf("Accepted print request\n");
+            System.err.println("Accepted print request");
             PrintRequest pr = mapper.readValue(exchange.getRequestBody(), PrintRequest.class);
             DrawerPrinter printer = new DrawerPrinter();
             printer.printPages(pr.convertToPages());
             exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
             replyText(exchange, "done");
         });
+        server.createContext("/settin", exchange -> {
+            List<String> settings = listPrintSetting();
+            replyJson(exchange, settings);
+        });
         System.err.printf("Drawer-site server is listening to port %d\n", port);
         server.start();
+    }
+
+    private static List<String> listPrintSetting(){
+        return Collections.emptyList();
+    }
+
+    private static void replyJson(HttpExchange exchange, Object obj) throws IOException {
+        byte[] body = mapper.writeValueAsBytes(obj);
+        exchange.getResponseHeaders().add("content-type", "application/json");
+        exchange.sendResponseHeaders(200, body.length);
+        exchange.getResponseBody().write(body);
+        exchange.getRequestBody().close();
     }
 
     private static void replyText(HttpExchange exchange, String reply) throws IOException {
@@ -47,7 +65,6 @@ public class Main {
         exchange.sendResponseHeaders(200, body.length);
         exchange.getResponseBody().write(body);
         exchange.getRequestBody().close();
-
     }
 
     private static Executor createExecutor(){

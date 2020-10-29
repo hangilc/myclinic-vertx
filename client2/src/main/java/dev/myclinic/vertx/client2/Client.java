@@ -30,17 +30,17 @@ public class Client {
         this.httpClient = HttpClient.newHttpClient();
     }
 
-    protected String param(String key, String value) {
+    public static String param(String key, String value) {
         return String.format("%s=%s", URLEncoder.encode(key, StandardCharsets.UTF_8),
                 URLEncoder.encode(value, StandardCharsets.UTF_8));
     }
 
-    protected String param(String key, LocalDate value) {
+    public static String param(String key, LocalDate value) {
         return String.format("%s=%s", URLEncoder.encode(key, StandardCharsets.UTF_8),
                 URLEncoder.encode(value.toString(), StandardCharsets.UTF_8));
     }
 
-    protected String param(String key, int value) {
+    public static String param(String key, int value) {
         return String.format("%s=%d", URLEncoder.encode(key, StandardCharsets.UTF_8), value);
     }
 
@@ -81,6 +81,20 @@ public class Client {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static <T> T getAlt(TypeReference<T> typeRef, String url, String... params)
+            throws IOException, InterruptedException {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .connectTimeout(Duration.of(3, ChronoUnit.SECONDS))
+                .build();
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(doCreateURI(url, params))
+                .GET()
+                .build();
+        HttpResponse<String> response = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        return mapper.readValue(response.body(), typeRef);
     }
 
     public static <T> T postAlt(Class<T> cls, String url, byte[] body, String... params)

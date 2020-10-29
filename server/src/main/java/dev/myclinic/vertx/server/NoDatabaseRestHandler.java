@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itextpdf.text.Image;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.appconfig.types.StampInfo;
+import dev.myclinic.vertx.client2.Client;
 import dev.myclinic.vertx.drawer.*;
 import dev.myclinic.vertx.drawer.form.Form;
 import dev.myclinic.vertx.drawer.form.Page;
@@ -36,6 +37,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
@@ -325,6 +327,25 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("render-medcert", this::renderMedCert);
         noDatabaseFuncMap.put("create-paper-scan-path", this::createPaperScanPath);
         noDatabaseFuncMap.put("receipt-drawer", this::receiptDrawer);
+        noDatabaseFuncMap.put("list-print-setting", this::listPrintSetting);
+    }
+
+    private void listPrintSetting(RoutingContext ctx) {
+        SocketAddress remoteAddr = ctx.request().remoteAddress();
+        String host = remoteAddr.host();
+        if( host.contains(":") ){
+            host = String.format("[%s]", host);
+        }
+        int port = 48080;
+        String url = String.format("http://%s:%d/setting", host, port);
+        GlobalService.getInstance().executorService.execute(() -> {
+            try {
+                List<String> settings = Client.getAlt(new TypeReference<>(){}, url);
+                ctx.response().end(jsonEncode(settings));
+            } catch(Throwable e){
+                ctx.fail(e);
+            }
+        });
     }
 
     public static class ReceiptDrawerRequest {
@@ -332,24 +353,27 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private void receiptDrawer(RoutingContext ctx) {
-        try {
-            ReceiptDrawerRequest req = mapper.readValue(
-                    ctx.getBody().getBytes(),
-                    ReceiptDrawerRequest.class
-            );
-            ReceiptDrawerData data = ReceiptDrawerDataCreator.create(
-                    null,
-                    null,
-                    null,
-                    null,
-                    req.clinicInfo
-            );
-            ReceiptDrawer drawer = new ReceiptDrawer(data);
-            List<Op> ops = drawer.getOps();
-            ctx.response().end(jsonEncode(ops));
-        } catch(Exception e){
-            ctx.fail(e);
-        }
+        SocketAddress remoteAddr = ctx.request().remoteAddress();
+        String host = remoteAddr.host();
+        ctx.response().end(host);
+//        try {
+//            ReceiptDrawerRequest req = mapper.readValue(
+//                    ctx.getBody().getBytes(),
+//                    ReceiptDrawerRequest.class
+//            );
+//            ReceiptDrawerData data = ReceiptDrawerDataCreator.create(
+//                    null,
+//                    null,
+//                    null,
+//                    null,
+//                    req.clinicInfo
+//            );
+//            ReceiptDrawer drawer = new ReceiptDrawer(data);
+//            List<Op> ops = drawer.getOps();
+//            ctx.response().end(jsonEncode(ops));
+//        } catch(Exception e){
+//            ctx.fail(e);
+//        }
     }
 
     private void createPaperScanPath(RoutingContext ctx) {

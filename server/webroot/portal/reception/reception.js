@@ -258,6 +258,7 @@ export async function initReception(pane) {
     let {CashierDialog} = await import("./cashier-dialog.js");
     let {Broadcaster} = await import("./broadcaster.js");
     let {PatientNewWidget} = await import("./patient-new-widget.js");
+    let {openPrintDialog} = await import("../js/print-dialog.js");
 
     let receptionWorkarea = $("#reception-workarea");
     let broadcaster = new Broadcaster();
@@ -320,18 +321,14 @@ export async function initReception(pane) {
     })();
 
     async function doPrintReceiptPaper(){
-        console.log("enter doPrintReceiptPaper");
         let receiptReq = {};
         receiptReq.clinicInfo = await rest.getClinicInfo();
         let ops = await rest.receiptDrawer(receiptReq);
-        let url = "http://127.0.0.1:48080/print";
         let req = {
             setup: [],
             pages: [ops]
         };
-        let xhr = new XMLHttpRequest();
-        xhr.open("POST", url);
-        xhr.send(JSON.stringify(req));
+        await openPrintDialog("領収書", req, [], rest);
     }
 
     class CashierDialogFactory {

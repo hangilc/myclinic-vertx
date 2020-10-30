@@ -353,27 +353,24 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private void receiptDrawer(RoutingContext ctx) {
-        SocketAddress remoteAddr = ctx.request().remoteAddress();
-        String host = remoteAddr.host();
-        ctx.response().end(host);
-//        try {
-//            ReceiptDrawerRequest req = mapper.readValue(
-//                    ctx.getBody().getBytes(),
-//                    ReceiptDrawerRequest.class
-//            );
-//            ReceiptDrawerData data = ReceiptDrawerDataCreator.create(
-//                    null,
-//                    null,
-//                    null,
-//                    null,
-//                    req.clinicInfo
-//            );
-//            ReceiptDrawer drawer = new ReceiptDrawer(data);
-//            List<Op> ops = drawer.getOps();
-//            ctx.response().end(jsonEncode(ops));
-//        } catch(Exception e){
-//            ctx.fail(e);
-//        }
+        try {
+            ReceiptDrawerRequest req = mapper.readValue(
+                    ctx.getBody().getBytes(),
+                    ReceiptDrawerRequest.class
+            );
+            ReceiptDrawerData data = ReceiptDrawerDataCreator.create(
+                    null,
+                    null,
+                    null,
+                    null,
+                    req.clinicInfo
+            );
+            ReceiptDrawer drawer = new ReceiptDrawer(data);
+            List<Op> ops = drawer.getOps();
+            ctx.response().end(jsonEncode(ops));
+        } catch(Exception e){
+            ctx.fail(e);
+        }
     }
 
     private void createPaperScanPath(RoutingContext ctx) {

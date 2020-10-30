@@ -153,6 +153,10 @@ public class DrawerPrinter {
         }
     }
 
+    public DialogResult printDialog(){
+        return printDialog((HWND)MyKernel32.INSTANCE.GetConsoleWindow(), null, null);
+    }
+
     public DialogResult printDialog(HWND owner, byte[] devmodeBase, byte[] devnamesBase) {
         PRINTDLGEX pd = new PRINTDLGEX();
         pd.hwndOwner = owner;

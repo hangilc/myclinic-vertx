@@ -34,25 +34,54 @@ public class Main {
             replyText(exchange, "pong");
         });
         server.createContext("/print", exchange -> {
-            System.err.println("Accepted print request");
             PrintRequest pr = mapper.readValue(exchange.getRequestBody(), PrintRequest.class);
             DrawerPrinter printer = new DrawerPrinter();
             printer.printPages(pr.convertToPages());
             exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
             replyText(exchange, "done");
         });
-        server.createContext("/setting", exchange -> {
-            List<String> settings = listPrintSetting();
-            replyJson(exchange, settings);
+        server.createContext("/setting/", exchange -> {
+            try {
+                String path = exchange.getRequestURI().getPath().substring(9);
+                String method = exchange.getRequestMethod();
+                System.err.printf("enter /setting/ %s %s\n", method, path);
+                if (method.equals("GET")) {
+                    if (path.equals("")) {
+                        List<String> settings = listPrintSetting();
+                        replyJson(exchange, settings);
+                    } else {
+                        replyNotFound(exchange);
+                    }
+                } else if (method.equals("POST")) {
+                    if (path.contains("/")) {
+                        replyError(exchange, "印刷設定名には '/' をふくめられません。");
+                    } else {
+                        System.err.printf("enter POST\n");
+                        DrawerPrinter drawerPrinter = new DrawerPrinter();
+                        DrawerPrinter.DialogResult result = drawerPrinter.printDialog();
+                        replyText(exchange, "done");
+                    }
+                } else {
+                    replyNotFound(exchange);
+                }
+            } catch(Throwable e){
+                e.printStackTrace();
+                replyError(exchange, e.toString());
+            }
         });
         server.createContext("/", exchange -> {
             String path = exchange.getRequestURI().getPath();
             if( path.equals("/") ){
-                replyHtml(exchange, "/web/index.html");
-            } else {
-                exchange.sendResponseHeaders(404, 0);
+                exchange.getResponseHeaders().add("Location", "/web/index.html");
+                exchange.sendResponseHeaders(308, 0);
                 exchange.getResponseBody().close();
+            } else {
+                replyNotFound(exchange);
             }
+        });
+        server.createContext("/web/", exchange -> {
+            String path = exchange.getRequestURI().getPath();
+            replyHtml(exchange, path);
         });
         System.err.printf("Drawer-site server is listening to port %d\n", port);
         server.start();
@@ -60,6 +89,26 @@ public class Main {
 
     private static List<String> listPrintSetting(){
         return Collections.emptyList();
+    }
+
+    private static void replyError(HttpExchange ex, String msg){
+        try {
+            byte[] bytes = msg.getBytes(StandardCharsets.UTF_8);
+            ex.sendResponseHeaders(500, bytes.length);
+            ex.getResponseBody().write(bytes);
+            ex.getResponseBody().close();
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+    }
+
+    private static void replyNotFound(HttpExchange ex){
+        try {
+            ex.sendResponseHeaders(404, 0);
+            ex.getResponseBody().close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void replyHtml(HttpExchange exchange, String path){

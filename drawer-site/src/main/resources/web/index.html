@@ -5,6 +5,18 @@
     <title>Index</title>
 </head>
 <body>
-INDEX
+<h1>印刷設定</h1>
+<h2>新規印刷設定</h2>
+<div>
+    <button id="create-new-setting">作成</button>
+</div>
+<script>
+    document.getElementById("create-new-setting").addEventListener("click", event => {
+        let name = prompt("新規設定の名称");
+        if( name ){
+            alert(name);
+        }
+    });
+</script>
 </body>
 </html>

@@ -19,4 +19,5 @@ public interface MyKernel32 extends StdCallLibrary, WinUser, WinNT {
     boolean GlobalUnlock(HANDLE handle);
     Pointer GlobalFree(HANDLE handle);
     HANDLE GlobalAlloc(UINT flag, SIZE_T dwBytes);
+    HWND GetConsoleWindow();
 }

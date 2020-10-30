@@ -8,12 +8,14 @@ import dev.myclinic.vertx.drawer.JacksonOpDeserializer;
 import dev.myclinic.vertx.drawer.JacksonOpSerializer;
 import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.drawer.PrintRequest;
+import dev.myclinic.vertx.drawerprinterwin.AuxSetting;
 import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -56,9 +58,14 @@ public class Main {
                     if (path.contains("/")) {
                         replyError(exchange, "印刷設定名には '/' をふくめられません。");
                     } else {
-                        System.err.printf("enter POST\n");
+                        String name = path;
                         DrawerPrinter drawerPrinter = new DrawerPrinter();
                         DrawerPrinter.DialogResult result = drawerPrinter.printDialog();
+                        PrintSetting setting = new PrintSetting();
+                        setting.devmode = result.devmodeData;
+                        setting.devnames = result.devnamesData;
+                        setting.auxSetting = new AuxSetting();
+                        savePrintSetting(name, setting);
                         replyText(exchange, "done");
                     }
                 } else {
@@ -178,6 +185,16 @@ public class Main {
 
     private static Path getDataDir(){
         return Path.of(System.getProperty("user.home"), "drawer-site-data");
+    }
+
+    private static void savePrintSetting(String name, PrintSetting setting) throws IOException {
+        Path dir = getDataDir();
+        if( !Files.exists(dir) ){
+            Files.createDirectories(dir);
+        }
+        Path file = dir.resolve(String.format("%s.setting", name));
+        byte[] bytes = setting.serialize(mapper);
+        Files.write(file, bytes);
     }
 
 }

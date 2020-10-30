@@ -11,11 +11,13 @@ import dev.myclinic.vertx.drawer.PrintRequest;
 import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -39,9 +41,18 @@ public class Main {
             exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
             replyText(exchange, "done");
         });
-        server.createContext("/settin", exchange -> {
+        server.createContext("/setting", exchange -> {
             List<String> settings = listPrintSetting();
             replyJson(exchange, settings);
+        });
+        server.createContext("/", exchange -> {
+            String path = exchange.getRequestURI().getPath();
+            if( path.equals("/") ){
+                replyHtml(exchange, "/web/index.html");
+            } else {
+                exchange.sendResponseHeaders(404, 0);
+                exchange.getResponseBody().close();
+            }
         });
         System.err.printf("Drawer-site server is listening to port %d\n", port);
         server.start();
@@ -51,20 +62,56 @@ public class Main {
         return Collections.emptyList();
     }
 
-    private static void replyJson(HttpExchange exchange, Object obj) throws IOException {
+    private static void replyHtml(HttpExchange exchange, String path){
+        try {
+            byte[] bytes = Objects.requireNonNull(
+                    Main.class.getClassLoader().getResourceAsStream(path)).readAllBytes();
+            exchange.getResponseHeaders().add("content-type", "text/html;charset=UTF-8");
+            exchange.sendResponseHeaders(200, bytes.length);
+            exchange.getResponseBody().write(bytes);
+            exchange.getRequestBody().close();
+        } catch(Throwable e){
+            try {
+                exchange.sendResponseHeaders(500, 0);
+                exchange.getResponseBody().close();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        }
+    }
+
+    private static void replyJson(HttpExchange exchange, Object obj) {
+        try {
         byte[] body = mapper.writeValueAsBytes(obj);
         exchange.getResponseHeaders().add("content-type", "application/json");
         exchange.sendResponseHeaders(200, body.length);
         exchange.getResponseBody().write(body);
         exchange.getRequestBody().close();
+        } catch(Throwable e){
+            try {
+                exchange.sendResponseHeaders(500, 0);
+                exchange.getResponseBody().close();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        }
     }
 
-    private static void replyText(HttpExchange exchange, String reply) throws IOException {
+    private static void replyText(HttpExchange exchange, String reply) {
+        try {
         byte[] body = reply.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("content-type", "text/plain");
         exchange.sendResponseHeaders(200, body.length);
         exchange.getResponseBody().write(body);
         exchange.getRequestBody().close();
+        } catch(Throwable e){
+            try {
+                exchange.sendResponseHeaders(500, 0);
+                exchange.getResponseBody().close();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        }
     }
 
     private static Executor createExecutor(){

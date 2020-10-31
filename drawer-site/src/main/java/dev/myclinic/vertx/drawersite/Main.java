@@ -15,8 +15,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -56,7 +58,7 @@ public class Main {
                     }
                 } else if (method.equals("POST")) {
                     if (path.contains("/")) {
-                        replyError(exchange, "印刷設定名には '/' をふくめられません。");
+                        replyJson(exchange, listPrintSetting());
                     } else {
                         String name = path;
                         DrawerPrinter drawerPrinter = new DrawerPrinter();
@@ -92,10 +94,6 @@ public class Main {
         });
         System.err.printf("Drawer-site server is listening to port %d\n", port);
         server.start();
-    }
-
-    private static List<String> listPrintSetting(){
-        return Collections.emptyList();
     }
 
     private static void replyError(HttpExchange ex, String msg){
@@ -195,6 +193,24 @@ public class Main {
         Path file = dir.resolve(String.format("%s.setting", name));
         byte[] bytes = setting.serialize(mapper);
         Files.write(file, bytes);
+    }
+
+    private static List<String> listPrintSetting() throws IOException {
+        Path dir = getDataDir();
+        if( !Files.exists(dir) ){
+            return Collections.emptyList();
+        }
+        List<String> result = new ArrayList<>();
+        String ext = ".setting";
+        try(DirectoryStream<Path> stream = Files.newDirectoryStream(dir)){
+            for(Path path: stream){
+                String fname = path.getFileName().toString();
+                if( fname.endsWith(ext) ){
+                    result.add(fname.substring(0, fname.length() - ext.length()));
+                }
+            }
+        }
+        return result;
     }
 
 }

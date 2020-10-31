@@ -29,6 +29,17 @@ public class Main {
     static ObjectMapper mapper = createMapper();
 
     public static void main(String[] args) throws Exception {
+        String bind = "0.0.0.0";
+        int port = 48080;
+        Server server = new Server(bind, port, 6);
+        System.out.printf("Drawer-site server is listening to %s:%d\n", bind, port);
+        server.addContext("/", handler -> {
+            handler.sendText(handler.getSubPath());
+        });
+        server.start();
+    }
+
+    public static void main2(String[] args) throws Exception {
         int port = 48080;
         HttpServer server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 4);
         server.setExecutor(createExecutor());

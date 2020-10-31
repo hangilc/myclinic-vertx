@@ -12,7 +12,6 @@ import dev.myclinic.vertx.drawerprinterwin.AuxSetting;
 import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
@@ -52,6 +51,7 @@ public class Main {
                 if (method.equals("GET")) {
                     if (path.equals("")) {
                         List<String> settings = listPrintSetting();
+                        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                         replyJson(exchange, settings);
                     } else {
                         replyNotFound(exchange);
@@ -73,14 +73,14 @@ public class Main {
                 } else {
                     replyNotFound(exchange);
                 }
-            } catch(Throwable e){
+            } catch (Throwable e) {
                 e.printStackTrace();
                 replyError(exchange, e.toString());
             }
         });
         server.createContext("/", exchange -> {
             String path = exchange.getRequestURI().getPath();
-            if( path.equals("/") ){
+            if (path.equals("/")) {
                 exchange.getResponseHeaders().add("Location", "/web/index.html");
                 exchange.sendResponseHeaders(308, 0);
                 exchange.getResponseBody().close();
@@ -90,13 +90,14 @@ public class Main {
         });
         server.createContext("/web/", exchange -> {
             String path = exchange.getRequestURI().getPath();
-            replyHtml(exchange, path);
+            System.out.printf("accept web request %s\n", path);
+            replyFile(exchange, path);
         });
         System.err.printf("Drawer-site server is listening to port %d\n", port);
         server.start();
     }
 
-    private static void replyError(HttpExchange ex, String msg){
+    private static void replyError(HttpExchange ex, String msg) {
         try {
             byte[] bytes = msg.getBytes(StandardCharsets.UTF_8);
             ex.sendResponseHeaders(500, bytes.length);
@@ -107,7 +108,7 @@ public class Main {
         }
     }
 
-    private static void replyNotFound(HttpExchange ex){
+    private static void replyNotFound(HttpExchange ex) {
         try {
             ex.sendResponseHeaders(404, 0);
             ex.getResponseBody().close();
@@ -116,15 +117,26 @@ public class Main {
         }
     }
 
-    private static void replyHtml(HttpExchange exchange, String path){
+    private static void replyFile(HttpExchange exchange, String path) {
         try {
             byte[] bytes = Objects.requireNonNull(
                     Main.class.getClassLoader().getResourceAsStream(path)).readAllBytes();
-            exchange.getResponseHeaders().add("content-type", "text/html;charset=UTF-8");
+            String contentType;
+            if (path.endsWith(".html")) {
+                contentType = "text/html;charset=UTF-8";
+            } else if (path.endsWith(".js")) {
+                contentType = "text/javascript;charset=UTF-8";
+            } else if (path.endsWith(".css")) {
+                contentType = "text/css;charset=UTF-8";
+            } else {
+                throw new RuntimeException("Unknown file type");
+            }
+            exchange.getResponseHeaders().add("content-type", contentType);
             exchange.sendResponseHeaders(200, bytes.length);
             exchange.getResponseBody().write(bytes);
             exchange.getRequestBody().close();
-        } catch(Throwable e){
+            exchange.close();
+        } catch (Throwable e) {
             try {
                 exchange.sendResponseHeaders(500, 0);
                 exchange.getResponseBody().close();
@@ -136,12 +148,12 @@ public class Main {
 
     private static void replyJson(HttpExchange exchange, Object obj) {
         try {
-        byte[] body = mapper.writeValueAsBytes(obj);
-        exchange.getResponseHeaders().add("content-type", "application/json");
-        exchange.sendResponseHeaders(200, body.length);
-        exchange.getResponseBody().write(body);
-        exchange.getRequestBody().close();
-        } catch(Throwable e){
+            byte[] body = mapper.writeValueAsBytes(obj);
+            exchange.getResponseHeaders().add("content-type", "application/json");
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.getRequestBody().close();
+        } catch (Throwable e) {
             try {
                 exchange.sendResponseHeaders(500, 0);
                 exchange.getResponseBody().close();
@@ -153,12 +165,12 @@ public class Main {
 
     private static void replyText(HttpExchange exchange, String reply) {
         try {
-        byte[] body = reply.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().add("content-type", "text/plain");
-        exchange.sendResponseHeaders(200, body.length);
-        exchange.getResponseBody().write(body);
-        exchange.getRequestBody().close();
-        } catch(Throwable e){
+            byte[] body = reply.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("content-type", "text/plain");
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.getRequestBody().close();
+        } catch (Throwable e) {
             try {
                 exchange.sendResponseHeaders(500, 0);
                 exchange.getResponseBody().close();
@@ -168,11 +180,11 @@ public class Main {
         }
     }
 
-    private static Executor createExecutor(){
+    private static Executor createExecutor() {
         return Executors.newFixedThreadPool(6);
     }
 
-    private static ObjectMapper createMapper(){
+    private static ObjectMapper createMapper() {
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
         module.addSerializer(Op.class, new JacksonOpSerializer());
@@ -181,13 +193,13 @@ public class Main {
         return mapper;
     }
 
-    private static Path getDataDir(){
+    private static Path getDataDir() {
         return Path.of(System.getProperty("user.home"), "drawer-site-data");
     }
 
     private static void savePrintSetting(String name, PrintSetting setting) throws IOException {
         Path dir = getDataDir();
-        if( !Files.exists(dir) ){
+        if (!Files.exists(dir)) {
             Files.createDirectories(dir);
         }
         Path file = dir.resolve(String.format("%s.setting", name));
@@ -197,15 +209,15 @@ public class Main {
 
     private static List<String> listPrintSetting() throws IOException {
         Path dir = getDataDir();
-        if( !Files.exists(dir) ){
+        if (!Files.exists(dir)) {
             return Collections.emptyList();
         }
         List<String> result = new ArrayList<>();
         String ext = ".setting";
-        try(DirectoryStream<Path> stream = Files.newDirectoryStream(dir)){
-            for(Path path: stream){
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+            for (Path path : stream) {
                 String fname = path.getFileName().toString();
-                if( fname.endsWith(ext) ){
+                if (fname.endsWith(ext)) {
                     result.add(fname.substring(0, fname.length() - ext.length()));
                 }
             }

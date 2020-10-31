@@ -10,11 +10,16 @@
 <div>
     <button id="create-new-setting">作成</button>
 </div>
+<script type="module">
+    import {PrintAPI} from "./print-api.js";
+    window.PrintAPI = PrintAPI;
+</script>
 <script>
-    document.getElementById("create-new-setting").addEventListener("click", event => {
+    document.getElementById("create-new-setting").addEventListener("click", async event => {
         let name = prompt("新規設定の名称");
         if( name ){
-            alert(name);
+            let api = new PrintAPI();
+            await api.createSetting(name);
         }
     });
 </script>

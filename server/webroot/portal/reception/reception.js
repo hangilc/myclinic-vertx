@@ -328,7 +328,7 @@ export async function initReception(pane) {
             setup: [],
             pages: [ops]
         };
-        await openPrintDialog("領収書", req, [], rest);
+        await openPrintDialog("領収書", req);
     }
 
     class CashierDialogFactory {

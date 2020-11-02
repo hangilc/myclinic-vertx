@@ -33,10 +33,72 @@ public class Main {
         int port = 48080;
         Server server = new Server(bind, port, 6);
         System.out.printf("Drawer-site server is listening to %s:%d\n", bind, port);
-        server.addContext("/", handler -> {
-            handler.sendText(handler.getSubPath());
-        });
+        server.addContext("/ping", handler -> handler.sendText("pong"));
+        server.addContext("/setting/", Main::handleSetting);
+        server.addContext("/web/", Main::handleWeb);
+        server.addContext("/", Main::handleRoot);
         server.start();
+    }
+
+    private static void handleRoot(Handler handler) throws IOException {
+        if( handler.getMethod().equals("GET") ){
+            String path = handler.getPath();
+            if( path.equals("/") ){
+                handler.sendRedirect("/web/index.html");
+            } else {
+                handler.sendNotFound();
+            }
+        } else {
+            handler.sendError("Invalid access.");
+        }
+    }
+
+    private static void handleWeb(Handler handler) throws IOException {
+        if( handler.getMethod().equals("GET") ){
+            String path = handler.getPath();
+            handler.sendResource(path);
+        } else {
+            handler.sendError("Invalid web access.");
+        }
+    }
+
+    private static void handleSetting(Handler handler) throws IOException {
+        switch (handler.getMethod()) {
+            case "GET":
+                handleSettingGET(handler);
+                break;
+            case "POST":
+                handleSettingPOST(handler);
+                break;
+            default:
+                handler.sendError("Invalid setting access.");
+                break;
+        }
+    }
+
+    private static void handleSettingGET(Handler handler) throws IOException {
+        String[] subpaths = handler.getSubPaths();
+        if (subpaths.length == 0) {
+            handler.sendJson(listPrintSetting());
+        } else {
+            handler.sendError("Invalid setting access.");
+        }
+    }
+
+    private static void handleSettingPOST(Handler handler) throws IOException {
+        String[] subpaths = handler.getSubPaths();
+        if( subpaths.length == 1 ){
+            String name = subpaths[0];
+            if( settingExists(name) ){
+                handler.sendError(String.format("%s はすでに存在します。", name));
+            } else {
+                createSetting(name);
+                handler.sendError("done");
+            }
+        } else {
+            System.out.println(handler.getExchange().getRequestURI().getPath());
+            handler.sendError("Invalid setting access.");
+        }
     }
 
     public static void main2(String[] args) throws Exception {
@@ -218,6 +280,16 @@ public class Main {
         Files.write(file, bytes);
     }
 
+    private static void createSetting(String name) throws IOException {
+        DrawerPrinter drawerPrinter = new DrawerPrinter();
+        DrawerPrinter.DialogResult result = drawerPrinter.printDialog();
+        PrintSetting setting = new PrintSetting();
+        setting.devmode = result.devmodeData;
+        setting.devnames = result.devnamesData;
+        setting.auxSetting = new AuxSetting();
+        savePrintSetting(name, setting);
+    }
+
     private static List<String> listPrintSetting() throws IOException {
         Path dir = getDataDir();
         if (!Files.exists(dir)) {
@@ -234,6 +306,11 @@ public class Main {
             }
         }
         return result;
+    }
+
+    private static boolean settingExists(String name) throws IOException {
+        List<String> list = listPrintSetting();
+        return list.contains(name);
     }
 
 }

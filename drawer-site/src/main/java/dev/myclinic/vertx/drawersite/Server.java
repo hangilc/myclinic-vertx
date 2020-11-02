@@ -8,6 +8,10 @@ import java.util.function.Consumer;
 
 public class Server {
 
+    public interface HandlerFunc {
+        void handle(Handler handler) throws Exception;
+    }
+
     private final HttpServer httpServer;
 
     public Server(String bind, int port, int backlog) throws IOException {
@@ -18,10 +22,15 @@ public class Server {
         httpServer.start();
     }
 
-    public void addContext(String path, Consumer<Handler> cb){
+    public void addContext(String path, HandlerFunc func){
         httpServer.createContext(path, exchange -> {
             Handler handler = new Handler(exchange, path);
-            cb.accept(handler);
+            try {
+                func.handle(handler);
+            } catch(Throwable e){
+                e.printStackTrace();
+                handler.sendError(e.getMessage());
+            }
         });
     }
 

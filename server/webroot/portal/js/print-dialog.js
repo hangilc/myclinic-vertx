@@ -32,9 +32,16 @@ export async function openPrintDialog(docName, req){
         map.select.appendChild(opt);
     }
     return modalOpen(ele, close => {
-        map.print.addEventListener("click", event => {
+        map.print.addEventListener("click", async event => {
             let setting = map.select.value;
-            alert(setting);
+            if( setting === "--manual--" ){
+                await printAPI.print(req.setup, req.pages);
+                close(true);
+            } else if( setting ){
+
+            } else {
+                alert("Invalid settting: " + setting);
+            }
         });
         map.cancel.addEventListener("click", event => close(false));
     });

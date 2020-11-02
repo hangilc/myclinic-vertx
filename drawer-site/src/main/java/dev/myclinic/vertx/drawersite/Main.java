@@ -34,6 +34,7 @@ public class Main {
         Server server = new Server(bind, port, 6);
         System.out.printf("Drawer-site server is listening to %s:%d\n", bind, port);
         server.addContext("/ping", handler -> handler.sendText("pong"));
+        server.addContext("/print/", Main::handlePrint);
         server.addContext("/setting/", Main::handleSetting);
         server.addContext("/web/", Main::handleWeb);
         server.addContext("/", Main::handleRoot);
@@ -79,6 +80,7 @@ public class Main {
     private static void handleSettingGET(Handler handler) throws IOException {
         String[] subpaths = handler.getSubPaths();
         if (subpaths.length == 0) {
+            handler.allowCORS();
             handler.sendJson(listPrintSetting());
         } else {
             handler.sendError("Invalid setting access.");
@@ -92,12 +94,25 @@ public class Main {
             if( settingExists(name) ){
                 handler.sendError(String.format("%s はすでに存在します。", name));
             } else {
+                handler.allowCORS();
                 createSetting(name);
                 handler.sendError("done");
             }
         } else {
             System.out.println(handler.getExchange().getRequestURI().getPath());
             handler.sendError("Invalid setting access.");
+        }
+    }
+
+    public static void handlePrint(Handler handler) throws IOException {
+        if( handler.getMethod().equals("POST") ){
+            handler.allowCORS();
+            PrintRequest pr = mapper.readValue(handler.getExchange().getRequestBody(), PrintRequest.class);
+            DrawerPrinter printer = new DrawerPrinter();
+            printer.printPages(pr.convertToPages());
+            handler.sendText("done");
+        } else {
+            handler.sendError("Invalid print access.");
         }
     }
 

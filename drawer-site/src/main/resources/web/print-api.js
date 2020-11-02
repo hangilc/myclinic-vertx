@@ -11,11 +11,16 @@ export class PrintAPI {
         return await this.POST("/setting/" + name, "", {});
     }
 
+    async print(setup, pages, setting){
+        let req = { setup, pages };
+        return await this.POST("/print/" + setting, req);
+    }
+
     REQUEST(method, path, params, body){
         return new Promise((resolve, reject) => {
             let xhr = new XMLHttpRequest();
             let url = this.url + path;
-            if( Object.keys(params).length !== 0 ){
+            if( params && Object.keys(params).length !== 0 ){
                 let parts = [];
                 for(let key in Object.keys(params) ){
                     let val = params[key];

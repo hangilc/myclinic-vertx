@@ -11,7 +11,6 @@ export function modalOpen(ele, closeHandler){
             backdrop.remove();
             ele.style.display = "none";
             ele.remove();
-            console.log("returning", retVal);
             resolve(retVal);
         };
         closeHandler(close);

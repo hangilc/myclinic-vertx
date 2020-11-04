@@ -1,6 +1,11 @@
 export class PrintAPI {
-    constructor(){
-        this.url = "http://127.0.0.1:48080";
+    constructor(url){
+        if( !url ){
+            url = "";
+        } else {
+            url = url.replace(/\/$/, "");
+        }
+        this.url = url;
     }
 
     async listSetting(){
@@ -49,10 +54,7 @@ export class PrintAPI {
             }
             xhr.onload = e => {
                 let contentType = xhr.getResponseHeader("Content-Type");
-                console.log("content-type", contentType);
                 if( contentType.startsWith("application/json") ){
-                    console.log("JSON.parse");
-                    console.log(xhr.responseText);
                     resolve(JSON.parse(xhr.responseText));
                 } else {
                     resolve(xhr.responseText);
@@ -75,7 +77,6 @@ export class PrintAPI {
     }
 
     PUT(path, body, params){
-        console.log("PUT", typeof body);
         return this.REQUEST("PUT", path, params, JSON.stringify(body));
     }
 }

@@ -12,7 +12,6 @@ import dev.myclinic.vertx.drawerprinterwin.DevnamesInfo;
 import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.Base64;
 
 public class Main {
 
@@ -50,13 +48,12 @@ public class Main {
     }
 
     private static void handlePrintDialog(Handler handler) throws IOException {
-        if( handler.getMethod().equals("GET") ){
+        if (handler.getMethod().equals("GET")) {
             String[] subpaths = handler.getSubPaths();
-            if( subpaths.length == 0 ){
-                handler.allowCORS();
+            if (subpaths.length == 0) {
                 DrawerPrinter printer = new DrawerPrinter();
                 DrawerPrinter.DialogResult result = printer.printDialog();
-                if( result.ok ){
+                if (result.ok) {
                     PrintSetting setting = new PrintSetting(
                             result.devmodeData, result.devnamesData
                     );
@@ -66,15 +63,14 @@ public class Main {
                 }
                 return;
             }
-            if( subpaths.length == 1 ){
-                handler.allowCORS();
+            if (subpaths.length == 1) {
                 String name = subpaths[0];
                 PrintSetting current = getSetting(name);
                 DrawerPrinter printer = new DrawerPrinter();
                 DrawerPrinter.DialogResult result = printer.printDialog(
                         current.devmode, current.devnames
                 );
-                if( result.ok ){
+                if (result.ok) {
                     PrintSetting setting = new PrintSetting(
                             result.devmodeData, result.devnamesData, current.auxSetting
                     );
@@ -132,7 +128,7 @@ public class Main {
                 handleSettingPUT(handler);
                 break;
             case "OPTIONS":
-                handler.respondToOptions(List.of("PUT", "POST", "GET", "OPTIONS"));
+                handler.respondToOptions(List.of("GET", "OPIONS"));
                 break;
             default:
                 handler.sendError("Invalid setting access.");
@@ -157,11 +153,11 @@ public class Main {
         }
         if (subpaths.length == 1) {
             String name = subpaths[0];
-            handler.allowCORS();
             handler.sendJson(getSetting(name));
             return;
         }
-        if( subpaths.length == 2 && subpaths[1].equals("detail") ){
+        if (subpaths.length == 2 && subpaths[1].equals("detail")) {
+            handler.allowCORS();
             String name = subpaths[0];
             PrintSetting setting = getSetting(name);
             PrintSettingDetail detail = new PrintSettingDetail();
@@ -172,7 +168,6 @@ public class Main {
             detail.quality = devmodeInfo.getPrintQualityLabel();
             DevnamesInfo devnamesInfo = new DevnamesInfo(setting.devnames);
             detail.printer = devnamesInfo.getDevice();
-            handler.allowCORS();
             handler.sendJson(detail);
             return;
         }
@@ -197,10 +192,9 @@ public class Main {
 
     private static void handleSettingPUT(Handler handler) throws IOException {
         String[] subpaths = handler.getSubPaths();
-        if( subpaths.length == 1 ){
-            handler.allowCORS();
+        if (subpaths.length == 1) {
             String name = subpaths[0];
-            if( !settingExists(name) ){
+            if (!settingExists(name)) {
                 handler.sendError("No such setting: " + name);
                 return;
             }
@@ -214,9 +208,14 @@ public class Main {
     }
 
     public static void handlePrint(Handler handler) throws IOException {
+        if( handler.getMethod().equals("OPTIONS") ){
+            handler.respondToOptions(List.of("POST", "OPTIONS"));
+            return;
+        }
         if (handler.getMethod().equals("POST")) {
             handler.allowCORS();
-            PrintRequest pr = mapper.readValue(handler.getExchange().getRequestBody(), PrintRequest.class);
+            PrintRequest pr = mapper.readValue(handler.getExchange().getRequestBody(),
+                    PrintRequest.class);
             DrawerPrinter printer = new DrawerPrinter();
             printer.printPages(pr.convertToPages());
             handler.sendText("done");

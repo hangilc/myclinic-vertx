@@ -95,6 +95,9 @@ public class Main {
     public static class PrintSettingDetail {
         public String printer;
         public String paperSize;
+        public String orientation;
+        public String tray;
+        public String quality;
     }
 
     private static void handleSettingGET(Handler handler) throws IOException {
@@ -116,6 +119,9 @@ public class Main {
             PrintSettingDetail detail = new PrintSettingDetail();
             DevmodeInfo devmodeInfo = new DevmodeInfo(setting.devmode);
             detail.paperSize = devmodeInfo.getPaperSizeLabel();
+            detail.orientation = devmodeInfo.getOrientationLabel();
+            detail.tray = devmodeInfo.getDefaultSourceLabel();
+            detail.quality = devmodeInfo.getPrintQualityLabel();
             DevnamesInfo devnamesInfo = new DevnamesInfo(setting.devnames);
             detail.printer = devnamesInfo.getDevice();
             handler.allowCORS();

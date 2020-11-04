@@ -121,7 +121,6 @@ public class Main {
     }
 
     private static void handleSetting(Handler handler) throws IOException {
-        System.out.printf("method: %s\n", handler.getMethod());
         switch (handler.getMethod()) {
             case "GET":
                 handleSettingGET(handler);
@@ -197,7 +196,6 @@ public class Main {
     }
 
     private static void handleSettingPUT(Handler handler) throws IOException {
-        System.out.printf("path: %s\n", handler.getPath());
         String[] subpaths = handler.getSubPaths();
         if( subpaths.length == 1 ){
             handler.allowCORS();
@@ -207,8 +205,6 @@ public class Main {
                 return;
             }
             byte[] body = handler.getBody();
-            System.out.printf("name: %s\n", name);
-            System.out.printf("setting: %s\n", new String(body, StandardCharsets.UTF_8));
             PrintSetting setting = PrintSetting.deserialize(mapper, body);
             savePrintSetting(name, setting);
             handler.sendText("done");

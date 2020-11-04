@@ -132,6 +132,9 @@ public class Main {
             case "PUT":
                 handleSettingPUT(handler);
                 break;
+            case "OPTIONS":
+                handler.respondToOptions(List.of("PUT", "POST", "GET", "OPTIONS"));
+                break;
             default:
                 handler.sendError("Invalid setting access.");
                 break;

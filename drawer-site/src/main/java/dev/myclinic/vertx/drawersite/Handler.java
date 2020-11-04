@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -66,6 +67,21 @@ public class Handler {
             exchange.getResponseBody().write(bytes);
         } catch (Throwable ex) {
             ex.printStackTrace();
+        }
+    }
+
+    public void respondToOptions(List<String> allowedMethods){
+        try {
+            exchange.getResponseHeaders().add("content-type", "text/plain");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Methods",
+                    String.join(",", allowedMethods));
+            exchange.sendResponseHeaders(204, -1);
+            exchange.getResponseBody().close();
+        } catch (Throwable e) {
+            doError(e);
+        } finally {
+            exchange.close();
         }
     }
 
@@ -135,7 +151,7 @@ public class Handler {
     }
 
     public void sendEncodedJson(byte[] bytes){
-        send(bytes, "applicatiom/json");
+        send(bytes, "application/json");
     }
 
     private static final Map<String, String> mimeMap = new HashMap<>();

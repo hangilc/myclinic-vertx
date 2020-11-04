@@ -48,7 +48,15 @@ export class PrintAPI {
                 url += "?" + parts.join("&");
             }
             xhr.onload = e => {
-                resolve(JSON.parse(xhr.response));
+                let contentType = xhr.getResponseHeader("Content-Type");
+                console.log("content-type", contentType);
+                if( contentType.startsWith("application/json") ){
+                    console.log("JSON.parse");
+                    console.log(xhr.responseText);
+                    resolve(JSON.parse(xhr.responseText));
+                } else {
+                    resolve(xhr.responseText);
+                }
             }
             xhr.onerror = e => {
                 reject(xhr.statusText + ": " + xhr.responseText);
@@ -67,6 +75,7 @@ export class PrintAPI {
     }
 
     PUT(path, body, params){
+        console.log("PUT", typeof body);
         return this.REQUEST("PUT", path, params, JSON.stringify(body));
     }
 }

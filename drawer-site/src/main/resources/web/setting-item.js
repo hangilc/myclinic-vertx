@@ -20,11 +20,18 @@ export class SettingItem {
         let map = parseElement(ele);
         map.settingName.innerText = name;
         map.detail.addEventListener("click", async event => await this.doDetail(name));
+        map.editPrinter.addEventListener("click", async event => await this.doEditPrinter(name));
     }
 
     async doDetail(name){
         let api = new PrintAPI();
         let detail = await api.getSettingDetail(name);
         await showSettingDetailDialog(name, detail);
+    }
+
+    async doEditPrinter(name){
+        let api = new PrintAPI();
+        let result = await api.printDialog(name);
+        console.log(result);
     }
 }

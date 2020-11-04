@@ -19,6 +19,13 @@ export class PrintAPI {
         return await this.GET(`/setting/${name}/detail`, {});
     }
 
+    async printDialog(name){
+        if( !name ){
+            name = "";
+        }
+        return await this.GET("/print-dialog/" + name, {});
+    }
+
     async print(setup, pages, setting){
         let req = { setup, pages };
         return await this.POST("/print/" + setting, req);

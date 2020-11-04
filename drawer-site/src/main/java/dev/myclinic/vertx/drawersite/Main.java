@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.Base64;
 
 public class Main {
 
@@ -34,6 +35,7 @@ public class Main {
         server.addContext("/ping", handler -> handler.sendText("pong"));
         server.addContext("/print/", Main::handlePrint);
         server.addContext("/setting/", Main::handleSetting);
+        server.addContext("/print-dialog/", Main::handlePrintDialog);
         server.addContext("/web/", handler -> {
             if (cmdArgs.isDev) {
                 Path root = Path.of("./drawer-site/src/main/resources");
@@ -44,6 +46,39 @@ public class Main {
         });
         server.addContext("/", Main::handleRoot);
         server.start();
+    }
+
+    private static void handlePrintDialog(Handler handler) throws IOException {
+        if( handler.getMethod().equals("GET") ){
+            String[] subpaths = handler.getSubPaths();
+            if( subpaths.length == 0 ){
+                handler.allowCORS();
+                DrawerPrinter printer = new DrawerPrinter();
+                DrawerPrinter.DialogResult result = printer.printDialog();
+                if( result.ok ){
+                    handler.sendJson(result);
+                } else {
+                    handler.sendJson(null);
+                }
+                return;
+            }
+            if( subpaths.length == 1 ){
+                handler.allowCORS();
+                String name = subpaths[0];
+                PrintSetting current = getSetting(name);
+                DrawerPrinter printer = new DrawerPrinter();
+                DrawerPrinter.DialogResult result = printer.printDialog(
+                        current.devmode, current.devnames
+                );
+                if( result.ok ){
+                    handler.sendJson(result);
+                } else {
+                    handler.sendJson(null);
+                }
+                return;
+            }
+        }
+        handler.sendError("Invalid print-dialog access.");
     }
 
     private static void handleRoot(Handler handler) throws IOException {

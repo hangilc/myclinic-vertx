@@ -2,25 +2,22 @@ package dev.myclinic.vertx.drawersite;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpServer;
 import dev.myclinic.vertx.drawer.JacksonOpDeserializer;
 import dev.myclinic.vertx.drawer.JacksonOpSerializer;
 import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.drawer.PrintRequest;
 import dev.myclinic.vertx.drawerprinterwin.AuxSetting;
+import dev.myclinic.vertx.drawerprinterwin.DevmodeInfo;
+import dev.myclinic.vertx.drawerprinterwin.DevnamesInfo;
 import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -37,15 +34,22 @@ public class Main {
         server.addContext("/ping", handler -> handler.sendText("pong"));
         server.addContext("/print/", Main::handlePrint);
         server.addContext("/setting/", Main::handleSetting);
-        server.addContext("/web/", Main::handleWeb);
+        server.addContext("/web/", handler -> {
+            if (cmdArgs.isDev) {
+                Path root = Path.of("./drawer-site/src/main/resources");
+                handleWebFromFile(handler, root);
+            } else {
+                handleWebFromResource(handler);
+            }
+        });
         server.addContext("/", Main::handleRoot);
         server.start();
     }
 
     private static void handleRoot(Handler handler) throws IOException {
-        if( handler.getMethod().equals("GET") ){
+        if (handler.getMethod().equals("GET")) {
             String path = handler.getPath();
-            if( path.equals("/") ){
+            if (path.equals("/")) {
                 handler.sendRedirect("/web/index.html");
             } else {
                 handler.sendNotFound();
@@ -55,10 +59,20 @@ public class Main {
         }
     }
 
-    private static void handleWeb(Handler handler) throws IOException {
-        if( handler.getMethod().equals("GET") ){
+    private static void handleWebFromResource(Handler handler) throws IOException {
+        if (handler.getMethod().equals("GET")) {
             String path = handler.getPath();
             handler.sendResource(path);
+        } else {
+            handler.sendError("Invalid web access.");
+        }
+    }
+
+    private static void handleWebFromFile(Handler handler, Path root) throws IOException {
+        if (handler.getMethod().equals("GET")) {
+            String path = handler.getPath().substring(1); // remove leading slash char
+            Path target = root.resolve(path);
+            handler.sendFile(target.toString());
         } else {
             handler.sendError("Invalid web access.");
         }
@@ -78,21 +92,44 @@ public class Main {
         }
     }
 
+    public static class PrintSettingDetail {
+        public String printer;
+        public String paperSize;
+    }
+
     private static void handleSettingGET(Handler handler) throws IOException {
         String[] subpaths = handler.getSubPaths();
         if (subpaths.length == 0) {
             handler.allowCORS();
             handler.sendJson(listPrintSetting());
-        } else {
-            handler.sendError("Invalid setting access.");
+            return;
         }
+        if (subpaths.length == 1) {
+            String name = subpaths[0];
+            handler.allowCORS();
+            handler.sendJson(getSetting(name));
+            return;
+        }
+        if( subpaths.length == 2 && subpaths[1].equals("detail") ){
+            String name = subpaths[0];
+            PrintSetting setting = getSetting(name);
+            PrintSettingDetail detail = new PrintSettingDetail();
+            DevmodeInfo devmodeInfo = new DevmodeInfo(setting.devmode);
+            detail.paperSize = devmodeInfo.getPaperSizeLabel();
+            DevnamesInfo devnamesInfo = new DevnamesInfo(setting.devnames);
+            detail.printer = devnamesInfo.getDevice();
+            handler.allowCORS();
+            handler.sendJson(detail);
+            return;
+        }
+        handler.sendError("Invalid setting access.");
     }
 
     private static void handleSettingPOST(Handler handler) throws IOException {
         String[] subpaths = handler.getSubPaths();
-        if( subpaths.length == 1 ){
+        if (subpaths.length == 1) {
             String name = subpaths[0];
-            if( settingExists(name) ){
+            if (settingExists(name)) {
                 handler.sendError(String.format("%s はすでに存在します。", name));
             } else {
                 handler.allowCORS();
@@ -106,7 +143,7 @@ public class Main {
     }
 
     public static void handlePrint(Handler handler) throws IOException {
-        if( handler.getMethod().equals("POST") ){
+        if (handler.getMethod().equals("POST")) {
             handler.allowCORS();
             PrintRequest pr = mapper.readValue(handler.getExchange().getRequestBody(), PrintRequest.class);
             DrawerPrinter printer = new DrawerPrinter();
@@ -152,6 +189,14 @@ public class Main {
         setting.devnames = result.devnamesData;
         setting.auxSetting = new AuxSetting();
         savePrintSetting(name, setting);
+    }
+
+    private static PrintSetting getSetting(String name) throws IOException {
+        Path dir = getDataDir();
+        Path file = dir.resolve(String.format("%s.setting", name));
+        byte[] bytes = Files.readAllBytes(file);
+        return PrintSetting.deserialize(mapper, bytes);
+
     }
 
     private static List<String> listPrintSetting() throws IOException {

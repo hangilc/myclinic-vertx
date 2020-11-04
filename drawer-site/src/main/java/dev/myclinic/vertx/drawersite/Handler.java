@@ -4,7 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,6 +53,31 @@ public class Handler {
         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
     }
 
+    private void doError(Throwable e){
+        try {
+            String message = e.getMessage();
+            byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("content-type", "text/plain;charset=UTF-8");
+            exchange.sendResponseHeaders(500, bytes.length);
+            exchange.getResponseBody().write(bytes);
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void send(InputStream is, long size, String contentType){
+        try {
+            exchange.getResponseHeaders().add("content-type", contentType);
+            exchange.sendResponseHeaders(200, size);
+            is.transferTo(exchange.getResponseBody());
+            exchange.getResponseBody().close();
+        } catch (Throwable e) {
+            doError(e);
+        } finally {
+            exchange.close();
+        }
+    }
+
     public void send(byte[] body, String contentType) {
         try {
             exchange.getResponseHeaders().add("content-type", contentType);
@@ -57,15 +85,7 @@ public class Handler {
             exchange.getResponseBody().write(body);
             exchange.getResponseBody().close();
         } catch (Throwable e) {
-            try {
-                String message = e.getMessage();
-                byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
-                exchange.getResponseHeaders().add("content-type", "text/plain;charset=UTF-8");
-                exchange.sendResponseHeaders(500, bytes.length);
-                exchange.getResponseBody().write(bytes);
-            } catch (Throwable ex) {
-                ex.printStackTrace();
-            }
+            doError(e);
         } finally {
             exchange.close();
         }
@@ -118,18 +138,28 @@ public class Handler {
         mimeMap.put(".css", "text/css;charset=UTF-8");
     }
 
+    private String resolveContentType(String path){
+        int index = path.lastIndexOf('.');
+        if( index >= 0 ){
+            String ext = path.substring(index);
+            return mimeMap.getOrDefault(ext, "application/octet-stream");
+        } else {
+            return "application/octet-stream";
+        }
+    }
+
     public void sendResource(String path) throws IOException {
         byte[] bytes = Objects.requireNonNull(
                 Main.class.getClassLoader().getResourceAsStream(path)).readAllBytes();
-        String contentType;
-        int index = path.lastIndexOf('.');
-        if (index >= 0) {
-            String ext = path.substring(index);
-            contentType = mimeMap.getOrDefault(ext, "application/octet-stream");
-        } else {
-            contentType = "application/octet-stream";
+        send(bytes, resolveContentType(path));
+    }
+
+    public void sendFile(String path) throws IOException {
+        File file = new File(path);
+        long size = file.length();
+        try(InputStream is = new FileInputStream(path)){
+            send(is, size, resolveContentType(path));
         }
-        send(bytes, contentType);
     }
 
     public void sendRedirect(String redirectPath){

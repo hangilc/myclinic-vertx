@@ -11,6 +11,14 @@ export class PrintAPI {
         return await this.POST("/setting/" + name, "", {});
     }
 
+    async getSetting(name){
+        return await this.GET("/setting/" + name, {});
+    }
+
+    async getSettingDetail(name){
+        return await this.GET(`/setting/${name}/detail`, {});
+    }
+
     async print(setup, pages, setting){
         let req = { setup, pages };
         return await this.POST("/print/" + setting, req);

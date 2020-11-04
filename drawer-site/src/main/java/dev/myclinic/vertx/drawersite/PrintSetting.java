@@ -27,7 +27,7 @@ public class PrintSetting {
         return mapper.writeValueAsBytes(ser);
     }
 
-    public PrintSetting deserialize(ObjectMapper mapper, byte[] bytes) throws IOException {
+    public static PrintSetting deserialize(ObjectMapper mapper, byte[] bytes) throws IOException {
         Serialized ser = mapper.readValue(bytes, Serialized.class);
         PrintSetting setting = new PrintSetting();
         setting.devmode = Base64.getDecoder().decode(ser.devmode);

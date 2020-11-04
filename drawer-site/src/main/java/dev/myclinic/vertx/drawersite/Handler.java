@@ -49,6 +49,10 @@ public class Handler {
         }
     }
 
+    public byte[] getBody() throws IOException {
+        return exchange.getRequestBody().readAllBytes();
+    }
+
     public void allowCORS() {
         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
     }
@@ -128,6 +132,10 @@ public class Handler {
             e.printStackTrace();
             sendError(e.getMessage());
         }
+    }
+
+    public void sendEncodedJson(byte[] bytes){
+        send(bytes, "applicatiom/json");
     }
 
     private static final Map<String, String> mimeMap = new HashMap<>();

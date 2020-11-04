@@ -12,6 +12,7 @@ import dev.myclinic.vertx.drawerprinterwin.DevnamesInfo;
 import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,7 +57,10 @@ public class Main {
                 DrawerPrinter printer = new DrawerPrinter();
                 DrawerPrinter.DialogResult result = printer.printDialog();
                 if( result.ok ){
-                    handler.sendJson(result);
+                    PrintSetting setting = new PrintSetting(
+                            result.devmodeData, result.devnamesData
+                    );
+                    handler.sendEncodedJson(setting.serialize(mapper));
                 } else {
                     handler.sendJson(null);
                 }
@@ -71,7 +75,10 @@ public class Main {
                         current.devmode, current.devnames
                 );
                 if( result.ok ){
-                    handler.sendJson(result);
+                    PrintSetting setting = new PrintSetting(
+                            result.devmodeData, result.devnamesData, current.auxSetting
+                    );
+                    handler.sendEncodedJson(setting.serialize(mapper));
                 } else {
                     handler.sendJson(null);
                 }
@@ -114,12 +121,16 @@ public class Main {
     }
 
     private static void handleSetting(Handler handler) throws IOException {
+        System.out.printf("method: %s\n", handler.getMethod());
         switch (handler.getMethod()) {
             case "GET":
                 handleSettingGET(handler);
                 break;
             case "POST":
                 handleSettingPOST(handler);
+                break;
+            case "PUT":
+                handleSettingPUT(handler);
                 break;
             default:
                 handler.sendError("Invalid setting access.");
@@ -178,9 +189,29 @@ public class Main {
                 handler.sendError("done");
             }
         } else {
-            System.out.println(handler.getExchange().getRequestURI().getPath());
             handler.sendError("Invalid setting access.");
         }
+    }
+
+    private static void handleSettingPUT(Handler handler) throws IOException {
+        System.out.printf("path: %s\n", handler.getPath());
+        String[] subpaths = handler.getSubPaths();
+        if( subpaths.length == 1 ){
+            handler.allowCORS();
+            String name = subpaths[0];
+            if( !settingExists(name) ){
+                handler.sendError("No such setting: " + name);
+                return;
+            }
+            byte[] body = handler.getBody();
+            System.out.printf("name: %s\n", name);
+            System.out.printf("setting: %s\n", new String(body, StandardCharsets.UTF_8));
+            PrintSetting setting = PrintSetting.deserialize(mapper, body);
+            savePrintSetting(name, setting);
+            handler.sendText("done");
+            return;
+        }
+        handler.sendError("Invalid setting access.");
     }
 
     public static void handlePrint(Handler handler) throws IOException {

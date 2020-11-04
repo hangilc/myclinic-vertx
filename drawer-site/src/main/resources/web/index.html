@@ -37,9 +37,7 @@
             let wrapper = document.getElementById("setting-list");
             wrapper.innerHTML = "";
             let settings = await printAPI.listSetting();
-            console.log(settings);
             for(let name of settings){
-                console.log(name);
                 let ele = document.createElement("div");
                 ele.classList.add("setting-item");
                 let item = new SettingItem(ele, name);

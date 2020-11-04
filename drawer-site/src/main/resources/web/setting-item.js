@@ -33,5 +33,8 @@ export class SettingItem {
         let api = new PrintAPI();
         let result = await api.printDialog(name);
         console.log(result);
+        if( result ){
+            await api.updateSetting(name, result);
+        }
     }
 }

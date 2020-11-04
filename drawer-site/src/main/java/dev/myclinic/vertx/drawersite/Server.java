@@ -4,7 +4,6 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.function.Consumer;
 
 public class Server {
 
@@ -18,16 +17,16 @@ public class Server {
         this.httpServer = HttpServer.create(new InetSocketAddress(bind, port), backlog);
     }
 
-    public void start(){
+    public void start() {
         httpServer.start();
     }
 
-    public void addContext(String path, HandlerFunc func){
+    public void addContext(String path, HandlerFunc func) {
         httpServer.createContext(path, exchange -> {
             Handler handler = new Handler(exchange, path);
             try {
                 func.handle(handler);
-            } catch(Throwable e){
+            } catch (Throwable e) {
                 e.printStackTrace();
                 handler.sendError(e.getMessage());
             }

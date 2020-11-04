@@ -13,6 +13,21 @@ public class PrintSetting {
     public byte[] devnames;
     public AuxSetting auxSetting;
 
+    public PrintSetting(){
+
+    }
+
+    public PrintSetting(byte[] devmode, byte[] devnames) {
+        this.devmode = devmode;
+        this.devnames = devnames;
+    }
+
+    public PrintSetting(byte[] devmode, byte[] devnames, AuxSetting auxSetting) {
+        this.devmode = devmode;
+        this.devnames = devnames;
+        this.auxSetting = auxSetting;
+    }
+
     public static class Serialized {
         public String devmode;
         public String devnames;

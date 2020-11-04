@@ -19,6 +19,10 @@ export class PrintAPI {
         return await this.GET(`/setting/${name}/detail`, {});
     }
 
+    async updateSetting(name, setting){
+        return await this.PUT(`/setting/${name}`, setting, {});
+    }
+
     async printDialog(name){
         if( !name ){
             name = "";
@@ -43,9 +47,8 @@ export class PrintAPI {
                 }
                 url += "?" + parts.join("&");
             }
-            xhr.responseType = "json";
             xhr.onload = e => {
-                resolve(xhr.response);
+                resolve(JSON.parse(xhr.response));
             }
             xhr.onerror = e => {
                 reject(xhr.statusText + ": " + xhr.responseText);

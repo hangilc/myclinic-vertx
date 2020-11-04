@@ -1,6 +1,7 @@
 import {parseElement} from "./parse-node.js";
 import {PrintAPI} from "./print-api.js";
 import {showSettingDetailDialog} from "./setting-detail-dialog.js";
+import {openEditAuxSettingDialog} from "./setting-edit-aux-dialog.js";
 
 let tmpl = `
     <span class="x-setting-name"></span> ： 
@@ -12,6 +13,7 @@ let tmpl = `
 
 export class SettingItem {
     constructor(ele, name){
+        this.api = new PrintAPI();
         if( !ele ){
             ele = document.createElement("div");
         }
@@ -21,19 +23,26 @@ export class SettingItem {
         map.settingName.innerText = name;
         map.detail.addEventListener("click", async event => await this.doDetail(name));
         map.editPrinter.addEventListener("click", async event => await this.doEditPrinter(name));
+        map.editAux.addEventListener("click", async event => await this.doEditAux(name));
     }
 
     async doDetail(name){
-        let api = new PrintAPI();
-        let detail = await api.getSettingDetail(name);
+        let detail = await this.api.getSettingDetail(name);
         await showSettingDetailDialog(name, detail);
     }
 
     async doEditPrinter(name){
-        let api = new PrintAPI();
-        let result = await api.printDialog(name);
+        let result = await this.api.printDialog(name);
         if( result ){
-            await api.updateSetting(name, result);
+            await this.api.updateSetting(name, result);
+        }
+    }
+
+    async doEditAux(name){
+        let current = await this.api.getSetting(name);
+        if( current ){
+            let aux = current.auxSetting;
+            let result = await openEditAuxSettingDialog(name, aux, this.api);
         }
     }
 }

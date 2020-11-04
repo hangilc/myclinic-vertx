@@ -8,6 +8,7 @@ let tmpl = `
 <div>向き: <span class="x-orientation"></span></div>
 <div>トレイ: <span class="x-tray"></span></div>
 <div>品質: <span class="x-quality"></span></div>
+<div>移動・縮小： <span class="x-aux"></span></div>
 `;
 
 let commandsTmpl = `
@@ -24,8 +25,13 @@ export async function showSettingDetailDialog(name, detail){
     map.orientation.innerText = detail.orientation;
     map.tray.innerText = detail.tray;
     map.quality.innerText = detail.quality;
+    map.aux.innerText = auxRep(detail.auxSetting);
     dialog.getCommands().innerHTML = commandsTmpl;
     let cmap = parseElement(dialog.getCommands());
     cmap.close.addEventListener("click", event => dialog.close());
     return await dialog.open();
+}
+
+function auxRep(auxSetting){
+    return `dx: ${auxSetting.dx}, dy: ${auxSetting.dy}, scale: ${auxSetting.scale}`;
 }

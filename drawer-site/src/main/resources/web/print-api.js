@@ -28,6 +28,10 @@ export class PrintAPI {
         return await this.PUT(`/setting/${name}`, setting, {});
     }
 
+    async updateAuxSetting(name, auxSetting){
+        return await this.PUT(`/setting/${name}/aux`, auxSetting, {});
+    }
+
     async printDialog(name){
         if( !name ){
             name = "";

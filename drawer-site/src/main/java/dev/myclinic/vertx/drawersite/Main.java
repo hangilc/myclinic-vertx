@@ -142,6 +142,7 @@ public class Main {
         public String orientation;
         public String tray;
         public String quality;
+        public AuxSetting auxSetting;
     }
 
     private static void handleSettingGET(Handler handler) throws IOException {
@@ -168,6 +169,7 @@ public class Main {
             detail.quality = devmodeInfo.getPrintQualityLabel();
             DevnamesInfo devnamesInfo = new DevnamesInfo(setting.devnames);
             detail.printer = devnamesInfo.getDevice();
+            detail.auxSetting = setting.auxSetting;
             handler.sendJson(detail);
             return;
         }
@@ -202,6 +204,19 @@ public class Main {
             PrintSetting setting = PrintSetting.deserialize(mapper, body);
             savePrintSetting(name, setting);
             handler.sendText("done");
+            return;
+        }
+        if( subpaths.length == 2 && subpaths[1].equals("aux") ){
+            String name = subpaths[0];
+            if (!settingExists(name)) {
+                handler.sendError("No such setting: " + name);
+                return;
+            }
+            PrintSetting current = getSetting(name);
+            byte[] body = handler.getBody();
+            current.auxSetting = mapper.readValue(body, AuxSetting.class);
+            savePrintSetting(name, current);
+            handler.sendJson(true);
             return;
         }
         handler.sendError("Invalid setting access.");

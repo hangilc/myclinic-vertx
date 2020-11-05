@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -16,13 +17,41 @@ import java.util.Objects;
 
 public class Handler {
 
+    private final static ObjectMapper mapper = new ObjectMapper();
     private final HttpExchange exchange;
     private final String contextPath;
-    private final static ObjectMapper mapper = new ObjectMapper();
+    private final Map<String, String> queryMap = new HashMap<>();
 
     public Handler(HttpExchange exchange, String contextPath) {
         this.exchange = exchange;
         this.contextPath = contextPath;
+        parseQuery(exchange.getRequestURI().getQuery());
+    }
+
+    private void parseQuery(String query){
+        if( query == null || query.isEmpty() ){
+            return;
+        }
+        String[] parts = query.split("&");
+        for(String part: parts){
+            if( part.isEmpty() ){
+                continue;
+            }
+            String[] subs = part.split("=");
+            String key, value;
+            if( subs.length == 1 ){
+                key = subs[0];
+                value = "";
+            } else if( subs.length == 2 ){
+                key = subs[0];
+                value = subs[1];
+            } else {
+                throw new RuntimeException("Failed to parse query: " + query);
+            }
+            key = URLDecoder.decode(key, StandardCharsets.UTF_8);
+            value = URLDecoder.decode(value, StandardCharsets.UTF_8);
+            queryMap.put(key, value);
+        }
     }
 
     public HttpExchange getExchange() {
@@ -52,6 +81,10 @@ public class Handler {
 
     public byte[] getBody() throws IOException {
         return exchange.getRequestBody().readAllBytes();
+    }
+
+    public String getParam(String key){
+        return queryMap.get(key);
     }
 
     public void allowCORS() {

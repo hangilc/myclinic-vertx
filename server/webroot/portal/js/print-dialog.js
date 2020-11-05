@@ -24,9 +24,9 @@ export async function openPrintDialog(docName, req){
     ele.innerHTML = tmpl;
     let map = parseElement(ele);
     map.doc.innerText = docName;
-    let printAPI = new PrintAPI();
+    let printAPI = new PrintAPI("http://127.0.0.1:48080");
     let settings = await printAPI.listSetting();
-    for(let setting in settings){
+    for(let setting of settings){
         let opt = document.createElement("option");
         opt.innerText = setting;
         map.select.appendChild(opt);
@@ -38,7 +38,8 @@ export async function openPrintDialog(docName, req){
                 await printAPI.print(req.setup, req.pages);
                 close(true);
             } else if( setting ){
-
+                await printAPI.print(req.setup, req.pages, setting);
+                close(true);
             } else {
                 alert("Invalid settting: " + setting);
             }

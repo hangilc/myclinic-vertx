@@ -30,12 +30,15 @@ public class Server {
 
     public void addContext(String path, HandlerFunc func) {
         httpServer.createContext(path, exchange -> {
-            Handler handler = new Handler(exchange, path);
+            Handler handler = null;
             try {
+                handler = new Handler(exchange, path);
                 func.handle(handler);
             } catch (Throwable e) {
                 e.printStackTrace();
-                handler.sendError(e.getMessage());
+                if( handler != null ) {
+                    handler.sendError(e.getMessage());
+                }
             }
         });
     }

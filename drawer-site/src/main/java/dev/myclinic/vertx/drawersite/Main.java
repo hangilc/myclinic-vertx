@@ -242,11 +242,28 @@ public class Main {
         }
         if (handler.getMethod().equals("POST")) {
             handler.allowCORS();
+            String[] subpaths= handler.getSubPaths();
+            String setting = null;
+            if( subpaths.length == 0 ){
+                // nop
+            } else if( subpaths.length == 1 ){
+                setting = subpaths[0];
+            } else {
+                handler.sendError("Invalid print path");
+                return;
+            }
             PrintRequest pr = mapper.readValue(handler.getExchange().getRequestBody(),
                     PrintRequest.class);
+            List<List<Op>> pages = pr.convertToPages();
             DrawerPrinter printer = new DrawerPrinter();
-            printer.printPages(pr.convertToPages());
-            handler.sendText("done");
+            if( setting == null ) {
+                printer.printPages(pages);
+            } else {
+                PrintSetting printSetting = getSetting(setting);
+                printer.printPages(pages, printSetting.devmode, printSetting.devnames,
+                        printSetting.auxSetting);
+            }
+            handler.sendJson(true);
         } else {
             handler.sendError("Invalid print access.");
         }

@@ -1,6 +1,11 @@
 export class PrintAPI {
-    constructor(){
-        this.url = "http://127.0.0.1:48080";
+    constructor(url){
+        if( !url ){
+            url = "";
+        } else {
+            url = url.replace(/\/$/, "");
+        }
+        this.url = url;
     }
 
     async listSetting(){
@@ -11,7 +16,37 @@ export class PrintAPI {
         return await this.POST("/setting/" + name, "", {});
     }
 
+    async deleteSetting(name){
+        return await this.DELETE("/setting/" + name, {});
+    }
+
+    async getSetting(name){
+        return await this.GET("/setting/" + name, {});
+    }
+
+    async getSettingDetail(name){
+        return await this.GET(`/setting/${name}/detail`, {});
+    }
+
+    async updateSetting(name, setting){
+        return await this.PUT(`/setting/${name}`, setting, {});
+    }
+
+    async updateAuxSetting(name, auxSetting){
+        return await this.PUT(`/setting/${name}/aux`, auxSetting, {});
+    }
+
+    async printDialog(name){
+        if( !name ){
+            name = "";
+        }
+        return await this.GET("/print-dialog/" + name, {});
+    }
+
     async print(setup, pages, setting){
+        if( !setting ){
+            setting = "";
+        }
         let req = { setup, pages };
         return await this.POST("/print/" + setting, req);
     }
@@ -28,9 +63,13 @@ export class PrintAPI {
                 }
                 url += "?" + parts.join("&");
             }
-            xhr.responseType = "json";
             xhr.onload = e => {
-                resolve(xhr.response);
+                let contentType = xhr.getResponseHeader("Content-Type");
+                if( contentType.startsWith("application/json") ){
+                    resolve(JSON.parse(xhr.responseText));
+                } else {
+                    resolve(xhr.responseText);
+                }
             }
             xhr.onerror = e => {
                 reject(xhr.statusText + ": " + xhr.responseText);
@@ -50,5 +89,9 @@ export class PrintAPI {
 
     PUT(path, body, params){
         return this.REQUEST("PUT", path, params, JSON.stringify(body));
+    }
+
+    DELETE(path, params){
+        return this.REQUEST("DELETE", path, params, "");
     }
 }

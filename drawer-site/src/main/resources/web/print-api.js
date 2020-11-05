@@ -44,6 +44,9 @@ export class PrintAPI {
     }
 
     async print(setup, pages, setting){
+        if( !setting ){
+            setting = "";
+        }
         let req = { setup, pages };
         return await this.POST("/print/" + setting, req);
     }

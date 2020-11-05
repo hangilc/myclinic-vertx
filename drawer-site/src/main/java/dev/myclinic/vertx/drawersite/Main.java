@@ -1,5 +1,6 @@
 package dev.myclinic.vertx.drawersite;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import dev.myclinic.vertx.drawer.JacksonOpDeserializer;
@@ -15,9 +16,7 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -43,6 +42,7 @@ public class Main {
                 handleWebFromResource(handler);
             }
         });
+        server.addContext("/pref/", Main::handlePref);
         server.addContext("/", Main::handleRoot);
         server.start();
     }
@@ -278,8 +278,12 @@ public class Main {
         return mapper;
     }
 
-    private static Path getDataDir() {
-        return Path.of(System.getProperty("user.home"), "drawer-site-data");
+    private static Path getDataDir() throws IOException {
+        Path dir = Path.of(System.getProperty("user.home"), "drawer-site-data");
+        if( !Files.exists(dir) ){
+            Files.createDirectories(dir);
+        }
+        return dir;
     }
 
     private static void savePrintSetting(String name, PrintSetting setting) throws IOException {
@@ -336,6 +340,161 @@ public class Main {
         Path dir = getDataDir();
         Path file = dir.resolve(String.format("%s.setting", name));
         Files.delete(file);
+    }
+
+    // pref ///////////////////////////////////////////////////////////////////////////
+
+    private static void handlePref(Handler handler) throws IOException {
+        if( handler.getMethod().equals("OPTIONS") ){
+            handler.respondToOptions(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+            return;
+        }
+        switch(handler.getMethod()){
+            case "GET": handlePrefGET(handler); break;
+            case "POST": handlePrefPOST(handler); break;
+            case "DELETE": handlePrefDELETE(handler); break;
+            default: {
+                handler.sendError("Invalid pref access");
+                break;
+            }
+        }
+    }
+
+    private static void handlePrefGET(Handler handler) throws IOException {
+        handler.allowCORS();
+        String[] subpaths = handler.getSubPaths();
+        if( subpaths.length == 0 ){
+            handler.sendJson(getPrefMap());
+            return;
+        }
+        if( subpaths.length == 1 ){
+            String prog = subpaths[0];
+            var map = getPrefMap();
+            if( map == null ) {
+                handler.sendJson(null);
+            } else {
+                handler.sendJson(map.get(prog));
+            }
+            return;
+        }
+        if( subpaths.length == 2 ){
+            String prog = subpaths[0];
+            String key = subpaths[1];
+            handler.sendJson(getPref(prog, key));
+            return;
+        }
+        handler.sendError("Invalid pref GET access");
+    }
+
+    private static void handlePrefPOST(Handler handler) throws IOException {
+        handler.allowCORS();
+        String[] subpaths = handler.getSubPaths();
+        if( subpaths.length == 2 ){
+            String prog = subpaths[0];
+            String key = subpaths[1];
+            String curr = getPref(prog, key);
+            String value = mapper.readValue(handler.getBody(), String.class);
+            setPref(prog, key, value);
+            handler.sendJson(curr);
+        }
+        handler.sendError("Invalid pref POST access");
+    }
+
+    private static void handlePrefDELETE(Handler handler) throws IOException {
+        handler.allowCORS();
+        String[] subpaths = handler.getSubPaths();
+        if( subpaths.length == 0 ){
+            var curr = getPrefMap();
+            deleteAllPref();
+            handler.sendJson(curr);
+            return;
+        }
+        if( subpaths.length == 1 ){
+            String prog = subpaths[0];
+            var curr = getProgPrefMap(prog);
+            deleteProgPref(prog);
+            handler.sendJson(curr);
+            return;
+        }
+        if( subpaths.length == 2 ){
+            String prog = subpaths[0];
+            String key = subpaths[1];
+            String curr = getPref(prog, key);
+            deletePref(prog, key);
+            handler.sendJson(curr);
+            return;
+        }
+        handler.sendError("Invalid pref DELETE access");
+    }
+
+    private static Path getPrefMapPath() throws IOException {
+        Path dir = getDataDir();
+        return dir.resolve("prefs.json");
+    }
+
+    private static Map<String, Map<String, String>> getPrefMap() throws IOException {
+        Path file = getPrefMapPath();
+        if( !Files.exists(file) ){
+            return Collections.emptyMap();
+        }
+        return mapper.readValue(file.toFile(), new TypeReference<>(){});
+    }
+
+    private static void savePrefMap(Map<String, Map<String, String>> map) throws IOException {
+        Path file = getPrefMapPath();
+        mapper.writeValue(file.toFile(), map);
+    }
+
+    private static Map<String, String> getProgPrefMap(String prog) throws IOException {
+        var map = getPrefMap();
+        return map.get(prog);
+    }
+
+    private static String getPref(String prog, String key) throws IOException {
+        var subMap = getProgPrefMap(prog);
+        if( subMap == null ){
+            return null;
+        } else {
+            return subMap.get(key);
+        }
+    }
+
+    private static void setPref(String prog, String key, String pref) throws IOException {
+        var map = getPrefMap();
+        var sub = map.get(prog);
+        if( sub == null ){
+            sub = new HashMap<String, String>();
+            sub.put(key, pref);
+            map = new HashMap<>(map);
+            map.put(prog, sub);
+        } else {
+            sub.put(key, pref);
+        }
+        savePrefMap(map);
+    }
+
+    private static void deleteAllPref() throws IOException {
+        Path file = getPrefMapPath();
+        Files.delete(file);
+    }
+
+    private static void deleteProgPref(String prog) throws IOException {
+        var map = getPrefMap();
+        if( map.containsKey(prog) ){
+            map = new HashMap<>(map);
+            map.remove(prog);
+            savePrefMap(map);
+        }
+    }
+
+    private static void deletePref(String prog, String key) throws IOException {
+        var map = getPrefMap();
+        var sub = map.get(prog);
+        if( sub != null ){
+            map = new HashMap<>(map);
+            sub.remove(key);
+            savePrefMap(map);
+        }
     }
 
 }

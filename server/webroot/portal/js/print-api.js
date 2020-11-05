@@ -59,6 +59,10 @@ export class PrintAPI {
         return await this.POST(`/pref/${prog}/${key}`, value, {});
     }
 
+    async deletePref(prog, key){
+        return await this.DELETE(`/pref/${prog}/${key}`, {});
+    }
+
     REQUEST(method, path, params, body){
         return new Promise((resolve, reject) => {
             let xhr = new XMLHttpRequest();

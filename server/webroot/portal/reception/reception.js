@@ -262,6 +262,7 @@ export async function initReception(pane) {
 
     let receptionWorkarea = $("#reception-workarea");
     let broadcaster = new Broadcaster();
+    let progName = "practice";
 
     pane.addEventListener("onreloaded", async event => await refreshWqueueTable());
 
@@ -328,7 +329,7 @@ export async function initReception(pane) {
             setup: [],
             pages: [ops]
         };
-        await openPrintDialog("領収書", req);
+        await openPrintDialog("領収書", req.setup, req.pages, progName, "receipt");
     }
 
     class CashierDialogFactory {

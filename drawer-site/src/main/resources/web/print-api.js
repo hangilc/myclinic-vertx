@@ -51,6 +51,18 @@ export class PrintAPI {
         return await this.POST("/print/" + setting, req);
     }
 
+    async getPref(prog, key){
+        return await this.GET(`/pref/${prog}/${key}`);
+    }
+
+    async setPref(prog, key, value){
+        return await this.POST(`/pref/${prog}/${key}`, value, {});
+    }
+
+    async deletePref(prog, key){
+        return await this.DELETE(`/pref/${prog}/${key}`, {});
+    }
+
     REQUEST(method, path, params, body){
         return new Promise((resolve, reject) => {
             let xhr = new XMLHttpRequest();

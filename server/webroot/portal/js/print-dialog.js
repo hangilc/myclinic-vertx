@@ -19,26 +19,32 @@ let tmpl = `
     </div>
 `;
 
-export async function openPrintDialog(docName, req){
+export async function openPrintDialog(docName, setupOps, pagesOps, prog, kind){
     let ele = document.createElement("div");
     ele.innerHTML = tmpl;
     let map = parseElement(ele);
     map.doc.innerText = docName;
-    let printAPI = new PrintAPI("http://127.0.0.1:48080");
-    let settings = await printAPI.listSetting();
+    let api = new PrintAPI("http://127.0.0.1:48080");
+    let pref = await api.getPref(prog, kind);
+    let settings = await api.listSetting();
     for(let setting of settings){
         let opt = document.createElement("option");
         opt.innerText = setting;
+        if( pref && pref === setting ){
+            opt.selected = true;
+        }
         map.select.appendChild(opt);
     }
     return modalOpen(ele, close => {
         map.print.addEventListener("click", async event => {
             let setting = map.select.value;
             if( setting === "--manual--" ){
-                await printAPI.print(req.setup, req.pages);
+                await api.print(setupOps, pagesOps);
+                await api.deletePref(prog, kind);
                 close(true);
             } else if( setting ){
-                await printAPI.print(req.setup, req.pages, setting);
+                await api.print(setupOps, pagesOps, setting);
+                await api.setPref(prog, kind, setting);
                 close(true);
             } else {
                 alert("Invalid settting: " + setting);

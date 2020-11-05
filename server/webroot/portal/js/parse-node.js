@@ -23,18 +23,30 @@ function parseElementIter(ele, map) {
         if (name.endsWith("_")) {
             if( name.endsWith("__") ){
                 name = name.substring(0, name.length - 2);
+                if( name in map ){
+                    throw new Error("element already defined: " + name);
+                }
                 map[name] = ele;
             } else {
+                if( name in map ){
+                    throw new Error("element already defined: " + name);
+                }
                 map[name] = ele;
                 name = name.substring(0, name.length - 1);
                 let submap = {};
                 for (let child of ele.children) {
                     parseElementIter(child, submap);
                 }
+                if( name in map ){
+                    throw new Error("element already defined: " + name);
+                }
                 map[name] = submap;
                 return;
             }
         } else {
+            if( name in map ){
+                throw new Error("element already defined: " + name);
+            }
             map[name] = ele;
         }
     }

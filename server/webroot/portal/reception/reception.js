@@ -1,4 +1,5 @@
 let html = `
+<div class="reception">
 <h3>受付</h3>
 
 <div id="reception-main-commands" class="pane">
@@ -62,6 +63,8 @@ let html = `
 
 <div id="reception-bottom-commands" class="form-inline">
     <button type="button" class="btn btn-secondary x-refresh">更新</button>
+</div>
+
 </div>
 
 <template id="reception-patient-search-dialog-template">
@@ -259,6 +262,7 @@ export async function initReception(pane) {
     let {Broadcaster} = await import("./broadcaster.js");
     let {PatientNewWidget} = await import("./patient-new-widget.js");
     let {openPrintDialog} = await import("../js/print-dialog.js");
+    let {PaymentSearch} = await import("./payment-search.js");
 
     let receptionWorkarea = $("#reception-workarea");
     let broadcaster = new Broadcaster();
@@ -318,8 +322,15 @@ export async function initReception(pane) {
             }
         });
 
+        map.searchPayment.on("click", async event => await doSearchPayment());
+
         map.printReceiptPaper.on("click", async event => await doPrintReceiptPaper());
     })();
+
+    async function doSearchPayment(){
+        let widget = new PaymentSearch(rest);
+        receptionWorkarea[0].prepend(widget.ele);
+    }
 
     async function doPrintReceiptPaper(){
         let receiptReq = {};

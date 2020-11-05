@@ -685,6 +685,10 @@ class Rest extends Client {
         return await this.get("/list-print-setting", {});
     }
 
+    async listRecentPayment(){
+        return await this.get("/list-recent-payment", {});
+    }
+
 }
 
 class Integration extends Client {

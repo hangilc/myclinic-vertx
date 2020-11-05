@@ -57,3 +57,8 @@ a:hover {text-decoration: none;}
     text-align: right;
     margin-top: 0.5em;
 }
+
+.reception .payment-search .search-result {
+    height: 20rem;
+    overflow-y: auto
+}

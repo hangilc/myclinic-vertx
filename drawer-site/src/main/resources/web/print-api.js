@@ -16,6 +16,10 @@ export class PrintAPI {
         return await this.POST("/setting/" + name, "", {});
     }
 
+    async deleteSetting(name){
+        return await this.DELETE("/setting/" + name, {});
+    }
+
     async getSetting(name){
         return await this.GET("/setting/" + name, {});
     }
@@ -82,5 +86,9 @@ export class PrintAPI {
 
     PUT(path, body, params){
         return this.REQUEST("PUT", path, params, JSON.stringify(body));
+    }
+
+    DELETE(path, params){
+        return this.REQUEST("DELETE", path, params, "");
     }
 }

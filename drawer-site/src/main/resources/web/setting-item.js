@@ -24,6 +24,7 @@ export class SettingItem {
         map.detail.addEventListener("click", async event => await this.doDetail(name));
         map.editPrinter.addEventListener("click", async event => await this.doEditPrinter(name));
         map.editAux.addEventListener("click", async event => await this.doEditAux(name));
+        map.delete.addEventListener("click", async event => await this.doDelete(name));
     }
 
     async doDetail(name){
@@ -43,6 +44,13 @@ export class SettingItem {
         if( current ){
             let aux = current.auxSetting;
             let result = await openEditAuxSettingDialog(name, aux, this.api);
+        }
+    }
+
+    async doDelete(name){
+        if( confirm(`この印刷設定（${name}）を削除しますか？`) ){
+            await this.api.deleteSetting(name);
+            this.ele.dispatchEvent(new CustomEvent("setting-deleted", { bubbles: true }));
         }
     }
 }

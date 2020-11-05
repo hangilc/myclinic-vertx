@@ -4,6 +4,8 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class Server {
 
@@ -15,6 +17,11 @@ public class Server {
 
     public Server(String bind, int port, int backlog) throws IOException {
         this.httpServer = HttpServer.create(new InetSocketAddress(bind, port), backlog);
+        this.httpServer.setExecutor(createExecutor());
+    }
+
+    private Executor createExecutor() {
+        return Executors.newFixedThreadPool(6);
     }
 
     public void start() {

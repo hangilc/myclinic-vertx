@@ -127,6 +127,9 @@ public class Main {
             case "PUT":
                 handleSettingPUT(handler);
                 break;
+            case "DELETE":
+                handleSettingDELETE(handler);
+                break;
             case "OPTIONS":
                 handler.respondToOptions(List.of("GET", "OPIONS"));
                 break;
@@ -183,9 +186,8 @@ public class Main {
             if (settingExists(name)) {
                 handler.sendError(String.format("%s はすでに存在します。", name));
             } else {
-                handler.allowCORS();
                 createSetting(name);
-                handler.sendError("done");
+                handler.sendJson(true);
             }
         } else {
             handler.sendError("Invalid setting access.");
@@ -222,7 +224,18 @@ public class Main {
         handler.sendError("Invalid setting access.");
     }
 
-    public static void handlePrint(Handler handler) throws IOException {
+    private static void handleSettingDELETE(Handler handler) throws IOException {
+        String[] subpaths = handler.getSubPaths();
+        if( subpaths.length == 1 ){
+            String name = subpaths[0];
+            deleteSetting(name);
+            handler.sendJson(true);
+            return;
+        }
+        handler.sendError("Invalid setting access.");
+    }
+
+    private static void handlePrint(Handler handler) throws IOException {
         if( handler.getMethod().equals("OPTIONS") ){
             handler.respondToOptions(List.of("POST", "OPTIONS"));
             return;
@@ -237,10 +250,6 @@ public class Main {
         } else {
             handler.sendError("Invalid print access.");
         }
-    }
-
-    private static Executor createExecutor() {
-        return Executors.newFixedThreadPool(6);
     }
 
     private static ObjectMapper createMapper() {
@@ -281,7 +290,6 @@ public class Main {
         Path file = dir.resolve(String.format("%s.setting", name));
         byte[] bytes = Files.readAllBytes(file);
         return PrintSetting.deserialize(mapper, bytes);
-
     }
 
     private static List<String> listPrintSetting() throws IOException {
@@ -305,6 +313,12 @@ public class Main {
     private static boolean settingExists(String name) throws IOException {
         List<String> list = listPrintSetting();
         return list.contains(name);
+    }
+
+    private static void deleteSetting(String name) throws IOException {
+        Path dir = getDataDir();
+        Path file = dir.resolve(String.format("%s.setting", name));
+        Files.delete(file);
     }
 
 }

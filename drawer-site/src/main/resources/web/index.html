@@ -25,10 +25,21 @@
 <script>
     window.addEventListener('DOMContentLoaded', async event => {
         let printAPI = new PrintAPI();
+
+        document.body.addEventListener("setting-created", async event => {
+            await updateCurrentSettings();
+        });
+
+        document.body.addEventListener("setting-deleted", async event => {
+            await updateCurrentSettings();
+        });
+
         document.getElementById("create-new-setting").addEventListener("click", async event => {
             let name = prompt("新規設定の名称");
             if( name ){
                 await printAPI.createSetting(name);
+                document.body.dispatchEvent(new CustomEvent("setting-created",
+                    { bubbles: true, detail: name}));
             }
         });
         await updateCurrentSettings();

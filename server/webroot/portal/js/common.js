@@ -153,8 +153,8 @@ class Rest extends Client {
         return await ajaxGet(this.url("/list-visit-full2"), {"patient-id": patientId, page: page});
     }
 
-    async listVisitIdByPatient(patientId){
-        return await this.get("/list-visit-id-by-patient", {"patient-id": patientId});
+    async listPaymentVisitByPatient(patientId){
+        return await this.get("/list-payment-visit-by-patient", {"patient-id": patientId});
     }
 
     async enterText(text) {

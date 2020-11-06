@@ -676,7 +676,7 @@ public class Backend {
                 " and visit.visitId = payment.visitId and patient.patientId = ? and visit.patientId = patient.patientId " +
                 " order by payment.visitId desc limit ?";
         return getQuery().query(xlate(sql, ts.paymentTable, "payment",
-                ts.visitTable, "visit", ts.paymentTable, "p2"),
+                ts.visitTable, "visit", ts.patientTable, "patient", ts.paymentTable, "p2"),
                 (rs, ctx) -> {
                     PaymentVisitDTO dto = new PaymentVisitDTO();
                     dto.payment = ts.paymentTable.project(rs, ctx);

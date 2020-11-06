@@ -14,7 +14,7 @@ let tmpl = `
 `;
 
 let sectionTitleTmpl = `
-<div class="x-label"></div>
+<div class="x-label lead"></div>
 `;
 
 let sectionItemTmpl = `
@@ -33,8 +33,6 @@ export class MeisaiDialog extends ModalDialog2 {
         map.name.innerText = `${patient.lastName}${patient.firstName}`;
         map.patientId.innerText = patient.patientId;
         map.datetime.innerText = formatDatetime(visit.visitedAt);
-        console.log(meisai);
-        console.log(charge);
         for(let sect of meisai.sections){
             let title = createSectionTitle(sect.label);
             map.detail.appendChild(title);
@@ -52,7 +50,7 @@ export class MeisaiDialog extends ModalDialog2 {
 
 function summaryText(meisai, charge){
     let chargeAmount = charge ? charge.charge : 0;
-    return `総点：${meisai.totalTen}、保険：${meisai.hoken.rep}、負担割合：${meisai.futanWari}割、`
+    return `総点：${meisai.totalTen.toLocaleString()}点、保険：${meisai.hoken.rep}、負担割合：${meisai.futanWari}割、`
         + `請求額：${chargeAmount.toLocaleString()}円`;
 }
 

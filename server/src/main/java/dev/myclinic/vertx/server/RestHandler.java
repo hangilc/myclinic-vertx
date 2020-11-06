@@ -1555,10 +1555,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
-        Integer n = params.contains("n") ? Integer.parseInt(params.get("n")) : 30;
+        int n = params.contains("n") ? Integer.parseInt(params.get("n")) : 1000;
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        List<PaymentVisitPatientDTO> _value = backend.listPaymentByPatient(patientId, n);
+        List<PaymentVisitDTO> _value = backend.listPaymentVisitByPatient(patientId, n);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);

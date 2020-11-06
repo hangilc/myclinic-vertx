@@ -39,6 +39,23 @@ export class PaymentSearch extends Widget {
         cmap.close.addEventListener("click", event => this.close());
     }
 
+    setItems(result){
+        this.table.clearItems();
+        for(let r of result){
+            let {patient, payment, visit} = r;
+            let at = kanjidate.sqldatetimeToKanji(visit.visitedAt,
+                {padZero: true, omitSecond:true, sep: " "})
+            this.table.addItem(patient.patientId, `${patient.lastName}${patient.firstName}`,
+                `${payment.amount.toLocaleString()}円`, at, visit.visitId);
+        }
+
+    }
+
+    async doRecentPayment(){
+        let payments = await this.rest.listRecentPayment();
+        this.setItems(payments);
+    }
+
     async doSearch(){
         let text = this.map.searchText.value;
         let patientId = parseInt(text);
@@ -46,8 +63,12 @@ export class PaymentSearch extends Widget {
             alert("患者番号の入力が適切でありません。");
             return;
         }
-        let list = await this.rest.listVisitIdByPatient(patientId);
-        console.log(list);
+        let payments = await this.rest.listPaymentVisitByPatient(patientId);
+        let patient = await this.rest.getPatient(patientId);
+        for(let p of payments){
+            p.patient = patient;
+        }
+        this.setItems(payments);
     }
 
     async doShowMeisaiDetail(){
@@ -79,18 +100,6 @@ export class PaymentSearch extends Widget {
             }
             let ops = await this.rest.receiptDrawer(req);
             await openPrintDialog("領収書", null, [ops], "reception", "receipt");
-        }
-    }
-
-    async doRecentPayment(){
-        let payments = await this.rest.listRecentPayment();
-        this.table.clearItems();
-        for(let p of payments){
-            let {patient, payment, visit} = p;
-            let at = kanjidate.sqldatetimeToKanji(visit.visitedAt,
-                {padZero: true, omitSecond:true, sep: " "})
-            this.table.addItem(patient.patientId, `${patient.lastName}${patient.firstName}`,
-                `${payment.amount.toLocaleString()}円`, at, visit.visitId);
         }
     }
 }

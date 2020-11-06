@@ -1,6 +1,6 @@
 import {modalOpen} from "./modal-dialog.js";
 import {parseElement} from "./parse-node.js";
-import {PrintAPI} from "../js/print-api.js";
+import {PrintAPI} from "./print-api.js";
 
 let tmpl = `
     <h3>印刷</h3>

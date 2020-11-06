@@ -2,7 +2,6 @@ package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.appconfig.FileBasedAppConfig;
 import dev.myclinic.vertx.db.MysqlDataSourceConfig;
@@ -45,16 +44,17 @@ public class Main {
         mapper.registerModule(module);
     }
 
-    private static final ObjectMapper yamlMapper;
-
-    static {
-        yamlMapper = new ObjectMapper(new YAMLFactory());
-    }
+//    private static final ObjectMapper yamlMapper;
+//
+//    static {
+//        yamlMapper = new ObjectMapper(new YAMLFactory());
+//    }
 
     private static class CmdArgs {
         int port = 28080;
-        String webroot = null;
+        // String webroot = null;
         List<String> args = new ArrayList<>();
+        boolean isDev = false;
 
         public static CmdArgs parse(String[] args) {
             CmdArgs cmdArgs = new CmdArgs();
@@ -67,8 +67,12 @@ public class Main {
                         cmdArgs.port = Integer.parseInt(args[++i]);
                         break;
                     }
-                    case "--webroot": {
-                        cmdArgs.webroot = args[++i];
+//                    case "--webroot": {
+//                        cmdArgs.webroot = args[++i];
+//                        break;
+//                    }
+                    case "--dev": {
+                        cmdArgs.isDev = true;
                         break;
                     }
                     default: {
@@ -86,20 +90,25 @@ public class Main {
             for (; i < args.length; i++) {
                 cmdArgs.args.add(args[i]);
             }
-            if( cmdArgs.webroot == null ){
-                cmdArgs.webroot = findWebroot();
-            }
+//            if( cmdArgs.webroot == null ){
+//                cmdArgs.webroot = findWebroot();
+//            }
             return cmdArgs;
         }
 
-        public static String findWebroot(){
-            List<String> lists = List.of("server/webroot", "webroot");
-            for(String s: lists){
-                if( Files.exists(Path.of(s)) ){
-                    return s;
-                }
+        public static String findWebroot() {
+//            List<String> lists = List.of("server/webroot", "webroot");
+//            for(String s: lists){
+//                if( Files.exists(Path.of(s)) ){
+//                    return s;
+//                }
+//            }
+            String s = "./server/src/main/resources/webroot";
+            Path path = Path.of(s);
+            if (Files.exists(path) && Files.isDirectory(path)) {
+                return s;
             }
-            System.err.println("Cannot find webroot.");
+            System.out.println("Cannot find webroot.");
             System.exit(1);
             return null;
         }
@@ -107,13 +116,13 @@ public class Main {
         public static void usage() {
             System.err.println("Usage: server [options]");
             System.err.println("  options:");
-            System.err.println("    --port PORT       server listening port");
+            System.err.println("    --port PORT    server listening port");
+            System.err.println("    --dev          server files instead of resources");
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         CmdArgs cmdArgs = CmdArgs.parse(args);
-        String webroot = cmdArgs.webroot;
         MysqlDataSourceConfig mysqlConfig = new MysqlDataSourceConfig();
         DataSource ds = MysqlDataSourceFactory.create(mysqlConfig);
         TableSet ts = TableSet.create();
@@ -134,25 +143,26 @@ public class Main {
         router.route("/integration/*").handler(BodyHandler.create());
         router.mountSubRouter("/integration", integrationRouter);
         router.route("/*").failureHandler(errorHandler);
-        boolean isDevMode = "dev".equals(System.getenv("VERTXWEB_ENVIRONMENT"));
-
-        Route portalRoute = router.route("/portal/*");
-        portalRoute.handler(StaticHandler.create(webroot + "/portal")
-                .setDefaultContentEncoding("UTF-8").setFilesReadOnly(!isDevMode)
-                .setCachingEnabled(!isDevMode));
-        router.route("/portal").handler(ctx -> ctx.response().setStatusCode(301)
-                .putHeader("Location", "/portal/index.html")
+//        boolean isDevMode = "dev".equals(System.getenv("VERTXWEB_ENVIRONMENT"));
+        Route portalRoute = router.route("/web/*");
+        StaticHandler staticHandler;
+        if (cmdArgs.isDev) {
+            String webroot = CmdArgs.findWebroot();
+            staticHandler = StaticHandler.create(webroot)
+                    //.setWebRoot(webroot)
+                    .setDefaultContentEncoding("UTF-8")
+                    .setFilesReadOnly(false)
+                    .setCachingEnabled(false);
+        } else {
+            staticHandler = StaticHandler.create()
+                    .setDefaultContentEncoding("UTF-8")
+                    .setFilesReadOnly(false)
+                    .setCachingEnabled(false);
+        }
+        portalRoute.handler(staticHandler);
+        router.route("/web/portal").handler(ctx -> ctx.response().setStatusCode(301)
+                .putHeader("Location", "/web/portal/index.html")
                 .end());
-
-//        Route portal2Route = router.route("/portal2/*");
-//        portal2Route.handler(StaticHandler.create("server/webroot/portal2")
-//                .setDefaultContentEncoding("UTF-8").setFilesReadOnly(!isDevMode)
-//                .setCachingEnabled(!isDevMode));
-//        router.route("/portal2").handler(ctx -> ctx.response().setStatusCode(301)
-//                .putHeader("Location", "/portal2/index.html")
-//                .end());
-        //ensureAppDir(GlobalService.getInstance().portalTmpDirToken);
-        //ensureAppDir(GlobalService.getInstance().paperScanDirToken);
         server.requestHandler(router);
         server.webSocketHandler(ws -> {
             System.out.println("opened: " + ws.path());
@@ -166,13 +176,13 @@ public class Main {
 
     private static void ensureAppDir(String dirToken) throws IOException {
         Path path = GlobalService.getInstance().resolveAppPath(dirToken);
-        if( !Files.exists(path) ){
+        if (!Files.exists(path)) {
             Files.createDirectories(path);
         }
     }
 
-    private static void addStaticPath(Router router, String url, Path root){
-        if( !url.endsWith("/") ){
+    private static void addStaticPath(Router router, String url, Path root) {
+        if (!url.endsWith("/")) {
             url += "/";
         }
         String urlPrefix = url;
@@ -181,7 +191,7 @@ public class Main {
                 String path = URLDecoder.decode(ctx.request().path(), StandardCharsets.UTF_8)
                         .substring(urlPrefix.length());
                 ctx.response().sendFile(root.resolve(path).toString());
-            } catch(Exception e){
+            } catch (Exception e) {
                 ctx.fail(e);
             }
         });

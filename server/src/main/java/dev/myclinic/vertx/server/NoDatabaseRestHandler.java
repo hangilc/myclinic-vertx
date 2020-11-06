@@ -403,7 +403,8 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 List<Op> ops = form.render(data);
                 String savePath = doCreateTempFileName("medcert", ".pdf");
                 PdfPrinter pdfPrinter = new PdfPrinter(PaperSize.A4);
-                pdfPrinter.print(Collections.singletonList(ops), savePath);
+                pdfPrinter.print(Collections.singletonList(ops),
+                        GlobalService.getInstance().resolveAppPath(savePath).toString());
                 promise.complete(jsonEncode(savePath));
             } catch (Exception e) {
                 promise.fail(e);

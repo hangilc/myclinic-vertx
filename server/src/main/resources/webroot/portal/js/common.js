@@ -1,4 +1,5 @@
 function ajaxGet(url, data) {
+    console.log("ajaxGet", url);
     return new Promise((resolve, fail) => {
         $.ajax({
             type: "GET",

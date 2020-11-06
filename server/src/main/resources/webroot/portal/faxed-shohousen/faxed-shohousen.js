@@ -99,10 +99,11 @@ export function getHtml(){
 export async function initFaxedShohousen(pane) {
 
     function shohousenUrl(path, attr=null) {
-        let url = "../integration/faxed-shohousen-data/" + path;
+        let url = "/integration/faxed-shohousen-data/" + path;
         if( attr ){
             url += "?" + $.param(attr);
         }
+        console.log("shohousenUrl", url);
         return url;
     }
 

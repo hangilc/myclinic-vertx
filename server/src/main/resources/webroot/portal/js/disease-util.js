@@ -1,4 +1,4 @@
-import * as kanjidate from "../js/kanjidate.js";
+import * as kanjidate from "./kanjidate.js";
 
 export function isPrefix(shuushokugocode){
     return shuushokugocode < 8000;

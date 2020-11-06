@@ -62,3 +62,7 @@ a:hover {text-decoration: none;}
     height: 20rem;
     overflow-y: auto
 }
+
+.reception .payment-search .search-result tr {
+    cursor: pointer;
+}

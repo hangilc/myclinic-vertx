@@ -1,6 +1,7 @@
 import {Widget} from "./widget2.js";
 import {parseElement} from "../js/parse-node.js";
 import {PaymentTable} from "./payment-table.js";
+import * as kanjidate from "../js/kanjidate.js";
 
 let tmpl = `
     <div class="form-inline">
@@ -29,7 +30,13 @@ export class PaymentSearch extends Widget {
         this.table = new PaymentTable(map.searchResult);
         this.getCommandsElement().innerHTML = commandsTmpl;
         let cmap = parseElement(this.getCommandsElement());
+        cmap.reIssueReceipt.addEventListener("click", async event => this.doReIssueReceipt());
         cmap.close.addEventListener("click", event => this.close());
+    }
+
+    async doReIssueReceipt(){
+        let data = this.table.getSelectedData();
+        console.log(data);
     }
 
     async doRecentPayment(){
@@ -38,8 +45,10 @@ export class PaymentSearch extends Widget {
         this.table.clearItems();
         for(let p of payments){
             let {patient, payment, visit} = p;
+            let at = kanjidate.sqldatetimeToKanji(visit.visitedAt,
+                {padZero: true, omitSecond:true, sep: " "})
             this.table.addItem(patient.patientId, `${patient.lastName}${patient.firstName}`,
-                "", "");
+                `${payment.amount.toLocaleString()}円`, at, visit.visitId);
         }
     }
 }

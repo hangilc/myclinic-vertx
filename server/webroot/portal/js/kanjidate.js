@@ -111,6 +111,28 @@ export function sqldateToKanji(sqldate, opts){
     return `${gengou}${nen}年${month}月${day}日`;
 }
 
+export function sqldatetimeToKanji(sqldatetime, opts){
+    if( !opts ){
+        opts = {};
+    }
+    let datePart = sqldateToKanji(sqldatetime.substring(0, 10), opts);
+    let data = sqldatetimeToData(sqldatetime);
+    let hour = "" + data.hour;
+    let minute = "" + data.minute;
+    let second = "" + data.second;
+    if( opts.padZero ){
+        hour = hour.padStart(2, "0");
+        minute = hour.padStart(2, "0");
+        second = hour.padStart(2, "0");
+    }
+    let timePart = `${hour}時${minute}分${second}秒`;
+    if( opts.omitSecond ){
+        timePart = `${hour}時${minute}分`;
+    }
+    let sep = opts.sep || "";
+    return datePart + sep + timePart;
+}
+
 let dayOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 let youbi = ["日", "月", "火", "水", "木", "金", "土"];
 

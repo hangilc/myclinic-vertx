@@ -8,7 +8,6 @@ let tmpl = `
         <th scope="col">氏名</th>
         <th scope="col">金額</th>
         <th scope="col">日時</th>
-        <th scope="col">操作</th>
     </tr>
     </thead>
     <tbody class="x-body"></tbody>
@@ -20,8 +19,9 @@ let itemTmpl = `
     <td class="x-name"></td>
     <td class="x-amount"></td>
     <td class="x-datetime"></td>
-    <td class="x-commands"></td>
 `;
+
+let symData = Symbol("data");
 
 export class PaymentTable {
     constructor(ele){
@@ -37,9 +37,25 @@ export class PaymentTable {
         this.map.body.innerHTML = "";
     }
 
-    addItem(patientId, name, amount, at){
+    selectItem(tr){
+        this.map.body.querySelectorAll("tr").forEach(r => {
+            if( r !== tr ) {
+                r.classList.remove("table-active");
+            }
+        });
+        tr.classList.add("table-active");
+    }
+
+    getSelectedData(){
+        let tr = this.map.body.querySelector("tr.table-active");
+        return tr ? tr[symData] : null;
+    }
+
+    addItem(patientId, name, amount, at, visitId){
         let tr = document.createElement("tr");
         tr.innerHTML = itemTmpl;
+        tr[symData] = visitId;
+        tr.addEventListener("click", event => this.selectItem(tr));
         let map = parseElement(tr);
         map.patientId.innerText = patientId;
         map.name.innerText = name;

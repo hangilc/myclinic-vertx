@@ -349,6 +349,10 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     public static class ReceiptDrawerRequest {
+        public MeisaiDTO meisai;
+        public PatientDTO patient;
+        public VisitDTO visit;
+        public Integer charge;
         public ClinicInfoDTO clinicInfo;
     }
 
@@ -359,10 +363,10 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     ReceiptDrawerRequest.class
             );
             ReceiptDrawerData data = ReceiptDrawerDataCreator.create(
-                    null,
-                    null,
-                    null,
-                    null,
+                    req.meisai,
+                    req.patient,
+                    req.visit,
+                    req.charge,
                     req.clinicInfo
             );
             ReceiptDrawer drawer = new ReceiptDrawer(data);

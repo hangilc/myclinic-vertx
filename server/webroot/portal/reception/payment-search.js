@@ -2,6 +2,7 @@ import {Widget} from "./widget2.js";
 import {parseElement} from "../js/parse-node.js";
 import {PaymentTable} from "./payment-table.js";
 import * as kanjidate from "../js/kanjidate.js";
+import {openPrintDialog} from "../js/print-dialog.js";
 
 let tmpl = `
     <div class="form-inline">
@@ -35,12 +36,24 @@ export class PaymentSearch extends Widget {
     }
 
     async doReIssueReceipt(){
-        let data = this.table.getSelectedData();
-        console.log(data);
+        let visitId = this.table.getSelectedData();
+        let meisai = await this.rest.getMeisai(visitId);
+        let visit = await this.rest.getVisit(visitId);
+        let patient = await this.rest.getPatient(visit.patientId);
+        let charge = await this.rest.getCharge(visitId);
+        let clinicInfo = await this.rest.getClinicInfo();
+        let req = {
+            meisai,
+            patient,
+            visit,
+            charge: charge == null ? null : charge.charge,
+            clinicInfo: clinicInfo
+        }
+        let ops = await this.rest.receiptDrawer(req);
+        await openPrintDialog("領収書", null, [ops], "reception", "receipt");
     }
 
     async doRecentPayment(){
-        console.log("doRecentPayment");
         let payments = await this.rest.listRecentPayment();
         this.table.clearItems();
         for(let p of payments){

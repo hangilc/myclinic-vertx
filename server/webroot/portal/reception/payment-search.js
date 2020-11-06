@@ -29,12 +29,25 @@ export class PaymentSearch extends Widget {
         this.getContentElement().innerHTML = tmpl;
         let map = parseElement(this.getContentElement());
         map.recentPayment.addEventListener("click", async event => this.doRecentPayment());
+        map.search.addEventListener("click", async event => this.doSearch());
+        this.map = map;
         this.table = new PaymentTable(map.searchResult);
         this.getCommandsElement().innerHTML = commandsTmpl;
         let cmap = parseElement(this.getCommandsElement());
         cmap.reIssueReceipt.addEventListener("click", async event => this.doReIssueReceipt());
         cmap.showMeisaiDetail.addEventListener("click", async event => this.doShowMeisaiDetail());
         cmap.close.addEventListener("click", event => this.close());
+    }
+
+    async doSearch(){
+        let text = this.map.searchText.value;
+        let patientId = parseInt(text);
+        if( !patientId ){
+            alert("患者番号の入力が適切でありません。");
+            return;
+        }
+        let list = await this.rest.listVisitIdByPatient(patientId);
+        console.log(list);
     }
 
     async doShowMeisaiDetail(){

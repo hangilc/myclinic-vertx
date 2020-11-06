@@ -652,19 +652,35 @@ public class Backend {
         practiceLogger.logPaymentCreated(payment);
     }
 
-    public List<PaymentVisitPatientDTO> listPaymentByPatient(int patientId, int count) {
-        String sql = "select payment.*, visit.*, patient.* from Payment payment, Visit visit, Patient patient " +
+//    public List<PaymentVisitPatientDTO> listPaymentByPatient(int patientId, int count) {
+//        String sql = "select payment.*, visit.*, patient.* from Payment payment, Visit visit, Patient patient " +
+//                " where payment.paytime = (select max(p2.paytime) from Payment p2 where payment.visitId = p2.visitId group by p2.visitId) " +
+//                " and visit.visitId = payment.visitId and patient.patientId = visit.patientId and visit.patientId = ?" +
+//                " order by payment.visitId desc limit ?";
+//        return getQuery().query(xlate(sql, ts.paymentTable, "payment",
+//                ts.visitTable, "visit", ts.patientTable, "patient",
+//                ts.paymentTable, "p2"),
+//                (rs, ctx) -> {
+//                    PaymentVisitPatientDTO dto = new PaymentVisitPatientDTO();
+//                    dto.payment = ts.paymentTable.project(rs, ctx);
+//                    dto.visit = ts.visitTable.project(rs, ctx);
+//                    dto.patient = ts.patientTable.project(rs, ctx);
+//                    return dto;
+//                },
+//                patientId, count);
+//    }
+
+    public List<PaymentVisitDTO> listPaymentVisitByPatient(int patientId, int count){
+        String sql = "select payment.*, visit.* from Payment payment, Visit visit, Patient patient " +
                 " where payment.paytime = (select max(p2.paytime) from Payment p2 where payment.visitId = p2.visitId group by p2.visitId) " +
-                " and visit.visitId = payment.visitId and patient.patientId = visit.patientId and visit.patientId = ?" +
+                " and visit.visitId = payment.visitId and patient.patientId = ? and visit.patientId = patient.patientId " +
                 " order by payment.visitId desc limit ?";
         return getQuery().query(xlate(sql, ts.paymentTable, "payment",
-                ts.visitTable, "visit", ts.patientTable, "patient",
-                ts.paymentTable, "p2"),
+                ts.visitTable, "visit", ts.paymentTable, "p2"),
                 (rs, ctx) -> {
-                    PaymentVisitPatientDTO dto = new PaymentVisitPatientDTO();
+                    PaymentVisitDTO dto = new PaymentVisitDTO();
                     dto.payment = ts.paymentTable.project(rs, ctx);
                     dto.visit = ts.visitTable.project(rs, ctx);
-                    dto.patient = ts.patientTable.project(rs, ctx);
                     return dto;
                 },
                 patientId, count);

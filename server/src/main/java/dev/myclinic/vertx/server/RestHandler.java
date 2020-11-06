@@ -1551,7 +1551,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end("true");
     }
 
-    private void listPaymentByPatient(RoutingContext ctx, Connection conn) throws Exception {
+    private void listPaymentVisitByPatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -2137,10 +2137,11 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("get-hoken", this::getHoken);
         funcMap.put("update-kouhi", this::updateKouhi);
         funcMap.put("suspend-exam", this::suspendExam);
-        funcMap.put("list-payment-by-patient", this::listPaymentByPatient);
+        //funcMap.put("list-payment-by-patient", this::listPaymentByPatient);
+        funcMap.put("list-payment-visit-by-patient", this::listPaymentVisitByPatient);
         funcMap.put("list-visiting-patient-id-having-hoken", this::listVisitingPatientIdHavingHoken);
         funcMap.put("update-text", this::updateText);
-        funcMap.put("list-visit-id-for-patient", this::listVisitIdByPatient);
+        funcMap.put("list-visit-id-by-patient", this::listVisitIdByPatient);
         funcMap.put("get-pharma-drug", this::getPharmaDrug);
         funcMap.put("batch-update-drug-days", this::batchUpdateDrugDays);
         funcMap.put("delete-drug", this::deleteDrug);

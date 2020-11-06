@@ -3,6 +3,7 @@ import {parseElement} from "../js/parse-node.js";
 import {PaymentTable} from "./payment-table.js";
 import * as kanjidate from "../js/kanjidate.js";
 import {openPrintDialog} from "../js/print-dialog.js";
+import {MeisaiDialog} from "./meisai-dialog.js";
 
 let tmpl = `
     <div class="form-inline">
@@ -32,25 +33,40 @@ export class PaymentSearch extends Widget {
         this.getCommandsElement().innerHTML = commandsTmpl;
         let cmap = parseElement(this.getCommandsElement());
         cmap.reIssueReceipt.addEventListener("click", async event => this.doReIssueReceipt());
+        cmap.showMeisaiDetail.addEventListener("click", async event => this.doShowMeisaiDetail());
         cmap.close.addEventListener("click", event => this.close());
+    }
+
+    async doShowMeisaiDetail(){
+        let visitId = this.table.getSelectedData();
+        if( visitId ){
+            let meisai = await this.rest.getMeisai(visitId);
+            let visit = await this.rest.getVisit(visitId);
+            let patient = await this.rest.getPatient(visit.patientId);
+            let charge = await this.rest.getCharge(visitId);
+            let dialog = new MeisaiDialog(meisai, patient, visit, charge);
+            await dialog.open();
+        }
     }
 
     async doReIssueReceipt(){
         let visitId = this.table.getSelectedData();
-        let meisai = await this.rest.getMeisai(visitId);
-        let visit = await this.rest.getVisit(visitId);
-        let patient = await this.rest.getPatient(visit.patientId);
-        let charge = await this.rest.getCharge(visitId);
-        let clinicInfo = await this.rest.getClinicInfo();
-        let req = {
-            meisai,
-            patient,
-            visit,
-            charge: charge == null ? null : charge.charge,
-            clinicInfo: clinicInfo
+        if( visitId ) {
+            let meisai = await this.rest.getMeisai(visitId);
+            let visit = await this.rest.getVisit(visitId);
+            let patient = await this.rest.getPatient(visit.patientId);
+            let charge = await this.rest.getCharge(visitId);
+            let clinicInfo = await this.rest.getClinicInfo();
+            let req = {
+                meisai,
+                patient,
+                visit,
+                charge: charge == null ? null : charge.charge,
+                clinicInfo: clinicInfo
+            }
+            let ops = await this.rest.receiptDrawer(req);
+            await openPrintDialog("領収書", null, [ops], "reception", "receipt");
         }
-        let ops = await this.rest.receiptDrawer(req);
-        await openPrintDialog("領収書", null, [ops], "reception", "receipt");
     }
 
     async doRecentPayment(){

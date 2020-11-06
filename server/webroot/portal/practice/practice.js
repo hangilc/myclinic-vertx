@@ -89,10 +89,8 @@ class Controller {
     }
 
     async fetchRecords(patientId, page) {
-        console.log("enter fetchRecords", patientId, page);
         let rest = this.rest;
         let recordsPage = await rest.listVisit(patientId, page);
-        console.log("fetched records", recordsPage.visits.length);
         let pane = this.pane;
         pane.dispatchEvent(new CustomEvent("records-changed", {
             detail: {

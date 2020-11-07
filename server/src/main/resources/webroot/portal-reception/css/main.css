@@ -1,0 +1,69 @@
+
+.sidebar { background-color:#eee; }
+.sidebar a.active { font-weight: bold; }
+
+.panel h3 { margin-bottom: 2rem; }
+
+.practice .practice-title { background-color: #eee; font-weight: bold; padding: 3px 6px; }
+.practice .practice-record.current-visit .practice-title { background-color: #ff9; }
+.practice .practice-record.current-visit .record-left-commands {
+    border-left: 4px solid orange;
+    padding-left: 8px;
+}
+.practice .practice-record.current-visit .record-text {
+    border-left: 4px solid orange;
+    padding-left: 8px;
+}
+.practice .practice-record.temp-visit .practice-title { background-color: #9ff; }
+
+.workarea {
+    border: 1px solid #ccc;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    border-radius: 0.5em;
+    padding: 1em;
+}
+
+.modal-dialog-backdrop {
+    display: block;
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #5a6268;
+    opacity: 0.4;
+    overflow-y: auto;
+    z-index: 2001;
+}
+
+.modal-dialog-content {
+    position: absolute;
+    top: 2rem;
+    left: 50vw;
+    transform: translateX(-50%);
+    background-color: white;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    opacity: 1.0;
+    z-index: 2002;
+}
+
+.modal-dialog-content h3 {
+    margin: 0 0 0.5em 0;
+    padding: 0;
+}
+
+.modal-dialog-content .command-box {
+    text-align: right;
+    margin-top: 0.5em;
+}
+
+.reception .payment-search .search-result {
+    height: 20rem;
+    overflow-y: auto
+}
+
+.reception .payment-search .search-result tr {
+    cursor: pointer;
+}

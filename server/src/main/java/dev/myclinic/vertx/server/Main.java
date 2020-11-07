@@ -160,8 +160,11 @@ public class Main {
                     .setCachingEnabled(false);
         }
         portalRoute.handler(staticHandler);
-        router.route("/web/portal").handler(ctx -> ctx.response().setStatusCode(301)
+        router.route("/practice").handler(ctx -> ctx.response().setStatusCode(301)
                 .putHeader("Location", "/web/portal/index.html")
+                .end());
+        router.route("/reception").handler(ctx -> ctx.response().setStatusCode(301)
+                .putHeader("Location", "/web/portal-reception/index.html")
                 .end());
         server.requestHandler(router);
         server.webSocketHandler(ws -> {

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>受付</title>
+    <script src="../vendor/jquery.min.js"></script>
+    <link rel="stylesheet" href="../vendor/bootstrap.min.css">
+    <script src="../vendor/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="css/main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+</head>
+<body class="mt-0 mx-5 mb-5">
+<div class="container">
+    <div class="row pt-3 pb-2">
+        <h1 class="bg-info text-white p-3 col-md-12">受付</h1>
+    </div>
+    <div class="row">
+        <div class="col-2 pl-0">
+            <div class="sidebar p-1 pl-2">
+                <ul class="list-unstyled menu-elements mb-1">
+                    <li><a href="javascript:void(0)" class="scroll-link" id="index-main-link">メイン</a></li>
+                    <li><a href="javascript:void(0)" class="scroll-link" id="index-new-patient-link">新規患者</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-10" id="index-pane-wrapper"></div>
+    </div>
+</div>
+<script>
+    (async function () {
+        let {Menu} = await import("./index-menu.js");
+        let {MainPanel} = await import("./main/main-panel.js");
+        let {NewPatientPanel} = await import("./new-patient/new-patient-panel.js");
+
+        let menu = new Menu(document.getElementById("index-pane-wrapper"));
+        menu.addItem("main", async e => await new MainPanel(e),
+            document.getElementById("index-main-link"));
+        menu.addItem("new-patient", async e => await new NewPatientPanel(e),
+            document.getElementById("index-new-patient-link"))
+    })();
+</script>
+</body>
+</html>

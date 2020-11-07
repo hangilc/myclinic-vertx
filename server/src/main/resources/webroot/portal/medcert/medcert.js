@@ -41,8 +41,8 @@ class MedCert {
 
     async doCreate() {
         let data = await this.collectData();
-        let savePath = this.rest.renderMedCert(data);
-        alert(savePath);
+        let savePath = await this.rest.renderMedCert(data);
+        alert("Saved to " + savePath);
     }
 
     async collectData() {

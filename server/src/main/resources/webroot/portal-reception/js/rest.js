@@ -8,4 +8,8 @@ export class Rest extends HttpClient {
     async enterPatient(patient){
         return await this.POST("/enter-patient", patient);
     }
+
+    async getPatient(patientId){
+        return await this.GET("/get-patient", {"patient-id": patientId});
+    }
 }

@@ -64,6 +64,14 @@ export function parseSqltime(sqltime){
     return {hour, minute, second};
 }
 
+export function convertJsDate(jsDate){
+    return {
+        year: jsDate.getFullYear(),
+        month: jsDate.getMonth() + 1,
+        day: jsDate.getDate()
+    };
+}
+
 export function seirekiToGengouData(year, month, day){
     let sqldate = toSqldate(year, month, day);
     for(let g of gengouList){
@@ -169,35 +177,43 @@ export function sqldatetimeToData(sqldatetime){
 }
 
 export function calcAge(birthday){
-    birthday = moment(birthday);
-    return moment().diff(birthday, "years");
+    let bd = parseSqldate(birthday);
+    let today = convertJsDate(new Date());
+    let age = today.year - bd.year;
+    if( today.month > bd.month ){
+        return age;
+    } else if( today.month < bd.month ){
+        return age - 1;
+    } else {
+        if( today.day >= bd.day ){
+            return age;
+        } else {
+            return age - 1;
+        }
+    }
 }
 
-function momentToSqldate(m){
-    return m.format("YYYY-MM-DD");
-}
-
-export function advanceDays(sqldate, days){
-    let m = moment(sqldate);
-    return momentToSqldate(m.add(days, "days"));
-}
-
-export function advanceMonths(sqldate, months){
-    let m = moment(sqldate);
-    return momentToSqldate(m.add(months, "months"));
-}
-
-export function toEndOfMonth(sqldate) {
-    let m = moment(sqldate).date(1);
-    m.add(1, "months");
-    m.add(-1, "days");
-    return momentToSqldate(m);
-}
-
-export function endOfLastMonth(){
-    let m = moment().date(1).add(-1, "days");
-    return momentToSqldate(m);
-}
+// export function advanceDays(sqldate, days){
+//     let m = moment(sqldate);
+//     return momentToSqldate(m.add(days, "days"));
+// }
+//
+// export function advanceMonths(sqldate, months){
+//     let m = moment(sqldate);
+//     return momentToSqldate(m.add(months, "months"));
+// }
+//
+// export function toEndOfMonth(sqldate) {
+//     let m = moment(sqldate).date(1);
+//     m.add(1, "months");
+//     m.add(-1, "days");
+//     return momentToSqldate(m);
+// }
+//
+// export function endOfLastMonth(){
+//     let m = moment().date(1).add(-1, "days");
+//     return momentToSqldate(m);
+// }
 
 function padZero2(num){
     return ("" + num).padStart(2, "0");

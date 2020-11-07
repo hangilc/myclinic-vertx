@@ -14,7 +14,7 @@ export class HttpClient {
             let url = this.url + path;
             if( params && Object.keys(params).length !== 0 ){
                 let parts = [];
-                for(let key in Object.keys(params) ){
+                for(let key of Object.keys(params) ){
                     let val = params[key];
                     parts.push(encodeURIComponent(key) + "=" + encodeURIComponent(val));
                 }

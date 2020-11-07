@@ -38,9 +38,9 @@
 
         let rest = new Rest("/json");
         let menu = new Menu(document.getElementById("index-pane-wrapper"));
-        menu.addItem("main", async e => await new MainPanel(e, rest),
+        menu.addItem("main", e => new MainPanel(e, rest),
             document.getElementById("index-main-link"));
-        menu.addItem("new-patient", async e => await new NewPatientPanel(e, rest),
+        menu.addItem("new-patient", e => new NewPatientPanel(e, rest),
             document.getElementById("index-new-patient-link"))
     })();
 </script>

@@ -47,7 +47,7 @@ let tmpl = `
         <label for="gensym-address">住所</label>
         <input id="gensym-address" class="form-control x-address"/>
     </div>
-    <div class="form-group">
+    <div class="form-group mb-0">
         <label for="gensym-phone">電話</label>
         <input id="gensym-phone" class="form-control w-50 x-phone"/>
     </div>
@@ -55,7 +55,7 @@ let tmpl = `
 `;
 
 export class PatientForm {
-    constructor(){
+    constructor(patient){
         let ele = createElementFrom(tmpl);
         gensymId(ele);
         let map = parseElement(ele);
@@ -64,38 +64,86 @@ export class PatientForm {
         this.birthdayInput = birthdayInput;
         map.birthday.appendChild(birthdayInput.ele);
         this.ele = ele;
+        this.patientId = 0;
+        if( patient ){
+            this.set(patient);
+        }
     }
 
     getLastName(){
         return this.map.lastName.value;
     }
 
+    setLastName(value){
+        this.map.lastName.value = value;
+    }
+
     getFirstName(){
         return this.map.firstName.value;
+    }
+
+    setFirstName(value){
+        this.map.firstName.value = value;
     }
 
     getLastNameYomi(){
         return this.map.lastNameYomi.value;
     }
 
+    setLastNameYomi(value){
+        this.map.lastNameYomi.value = value;
+    }
+
     getFirstNameYomi(){
         return this.map.firstNameYomi.value;
+    }
+
+    setFirstNameYomi(value){
+        this.map.firstNameYomi.value = value;
     }
 
     getBirthday(){
         return this.birthdayInput.get();
     }
 
+    setBirthday(value){
+        this.birthdayInput.set(value);
+    }
+
     getSex(){
         return this.map.sex.querySelector("input[name='sex']:checked").value;
+    }
+
+    setSex(value){
+        this.map.sex.querySelector(`input[value='${value}']`).checked = true;
     }
 
     getAddress(){
         return this.map.address.value;
     }
 
+    setAddress(value){
+        this.map.address.value = value;
+    }
+
     getPhone(){
         return this.map.phone.value;
+    }
+
+    setPhone(value){
+        this.map.phone.value = value;
+    }
+
+    set(patient){
+        this.patientId = patient.patientId;
+        this.setLastName(patient.lastName);
+        this.setFirstName(patient.firstName);
+        this.setLastNameYomi(patient.lastNameYomi);
+        this.setFirstNameYomi(patient.firstNameYomi);
+        this.setBirthday(patient.birthday);
+        this.setSex(patient.sex);
+        this.setAddress(patient.address);
+        this.setPhone(patient.phone);
     }
 
     get(){

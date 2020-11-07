@@ -18,8 +18,8 @@
         <div class="col-2 pl-0">
             <div class="sidebar p-1 pl-2">
                 <ul class="list-unstyled menu-elements mb-1">
-                    <li><a href="javascript:void(0)" class="scroll-link" id="index-main-link">メイン</a></li>
-                    <li><a href="javascript:void(0)" class="scroll-link" id="index-new-patient-link">新規患者</a></li>
+                    <li><a href="javascript:void(0)" id="index-main-link">メイン</a></li>
+                    <li><a href="javascript:void(0)" id="index-patient-management-link">患者管理</a></li>
                 </ul>
             </div>
         </div>
@@ -33,16 +33,20 @@
     (async function () {
         let {Menu} = await import("./index-menu.js");
         let {MainPanel} = await import("./main/main-panel.js");
-        let {NewPatientPanel} = await import("./new-patient/new-patient-panel.js");
+        let {PatientManagementPanel} = await import("./patient-management/patient-management-panel.js");
         let {Rest} = await import("./js/rest.js");
 
         let rest = new Rest("/json");
         let menu = new Menu(document.getElementById("index-pane-wrapper"));
         menu.addItem("main", e => new MainPanel(e, rest),
             document.getElementById("index-main-link"));
-        menu.addItem("new-patient", e => new NewPatientPanel(e, rest),
-            document.getElementById("index-new-patient-link"))
-    })();
+        menu.addItem("patient-management", e => {
+                let panel = new PatientManagementPanel(rest);
+                e.appendChild(panel.ele);
+            },
+            document.getElementById("index-patient-management-link"));
+    })
+    ();
 </script>
 </body>
 </html>

@@ -12,4 +12,8 @@ export class Rest extends HttpClient {
     async getPatient(patientId){
         return await this.GET("/get-patient", {"patient-id": patientId});
     }
+
+    async updatePatient(patient){
+        return await this.POST("/update-patient", patient);
+    }
 }

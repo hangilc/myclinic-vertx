@@ -6,11 +6,11 @@ import {success, error} from "../js/opt-result.js";
 let tmpl = `
 <div class="form-inline">
     <select class="x-gengou form-control mr-1">
-        <option>令和</option>
-        <option>平成</option>
-        <option selected>昭和</option>
-        <option>大正</option>
-        <option>明治</option>
+        <option value="令和">令和</option>
+        <option value="平成">平成</option>
+        <option  value="昭和" selected>昭和</option>
+        <option value="大正">大正</option>
+        <option value="明治">明治</option>
     </select>
     <input type="text" class="x-nen form-control ml-2 mr-1" size="3"/> 年
     <input type="text" class="x-month form-control ml-2 mr-1" size="3"/> 月
@@ -38,20 +38,50 @@ export class DateInput {
         return this.map.gengou.value;
     }
 
+    setGengou(value){
+        this.map.gengou.querySelector(`option[value='${value}']`).selected = true;
+    }
+
     getNenInput(){
         return this.map.nen.value;
+    }
+
+    setNenInput(value){
+        this.map.nen.value = value;
     }
 
     getMonthInput(){
         return this.map.month.value;
     }
 
+    setMonthInput(value){
+        this.map.month.value = value;
+    }
+
     getDayInput(){
         return this.map.day.value;
     }
 
+    setDayInput(value){
+        this.map.day.value = value;
+    }
+
     isEmpty(){
         return this.getNenInput() === "" && this.getMonthInput() === "" && this.getDayInput() === "";
+    }
+
+    set(sqldate){
+        if( sqldate && sqldate !== "0000-00-00" ){
+            let data = kanjidate.sqldatetimeToData(sqldate);
+            this.setGengou(data.gengou.name);
+            this.setNenInput(data.nen);
+            this.setMonthInput(data.month);
+            this.setDayInput(data.day);
+        } else {
+            this.setNenInput("");
+            this.setMonthInput("");
+            this.setDayInput("");
+        }
     }
 
     get(){

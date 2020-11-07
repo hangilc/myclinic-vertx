@@ -81,15 +81,6 @@ export function seirekiToGengouData(year, month, day){
     }
 }
 
-export function seirekiToGengou(year, month, day){
-    let sqldate = toSqldate(year, month, day);
-    for(let g of gengouList){
-        if( sqldate >= g.start ){
-            return [g.name, year - g.year + 1];
-        }
-    }
-}
-
 export function gengouToSeireki(gengou, nen){
     for(let g of gengouList){
         if( g.name === gengou ){

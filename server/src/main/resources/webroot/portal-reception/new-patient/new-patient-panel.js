@@ -15,7 +15,8 @@ export class NewPatientPanel {
         let map = parseElement(ele);
         (async function(){
             let patient = await rest.getPatient(2);
-            let enterHoken = new EnterHoken(map.workarea, rest, patient);
+            let enterHoken = new EnterHoken(patient, rest);
+            map.workarea.appendChild(enterHoken.ele);
         })();
         // let enterPatient = new EnterPatient(map.workarea);
         // enterPatient.onEntered(patient => {});

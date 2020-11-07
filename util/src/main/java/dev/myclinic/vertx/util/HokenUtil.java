@@ -34,7 +34,8 @@ public class HokenUtil {
             terms.add(KouhiUtil.rep(kouhi3FutanshaBangou));
         }
         if( terms.size() == 0 ){
-            return "［保険なし］";
+            //return "［保険なし］";
+            return "自費";
         } else {
             return String.join("・", terms);
         }

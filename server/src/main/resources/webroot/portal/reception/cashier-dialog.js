@@ -1,6 +1,7 @@
 import {Dialog} from "./dialog.js";
 import {parseElement} from "../js/parse-element.js";
 import {compareBy} from "../js/general-util.js";
+import {printReceipt} from "./misc.js";
 
 export class CashierDialog extends Dialog {
     constructor(ele, map, rest) {
@@ -18,7 +19,7 @@ export class CashierDialog extends Dialog {
 
     init() {
         super.init();
-        this.printReceiptElement.on("click", event => this.doPrintReceipt());
+        this.printReceiptElement.on("click", async event => await this.doPrintReceipt());
         this.endElement.on("click", event => this.doEnd());
         this.cancelElement.on("click", event => this.close());
         return this;
@@ -34,13 +35,14 @@ export class CashierDialog extends Dialog {
             this.sectionsElement.append(e);
         }
         this.summaryElement.text(this.createSummary(meisai));
-        let chargeRep = chargeValue.toLocaleString();
         let lastPayment = this.getLastPayment(payments);
         if( lastPayment !== null ){
-            this.paymentsElement.text(`支払い済額：${lastPayment}円`);
-            this.chargeElement.text(`請求額：${chargeValue} - ${lastPayment} = ${chargeValue - lastPayment}円 `);
+            this.paymentsElement.text(`支払い済額：${lastPayment.toLocaleString()}円`);
+            this.chargeElement.text(
+                `請求額：${chargeValue.toLocaleString()} - ${lastPayment.toLocaleString()} ` +
+                `= ${(chargeValue - lastPayment).toLocaleString()}円 `);
         } else {
-            this.chargeElement.text(`請求額：${chargeValue}円 `);
+            this.chargeElement.text(`請求額：${chargeValue.toLocaleString()}円 `);
         }
         return this;
     }
@@ -73,8 +75,14 @@ export class CashierDialog extends Dialog {
         return e;
     }
 
-    doPrintReceipt(){
-        alert("Not implemented");
+    async doPrintReceipt(){
+        let meisai = this.meisai;
+        let visitId = this.visitId;
+        let chargeValue = this.chargeValue;
+        let visit = await this.rest.getVisit(visitId);
+        let patient = await this.rest.getPatient(visit.patientId);
+        let clinicInfo = await this.rest.getClinicInfo();
+        return await printReceipt(this.rest, clinicInfo, meisai, patient, visit, chargeValue);
     }
 
     async doEnd(){

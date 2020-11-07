@@ -149,7 +149,7 @@ public class Main {
         if (cmdArgs.isDev) {
             String webroot = CmdArgs.findWebroot();
             staticHandler = StaticHandler.create(webroot)
-                    //.setWebRoot(webroot)
+                    .setWebRoot(webroot)
                     .setDefaultContentEncoding("UTF-8")
                     .setFilesReadOnly(false)
                     .setCachingEnabled(false);

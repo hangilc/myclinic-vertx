@@ -28,15 +28,19 @@
     </div>
 </div>
 <script>
+    window.onerror = message => alert(message);
+
     (async function () {
         let {Menu} = await import("./index-menu.js");
         let {MainPanel} = await import("./main/main-panel.js");
         let {NewPatientPanel} = await import("./new-patient/new-patient-panel.js");
+        let {Rest} = await import("./js/rest.js");
 
+        let rest = new Rest("/json");
         let menu = new Menu(document.getElementById("index-pane-wrapper"));
-        menu.addItem("main", async e => await new MainPanel(e),
+        menu.addItem("main", async e => await new MainPanel(e, rest),
             document.getElementById("index-main-link"));
-        menu.addItem("new-patient", async e => await new NewPatientPanel(e),
+        menu.addItem("new-patient", async e => await new NewPatientPanel(e, rest),
             document.getElementById("index-new-patient-link"))
     })();
 </script>

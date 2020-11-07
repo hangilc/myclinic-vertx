@@ -4,7 +4,8 @@ MAIN
 `;
 
 export class MainPanel {
-    constructor(ele){
+    constructor(ele, rest){
         ele.innerHTML = tmpl;
+        this.rest = rest;
     }
 }

@@ -11,9 +11,10 @@ let tmpl = `
 `;
 
 export class NewPatientPanel {
-    constructor(ele){
+    constructor(ele, rest){
         ele.innerHTML = tmpl;
         this.ele = ele;
+        this.rest = rest;
         let map = parseElement(ele);
         let form = new PatientForm();
         this.form = form;
@@ -29,11 +30,13 @@ export class NewPatientPanel {
         } else {
             let patient = patientOpt.value;
             console.log(patient);
+            let patientId = await this.rest.enterPatient(patient);
+            console.log(patientId);
         }
     }
 
     doCancel(){
         this.ele.innerHTML = "";
-        new NewPatientPanel(this.ele);
+        new NewPatientPanel(this.ele, this.rest);
     }
 }

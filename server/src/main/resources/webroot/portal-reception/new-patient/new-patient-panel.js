@@ -1,6 +1,6 @@
 import {parseElement} from "../js/parse-node.js";
 import {EnterPatient} from "./enter-patient.js";
-import {PatientDisp} from "../components/patient-disp.js";
+import {EnterHoken} from "./enter-hoken.js";
 
 let tmpl = `
 <h3>新規患者</h3>
@@ -15,8 +15,7 @@ export class NewPatientPanel {
         let map = parseElement(ele);
         (async function(){
             let patient = await rest.getPatient(2);
-            let disp = new PatientDisp(patient);
-            map.workarea.appendChild(disp.ele);
+            let enterHoken = new EnterHoken(map.workarea, rest, patient);
         })();
         // let enterPatient = new EnterPatient(map.workarea);
         // enterPatient.onEntered(patient => {});

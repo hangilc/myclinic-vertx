@@ -12,11 +12,8 @@ export function gensymId(ele){
         map[id] = newId;
         e.id = newId;
     });
-    console.log(map);
     ele.querySelectorAll("label[for^='gensym-']").forEach(e => {
-        console.log(e);
         let id = e.getAttribute("for");
-        console.log(id);
         let newId = map[id];
         if( newId ){
             e.setAttribute("for", newId);

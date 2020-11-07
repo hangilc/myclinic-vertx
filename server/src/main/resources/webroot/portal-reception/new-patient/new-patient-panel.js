@@ -3,13 +3,37 @@ import {PatientForm} from "../components/patient-form.js";
 
 let tmpl = `
 <h3>新規患者</h3>
-<form class="x-form"></form>
+<div class="x-form mb-2"></div>
+<div class="text-right">
+    <button class="btn btn-primary x-enter">入力</button>
+    <button class="btn btn-secondary x-cancel">キャンセル</button>
+</div>
 `;
 
 export class NewPatientPanel {
     constructor(ele){
         ele.innerHTML = tmpl;
+        this.ele = ele;
         let map = parseElement(ele);
-        let form = new PatientForm(map.form);
+        let form = new PatientForm();
+        this.form = form;
+        map.form.appendChild(form.ele);
+        map.enter.addEventListener("click", async event => await this.doEnter());
+        map.cancel.addEventListener("click", event => this.doCancel());
+    }
+
+    async doEnter(){
+        let patientOpt = this.form.get();
+        if( !patientOpt.ok ){
+            alert(patientOpt.message);
+        } else {
+            let patient = patientOpt.value;
+            console.log(patient);
+        }
+    }
+
+    doCancel(){
+        this.ele.innerHTML = "";
+        new NewPatientPanel(this.ele);
     }
 }

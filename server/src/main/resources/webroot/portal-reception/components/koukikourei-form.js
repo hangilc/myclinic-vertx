@@ -97,12 +97,12 @@ export class KoukikoureiForm {
         }
         let validFromOpt = this.validFrom.get();
         if( !validFromOpt.ok ){
-            return error(validFromOpt.message);
+            return error("開始日：" + validFromOpt.message);
         }
         let validFrom = validFromOpt.value;
         let validUptoOpt = this.validUpto.get();
         if( !validUptoOpt.ok ){
-            return error(validUptoOpt.message);
+            return error("終了日：" + validUptoOpt.message);
         }
         let validUpto = validUptoOpt.value;
         let futanWari = parseInt(getRadioValue(this.map.form, "futan-wari"));

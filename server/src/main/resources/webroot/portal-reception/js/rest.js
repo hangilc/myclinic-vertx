@@ -45,4 +45,12 @@ export class Rest extends HttpClient {
         return await this.POST("/update-koukikourei", koukikourei);
     }
 
+    async enterKouhi(kouhi){
+        return await this.POST("/enter-kouhi", kouhi);
+    }
+
+    async updateKouhi(kouhi){
+        return await this.POST("/update-kouhi", kouhi);
+    }
+
 }

@@ -148,17 +148,17 @@ export class ShahokokuhoForm {
         }
         let validFromOpt = this.validFromInput.get();
         if( !validFromOpt.ok ){
-            return error(validFromOpt.message);
+            return error("開始日：" + validFromOpt.message);
         }
         let validFrom = validFromOpt.value;
         let validUptoOpt = this.validUptoInput.get();
         if( !validUptoOpt.ok ){
-            return error(validUptoOpt.message);
+            return error("終了日：" + validUptoOpt.message);
         }
         let validUpto = validUptoOpt.value;
         let koureiOpt = this.getKourei();
         if( !koureiOpt.ok ){
-            return error(koureiOpt.message);
+            return error("高齢：" + koureiOpt.message);
         }
         let kourei = koureiOpt.value;
         if (!(kourei >= 0 && kourei <= 3)) {

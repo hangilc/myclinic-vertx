@@ -105,7 +105,7 @@ export class DateInput {
 
     get(){
         if( this.isEmpty() ){
-            if( this.isAllowEmpty ){
+            if( this.allowEmpty ){
                 return success(this.emptyValue);
             } else {
                 return error("入力されていません。");

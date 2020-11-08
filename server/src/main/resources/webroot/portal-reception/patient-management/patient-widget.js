@@ -8,6 +8,8 @@ import {createElementFrom} from "../js/create-element-from.js";
 import {validFromRep, validUptoRep} from "../components/form-util.js";
 import {ShahokokuhoBox} from "./shahokokuho-box.js";
 import {KoukikoureiBox} from "./koukikourei-box.js";
+import {KouhiBox} from "./kouhi-box.js";
+import {NewKouhiBox} from "./new-kouhi-box.js";
 
 let tmpl = `
 <div class="x-basic mb-2"></div>
@@ -92,6 +94,23 @@ export class PatientWidget extends Widget {
             });
             this.map.currentHoken.appendChild(item.ele);
         });
+        hokenList.kouhiList.forEach(kouhi => {
+            let rep = repMap[`kouhi:${kouhi.kouhiId}`];
+            let item = new CurrentHokenItem(rep, kouhi.validFrom, kouhi.validUpto);
+            item.ele.addEventListener("detail", event => {
+                let e = this.ele.querySelector(`.kouhi-box-${kouhi.kouhiId}`);
+                if( e ){
+                    this.map.workarea.prepend(e);
+                } else {
+                    let box = new KouhiBox(kouhi, this.rest);
+                    box.ele.addEventListener("updated", event => {
+                        this.refreshHoken();
+                    });
+                    this.map.workarea.prepend(box.ele);
+                }
+            });
+            this.map.currentHoken.appendChild(item.ele);
+        });
     }
 
     doNewShahokokuho(){
@@ -124,7 +143,18 @@ export class PatientWidget extends Widget {
     }
 
     doNewKouhi(){
-
+        let e = this.ele.querySelector(".kouhi-box-new");
+        if( e ){
+            console.log("prepending");
+            this.map.workarea.prepend(e);
+        } else {
+            let part = new NewKouhiBox(this.patient.patientId, this.rest);
+            part.ele.addEventListener("kouhi-entered", event => {
+                part.ele.remove();
+                this.ele.dispatchEvent(new Event("refresh-hoken"));
+            });
+            this.map.workarea.prepend(part.ele);
+        }
     }
 }
 

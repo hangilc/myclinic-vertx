@@ -7,6 +7,7 @@ import {NewKoukikoureiBox} from "./new-koukikourei-box.js";
 import {createElementFrom} from "../js/create-element-from.js";
 import {validFromRep, validUptoRep} from "../components/form-util.js";
 import {ShahokokuhoBox} from "./shahokokuho-box.js";
+import {KoukikoureiBox} from "./koukikourei-box.js";
 
 let tmpl = `
 <div class="x-basic mb-2"></div>
@@ -59,13 +60,30 @@ export class PatientWidget extends Widget {
         this.map.currentHoken.innerHTML = "";
         hokenList.shahokokuhoList.forEach(shahokokuho => {
             let rep = repMap[`shahokokuho:${shahokokuho.shahokokuhoId}`];
-            let item = new ShahokokuhoItem(shahokokuho, rep);
+            let item = new CurrentHokenItem(rep, shahokokuho.validFrom, shahokokuho.validUpto);
             item.ele.addEventListener("detail", event => {
                 let e = this.ele.querySelector(`.shahokokuho-box-${shahokokuho.shahokokuhoId}`);
                 if( e ){
                     this.map.workarea.prepend(e);
                 } else {
                     let box = new ShahokokuhoBox(shahokokuho, this.rest);
+                    box.ele.addEventListener("updated", event => {
+                        this.refreshHoken();
+                    });
+                    this.map.workarea.prepend(box.ele);
+                }
+            });
+            this.map.currentHoken.appendChild(item.ele);
+        });
+        hokenList.koukikoureiList.forEach(koukikourei => {
+            let rep = repMap[`koukikourei:${koukikourei.koukikoureiId}`];
+            let item = new CurrentHokenItem(rep, koukikourei.validFrom, koukikourei.validUpto);
+            item.ele.addEventListener("detail", event => {
+                let e = this.ele.querySelector(`.koukikourei-box-${koukikourei.koukikoureiId}`);
+                if( e ){
+                    this.map.workarea.prepend(e);
+                } else {
+                    let box = new KoukikoureiBox(koukikourei, this.rest);
                     box.ele.addEventListener("updated", event => {
                         this.refreshHoken();
                     });
@@ -93,6 +111,7 @@ export class PatientWidget extends Widget {
     doNewKoukikourei(){
         let e = this.ele.querySelector(".koukikourei-box-new");
         if( e ){
+            console.log("prepending");
             this.map.workarea.prepend(e);
         } else {
             let part = new NewKoukikoureiBox(this.patient.patientId, this.rest);
@@ -109,21 +128,22 @@ export class PatientWidget extends Widget {
     }
 }
 
-class ShahokokuhoItem {
+class CurrentHokenItem {
     static tmpl = `
         <div>
             <span class="x-rep"></span>
-            <button class="btn btn-link x-detail">詳細</button>
+            <button class="btn btn-link py-0 x-detail">詳細</button>
         </div>
     `;
-    constructor(shahokokuho, rep){
-        this.ele = createElementFrom(ShahokokuhoItem.tmpl);
+    constructor(rep, validFrom, validUpto){
+        this.ele = createElementFrom(CurrentHokenItem.tmpl);
         this.map = parseElement(this.ele);
-        let from = validFromRep(shahokokuho.validFrom);
-        let upto = validUptoRep(shahokokuho.validUpto);
+        let from = validFromRep(validFrom);
+        let upto = validUptoRep(validUpto);
         this.map.rep.innerText = `${rep} ${from} - ${upto}`;
         this.map.detail.addEventListener("click", event => {
             this.ele.dispatchEvent(new Event("detail"));
         });
     }
 }
+

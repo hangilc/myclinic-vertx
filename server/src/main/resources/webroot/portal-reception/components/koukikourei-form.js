@@ -72,6 +72,11 @@ export class KoukikoureiForm {
     set(koukikourei){
         this.koukikoureiId = koukikourei.koukikoureiId;
         this.patientId = koukikourei.patientId;
+        this.map.hokenshaBangou.value = koukikourei.hokenshaBangou;
+        this.map.hihokenshaBangou.value = koukikourei.hihokenshaBangou;
+        this.validFrom.set(koukikourei.validFrom);
+        this.validUpto.set(koukikourei.validUpto);
+        setRadioValue(this.map.form, "futan-wari", koukikourei.futanWari);
     }
 
     get(){

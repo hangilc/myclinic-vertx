@@ -3,6 +3,7 @@ import {BasicInfo} from "./basic-info/basic-info.js";
 import {parseElement} from "../js/parse-node.js";
 import * as kanjidate from "../js/kanjidate.js";
 import {NewShahokokuhoBox} from "./new-shahokokuho-box.js";
+import {NewKoukikoureiBox} from "./new-koukikourei-box.js";
 import {createElementFrom} from "../js/create-element-from.js";
 import {validFromRep, validUptoRep} from "../components/form-util.js";
 import {ShahokokuhoBox} from "./shahokokuho-box.js";
@@ -62,7 +63,6 @@ export class PatientWidget extends Widget {
             item.ele.addEventListener("detail", event => {
                 let e = this.ele.querySelector(`.shahokokuho-box-${shahokokuho.shahokokuhoId}`);
                 if( e ){
-                    e.remove();
                     this.map.workarea.prepend(e);
                 } else {
                     let box = new ShahokokuhoBox(shahokokuho, this.rest);
@@ -91,7 +91,17 @@ export class PatientWidget extends Widget {
     }
 
     doNewKoukikourei(){
-
+        let e = this.ele.querySelector(".koukikourei-box-new");
+        if( e ){
+            this.map.workarea.prepend(e);
+        } else {
+            let part = new NewKoukikoureiBox(this.patient.patientId, this.rest);
+            part.ele.addEventListener("koukikourei-entered", event => {
+                part.ele.remove();
+                this.ele.dispatchEvent(new Event("refresh-hoken"));
+            });
+            this.map.workarea.prepend(part.ele);
+        }
     }
 
     doNewKouhi(){

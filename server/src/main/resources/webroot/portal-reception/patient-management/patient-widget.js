@@ -10,6 +10,8 @@ import {ShahokokuhoBox} from "./shahokokuho-box.js";
 import {KoukikoureiBox} from "./koukikourei-box.js";
 import {KouhiBox} from "./kouhi-box.js";
 import {NewKouhiBox} from "./new-kouhi-box.js";
+import {AllHokenBox} from "./all-hoken-box.js";
+import {HokenItemList} from "./hoken-item-list.js";
 
 let tmpl = `
 <div class="x-basic mb-2"></div>
@@ -23,6 +25,7 @@ let tmpl = `
     <button class="x-new-kouhi btn btn-link mr-4">新規公費負担</button>
     <button class="x-list-all-hoken btn btn-link">全保険リスト</button>
 </div>
+<div class="x-all-hoken mb-2"></div>
 <div class="x-workarea"></div>
 `;
 
@@ -37,12 +40,23 @@ export class PatientWidget extends Widget {
         this.map.newShahokokuho.addEventListener("click", event => this.doNewShahokokuho());
         this.map.newKoukikourei.addEventListener("click", event => this.doNewKoukikourei());
         this.map.newKouhi.addEventListener("click", event => this.doNewKouhi());
-        this.ele.addEventListener("refresh-hoken", async event => await this.refreshHoken());
+        this.map.listAllHoken.addEventListener("click", async event => await this.doListAllHoken());
+        this.ele.addEventListener("hoken-changed", async event => await this.refreshHokenItemLists());
+        this.currentHokenItemList = new HokenItemList(this.patient.patientId,
+            this.map.currentHoken, this.map.workarea, true, this.rest);
+        this.allHokenItemList = null;
         this.addBasic();
     }
 
     async init(){
-        await this.refreshHoken();
+        await this.refreshHokenItemLists();
+    }
+
+    async refreshHokenItemLists(){
+        await this.currentHokenItemList.populate();
+        if( this.allHokenItemList ){
+            await this.allHokenItemList.populate();
+        }
     }
 
     addBasic(){
@@ -55,63 +69,63 @@ export class PatientWidget extends Widget {
         this.map.basic.appendChild(basic.ele);
     }
 
-    async refreshHoken(){
-        let hokenList = await this.rest.listAvailableAllHoken(this.patient.patientId,
-            kanjidate.todayAsSqldate());
-        let repMap = await this.rest.batchResolveHokenRep(hokenList);
-        this.map.currentHoken.innerHTML = "";
-        hokenList.shahokokuhoList.forEach(shahokokuho => {
-            let rep = repMap[`shahokokuho:${shahokokuho.shahokokuhoId}`];
-            let item = new CurrentHokenItem(rep, shahokokuho.validFrom, shahokokuho.validUpto);
-            item.ele.addEventListener("detail", event => {
-                let e = this.ele.querySelector(`.shahokokuho-box-${shahokokuho.shahokokuhoId}`);
-                if( e ){
-                    this.map.workarea.prepend(e);
-                } else {
-                    let box = new ShahokokuhoBox(shahokokuho, this.rest);
-                    box.ele.addEventListener("updated", event => {
-                        this.refreshHoken();
-                    });
-                    this.map.workarea.prepend(box.ele);
-                }
-            });
-            this.map.currentHoken.appendChild(item.ele);
-        });
-        hokenList.koukikoureiList.forEach(koukikourei => {
-            let rep = repMap[`koukikourei:${koukikourei.koukikoureiId}`];
-            let item = new CurrentHokenItem(rep, koukikourei.validFrom, koukikourei.validUpto);
-            item.ele.addEventListener("detail", event => {
-                let e = this.ele.querySelector(`.koukikourei-box-${koukikourei.koukikoureiId}`);
-                if( e ){
-                    this.map.workarea.prepend(e);
-                } else {
-                    let box = new KoukikoureiBox(koukikourei, this.rest);
-                    box.ele.addEventListener("updated", event => {
-                        this.refreshHoken();
-                    });
-                    this.map.workarea.prepend(box.ele);
-                }
-            });
-            this.map.currentHoken.appendChild(item.ele);
-        });
-        hokenList.kouhiList.forEach(kouhi => {
-            let rep = repMap[`kouhi:${kouhi.kouhiId}`];
-            let item = new CurrentHokenItem(rep, kouhi.validFrom, kouhi.validUpto);
-            item.ele.addEventListener("detail", event => {
-                let e = this.ele.querySelector(`.kouhi-box-${kouhi.kouhiId}`);
-                if( e ){
-                    this.map.workarea.prepend(e);
-                } else {
-                    let box = new KouhiBox(kouhi, this.rest);
-                    box.ele.addEventListener("updated", event => {
-                        this.refreshHoken();
-                    });
-                    this.map.workarea.prepend(box.ele);
-                }
-            });
-            this.map.currentHoken.appendChild(item.ele);
-        });
-    }
+    // async refreshHoken(){
+    //     let hokenList = await this.rest.listAvailableAllHoken(this.patient.patientId,
+    //         kanjidate.todayAsSqldate());
+    //     let repMap = await this.rest.batchResolveHokenRep(hokenList);
+    //     this.map.currentHoken.innerHTML = "";
+    //     hokenList.shahokokuhoList.forEach(shahokokuho => {
+    //         let rep = repMap[`shahokokuho:${shahokokuho.shahokokuhoId}`];
+    //         let item = new HokenItem(rep, shahokokuho.validFrom, shahokokuho.validUpto);
+    //         item.ele.addEventListener("detail", event => {
+    //             let e = this.ele.querySelector(`.shahokokuho-box-${shahokokuho.shahokokuhoId}`);
+    //             if( e ){
+    //                 this.map.workarea.prepend(e);
+    //             } else {
+    //                 let box = new ShahokokuhoBox(shahokokuho, this.rest);
+    //                 box.ele.addEventListener("updated", event => {
+    //                     this.refreshHoken();
+    //                 });
+    //                 this.map.workarea.prepend(box.ele);
+    //             }
+    //         });
+    //         this.map.currentHoken.appendChild(item.ele);
+    //     });
+    //     hokenList.koukikoureiList.forEach(koukikourei => {
+    //         let rep = repMap[`koukikourei:${koukikourei.koukikoureiId}`];
+    //         let item = new CurrentHokenItem(rep, koukikourei.validFrom, koukikourei.validUpto);
+    //         item.ele.addEventListener("detail", event => {
+    //             let e = this.ele.querySelector(`.koukikourei-box-${koukikourei.koukikoureiId}`);
+    //             if( e ){
+    //                 this.map.workarea.prepend(e);
+    //             } else {
+    //                 let box = new KoukikoureiBox(koukikourei, this.rest);
+    //                 box.ele.addEventListener("updated", event => {
+    //                     this.refreshHoken();
+    //                 });
+    //                 this.map.workarea.prepend(box.ele);
+    //             }
+    //         });
+    //         this.map.currentHoken.appendChild(item.ele);
+    //     });
+    //     hokenList.kouhiList.forEach(kouhi => {
+    //         let rep = repMap[`kouhi:${kouhi.kouhiId}`];
+    //         let item = new CurrentHokenItem(rep, kouhi.validFrom, kouhi.validUpto);
+    //         item.ele.addEventListener("detail", event => {
+    //             let e = this.ele.querySelector(`.kouhi-box-${kouhi.kouhiId}`);
+    //             if( e ){
+    //                 this.map.workarea.prepend(e);
+    //             } else {
+    //                 let box = new KouhiBox(kouhi, this.rest);
+    //                 box.ele.addEventListener("updated", event => {
+    //                     this.refreshHoken();
+    //                 });
+    //                 this.map.workarea.prepend(box.ele);
+    //             }
+    //         });
+    //         this.map.currentHoken.appendChild(item.ele);
+    //     });
+    // }
 
     doNewShahokokuho(){
         let e = this.ele.querySelector(".shahokokuho-box-new");
@@ -154,6 +168,21 @@ export class PatientWidget extends Widget {
                 this.ele.dispatchEvent(new Event("refresh-hoken"));
             });
             this.map.workarea.prepend(part.ele);
+        }
+    }
+
+    async doListAllHoken(){
+        if( !this.allHokenItemList ){
+            let box = new AllHokenBox(this.patient.patientId, this.rest);
+            box.ele.addEventListener("close", event => {
+                this.allHokenItemList = null;
+                box.ele.remove();
+            });
+            this.allHokenItemList = new HokenItemList(this.patient.patientId,
+                box.getContent(), this.map.workarea, false, this.rest);
+            await this.allHokenItemList.populate();
+            this.map.allHoken.innerHTML = "";
+            this.map.allHoken.append(box.ele);
         }
     }
 }

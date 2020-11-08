@@ -25,6 +25,10 @@ export class Rest extends HttpClient {
         return await this.GET("/list-available-hoken", {"patient-id": patientId, at});
     }
 
+    async listAllHoken(patientId){
+        return await this.GET("/list-hoken", {"patient-id": patientId});
+    }
+
     async batchResolveHokenRep(hokenList){
         return await this.POST("/batch-resolve-hoken-rep", hokenList);
     }

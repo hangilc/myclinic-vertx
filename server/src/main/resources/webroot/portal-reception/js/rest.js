@@ -16,4 +16,25 @@ export class Rest extends HttpClient {
     async updatePatient(patient){
         return await this.POST("/update-patient", patient);
     }
+
+    async listAvailableAllHoken(patientId, at){ // available kouhi is reported as list
+        return await this.GET("/list-available-all-hoken", {"patient-id": patientId, at});
+    }
+
+    async listAvailableHoken(patientId, at){ // available kouhi is reported as kouhi_1, ...
+        return await this.GET("/list-available-hoken", {"patient-id": patientId, at});
+    }
+
+    async batchResolveHokenRep(hokenList){
+        return await this.POST("/batch-resolve-hoken-rep", hokenList);
+    }
+
+    async enterShahokokuho(shahokokuho){
+        return await this.POST("/enter-shahokokuho", shahokokuho);
+    }
+
+    async updateShahokokuho(shahokokuho){
+        return await this.POST("/update-shahokokuho", shahokokuho);
+    }
+
 }

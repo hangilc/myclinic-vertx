@@ -1,6 +1,7 @@
 package dev.myclinic.vertx.util;
 
 import dev.myclinic.vertx.dto.HokenDTO;
+import dev.myclinic.vertx.dto.HokenListDTO;
 import dev.myclinic.vertx.dto.KouhiDTO;
 
 import java.util.ArrayList;

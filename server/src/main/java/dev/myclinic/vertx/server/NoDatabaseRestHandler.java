@@ -328,7 +328,39 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("create-paper-scan-path", this::createPaperScanPath);
         noDatabaseFuncMap.put("receipt-drawer", this::receiptDrawer);
         noDatabaseFuncMap.put("list-print-setting", this::listPrintSetting);
+        noDatabaseFuncMap.put("batch-resolve-hoken-rep", this::batchResolveHokenRep);
     }
+
+    private void batchResolveHokenRep(RoutingContext ctx) {
+        try {
+            HokenListDTO hokenList = mapper.readValue(ctx.getBody().getBytes(), HokenListDTO.class);
+            Map<String, String> map = new HashMap<>();
+            for(var shahokokuho: hokenList.shahokokuhoList){
+                String key = String.format("shahokokuho:%d", shahokokuho.shahokokuhoId);
+                String val = ShahokokuhoUtil.rep(shahokokuho);
+                map.put(key, val);
+            }
+            for(var koukikourei: hokenList.koukikoureiList){
+                String key = String.format("koukikourei:%d", koukikourei.koukikoureiId);
+                String val = KoukikoureiUtil.rep(koukikourei);
+                map.put(key, val);
+            }
+            for(var roujin: hokenList.roujinList){
+                String key = String.format("roujin:%d", roujin.roujinId);
+                String val = RoujinUtil.rep(roujin);
+                map.put(key, val);
+            }
+            for(var kouhi: hokenList.kouhiList){
+                String key = String.format("kouhi:%d", kouhi.kouhiId);
+                String val = KouhiUtil.rep(kouhi);
+                map.put(key, val);
+            }
+            ctx.response().end(jsonEncode(map));
+        } catch(Exception e){
+            ctx.fail(e);
+        }
+    }
+
 
     private void listPrintSetting(RoutingContext ctx) {
         SocketAddress remoteAddr = ctx.request().remoteAddress();

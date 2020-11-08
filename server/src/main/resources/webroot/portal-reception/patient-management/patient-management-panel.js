@@ -22,6 +22,7 @@ export class PatientManagementPanel {
         (async function(self){
             let patient = await rest.getPatient(3);
             let w = new PatientWidget(patient, rest);
+            await w.init();
             self.map.workarea.append(w.ele);
         })(this);
     }

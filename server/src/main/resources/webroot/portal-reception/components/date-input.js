@@ -26,6 +26,25 @@ export class DateInput {
         this.emptyValue = "0000-00-00";
     }
 
+    setGengouRecent(){
+        this.initGengouSelect(["令和", "平成"]);
+        this.setSelectedGengou("令和");
+    }
+
+    initGengouSelect(gengouList){
+        this.map.gengou.querySelectorAll("option").forEach(opt => {
+            if( gengouList.includes(opt.value) ){
+                opt.classList.remove("d-none");
+            } else {
+                opt.classList.add("d-none");
+            }
+        });
+    }
+
+    setSelectedGengou(gengou){
+        this.map.gengou.value = gengou;
+    }
+
     setAllowEmpty(boolValue){
         this.allowEmpty = boolValue;
     }

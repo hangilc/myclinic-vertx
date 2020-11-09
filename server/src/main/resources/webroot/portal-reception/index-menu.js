@@ -29,7 +29,7 @@ export class Menu {
     }
 
     getCurrentPanelContent(){
-        return this.paneWrapper.firstChild;
+        return this.panelWrapper.firstChild;
     }
 
     async simulateClick(name){
@@ -51,6 +51,7 @@ export class Menu {
             } else {
                 this.panelWrapper.appendChild(panel.savedElement);
             }
+            this.currentPanel = panel;
         }
     }
 

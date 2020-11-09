@@ -48,6 +48,11 @@ export class PatientSearchResultBox {
                 await this.doStartVisit(selectedPatientId);
             }
         });
+        this.map.managePatient.addEventListener("click", event => {
+            if( selectedPatientId > 0 ){
+                this.doManagePatient(selectedPatientId);
+            }
+        });
         this.map.close.addEventListener("click", event => this.ele.dispatchEvent(new Event("close")));
     }
 
@@ -55,6 +60,12 @@ export class PatientSearchResultBox {
         if( patientId > 0 ){
             await this.rest.startVisit(patientId);
             this.ele.dispatchEvent(new Event("close"));
+        }
+    }
+
+    doManagePatient(patientId){
+        if( patientId > 0 ){
+            this.ele.dispatchEvent(new CustomEvent("manage-patient", {detail: patientId}));
         }
     }
 

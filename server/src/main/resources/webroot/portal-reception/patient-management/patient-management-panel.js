@@ -24,12 +24,6 @@ export class PatientManagementPanel {
         this.map = parseElement(this.ele);
         this.map.newPatient.addEventListener("click", event => this.doNewPatient());
         this.map.patientSearchButton.addEventListener("click", async event => await this.doPatientSearch());
-        // (async function(self){
-        //     let patient = await rest.getPatient(3);
-        //     let w = new PatientWidget(patient, rest);
-        //     await w.init();
-        //     self.map.workarea.append(w.ele);
-        // })(this);
     }
 
     async doPatientSearch(){
@@ -42,6 +36,19 @@ export class PatientManagementPanel {
         this.map.patientSearchResult.innerHTML = "";
         this.map.patientSearchResult.appendChild(box.ele);
         box.ele.addEventListener("close", event => {
+            box.ele.remove();
+            this.map.patientSearchText.value = "";
+        });
+        box.ele.addEventListener("manage-patient", async event => {
+            let patientId = event.detail;
+            let e = this.map.workarea.querySelector(`.patient-widget-${patientId}`);
+            if( !e ){
+                let patient = await this.rest.getPatient(patientId);
+                let w = new PatientWidget(patient, this.rest);
+                await w.init();
+                e = w.ele;
+            }
+            this.map.workarea.prepend(e);
             box.ele.remove();
             this.map.patientSearchText.value = "";
         });

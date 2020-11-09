@@ -29,6 +29,7 @@ let tmpl = `
 export class PatientWidget extends Widget {
     constructor(patient, rest) {
         super(`${patient.lastName}${patient.firstName}（${patient.patientId}）`);
+        this.ele.classList.add(`patient-widget-${patient.patientId}`);
         this.patient = patient;
         this.rest = rest;
         this.getContent().innerHTML = tmpl;

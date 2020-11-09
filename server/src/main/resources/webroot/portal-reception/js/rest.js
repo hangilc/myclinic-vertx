@@ -17,6 +17,10 @@ export class Rest extends HttpClient {
         return await this.POST("/update-patient", patient);
     }
 
+    async searchPatient(text){
+        return await this.GET("/search-patient", {text});
+    }
+
     async listAvailableAllHoken(patientId, at){ // available kouhi is reported as list
         return await this.GET("/list-available-all-hoken", {"patient-id": patientId, at});
     }

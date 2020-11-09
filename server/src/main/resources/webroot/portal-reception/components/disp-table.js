@@ -14,16 +14,41 @@ let itemTmpl = `
     </div>
 `;
 
+class Field {
+    constructor(element, converter){
+        this.element = element;
+        this.converter = converter;
+    }
+}
+
 export class DispTable {
     constructor(){
         this.ele = createElementFrom(tmpl);
+        this.fields = [];
     }
 
-    add(key, value){
+    addField(key, conv){ // conv: data => string
         let item = createElementFrom(itemTmpl);
         let map = parseElement(item);
         map.key.innerText = key;
-        map.value.innerText = value;
         this.ele.appendChild(item);
+        let field = new Field(map.value, conv);
+        this.fields.push(field);
+    }
+
+    set(data){
+        for(let f of this.fields){
+            f.element.innerText = f.converter(data);
+        }
+    }
+
+    clear(){
+        for(let f of this.fields){
+            f.element.innerText = "";
+        }
+    }
+
+    add(key, value){ // for backward compatibility
+        this.addField(key, data => value);
     }
 }

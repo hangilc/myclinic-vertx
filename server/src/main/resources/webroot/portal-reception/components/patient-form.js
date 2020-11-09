@@ -6,50 +6,49 @@ import {success, error} from "../js/opt-result.js";
 
 let tmpl = `
 <form onsubmit="return false;">
-    <div class="form-row">
-        <div class="form-group col-auto">
-            <label for="gensym-last-name">姓</label>
-            <input id="gensym-last-name" class="form-control x-last-name"/>
-        </div>
-        <div class="form-group col-auto">
-            <label for="gensym-first-name">名</label>
-            <input id="gensym-first-name" class="form-control x-first-name"/>
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label d-flex justify-content-end">氏名</div>
+        <div class="col-sm-10 form-inline">
+            <input type="text" class="form-control x-last-name mr-3"/>
+            <input type="text" class="form-control x-first-name"/>
         </div>
     </div>
-    <div class="form-row">
-        <div class="form-group col-auto">
-            <label for="gensym-last-name">姓（よみ）</label>
-            <input id="gensym-last-name-yomi" class="form-control x-last-name-yomi"/>
-        </div>
-        <div class="form-group col-auto">
-            <label for="gensym-first-name">名（よみ）</label>
-            <input id="gensym-first-name-yomi" class="form-control x-first-name-yomi"/>
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label d-flex justify-content-end">よみ</div>
+        <div class="col-sm-10 form-inline">
+            <input type="text" class="form-control x-last-name-yomi mr-3"/>
+            <input type="text" class="form-control x-first-name-yomi"/>
         </div>
     </div>
-    <div class="form-group">
-        <label for="gensym-birthday">生年月日</label>
-        <div class="x-birthday"></div>
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label d-flex justify-content-end">生年月日</div>
+        <div class="col-sm-10 form-inline x-birthday"></div>
     </div>
-    <div class="form-group x-sex">
-        <label for="gensym-sex">性別</label>
-        <div class="form-row pl-2">
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="sex" id="gensym-sex-male" value="M">
-            <label class="form-check-label" for="gensym-sex-male">男</label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="sex" id="gensym-sex-female" value="F" checked>
-            <label class="form-check-label" for="gensym-sex-female">女</label>
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label d-flex justify-content-end">性別</div>
+        <div class="col-sm-10 form-inline">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="sex" id="gensym-sex-male" value="M">
+                <label class="form-check-label" for="gensym-sex-male">男</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="sex" id="gensym-sex-female" value="F" 
+                    checked>
+                <label class="form-check-label" for="gensym-sex-female">女</label>
         </div>
         </div>
     </div>
-    <div class="form-group">
-        <label for="gensym-address">住所</label>
-        <input id="gensym-address" class="form-control x-address"/>
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label d-flex justify-content-end">住所</div>
+        <div class="col-sm-10">
+            <input type="text" class="form-control x-address"/>
+        </div>
     </div>
-    <div class="form-group mb-0">
-        <label for="gensym-phone">電話</label>
-        <input id="gensym-phone" class="form-control w-50 x-phone"/>
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label d-flex justify-content-end">電話</div>
+        <div class="col-sm-10">
+            <input type="text" class="form-control x-phone"/>
+        </div>
     </div>
 </form>
 `;

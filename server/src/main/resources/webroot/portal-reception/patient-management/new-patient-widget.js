@@ -1,6 +1,11 @@
 import {Widget} from "../components/widget.js";
 import {PatientForm} from "../components/patient-form.js";
-import {ComEnterCancel} from "../components/com-enter-cancel.js";
+import {parseElement} from "../js/parse-node.js";
+
+let commandsTmpl = `
+    <button class="x-enter btn btn-primary">入力</button>
+    <button class="x-cancel btn btn-sm btn-secondary">キャンセル</button>
+`;
 
 export class NewPatientWidget extends Widget {
     constructor(rest){
@@ -8,7 +13,8 @@ export class NewPatientWidget extends Widget {
         this.rest = rest;
         this.form = new PatientForm();
         this.getContent().appendChild(this.form.ele);
-        let cmap = ComEnterCancel.populate(this.getCommands());
+        this.getCommands().innerHTML = commandsTmpl;
+        let cmap = parseElement(this.getCommands());
         cmap.enter.addEventListener("click", async event => await this.doEnter());
         cmap.cancel.addEventListener("click", event => this.close());
     }

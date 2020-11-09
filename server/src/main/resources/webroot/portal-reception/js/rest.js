@@ -57,4 +57,8 @@ export class Rest extends HttpClient {
         return await this.POST("/update-kouhi", kouhi);
     }
 
+    async startVisit(patientId){ // returns visit-id
+        return await this.GET("/start-visit", {"patient-id": patientId});
+    }
+
 }

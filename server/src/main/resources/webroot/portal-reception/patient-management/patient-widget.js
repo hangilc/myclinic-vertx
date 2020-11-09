@@ -1,14 +1,10 @@
 import {Widget} from "../components/widget.js";
 import {BasicInfo} from "./basic-info/basic-info.js";
 import {parseElement} from "../js/parse-node.js";
-import * as kanjidate from "../js/kanjidate.js";
 import {NewShahokokuhoBox} from "./new-shahokokuho-box.js";
 import {NewKoukikoureiBox} from "./new-koukikourei-box.js";
 import {createElementFrom} from "../js/create-element-from.js";
 import {validFromRep, validUptoRep} from "../components/form-util.js";
-import {ShahokokuhoBox} from "./shahokokuho-box.js";
-import {KoukikoureiBox} from "./koukikourei-box.js";
-import {KouhiBox} from "./kouhi-box.js";
 import {NewKouhiBox} from "./new-kouhi-box.js";
 import {AllHokenBox} from "./all-hoken-box.js";
 import {HokenItemList} from "./hoken-item-list.js";
@@ -17,6 +13,7 @@ let tmpl = `
 <div class="x-basic mb-2"></div>
 <div class="x-current-hoken mb-2"></div>
 <div class="mb-2 text-right">
+    <button class="btn btn-primary x-start-visit">診察受付</button>
     <button class="btn btn-secondary btn-sm x-close">閉じる</button>
 </div>
 <div class="mb-2">
@@ -30,12 +27,13 @@ let tmpl = `
 `;
 
 export class PatientWidget extends Widget {
-    constructor(patient, rest){
+    constructor(patient, rest) {
         super(`${patient.lastName}${patient.firstName}（${patient.patientId}）`);
         this.patient = patient;
         this.rest = rest;
         this.getContent().innerHTML = tmpl;
         this.map = parseElement(this.getContent());
+        this.map.startVisit.addEventListener("click", async event => await this.doStartVisit());
         this.map.close.addEventListener("click", event => this.ele.remove());
         this.map.newShahokokuho.addEventListener("click", event => this.doNewShahokokuho());
         this.map.newKoukikourei.addEventListener("click", event => this.doNewKoukikourei());
@@ -48,18 +46,18 @@ export class PatientWidget extends Widget {
         this.addBasic();
     }
 
-    async init(){
+    async init() {
         await this.refreshHokenItemLists();
     }
 
-    async refreshHokenItemLists(){
+    async refreshHokenItemLists() {
         await this.currentHokenItemList.populate();
-        if( this.allHokenItemList ){
+        if (this.allHokenItemList) {
             await this.allHokenItemList.populate();
         }
     }
 
-    addBasic(){
+    addBasic() {
         let basic = new BasicInfo(this.patient, this.rest);
         basic.ele.addEventListener("patient-updated", event => {
             this.patient = event.detail;
@@ -69,67 +67,15 @@ export class PatientWidget extends Widget {
         this.map.basic.appendChild(basic.ele);
     }
 
-    // async refreshHoken(){
-    //     let hokenList = await this.rest.listAvailableAllHoken(this.patient.patientId,
-    //         kanjidate.todayAsSqldate());
-    //     let repMap = await this.rest.batchResolveHokenRep(hokenList);
-    //     this.map.currentHoken.innerHTML = "";
-    //     hokenList.shahokokuhoList.forEach(shahokokuho => {
-    //         let rep = repMap[`shahokokuho:${shahokokuho.shahokokuhoId}`];
-    //         let item = new HokenItem(rep, shahokokuho.validFrom, shahokokuho.validUpto);
-    //         item.ele.addEventListener("detail", event => {
-    //             let e = this.ele.querySelector(`.shahokokuho-box-${shahokokuho.shahokokuhoId}`);
-    //             if( e ){
-    //                 this.map.workarea.prepend(e);
-    //             } else {
-    //                 let box = new ShahokokuhoBox(shahokokuho, this.rest);
-    //                 box.ele.addEventListener("updated", event => {
-    //                     this.refreshHoken();
-    //                 });
-    //                 this.map.workarea.prepend(box.ele);
-    //             }
-    //         });
-    //         this.map.currentHoken.appendChild(item.ele);
-    //     });
-    //     hokenList.koukikoureiList.forEach(koukikourei => {
-    //         let rep = repMap[`koukikourei:${koukikourei.koukikoureiId}`];
-    //         let item = new CurrentHokenItem(rep, koukikourei.validFrom, koukikourei.validUpto);
-    //         item.ele.addEventListener("detail", event => {
-    //             let e = this.ele.querySelector(`.koukikourei-box-${koukikourei.koukikoureiId}`);
-    //             if( e ){
-    //                 this.map.workarea.prepend(e);
-    //             } else {
-    //                 let box = new KoukikoureiBox(koukikourei, this.rest);
-    //                 box.ele.addEventListener("updated", event => {
-    //                     this.refreshHoken();
-    //                 });
-    //                 this.map.workarea.prepend(box.ele);
-    //             }
-    //         });
-    //         this.map.currentHoken.appendChild(item.ele);
-    //     });
-    //     hokenList.kouhiList.forEach(kouhi => {
-    //         let rep = repMap[`kouhi:${kouhi.kouhiId}`];
-    //         let item = new CurrentHokenItem(rep, kouhi.validFrom, kouhi.validUpto);
-    //         item.ele.addEventListener("detail", event => {
-    //             let e = this.ele.querySelector(`.kouhi-box-${kouhi.kouhiId}`);
-    //             if( e ){
-    //                 this.map.workarea.prepend(e);
-    //             } else {
-    //                 let box = new KouhiBox(kouhi, this.rest);
-    //                 box.ele.addEventListener("updated", event => {
-    //                     this.refreshHoken();
-    //                 });
-    //                 this.map.workarea.prepend(box.ele);
-    //             }
-    //         });
-    //         this.map.currentHoken.appendChild(item.ele);
-    //     });
-    // }
+    async doStartVisit(){
+        let patientId = this.patient.patientId;
+        await this.rest.startVisit(patientId);
+        this.ele.remove();
+    }
 
-    doNewShahokokuho(){
+    doNewShahokokuho() {
         let e = this.ele.querySelector(".shahokokuho-box-new");
-        if( e ){
+        if (e) {
             this.map.workarea.prepend(e);
         } else {
             let part = new NewShahokokuhoBox(this.patient.patientId, this.rest);
@@ -141,9 +87,9 @@ export class PatientWidget extends Widget {
         }
     }
 
-    doNewKoukikourei(){
+    doNewKoukikourei() {
         let e = this.ele.querySelector(".koukikourei-box-new");
-        if( e ){
+        if (e) {
             console.log("prepending");
             this.map.workarea.prepend(e);
         } else {
@@ -156,9 +102,9 @@ export class PatientWidget extends Widget {
         }
     }
 
-    doNewKouhi(){
+    doNewKouhi() {
         let e = this.ele.querySelector(".kouhi-box-new");
-        if( e ){
+        if (e) {
             console.log("prepending");
             this.map.workarea.prepend(e);
         } else {
@@ -171,8 +117,8 @@ export class PatientWidget extends Widget {
         }
     }
 
-    async doListAllHoken(){
-        if( !this.allHokenItemList ){
+    async doListAllHoken() {
+        if (!this.allHokenItemList) {
             let box = new AllHokenBox(this.patient.patientId, this.rest);
             box.ele.addEventListener("close", event => {
                 this.allHokenItemList = null;
@@ -194,7 +140,8 @@ class CurrentHokenItem {
             <button class="btn btn-link py-0 x-detail">詳細</button>
         </div>
     `;
-    constructor(rep, validFrom, validUpto){
+
+    constructor(rep, validFrom, validUpto) {
         this.ele = createElementFrom(CurrentHokenItem.tmpl);
         this.map = parseElement(this.ele);
         let from = validFromRep(validFrom);

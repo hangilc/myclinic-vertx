@@ -1,6 +1,9 @@
 package dev.myclinic.vertx.drawer.pdf;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 class FontResourceData {
@@ -12,13 +15,40 @@ class FontResourceData {
         this.encoding = encoding;
     }
 
+    private static final Path fontDir;
+    static {
+        String fontDirEnv = System.getenv("MYCLINIC_FONT_DIR");
+        if( fontDirEnv == null ){
+            throw new RuntimeException("Cannot find env var: MYCLINIC_FONT_DIR");
+        }
+        fontDir = Path.of(fontDirEnv);
+    }
+
+    private static final Map<String, String> fontMap = new HashMap<>();
+    static {
+        fontMap.put("MS Mincho", "msmincho.ttc,0:Identity-H");
+        fontMap.put("MS Gothic", "msgothic.ttc,0:Identity-H");
+    }
+
+    private static FontResourceData getFontResourceData(String name){
+        String fontInfo = fontMap.get(name);
+        if( fontInfo == null ){
+            throw new RuntimeException("Cannot find font with name " + name);
+        }
+        String[] fontParts = fontInfo.split(":");
+        if( fontParts.length != 2 ){
+            throw new RuntimeException("Invalid font info: " + fontInfo);
+        }
+        return new FontResourceData(fontDir.resolve(fontParts[0]).toString(), fontParts[1]);
+    }
+
     static final Map<String, FontResourceData> fontResourceMap = new HashMap<>();
 
     static {
-        FontResourceData mincho = new FontResourceData("C:\\Windows\\Fonts\\msmincho.ttc,0", "Identity-H");
-        fontResourceMap.put("MS Mincho", mincho);
-        FontResourceData gothic = new FontResourceData("C:\\Windows\\Fonts\\msgothic.ttc,0", "Identity-H");
-        fontResourceMap.put("MS Gothic", gothic);
+        for(String name: List.of("MS Mincho", "MS Gothic")){
+            FontResourceData data = getFontResourceData(name);
+            fontResourceMap.put(name, data);
+        }
     }
 
 }

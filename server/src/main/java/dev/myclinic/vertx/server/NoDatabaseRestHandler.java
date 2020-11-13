@@ -2,6 +2,7 @@ package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
 import com.itextpdf.text.Image;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.appconfig.types.StampInfo;
@@ -1360,7 +1361,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         try {
             return Files.readString(path, StandardCharsets.UTF_8);
         } catch (MalformedInputException ex) {
-            return Files.readString(path, Charset.defaultCharset());
+            return Files.readString(path, Charset.forName("MS932"));
         }
     }
 

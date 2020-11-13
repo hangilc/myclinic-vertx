@@ -105,7 +105,7 @@ export class UploadImageDialog extends Dialog {
                     let filename = `${patientId}-${tag}-${stamp}${ser}${ext}`;
                     formData.append(`file${index}`, file, filename);
                 }
-                $.ajax("../json/save-patient-image", {
+                $.ajax("/json/save-patient-image", {
                     data: formData,
                     processData: false,
                     contentType: false,

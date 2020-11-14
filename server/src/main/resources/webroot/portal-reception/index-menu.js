@@ -54,6 +54,7 @@ export class Menu {
                 let config = await panel.ctor(panelWrap);
                 if( config.reloadHook ){
                     panel.setReloadHook(config.reloadHook);
+                    await panel.reloadHook();
                 }
                 this.panelWrapper.appendChild(panelWrap);
             } else {

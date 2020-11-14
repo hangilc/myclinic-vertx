@@ -48,7 +48,7 @@
         menu.addItem("cashier", e => {
                 let panel = new CashierPanel(e, rest);
                 return {
-                    reloadHook: panel.reloadHook
+                    reloadHook: async () => await panel.reloadHook()
                 };
             },
             document.getElementById("index-cashier-link"));

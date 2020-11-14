@@ -77,7 +77,7 @@ export class Title extends Component {
             alert("Invalid input: " + input);
             return;
         }
-        let attr = this.visit.attributes || {};
+        let attr = JSON.parse(this.visit.attributes || "{}");
         attr.futanWari = futanWari;
         await this.rest.updateVisitAttr(this.visit.visitId, JSON.stringify(attr));
     }

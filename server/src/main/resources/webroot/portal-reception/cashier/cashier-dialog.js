@@ -3,8 +3,11 @@ import {parseElement} from "../js/parse-node.js";
 import {MeisaiDisp} from "../components/meisai-disp.js";
 
 let bodyTmpl = `
-<div class="x-detail"></div>
-<div class="x-summary"></div>
+<div class="x-detail mb-2"></div>
+<div class="x-summary">
+    <div class="x-info mb-2"></div>
+    <div class="x-charge h5 font-weight-bold text-primary mb-0"></div>
+</div>
 `;
 
 let commandsTmpl = `
@@ -37,6 +40,8 @@ export class CashierDialog extends Dialog {
         let charge = await rest.getCharge(visitId);
         let meisaiDisp = new MeisaiDisp(meisai);
         this.map.detail.appendChild(meisaiDisp.ele);
+        this.map.info.innerText = meisaiInfo(meisai);
+        this.map.charge.innerText = meisaiCharge(charge);
         console.log(meisai);
         console.log(charge);
     }
@@ -64,4 +69,17 @@ function patientName(patient) {
 
 function patientNameYomi(patient){
     return `${patient.lastNameYomi}${patient.firstNameYomi}`
+}
+
+function meisaiInfo(meisai){
+    let parts = [
+        `総点：${meisai.totalTen}点`,
+        `負担割：${meisai.futanWari}割`
+    ];
+    return parts.join("、");
+}
+
+function meisaiCharge(charge){
+    let c = charge ? charge.charge : 0;
+    return `請求額：${c.toLocaleString()}円`;
 }

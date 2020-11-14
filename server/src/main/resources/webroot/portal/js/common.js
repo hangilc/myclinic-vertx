@@ -213,6 +213,10 @@ class Rest extends Client {
         return await this.get("/get-visit", {"visit-id": visitId});
     }
 
+    async updateVisitAttr(visitId, attr){
+        return await this.get("/update-visit-attr", {"visit-id": visitId, attr});
+    }
+
     async deleteVisit(visitId){
         return await this.post("/delete-visit", {}, {
             params: {"visit-id": visitId}

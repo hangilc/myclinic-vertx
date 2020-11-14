@@ -541,6 +541,7 @@ let html = `
                 <a href="javascript:void(0)" class="x-temp-visit dropdown-item">暫定診察に設定</a>
                 <a href="javascript:void(0)" class="x-untemp-visit dropdown-item">暫定診察の解除</a>
                 <a href="javascript:void(0)" class="x-meisai dropdown-item">診療明細</a>
+                <a href="javascript:void(0)" class="x-futan-wari-override dropdown-item">負担割オーバーライド</a>
             </div>
         </div>
     </div>

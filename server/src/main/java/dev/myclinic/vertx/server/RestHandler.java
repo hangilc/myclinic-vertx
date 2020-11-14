@@ -1,5 +1,6 @@
 package dev.myclinic.vertx.server;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.consts.ConductKind;
@@ -2127,6 +2128,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("search-prev-drug", this::searchPrevDrug);
         funcMap.put("list-shinryou-full-by-ids", this::listShinryouFullByIds);
         funcMap.put("start-visit", this::startVisit);
+        funcMap.put("update-visit-attr", this::updateVisitAttr);
         funcMap.put("modify-disease", this::modifyDisease);
         funcMap.put("delete-shinryou", this::deleteShinryou);
         funcMap.put("list-visit-text-drug-for-patient", this::listVisitTextDrugForPatient);
@@ -2198,6 +2200,20 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("resolve-kizai-master", this::resolveKizaiMaster);
         funcMap.put("resolve-shinryou-master-by-name", this::resolveShinryouMasterByName);
         funcMap.put("enter-xp", this::enterXp);
+    }
+
+    private void updateVisitAttr(RoutingContext ctx, Connection conn) throws Exception {
+        String visitIdParam = ctx.request().getParam("visit-id");
+        String attr = ctx.request().getParam("attr");
+        if( visitIdParam == null ){
+            throw new RuntimeException("Missing parameter: visit-id");
+        }
+        int visitId = Integer.parseInt(visitIdParam);
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        backend.updateVisitAttr(visitId, attr);
+        conn.commit();
+        ctx.response().end(jsonEncode(true));
     }
 
     private void listVisitIdInDateInRange(RoutingContext ctx, Connection conn) throws Exception {
@@ -2548,7 +2564,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end(result);
     }
 
-    private MeisaiDTO composeMeisai(Backend backend, int visitId, Integer futanWari) {
+    private MeisaiDTO composeMeisai(Backend backend, int visitId) throws JsonProcessingException {
         RcptVisit rcptVisit = new RcptVisit();
         VisitDTO visit = backend.getVisit(visitId);
         List<ShinryouFullDTO> shinryouList = backend.listShinryouFull(visitId);
@@ -2578,6 +2594,11 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         }
         meisaiDTO.totalTen = meisai.totalTen();
         PatientDTO patientDTO = backend.getPatient(visit.patientId);
+        Integer futanWari = null;
+        if( visit.attributes != null ){
+            VisitAttrDTO attr = mapper.readValue(visit.attributes, VisitAttrDTO.class);
+            futanWari = attr.futanWari;
+        }
         if( futanWari == null ){
             if (patientDTO.birthday != null) {
                 HokenDTO hokenDTO = backend.getHokenForVisit(visit);
@@ -2600,14 +2621,9 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private void getVisitMeisai(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         int visitId = Integer.parseInt(ctx.request().getParam("visit-id"));
-        String futanWariParam = ctx.request().getParam("futan-wari");
-        Integer futanWari = null;
-        if( futanWariParam != null ){
-            futanWari = Integer.parseInt(futanWariParam);
-        }
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        MeisaiDTO _value = composeMeisai(backend, visitId, futanWari);
+        MeisaiDTO _value = composeMeisai(backend, visitId);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);

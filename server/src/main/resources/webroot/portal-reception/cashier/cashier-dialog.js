@@ -1,6 +1,7 @@
 import {Dialog} from "../components/dialog.js";
 import {parseElement} from "../js/parse-node.js";
 import {MeisaiDisp} from "../components/meisai-disp.js";
+import {PrintReceiptDialog} from "./print-receipt-dialog.js";
 
 let bodyTmpl = `
 <div class="x-detail mb-2"></div>
@@ -32,12 +33,12 @@ export class CashierDialog extends Dialog {
     async init(visitId){
         this.visitId = visitId;
         let rest = this.rest;
-        let visit = await rest.getVisit(visitId);
-        let patient = await rest.getPatient(visit.patientId);
+        let visit = this.visit = await rest.getVisit(visitId);
+        let patient = this.patient = await rest.getPatient(visit.patientId);
         let title = `会計：（${patient.patientId}） ${patientName(patient)} （${patientNameYomi(patient)}）`;
         this.setTitle(title);
-        let meisai = await rest.getMeisai(visitId);
-        let charge = await rest.getCharge(visitId);
+        let meisai = this.meisai = await rest.getMeisai(visitId);
+        let charge = this.charge = await rest.getCharge(visitId);
         let meisaiDisp = new MeisaiDisp(meisai);
         this.map.detail.appendChild(meisaiDisp.ele);
         this.map.info.innerText = meisaiInfo(meisai);
@@ -46,12 +47,29 @@ export class CashierDialog extends Dialog {
         console.log(charge);
     }
 
+    async getReceiptOps(){
+        let clinicInfo = this.rest.getClinicInfo();
+        let chargeValue = this.charge == null ? 0 : this.charge.charge;
+        let req = {
+            meisai: this.meisai,
+            patient: this.patient,
+            visit: this.visit,
+            charge: chargeValue,
+            clinicInfo: clinicInfo
+        };
+        return await this.rest.receiptDrawer(req);
+    }
+
     async doPrintReceipt(){
         if( !(this.visitId > 0) ){
             console.log("visitId not specified");
             return;
         }
-        this.close(true);
+        let ops = await this.getReceiptOps();
+        let printDialog = new PrintReceiptDialog(ops);
+        $(this.ele).modal("hide");
+        await printDialog.open();
+        $(this.ele).modal("show");
     }
 
     async doFinish(){

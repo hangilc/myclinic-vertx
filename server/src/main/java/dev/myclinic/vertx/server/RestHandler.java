@@ -2548,7 +2548,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         req.response().end(result);
     }
 
-    private MeisaiDTO getVisitMeisai(Backend backend, int visitId) throws Exception {
+    private MeisaiDTO composeMeisai(Backend backend, int visitId, Integer futanWari) {
         RcptVisit rcptVisit = new RcptVisit();
         VisitDTO visit = backend.getVisit(visitId);
         List<ShinryouFullDTO> shinryouList = backend.listShinryouFull(visitId);
@@ -2578,16 +2578,20 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         }
         meisaiDTO.totalTen = meisai.totalTen();
         PatientDTO patientDTO = backend.getPatient(visit.patientId);
-        if (patientDTO.birthday != null) {
-            HokenDTO hokenDTO = backend.getHokenForVisit(visit);
-            HokenUtil.fillHokenRep(hokenDTO);
-            meisaiDTO.hoken = hokenDTO;
-            LocalDate birthdayDate = DateTimeUtil.parseSqlDate(patientDTO.birthday);
-            int rcptAge = HokenUtil.calcRcptAge(birthdayDate.getYear(), birthdayDate.getMonth().getValue(),
-                    birthdayDate.getDayOfMonth(), at.getYear(), at.getMonth().getValue());
-            meisaiDTO.futanWari = HokenUtil.calcFutanWari(hokenDTO, rcptAge);
+        if( futanWari == null ){
+            if (patientDTO.birthday != null) {
+                HokenDTO hokenDTO = backend.getHokenForVisit(visit);
+                HokenUtil.fillHokenRep(hokenDTO);
+                meisaiDTO.hoken = hokenDTO;
+                LocalDate birthdayDate = DateTimeUtil.parseSqlDate(patientDTO.birthday);
+                int rcptAge = HokenUtil.calcRcptAge(birthdayDate.getYear(), birthdayDate.getMonth().getValue(),
+                        birthdayDate.getDayOfMonth(), at.getYear(), at.getMonth().getValue());
+                meisaiDTO.futanWari = HokenUtil.calcFutanWari(hokenDTO, rcptAge);
+            } else {
+                meisaiDTO.futanWari = 10;
+            }
         } else {
-            meisaiDTO.futanWari = 10;
+            meisaiDTO.futanWari = futanWari;
         }
         meisaiDTO.charge = RcptUtil.calcCharge(meisaiDTO.totalTen, meisaiDTO.futanWari);
         return meisaiDTO;
@@ -2595,11 +2599,15 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
 
     private void getVisitMeisai(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
-        MultiMap params = req.params();
-        int visitId = Integer.parseInt(params.get("visit-id"));
+        int visitId = Integer.parseInt(ctx.request().getParam("visit-id"));
+        String futanWariParam = ctx.request().getParam("futan-wari");
+        Integer futanWari = null;
+        if( futanWariParam != null ){
+            futanWari = Integer.parseInt(futanWariParam);
+        }
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        MeisaiDTO _value = getVisitMeisai(backend, visitId);
+        MeisaiDTO _value = composeMeisai(backend, visitId, futanWari);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);

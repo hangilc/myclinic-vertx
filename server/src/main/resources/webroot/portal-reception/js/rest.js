@@ -81,4 +81,12 @@ export class Rest extends HttpClient {
         return await this.GET("/get-charge", {"visit-id": visitId});
     }
 
+    async getClinicInfo(){
+        return await this.GET("/get-clinic-info", {});
+    }
+
+    async receiptDrawer(req){
+        return await this.POST("/receipt-drawer", req);
+    }
+
 }

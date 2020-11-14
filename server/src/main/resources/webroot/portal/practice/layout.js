@@ -1039,7 +1039,7 @@ export async function initLayout(pane, rest, controller) {
     let {parseElement} = await import("./parse-element.js");
     let {PatientDisplay} = await import("./patient-display.js");
     let {wqueueStateCodeToRep} = await import("../js/consts.js");
-    let DrawerSvg = await import("../js/drawer-svg.js");
+    let DrawerSvg = await import("../../js/drawer-svg.js");
     let {Title} = await import("./title.js");
     let {SelectWqueueDialog} = await import("./select-wqueue-dialog.js");
     let {SelectRecentVisitDialog} = await import("./select-recent-visit-dialog.js");

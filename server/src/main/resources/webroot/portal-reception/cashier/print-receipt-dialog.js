@@ -1,7 +1,9 @@
 import {Dialog} from "../components/dialog.js";
 import {DrawerDisp} from "../components/drawer-disp.js";
 
+let commandTmpl = `
 
+`;
 
 export class PrintReceiptDialog extends Dialog {
     constructor(ops){

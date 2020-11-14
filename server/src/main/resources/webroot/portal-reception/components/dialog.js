@@ -28,6 +28,14 @@ export class Dialog {
         this.ele.querySelector(".modal-title").innerText = title;
     }
 
+    setLarge(){
+        this.ele.querySelector(".modal-dialog").classList.add("modal-lg");
+    }
+
+    setSmall(){
+        this.ele.querySelector(".modal-dialog").classList.add("modal-sm");
+    }
+
     getBody(){
         return this.ele.querySelector(".modal-body");
     }

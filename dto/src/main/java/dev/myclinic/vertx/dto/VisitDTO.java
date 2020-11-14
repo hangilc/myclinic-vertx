@@ -17,6 +17,7 @@ public class VisitDTO {
 	public int kouhi1Id;
 	public int kouhi2Id;
 	public int kouhi3Id;
+	public String attributes;
 
 	public static VisitDTO copy(VisitDTO src){
 		VisitDTO dst = new VisitDTO();
@@ -29,6 +30,7 @@ public class VisitDTO {
 		dst.kouhi1Id = src.kouhi1Id;
 		dst.kouhi2Id = src.kouhi2Id;
 		dst.kouhi3Id = src.kouhi3Id;
+		dst.attributes = src.attributes;
 		return dst;
 	}
 
@@ -44,6 +46,7 @@ public class VisitDTO {
 				", kouhi1Id=" + kouhi1Id +
 				", kouhi2Id=" + kouhi2Id +
 				", kouhi3Id=" + kouhi3Id +
+				", attributes=" + attributes +
 				'}';
 	}
 
@@ -60,12 +63,14 @@ public class VisitDTO {
 				kouhi1Id == visitDTO.kouhi1Id &&
 				kouhi2Id == visitDTO.kouhi2Id &&
 				kouhi3Id == visitDTO.kouhi3Id &&
+				Objects.equals(attributes, visitDTO.attributes) &&
 				Objects.equals(visitedAt, visitDTO.visitedAt);
 	}
 
 	@Override
 	public int hashCode() {
 
-		return Objects.hash(visitId, patientId, visitedAt, shahokokuhoId, koukikoureiId, roujinId, kouhi1Id, kouhi2Id, kouhi3Id);
+		return Objects.hash(visitId, patientId, visitedAt, shahokokuhoId, koukikoureiId, roujinId, kouhi1Id, kouhi2Id,
+				kouhi3Id, attributes);
 	}
 }

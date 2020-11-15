@@ -15,7 +15,7 @@ let tmpl = `
 </div>
 `;
 
-export class CashierPanel {
+export class MainPanel {
     constructor(ele, rest) {
         ele.innerHTML = tmpl;
         this.rest = rest;

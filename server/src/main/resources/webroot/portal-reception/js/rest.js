@@ -81,6 +81,21 @@ export class Rest extends HttpClient {
         return await this.GET("/get-charge", {"visit-id": visitId});
     }
 
+    async finishCharge(visitId, amount, payTime) {
+        // if (moment.isMoment(payTime)) {
+        //     payTime = payTime.format("YYYY-MM-DD HH:mm:ss");
+        // }
+        if (typeof payTime !== "string") {
+            throw `Invalid paytime: ${payTime}`;
+        }
+        let dto = {
+            visitId: visitId,
+            amount: amount,
+            paytime: payTime
+        }
+        return await this.POST("/finish-cashier", dto);
+    }
+
     async getClinicInfo(){
         return await this.GET("/get-clinic-info", {});
     }

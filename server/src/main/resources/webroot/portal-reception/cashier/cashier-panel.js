@@ -40,22 +40,7 @@ export class CashierPanel {
     async doCashier(visitId){
         let dialog = new CashierDialog(this.rest);
         await dialog.init(visitId);
+        dialog.ele.addEventListener("cashier-done", async event => await this.reloadHook());
         await dialog.open();
-        // let rest = this.rest;
-        // let meisai = await rest.getMeisai(visitId);
-        // let charge = await rest.getCharge(visitId);
-        // let dialog = chargeDialog;
-        // dialog.title = `会計：（${wq.patient.patientId}）${name}（${yomi}）`;
-        // dialog.detail = meisai.sections.map(sect => {
-        //     return `${sect.label}：${sect.sectionTotalTen.toLocaleString()} 点`;
-        // }).join("\n");
-        // dialog.summary = `総点：${meisai.totalTen.toLocaleString()} 点、負担割：${meisai.futanWari}割`;
-        // dialog.value = `請求額：${charge.charge.toLocaleString()} 円`;
-        // dialog.setOnEnter(async () => {
-        //     await rest.finishCharge(visitId, charge.charge, moment());
-        //     dialog.hide();
-        //     update();
-        // });
-        // dialog.show();
     }
 }

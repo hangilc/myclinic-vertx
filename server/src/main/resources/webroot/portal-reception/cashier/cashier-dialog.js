@@ -1,8 +1,8 @@
 import {Dialog} from "../components/dialog.js";
 import {parseElement} from "../js/parse-node.js";
 import {MeisaiDisp} from "../components/meisai-disp.js";
-import {PrintDialog} from "../components/print-dialog.js";
 import {openPrintReceiptDialog} from "./print-receipt-dialog.js";
+import * as kanjidate from "../js/kanjidate.js";
 
 let bodyTmpl = `
 <div class="x-detail mb-2"></div>
@@ -19,19 +19,19 @@ let commandsTmpl = `
 `;
 
 export class CashierDialog extends Dialog {
-    constructor(rest){
+    constructor(rest) {
         super();
         this.rest = rest;
         this.getBody().innerHTML = bodyTmpl;
         this.map = parseElement(this.getBody());
         this.getFooter().innerHTML = commandsTmpl;
-        let cmap = parseElement(this.getFooter());
+        let cmap = this.cmap = parseElement(this.getFooter());
         cmap.printReceipt.addEventListener("click", async event => await this.doPrintReceipt());
         cmap.finish.addEventListener("click", async event => await this.doFinish());
         cmap.cancel.addEventListener("click", event => this.close(undefined));
     }
 
-    async init(visitId){
+    async init(visitId) {
         this.visitId = visitId;
         let rest = this.rest;
         let visit = this.visit = await rest.getVisit(visitId);
@@ -48,7 +48,15 @@ export class CashierDialog extends Dialog {
         console.log(charge);
     }
 
-    async getReceiptOps(){
+    getChargeValue() {
+        if (this.charge) {
+            return this.charge.charge;
+        } else {
+            throw new Error("Charge is not specified.");
+        }
+    }
+
+    async getReceiptOps() {
         let clinicInfo = this.rest.getClinicInfo();
         let chargeValue = this.charge == null ? 0 : this.charge.charge;
         let req = {
@@ -61,22 +69,33 @@ export class CashierDialog extends Dialog {
         return await this.rest.receiptDrawer(req);
     }
 
-    async doPrintReceipt(){
-        if( !(this.visitId > 0) ){
+    async doPrintReceipt() {
+        if (!(this.visitId > 0)) {
             console.log("visitId not specified");
             return;
         }
         let ops = await this.getReceiptOps();
         $(this.ele).modal("hide");
-        await openPrintReceiptDialog(ops);
+        let printed = await openPrintReceiptDialog(ops);
+        if (printed) {
+            this.cmap.printReceipt.classList.remove("btn-primary");
+            this.cmap.printReceipt.classList.add("btn-secondary");
+            this.cmap.finish.classList.remove("btn-secondary");
+            this.cmap.finish.classList.add("btn-primary");
+        }
         $(this.ele).modal("show");
     }
 
-    async doFinish(){
-        if( !(this.visitId > 0) ){
+    async doFinish() {
+        if (!(this.visitId > 0)) {
             console.log("visitId not specified");
             return;
         }
+        let visitId = this.visitId;
+        let charge = this.getChargeValue();
+        let paytime = kanjidate.nowAsSqldatetime();
+        await this.rest.finishCharge(visitId, charge, paytime);
+        this.ele.dispatchEvent(new Event("cashier-done"));
         this.close(true);
     }
 }
@@ -85,11 +104,11 @@ function patientName(patient) {
     return `${patient.lastName}${patient.firstName}`
 }
 
-function patientNameYomi(patient){
+function patientNameYomi(patient) {
     return `${patient.lastNameYomi}${patient.firstNameYomi}`
 }
 
-function meisaiInfo(meisai){
+function meisaiInfo(meisai) {
     let parts = [
         `総点：${meisai.totalTen}点`,
         `負担割：${meisai.futanWari}割`
@@ -97,7 +116,7 @@ function meisaiInfo(meisai){
     return parts.join("、");
 }
 
-function meisaiCharge(charge){
+function meisaiCharge(charge) {
     let c = charge ? charge.charge : 0;
     return `請求額：${c.toLocaleString()}円`;
 }

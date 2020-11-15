@@ -1,0 +1,1 @@
+alter table visit add column attributes text;

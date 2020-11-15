@@ -198,8 +198,9 @@
         <module>master-cli</module>
         <module>multi-drawer</module>
         <module>ad-hoc</module>
-        <module>drawer-site</module>
         <module>drawer-printer-win</module>
+        <module>scanner</module>
+        <module>drawer-site</module>
     </modules>
 
 </project>

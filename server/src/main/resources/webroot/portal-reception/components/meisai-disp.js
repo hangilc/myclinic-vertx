@@ -24,7 +24,6 @@ export class MeisaiDisp {
             for(let item of sect.items){
                 let itemElement = createElementFrom(itemTmpl);
                 let imap = parseElement(itemElement);
-                console.log(imap);
                 imap.content.innerText = item.label;
                 imap.account.innerHTML = `${item.tanka} &times; ${item.count} = ${item.tanka * item.count}`;
                 this.ele.appendChild(itemElement);

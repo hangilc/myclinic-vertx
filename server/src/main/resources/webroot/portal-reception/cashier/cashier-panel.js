@@ -26,6 +26,11 @@ export class CashierPanel {
             let visitId = event.detail;
             await this.doCashier(visitId);
         });
+        this.wqueueTable.ele.addEventListener("wq-delete", async event => {
+            event.stopPropagation();
+            let visitId = event.detail;
+            await this.doDelete(visitId);
+        });
         this.map.wqueueTable.appendChild(this.wqueueTable.ele);
         this.map.refresh.addEventListener("click", async event => await this.reloadHook());
     }
@@ -42,5 +47,12 @@ export class CashierPanel {
         await dialog.init(visitId);
         dialog.ele.addEventListener("cashier-done", async event => await this.reloadHook());
         await dialog.open();
+    }
+
+    async doDelete(visitId){
+        if( confirm("この受付を削除しますか？") ){
+            await this.rest.deleteVisitFromReception(visitId);
+            await this.reloadHook();
+        }
     }
 }

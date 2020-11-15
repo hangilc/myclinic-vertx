@@ -69,6 +69,10 @@ export class Rest extends HttpClient {
         return await this.GET("/start-visit", {"patient-id": patientId});
     }
 
+    async deleteVisitFromReception(visitId){
+        return await this.GET("/delete-visit-from-reception", {"visit-id": visitId});
+    }
+
     async listWqueueFull(){
         return await this.GET("/list-wqueue-full", {});
     }

@@ -44,8 +44,6 @@ export class CashierDialog extends Dialog {
         this.map.detail.appendChild(meisaiDisp.ele);
         this.map.info.innerText = meisaiInfo(meisai);
         this.map.charge.innerText = meisaiCharge(charge);
-        console.log(meisai);
-        console.log(charge);
     }
 
     getChargeValue() {

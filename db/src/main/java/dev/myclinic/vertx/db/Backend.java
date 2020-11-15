@@ -214,6 +214,12 @@ public class Backend {
         practiceLogger.logVisitUpdated(prev, visit);
     }
 
+    public void updateVisitAttr(int visitId, String attr){
+        VisitDTO visit = getVisit(visitId);
+        visit.attributes = attr;
+        updateVisit(visit);
+    }
+
     void deleteVisit(int visitId) {
         VisitDTO visit = getVisit(visitId);
         ts.visitTable.delete(query, visitId);

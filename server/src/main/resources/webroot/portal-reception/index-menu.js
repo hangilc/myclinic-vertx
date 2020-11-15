@@ -4,7 +4,12 @@ class Panel {
         this.name = name;
         this.ctor = ctor;
         this.link = link;
+        this.reloadHook = async () => {};
         this.savedElement = null;
+    }
+
+    setReloadHook(hook){
+        this.reloadHook = hook;
     }
 }
 
@@ -29,7 +34,7 @@ export class Menu {
     }
 
     getCurrentPanelContent(){
-        return this.paneWrapper.firstChild;
+        return this.panelWrapper.firstChild;
     }
 
     async simulateClick(name){
@@ -46,20 +51,27 @@ export class Menu {
             if( !panel.savedElement ){
                 let panelWrap = document.createElement("div");
                 panelWrap.classList.add("panel");
-                await panel.ctor(panelWrap);
+                let config = await panel.ctor(panelWrap);
+                if( config.reloadHook ){
+                    panel.setReloadHook(config.reloadHook);
+                    await panel.reloadHook();
+                }
                 this.panelWrapper.appendChild(panelWrap);
             } else {
+                await panel.reloadHook();
                 this.panelWrapper.appendChild(panel.savedElement);
             }
+            this.currentPanel = panel;
+            this.setActive(name);
         }
     }
 
     setActive(name){
         for(let panel of this.panels){
             if( panel.name === name ){
-                link.classList.add("active");
+                panel.link.classList.add("active");
             } else {
-                link.classList.remove("active");
+                panel.link.classList.remove("active");
             }
         }
     }

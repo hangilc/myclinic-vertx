@@ -61,8 +61,32 @@ export class Rest extends HttpClient {
         return await this.POST("/update-kouhi", kouhi);
     }
 
+    async getVisit(visitId){
+        return await this.GET("/get-visit", {"visit-id": visitId});
+    }
+
     async startVisit(patientId){ // returns visit-id
         return await this.GET("/start-visit", {"patient-id": patientId});
+    }
+
+    async listWqueueFull(){
+        return await this.GET("/list-wqueue-full", {});
+    }
+
+    async getMeisai(visitId){
+        return await this.GET("/get-visit-meisai", {"visit-id": visitId});
+    }
+
+    async getCharge(visitId){
+        return await this.GET("/get-charge", {"visit-id": visitId});
+    }
+
+    async getClinicInfo(){
+        return await this.GET("/get-clinic-info", {});
+    }
+
+    async receiptDrawer(req){
+        return await this.POST("/receipt-drawer", req);
     }
 
 }

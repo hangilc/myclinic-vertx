@@ -541,6 +541,7 @@ let html = `
                 <a href="javascript:void(0)" class="x-temp-visit dropdown-item">暫定診察に設定</a>
                 <a href="javascript:void(0)" class="x-untemp-visit dropdown-item">暫定診察の解除</a>
                 <a href="javascript:void(0)" class="x-meisai dropdown-item">診療明細</a>
+                <a href="javascript:void(0)" class="x-futan-wari-override dropdown-item">負担割オーバーライド</a>
             </div>
         </div>
     </div>
@@ -1039,7 +1040,7 @@ export async function initLayout(pane, rest, controller) {
     let {parseElement} = await import("./parse-element.js");
     let {PatientDisplay} = await import("./patient-display.js");
     let {wqueueStateCodeToRep} = await import("../js/consts.js");
-    let DrawerSvg = await import("../js/drawer-svg.js");
+    let DrawerSvg = await import("../../js/drawer-svg.js");
     let {Title} = await import("./title.js");
     let {SelectWqueueDialog} = await import("./select-wqueue-dialog.js");
     let {SelectRecentVisitDialog} = await import("./select-recent-visit-dialog.js");

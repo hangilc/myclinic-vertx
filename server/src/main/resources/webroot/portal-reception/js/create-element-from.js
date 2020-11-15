@@ -1,5 +1,5 @@
 export function createElementFrom(html){
-    let tmpl = document.createElement("tmpl");
+    let tmpl = document.createElement("template");
     tmpl.innerHTML = html.trim();
-    return tmpl.firstChild;
+    return tmpl.content.firstElementChild;
 }

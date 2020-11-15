@@ -368,19 +368,9 @@ public class Main {
             return;
         }
         if( subpaths.length == 1 ){
-            String prog = subpaths[0];
-            var map = getPrefMap();
-            if( map == null ) {
-                handler.sendJson(null);
-            } else {
-                handler.sendJson(map.get(prog));
-            }
-            return;
-        }
-        if( subpaths.length == 2 ){
-            String prog = subpaths[0];
-            String key = subpaths[1];
-            handler.sendJson(getPref(prog, key));
+            String key = subpaths[0];
+            String pref = getPref(key);
+            handler.sendJson(pref);
             return;
         }
         handler.sendError("Invalid pref GET access");
@@ -389,13 +379,13 @@ public class Main {
     private static void handlePrefPOST(Handler handler) throws IOException {
         handler.allowCORS();
         String[] subpaths = handler.getSubPaths();
-        if( subpaths.length == 2 ){
-            String prog = subpaths[0];
-            String key = subpaths[1];
-            String curr = getPref(prog, key);
+        if( subpaths.length == 1 ){
+            String key = subpaths[0];
+            String curr = getPref(key);
             String value = mapper.readValue(handler.getBody(), String.class);
-            setPref(prog, key, value);
+            setPref(key, value);
             handler.sendJson(curr);
+            return;
         }
         handler.sendError("Invalid pref POST access");
     }
@@ -410,17 +400,9 @@ public class Main {
             return;
         }
         if( subpaths.length == 1 ){
-            String prog = subpaths[0];
-            var curr = getProgPrefMap(prog);
-            deleteProgPref(prog);
-            handler.sendJson(curr);
-            return;
-        }
-        if( subpaths.length == 2 ){
-            String prog = subpaths[0];
-            String key = subpaths[1];
-            String curr = getPref(prog, key);
-            deletePref(prog, key);
+            String key = subpaths[0];
+            var curr = getPref(key);
+            deletePref(key);
             handler.sendJson(curr);
             return;
         }
@@ -432,7 +414,7 @@ public class Main {
         return dir.resolve("prefs.json");
     }
 
-    private static Map<String, Map<String, String>> getPrefMap() throws IOException {
+    private static Map<String, String> getPrefMap() throws IOException {
         Path file = getPrefMapPath();
         if( !Files.exists(file) ){
             return Collections.emptyMap();
@@ -440,36 +422,18 @@ public class Main {
         return mapper.readValue(file.toFile(), new TypeReference<>(){});
     }
 
-    private static void savePrefMap(Map<String, Map<String, String>> map) throws IOException {
+    private static void savePrefMap(Map<String, String> map) throws IOException {
         Path file = getPrefMapPath();
         mapper.writeValue(file.toFile(), map);
     }
 
-    private static Map<String, String> getProgPrefMap(String prog) throws IOException {
-        var map = getPrefMap();
-        return map.get(prog);
+    private static String getPref(String key) throws IOException {
+        return getPrefMap().get(key);
     }
 
-    private static String getPref(String prog, String key) throws IOException {
-        var subMap = getProgPrefMap(prog);
-        if( subMap == null ){
-            return null;
-        } else {
-            return subMap.get(key);
-        }
-    }
-
-    private static void setPref(String prog, String key, String pref) throws IOException {
-        var map = getPrefMap();
-        var sub = map.get(prog);
-        if( sub == null ){
-            sub = new HashMap<String, String>();
-            sub.put(key, pref);
-            map = new HashMap<>(map);
-            map.put(prog, sub);
-        } else {
-            sub.put(key, pref);
-        }
+    private static void setPref(String key, String pref) throws IOException {
+        Map<String, String> map = new HashMap<>(getPrefMap());
+        map.put(key, pref);
         savePrefMap(map);
     }
 
@@ -478,23 +442,10 @@ public class Main {
         Files.delete(file);
     }
 
-    private static void deleteProgPref(String prog) throws IOException {
+    private static void deletePref(String key) throws IOException {
         var map = getPrefMap();
-        if( map.containsKey(prog) ){
-            map = new HashMap<>(map);
-            map.remove(prog);
-            savePrefMap(map);
-        }
-    }
-
-    private static void deletePref(String prog, String key) throws IOException {
-        var map = getPrefMap();
-        var sub = map.get(prog);
-        if( sub != null ){
-            map = new HashMap<>(map);
-            sub.remove(key);
-            savePrefMap(map);
-        }
+        map.remove(key);
+        savePrefMap(map);
     }
 
 }

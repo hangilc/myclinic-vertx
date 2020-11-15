@@ -99,26 +99,4 @@ function populateManip(wrapper, wq){
     }
     map.remove.addEventListener("click", event => wrapper.dispatchEvent(
         new CustomEvent("wq-delete", {bubbles: true, detail: visitId})));
-    // if( wq.wqueue.waitState === WqueueStateWaitCashier ){
-    //     let cashierButton = $("<button>", {class: "btn btn-primary"}).text("会計");
-    //     cashierButton.on("click", async event => {
-    //         let meisai = await rest.getMeisai(wq.visit.visitId);
-    //         let charge = await rest.getCharge(wq.visit.visitId);
-    //         let dialog = chargeDialog;
-    //         dialog.title = `会計：（${wq.patient.patientId}）${name}（${yomi}）`;
-    //         dialog.detail = meisai.sections.map(sect => {
-    //             return `${sect.label}：${sect.sectionTotalTen.toLocaleString()} 点`;
-    //         }).join("\n");
-    //         dialog.summary = `総点：${meisai.totalTen.toLocaleString()} 点、負担割：${meisai.futanWari}割`;
-    //         //dialog.value = `請求額：${meisai.charge.toLocaleString()} 円`;
-    //         dialog.value = `請求額：${charge.charge.toLocaleString()} 円`;
-    //         dialog.setOnEnter(async () => {
-    //             await rest.finishCharge(wq.visit.visitId, charge.charge, moment());
-    //             dialog.hide();
-    //             update();
-    //         });
-    //         dialog.show();
-    //     });
-    //     commands = cashierButton;
-    // }
 }

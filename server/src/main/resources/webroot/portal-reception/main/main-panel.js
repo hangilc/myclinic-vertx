@@ -15,7 +15,7 @@ let tmpl = `
 </div>
 `;
 
-export class CashierPanel {
+export class MainPanel {
     constructor(ele, rest) {
         ele.innerHTML = tmpl;
         this.rest = rest;
@@ -25,6 +25,11 @@ export class CashierPanel {
             event.stopPropagation();
             let visitId = event.detail;
             await this.doCashier(visitId);
+        });
+        this.wqueueTable.ele.addEventListener("wq-delete", async event => {
+            event.stopPropagation();
+            let visitId = event.detail;
+            await this.doDelete(visitId);
         });
         this.map.wqueueTable.appendChild(this.wqueueTable.ele);
         this.map.refresh.addEventListener("click", async event => await this.reloadHook());
@@ -40,22 +45,14 @@ export class CashierPanel {
     async doCashier(visitId){
         let dialog = new CashierDialog(this.rest);
         await dialog.init(visitId);
+        dialog.ele.addEventListener("cashier-done", async event => await this.reloadHook());
         await dialog.open();
-        // let rest = this.rest;
-        // let meisai = await rest.getMeisai(visitId);
-        // let charge = await rest.getCharge(visitId);
-        // let dialog = chargeDialog;
-        // dialog.title = `会計：（${wq.patient.patientId}）${name}（${yomi}）`;
-        // dialog.detail = meisai.sections.map(sect => {
-        //     return `${sect.label}：${sect.sectionTotalTen.toLocaleString()} 点`;
-        // }).join("\n");
-        // dialog.summary = `総点：${meisai.totalTen.toLocaleString()} 点、負担割：${meisai.futanWari}割`;
-        // dialog.value = `請求額：${charge.charge.toLocaleString()} 円`;
-        // dialog.setOnEnter(async () => {
-        //     await rest.finishCharge(visitId, charge.charge, moment());
-        //     dialog.hide();
-        //     update();
-        // });
-        // dialog.show();
+    }
+
+    async doDelete(visitId){
+        if( confirm("この受付を削除しますか？") ){
+            await this.rest.deleteVisitFromReception(visitId);
+            await this.reloadHook();
+        }
     }
 }

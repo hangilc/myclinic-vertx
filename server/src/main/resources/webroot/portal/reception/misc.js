@@ -9,5 +9,5 @@ export async function printReceipt(rest, clinicInfo, meisai, patient, visit, cha
         clinicInfo: clinicInfo
     }
     let ops = await rest.receiptDrawer(req);
-    return await openPrintDialog("領収書", null, [ops], "reception", "receipt");
+    return await openPrintDialog("領収書", null, [ops], "receipt");
 }

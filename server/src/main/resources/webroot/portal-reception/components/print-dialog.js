@@ -1,26 +1,77 @@
 import {Dialog} from "./dialog.js";
 import {parseElement} from "../js/parse-node.js";
 import {PrintAPI} from "../../js/print-api.js";
+import {DrawerDisp} from "./drawer-disp.js";
 
 let tmpl = `
     <div>
-        <div class="x-doc"></div>
-        <div>
-            設定：<select class="x-select"><option value="--manual--">手動</option></select>
+        <div class="x-preview d-flex justify-content-center mb-2"></div>
+        <div class="form-inline">
+            設定：<select class="x-setting-select form-control mr-2"><option value="--manual--">手動</option></select>
+            <a href="http://127.0.0.1:48080/" target="_blank" class="x-open-print-manager">管理画面表示</a>
         </div>
-    </div>
-    <div>
-        <a href="http://127.0.0.1:48080/" target="_blank">管理画面表示</a>
-    </div>
-    <div class="command-box">
-    <button class="x-print">印刷</button>
-    <button class="x-cancel">キャンセル</button>
     </div>
 `;
 
+let commandsTmpl = `
+    <button class="x-print btn btn-primary">印刷</button>
+    <button class="x-cancel btn btn-secondary">キャンセル</button>
+`;
+
 export class PrintDialog extends Dialog {
-    constructor(){
+    constructor(setup, pages, previewSpec = null){
         super();
+        this.setup = setup || [];
+        this.pages = pages || [];
+        this.api = new PrintAPI("http://127.0.0.1:48080");
+        this.getBody().innerHTML = tmpl;
+        let map = this.map = parseElement(this.getBody());
+        if( previewSpec ){
+            let ops = getPageOps(setup, pages, 0);
+            let preview = new DrawerDisp(ops, previewSpec.width, previewSpec.height, previewSpec.viewBox);
+            map.preview.appendChild(preview.ele);
+        }
+        this.getFooter().innerHTML = commandsTmpl;
+        let cmap = parseElement(this.getFooter());
+        cmap.print.addEventListener("click", async event => await this.doPrint());
+        cmap.cancel.addEventListener("click", event => this.close());
+    }
+
+    async initSetting(kind){
+        this.kind = kind;
+        let settings = await this.api.listSetting();
+        let pref = await this.api.getPref(kind);
+        for(let setting of settings){
+            let opt = document.createElement("option");
+            opt.innerText = setting;
+            if( pref && pref === setting ){
+                opt.selected = true;
+            }
+            this.map.settingSelect.appendChild(opt);
+        }
+    }
+
+    async doPrint(){
+        let setting = this.map.settingSelect.value;
+        if( setting === "--manual--" ){
+            await this.api.print(this.setup, this.pages);
+            await this.api.deletePref(this.kind);
+            this.close(true);
+        } else if( setting ){
+            await this.api.print(this.setup, this.pages, setting);
+            await this.api.setPref(this.kind, setting);
+            this.close(true);
+        } else {
+            alert("Invalid settting: " + setting);
+        }
+    }
+}
+
+function getPageOps(setup, pages, ipage){
+    if( setup && pages && pages.length > 0 ){
+        return setup.concat(pages[ipage]);
+    } else {
+        return [];
     }
 }
 

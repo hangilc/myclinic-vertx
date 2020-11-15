@@ -1,7 +1,8 @@
 import {Dialog} from "../components/dialog.js";
 import {parseElement} from "../js/parse-node.js";
 import {MeisaiDisp} from "../components/meisai-disp.js";
-import {PrintReceiptDialog} from "./print-receipt-dialog.js";
+import {PrintDialog} from "../components/print-dialog.js";
+import {openPrintReceiptDialog} from "./print-receipt-dialog.js";
 
 let bodyTmpl = `
 <div class="x-detail mb-2"></div>
@@ -66,9 +67,8 @@ export class CashierDialog extends Dialog {
             return;
         }
         let ops = await this.getReceiptOps();
-        let printDialog = new PrintReceiptDialog(ops);
         $(this.ele).modal("hide");
-        await printDialog.open();
+        await openPrintReceiptDialog(ops);
         $(this.ele).modal("show");
     }
 

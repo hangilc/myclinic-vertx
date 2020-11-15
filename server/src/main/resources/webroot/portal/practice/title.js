@@ -72,10 +72,13 @@ export class Title extends Component {
         if( input == null ){
             return;
         }
-        let futanWari = parseInt(input);
-        if( isNaN(futanWari) ){
-            alert("Invalid input: " + input);
-            return;
+        let futanWari = null;
+        if( input !== "" ){
+            futanWari = parseInt(input);
+            if( isNaN(futanWari) ){
+                alert("Invalid input: " + input);
+                return;
+            }
         }
         let attr = JSON.parse(this.visit.attributes || "{}");
         attr.futanWari = futanWari;

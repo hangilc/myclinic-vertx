@@ -51,16 +51,16 @@ export class PrintAPI {
         return await this.POST("/print/" + setting, req);
     }
 
-    async getPref(prog, key){
-        return await this.GET(`/pref/${prog}/${key}`);
+    async getPref(key){
+        return await this.GET(`/pref/${key}`);
     }
 
-    async setPref(prog, key, value){
-        return await this.POST(`/pref/${prog}/${key}`, value, {});
+    async setPref(key, value){
+        return await this.POST(`/pref/${key}`, value, {});
     }
 
-    async deletePref(prog, key){
-        return await this.DELETE(`/pref/${prog}/${key}`, {});
+    async deletePref(key){
+        return await this.DELETE(`/pref/${key}`, {});
     }
 
     REQUEST(method, path, params, body){

@@ -99,7 +99,7 @@ export class PaymentSearch extends Widget {
                 clinicInfo: clinicInfo
             }
             let ops = await this.rest.receiptDrawer(req);
-            await openPrintDialog("領収書", null, [ops], "reception", "receipt");
+            await openPrintDialog("領収書", null, [ops], "receipt");
         }
     }
 }

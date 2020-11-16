@@ -11,14 +11,15 @@ import dev.myclinic.vertx.drawerprinterwin.AuxSetting;
 import dev.myclinic.vertx.drawerprinterwin.DevmodeInfo;
 import dev.myclinic.vertx.drawerprinterwin.DevnamesInfo;
 import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
+import dev.myclinic.vertx.scanner.ScanTask;
+import dev.myclinic.vertx.scanner.Scanner;
+import dev.myclinic.vertx.scanner.ScannerLib;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 public class Main {
 
@@ -34,6 +35,8 @@ public class Main {
         server.addContext("/print/", Main::handlePrint);
         server.addContext("/setting/", Main::handleSetting);
         server.addContext("/print-dialog/", Main::handlePrintDialog);
+        server.addContext("/scanner/choose-device", Main::handleScannerChooseDevice);
+        server.addContext("/scanner/scan", Main::handleScannerScan);
         server.addContext("/web/", handler -> {
             if (cmdArgs.isDev) {
                 Path root = Path.of("./drawer-site/src/main/resources");
@@ -45,6 +48,63 @@ public class Main {
         server.addContext("/pref/", Main::handlePref);
         server.addContext("/", Main::handleRoot);
         server.start();
+    }
+
+    private static void handleScannerScan(Handler handler) throws IOException {
+        switch(handler.getMethod()){
+            case "OPTIONS": {
+                handler.respondToOptions(List.of("GET", "OPIONS"));
+                break;
+            }
+            case "GET": {
+                handler.allowCORS();
+                Scanner.coInitialize();
+                try {
+                    List<String> errs = new ArrayList<>();
+                    String device = ScannerLib.chooseScannerDevice(errs::add);
+                    if( errs.size() > 0 ){
+                        handler.sendError(errs.get(0));
+                    } else {
+                        ScanTask task = new ScanTask(device, Path.of("./work/scanned.jpg"), 200, pct -> {
+                            System.out.println(pct);
+                        });
+                        task.run();
+                    }
+                } finally {
+                    Scanner.coUninitialize();
+                }
+                break;
+            }
+        }
+    }
+
+    private static void handleScannerChooseDevice(Handler handler) throws IOException {
+        switch(handler.getMethod()){
+            case "OPTIONS": {
+                handler.respondToOptions(List.of("GET", "OPIONS"));
+                break;
+            }
+            case "GET": {
+                handler.allowCORS();
+                List<String> errs = new ArrayList<>();
+                Scanner.coInitialize();
+                try {
+                    String device = ScannerLib.chooseScannerDevice(errs::add);
+                    if (errs.size() > 0) {
+                        handler.sendError(errs.get(0));
+                    } else {
+                        handler.sendJson(device);
+                    }
+                } finally {
+                    Scanner.coUninitialize();
+                }
+                break;
+            }
+            default: {
+                handler.sendError("Invalid setting access.");
+                break;
+            }
+        }
     }
 
     private static void handlePrintDialog(Handler handler) throws IOException {

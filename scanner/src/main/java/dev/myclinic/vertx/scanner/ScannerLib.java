@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 
-class ScannerLib {
+public class ScannerLib {
 
     //private static Logger logger = LoggerFactory.getLogger(ScannerLib.class);
 
@@ -34,7 +34,7 @@ class ScannerLib {
         }
     }
 
-    static String chooseScannerDevice(Consumer<String> alertFunc){
+    static public String chooseScannerDevice(Consumer<String> alertFunc){
         List<Wia.Device> devices = Wia.listDevices();
         if (devices.size() == 0) {
             alertFunc.accept("接続された。スキャナーがみつかりません。");

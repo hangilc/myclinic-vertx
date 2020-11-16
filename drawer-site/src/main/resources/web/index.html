@@ -7,13 +7,19 @@
     <link rel="stylesheet" type="text/css" href="./modal-dialog.css">
 </head>
 <body>
-<h1>印刷設定</h1>
+<h1>プリンター設定</h1>
 <h2>新規印刷設定</h2>
 <div>
     <button id="create-new-setting">作成</button>
 </div>
 <h2>設定一覧</h2>
 <div id="setting-list"></div>
+
+<h1>スキャナー設定</h1>
+<div>
+    <button id="select-scanner">デバイスの選択</button>
+    <button id="start-scan">スキャン開始</button>
+</div>
 
 <script type="module">
     import {PrintAPI} from "./print-api.js";
@@ -42,9 +48,19 @@
                     { bubbles: true, detail: name}));
             }
         });
-        await updateCurrentSettings();
 
-        async function updateCurrentSettings(){
+        document.getElementById("select-scanner").addEventListener("click", async event => {
+            let device = await printAPI.chooseScannerDevice();
+            alert(device);
+        });
+
+        document.getElementById("start-scan").addEventListener("click", async event => {
+            await printAPI.startScan();
+        });
+
+        await updateCurrentPrinterSettings();
+
+        async function updateCurrentPrinterSettings(){
             let wrapper = document.getElementById("setting-list");
             wrapper.innerHTML = "";
             let settings = await printAPI.listSetting();

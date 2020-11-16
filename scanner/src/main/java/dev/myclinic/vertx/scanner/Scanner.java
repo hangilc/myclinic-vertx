@@ -8,11 +8,20 @@ public class Scanner {
 
     private static final Logger logger = LoggerFactory.getLogger(Scanner.class);
 
-    public void init() {
+//    public static void init() {
+//        Wia.CoInitialize();
+//    }
+//
+
+    public static void coInitialize(){
         Wia.CoInitialize();
     }
 
-    public void onClosing() {
+    public static void coUninitialize(){
+        Wia.CoUninitialize();
+    }
+
+    public static void onClosing() {
         try {
             if( Globals.regularDocSavingDirHint != null ) {
                 ScannerSetting.INSTANCE.setRegularDocSavingDirHint(Globals.regularDocSavingDirHint);

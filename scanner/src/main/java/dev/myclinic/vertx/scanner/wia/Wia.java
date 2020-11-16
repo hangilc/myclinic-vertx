@@ -44,6 +44,10 @@ public class Wia {
         }
     }
 
+    public static void CoUninitialize() {
+        Ole32.INSTANCE.CoUninitialize();
+    }
+
     public static WiaDevMgr createWiaDevMgr() {
         PointerByReference pp = new PointerByReference();
         HRESULT hr = Ole32.INSTANCE.CoCreateInstance(WiaConsts.CLSID_WiaDevMgr, null,

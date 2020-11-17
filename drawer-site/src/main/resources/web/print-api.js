@@ -63,6 +63,10 @@ export class PrintAPI {
         return await this.DELETE(`/pref/${key}`, {});
     }
 
+    async listScannerDevices(){
+        return await this.GET("/scanner/device/", {});
+    }
+
     async chooseScannerDevice(){
         return await this.GET("/scanner/choose-device");
     }

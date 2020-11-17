@@ -15,9 +15,9 @@
 <h2>設定一覧</h2>
 <div id="setting-list"></div>
 
-<h1>スキャナー設定</h1>
+<h1>スキャナー</h1>
 <div>
-    <button id="select-scanner">デバイスの選択</button>
+    <select id="scanner-list"></select> <button id="refresh-scanner-list">更新</button>
     <button id="start-scan">スキャン開始</button>
 </div>
 
@@ -49,16 +49,30 @@
             }
         });
 
-        document.getElementById("select-scanner").addEventListener("click", async event => {
-            let device = await printAPI.chooseScannerDevice();
-            alert(device);
-        });
+        document.getElementById("refresh-scanner-list").addEventListener("click", async event => {
+            await refreshScannerList();
+        })
 
         document.getElementById("start-scan").addEventListener("click", async event => {
-            await printAPI.startScan();
+            let file = await printAPI.startScan();
+            alert(file);
         });
 
+
         await updateCurrentPrinterSettings();
+        await refreshScannerList();
+
+        async function refreshScannerList(){
+            let devices = await printAPI.listScannerDevices();
+            let select = document.getElementById("scanner-list");
+            select.innerHTML = "";
+            for(let device of devices){
+                let op = document.createElement("option");
+                op.innerText = device.name;
+                op.value = device.deviceId;
+                select.appendChild(op);
+            }
+        }
 
         async function updateCurrentPrinterSettings(){
             let wrapper = document.getElementById("setting-list");

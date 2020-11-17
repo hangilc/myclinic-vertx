@@ -14,6 +14,7 @@ import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
 import dev.myclinic.vertx.scanner.ScanTask;
 import dev.myclinic.vertx.scanner.Scanner;
 import dev.myclinic.vertx.scanner.ScannerLib;
+import dev.myclinic.vertx.scanner.wia.Wia;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -35,7 +36,7 @@ public class Main {
         server.addContext("/print/", Main::handlePrint);
         server.addContext("/setting/", Main::handleSetting);
         server.addContext("/print-dialog/", Main::handlePrintDialog);
-        server.addContext("/scanner/choose-device", Main::handleScannerChooseDevice);
+        server.addContext("/scanner/device/", Main::handleScannerDevice);
         server.addContext("/scanner/scan", Main::handleScannerScan);
         server.addContext("/web/", handler -> {
             if (cmdArgs.isDev) {
@@ -50,51 +51,61 @@ public class Main {
         server.start();
     }
 
-    private static void handleScannerScan(Handler handler) throws IOException {
-        switch(handler.getMethod()){
+    private static void handleScannerDevice(Handler handler) throws Exception {
+        switch (handler.getMethod()) {
             case "OPTIONS": {
-                handler.respondToOptions(List.of("GET", "OPIONS"));
+                handler.respondToOptions(List.of("GET", "OPTIONS"));
                 break;
             }
             case "GET": {
-                handler.allowCORS();
-                Scanner.coInitialize();
-                try {
-                    List<String> errs = new ArrayList<>();
-                    String device = ScannerLib.chooseScannerDevice(errs::add);
-                    if( errs.size() > 0 ){
-                        handler.sendError(errs.get(0));
-                    } else {
-                        ScanTask task = new ScanTask(device, Path.of("./work/scanned.jpg"), 200, pct -> {
-                            System.out.println(pct);
-                        });
-                        task.run();
+                String[] subpaths = handler.getSubPaths();
+                if (subpaths.length == 0) { // "/scanner/device/"
+                    handler.allowCORS();
+                    Scanner.coInitialize();
+                    try {
+                        List<Wia.Device> devices = Wia.listDevices();
+                        handler.sendJson(devices);
+                    } finally {
+                        Scanner.coUninitialize();
                     }
-                } finally {
-                    Scanner.coUninitialize();
+                } else {
+                    handler.sendError("Invalid scanner/device access");
                 }
+                break;
+            }
+            default: {
+                handler.sendError("Invalid setting access.");
                 break;
             }
         }
     }
 
-    private static void handleScannerChooseDevice(Handler handler) throws IOException {
-        switch(handler.getMethod()){
+    private static void handleScannerScan(Handler handler) throws IOException {
+        switch (handler.getMethod()) {
             case "OPTIONS": {
-                handler.respondToOptions(List.of("GET", "OPIONS"));
+                handler.respondToOptions(List.of("GET", "OPTIONS"));
                 break;
             }
             case "GET": {
                 handler.allowCORS();
-                List<String> errs = new ArrayList<>();
                 Scanner.coInitialize();
                 try {
-                    String device = ScannerLib.chooseScannerDevice(errs::add);
-                    if (errs.size() > 0) {
-                        handler.sendError(errs.get(0));
-                    } else {
-                        handler.sendJson(device);
+                    String deviceId = handler.getParam("device-id");
+                    if (deviceId == null) {
+                        List<Wia.Device> devices = Wia.listDevices();
+                        if (devices.size() > 0) {
+                            deviceId = devices.get(0).deviceId;
+                        } else {
+                            handler.sendError("スキャナーがみつかりません。");
+                            return;
+                        }
                     }
+                    Path savePath = createScannedImagePath();
+                    ScanTask task = new ScanTask(deviceId, savePath, 200, pct -> {
+                        System.out.println(pct);
+                    });
+                    task.run();
+                    handler.sendJson(savePath.getFileName().toString());
                 } finally {
                     Scanner.coUninitialize();
                 }
@@ -191,7 +202,7 @@ public class Main {
                 handleSettingDELETE(handler);
                 break;
             case "OPTIONS":
-                handler.respondToOptions(List.of("GET", "OPIONS"));
+                handler.respondToOptions(List.of("GET", "OPTIONS"));
                 break;
             default:
                 handler.sendError("Invalid setting access.");
@@ -268,7 +279,7 @@ public class Main {
             handler.sendText("done");
             return;
         }
-        if( subpaths.length == 2 && subpaths[1].equals("aux") ){
+        if (subpaths.length == 2 && subpaths[1].equals("aux")) {
             String name = subpaths[0];
             if (!settingExists(name)) {
                 handler.sendError("No such setting: " + name);
@@ -286,7 +297,7 @@ public class Main {
 
     private static void handleSettingDELETE(Handler handler) throws IOException {
         String[] subpaths = handler.getSubPaths();
-        if( subpaths.length == 1 ){
+        if (subpaths.length == 1) {
             String name = subpaths[0];
             deleteSetting(name);
             handler.sendJson(true);
@@ -296,17 +307,17 @@ public class Main {
     }
 
     private static void handlePrint(Handler handler) throws IOException {
-        if( handler.getMethod().equals("OPTIONS") ){
+        if (handler.getMethod().equals("OPTIONS")) {
             handler.respondToOptions(List.of("POST", "OPTIONS"));
             return;
         }
         if (handler.getMethod().equals("POST")) {
             handler.allowCORS();
-            String[] subpaths= handler.getSubPaths();
+            String[] subpaths = handler.getSubPaths();
             String setting = null;
-            if( subpaths.length == 0 ){
+            if (subpaths.length == 0) {
                 // nop
-            } else if( subpaths.length == 1 ){
+            } else if (subpaths.length == 1) {
                 setting = subpaths[0];
             } else {
                 handler.sendError("Invalid print path");
@@ -316,7 +327,7 @@ public class Main {
                     PrintRequest.class);
             List<List<Op>> pages = pr.convertToPages();
             DrawerPrinter printer = new DrawerPrinter();
-            if( setting == null ) {
+            if (setting == null) {
                 printer.printPages(pages);
             } else {
                 PrintSetting printSetting = getSetting(setting);
@@ -340,10 +351,24 @@ public class Main {
 
     private static Path getDataDir() throws IOException {
         Path dir = Path.of(System.getProperty("user.home"), "drawer-site-data");
+        if (!Files.exists(dir)) {
+            Files.createDirectories(dir);
+        }
+        return dir;
+    }
+
+    private static Path getScannedImagesDir() throws IOException {
+        Path dataDir = getDataDir();
+        Path dir = dataDir.resolve("scanned-images");
         if( !Files.exists(dir) ){
             Files.createDirectories(dir);
         }
         return dir;
+    }
+
+    private static Path createScannedImagePath() throws IOException {
+        Path dir = getScannedImagesDir();
+        return Files.createTempFile(dir, "scanned-image-", ".jpg");
     }
 
     private static void savePrintSetting(String name, PrintSetting setting) throws IOException {
@@ -405,14 +430,20 @@ public class Main {
     // pref ///////////////////////////////////////////////////////////////////////////
 
     private static void handlePref(Handler handler) throws IOException {
-        if( handler.getMethod().equals("OPTIONS") ){
+        if (handler.getMethod().equals("OPTIONS")) {
             handler.respondToOptions(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
             return;
         }
-        switch(handler.getMethod()){
-            case "GET": handlePrefGET(handler); break;
-            case "POST": handlePrefPOST(handler); break;
-            case "DELETE": handlePrefDELETE(handler); break;
+        switch (handler.getMethod()) {
+            case "GET":
+                handlePrefGET(handler);
+                break;
+            case "POST":
+                handlePrefPOST(handler);
+                break;
+            case "DELETE":
+                handlePrefDELETE(handler);
+                break;
             default: {
                 handler.sendError("Invalid pref access");
                 break;
@@ -423,11 +454,11 @@ public class Main {
     private static void handlePrefGET(Handler handler) throws IOException {
         handler.allowCORS();
         String[] subpaths = handler.getSubPaths();
-        if( subpaths.length == 0 ){
+        if (subpaths.length == 0) {
             handler.sendJson(getPrefMap());
             return;
         }
-        if( subpaths.length == 1 ){
+        if (subpaths.length == 1) {
             String key = subpaths[0];
             String pref = getPref(key);
             handler.sendJson(pref);
@@ -439,7 +470,7 @@ public class Main {
     private static void handlePrefPOST(Handler handler) throws IOException {
         handler.allowCORS();
         String[] subpaths = handler.getSubPaths();
-        if( subpaths.length == 1 ){
+        if (subpaths.length == 1) {
             String key = subpaths[0];
             String curr = getPref(key);
             String value = mapper.readValue(handler.getBody(), String.class);
@@ -453,13 +484,13 @@ public class Main {
     private static void handlePrefDELETE(Handler handler) throws IOException {
         handler.allowCORS();
         String[] subpaths = handler.getSubPaths();
-        if( subpaths.length == 0 ){
+        if (subpaths.length == 0) {
             var curr = getPrefMap();
             deleteAllPref();
             handler.sendJson(curr);
             return;
         }
-        if( subpaths.length == 1 ){
+        if (subpaths.length == 1) {
             String key = subpaths[0];
             var curr = getPref(key);
             deletePref(key);
@@ -476,10 +507,11 @@ public class Main {
 
     private static Map<String, String> getPrefMap() throws IOException {
         Path file = getPrefMapPath();
-        if( !Files.exists(file) ){
+        if (!Files.exists(file)) {
             return Collections.emptyMap();
         }
-        return mapper.readValue(file.toFile(), new TypeReference<>(){});
+        return mapper.readValue(file.toFile(), new TypeReference<>() {
+        });
     }
 
     private static void savePrefMap(Map<String, String> map) throws IOException {

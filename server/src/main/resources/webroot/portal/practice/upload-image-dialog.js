@@ -99,7 +99,7 @@ export class UploadImageDialog extends Dialog {
                     let tag = this.body.getTag();
                     let ser = "";
                     if( files.length > 1 ){
-                        ser = `(${index})`;
+                        ser = `-${index}`;
                         index += 1;
                     }
                     let filename = `${patientId}-${tag}-${stamp}${ser}${ext}`;

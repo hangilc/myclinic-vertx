@@ -811,7 +811,7 @@ let html = `
                 <button type="submit" class="btn btn-secondary mt-1">検索</button>
                 <a href="javascript:void(0)" class="x-example mt-1 ml-2">例</a>
             </div>
-            <div class="mt-1" onsubmit="return false">
+            <div class="mt-1" onsubmit="return false;">
                 <input type="radio" name="search-kind" class="x-disease-radio" checked> 病名
                 <input type="radio" name="search-kind" class="x-adj-radio"> 修飾語
             </div>
@@ -900,7 +900,7 @@ let html = `
                     <button type="submit" class="btn btn-secondary mt-1">検索</button>
                     <a href="javascript:void(0)" class="x-example mt-1 ml-2">例</a>
                 </div>
-                <div class="mt-1" onsubmit="return false">
+                <div class="mt-1" onsubmit="return false;">
                     <input type="radio" name="search-kind"
                            value="byoumei" checked> 病名
                     <input type="radio" name="search-kind"
@@ -929,13 +929,7 @@ let html = `
                         <input type="text" class="x-search-text form-control"/>
                         <button type="submit" class="btn btn-primary ml-2">検索</button>
                     </form>
-                    <div class="x-nav_ d-none mt-2">
-<!--                        <a href="javascript:void(0)" class="x-first">最初</a>-->
-<!--                        <a href="javascript:void(0)" class="x-prev ml-1">前へ</a>-->
-<!--                        <a href="javascript:void(0)" class="x-next ml-1">次へ</a>-->
-<!--                        <a href="javascript:void(0)" class="x-last ml-1 mr-1">最後</a>-->
-<!--                        [<span class="x-page"></span>/<span class="x-total"></span>]-->
-                    </div>
+                    <div class="x-nav_ d-none mt-2"></div>
                     <div class="x-result"></div>
                 </div>
             </div>
@@ -1358,6 +1352,7 @@ export async function initLayout(pane, rest, controller) {
         });
 
         map.refer.on("click", event => {
+            alert("Not implemented.");
         });
 
         map.uploadImage.on("click", async event => {

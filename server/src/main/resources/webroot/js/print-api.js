@@ -63,6 +63,14 @@ export class PrintAPI {
         return await this.DELETE(`/pref/${key}`, {});
     }
 
+    async listScannerDevices(){
+        return await this.GET("/scanner/device/", {});
+    }
+
+    async startScan(deviceId = null){
+        return await this.GET("/scanner/scan", {"device-id": deviceId});
+    }
+
     REQUEST(method, path, params, body){
         return new Promise((resolve, reject) => {
             let xhr = new XMLHttpRequest();

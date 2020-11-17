@@ -28,7 +28,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         CmdArgs cmdArgs = CmdArgs.parse(args);
-        String bind = "0.0.0.0";
+        String bind = "127.0.0.1";
         int port = 48080;
         Server server = new Server(bind, port, 6);
         System.out.printf("Drawer-site server is listening to %s:%d\n", bind, port);
@@ -102,7 +102,7 @@ public class Main {
                     }
                     Path savePath = createScannedImagePath();
                     ScanTask task = new ScanTask(deviceId, savePath, 200, pct -> {
-                        System.out.println(pct);
+                        // System.out.println(pct);
                     });
                     task.run();
                     handler.sendJson(savePath.getFileName().toString());

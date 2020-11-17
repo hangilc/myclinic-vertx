@@ -67,12 +67,8 @@ export class PrintAPI {
         return await this.GET("/scanner/device/", {});
     }
 
-    async chooseScannerDevice(){
-        return await this.GET("/scanner/choose-device");
-    }
-
-    async startScan(){
-        return await this.GET("/scanner/scan");
+    async startScan(deviceId = null){
+        return await this.GET("/scanner/scan", {"device-id": deviceId});
     }
 
     REQUEST(method, path, params, body){

@@ -21,6 +21,7 @@
                 <ul class="list-unstyled menu-elements mb-1">
                     <li><a href="javascript:void(0)" id="index-main-link">メイン</a></li>
                     <li><a href="javascript:void(0)" id="index-patient-management-link">患者管理</a></li>
+                    <li><a href="javascript:void(0)" id="index-scan-link">スキャン</a></li>
                 </ul>
             </div>
         </div>
@@ -35,9 +36,12 @@
         let {Menu} = await import("./index-menu.js");
         let {MainPanel} = await import("./main/main-panel.js");
         let {PatientManagementPanel} = await import("./patient-management/patient-management-panel.js");
+        let {ScanPanel} = await import("./scan/scan-panel.js");
         let {Rest} = await import("./js/rest.js");
+        let {PrintAPI} = await import("../js/print-api.js");
 
         let rest = new Rest("/json");
+        let printAPI = new PrintAPI("http://127.0.0.1:48080");
         let menu = new Menu(document.getElementById("index-pane-wrapper"));
         menu.addItem("main", e => {
                 let panel = new MainPanel(e, rest);
@@ -52,6 +56,14 @@
                 return {};
             },
             document.getElementById("index-patient-management-link"));
+        menu.addItem("scan", e => {
+                let panel = new ScanPanel(rest, printAPI);
+                e.appendChild(panel.ele);
+                return {
+                    reloadHook: async () => await panel.reloadHook()
+                };
+            },
+            document.getElementById("index-scan-link"));
         await menu.simulateClick("main");
     })
     ();

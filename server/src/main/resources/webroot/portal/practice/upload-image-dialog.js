@@ -2,7 +2,7 @@ import {Dialog} from "./dialog2.js";
 import {Component} from "./component2.js";
 import {parseElement} from "../js/parse-element.js";
 import {getTimestamp} from "../js/kanjidate.js";
-import {uploadFile} from "../js/upload.js";
+import {FileUploader} from "../js/upload.js";
 
 let bodyTemplate = `
     <div>
@@ -74,10 +74,9 @@ class Footer extends Component {
 }
 
 export class UploadImageDialog extends Dialog {
-    constructor(patientId, rest) {
+    constructor(patientId) {
         super();
         this.patientId = patientId;
-        this.rest = rest;
         this.setDialogTitle("画像保存");
         let body = this.body = new Body();
         this.appendToBody(body.ele);
@@ -87,11 +86,11 @@ export class UploadImageDialog extends Dialog {
         footer.onCancel(() => this.close());
     }
 
-    async doSave(progress) {
+    async doSave() {
         let patientId = this.patientId;
         if (patientId > 0) {
-            let files = this.body.getFiles();
             let stamp = getTimestamp();
+            let files = this.body.getFiles();
             let conv = (name, index) => {
                 let ext = getFileExtension(name);
                 let tag = this.body.getTag();
@@ -101,48 +100,19 @@ export class UploadImageDialog extends Dialog {
                 }
                 return `${patientId}-${tag}-${stamp}${ser}${ext}`;
             };
-            let promise = uploadFile("/json/save-patient-image", files, conv, progress, {
-                "patient-id": patientId
-            });
-            this.close();
-            return promise;
+            let uploaders = [];
+            let index = 1;
+            for(let file of files){
+                let uploader = new FileUploader("/json/save-patient-image", file);
+                uploader.setFilename(conv(file.name, index));
+                index += 1;
+                uploader.setAttr("patient-id", patientId);
+                uploaders.push(uploader);
+            }
+            this.close(uploaders);
         }
     }
 
-    async doSaveOrig() {
-        let patientId = this.patientId;
-        if (patientId > 0) {
-            let formData = new FormData();
-            formData.append("patient-id", "" + patientId);
-            let files = this.body.getFiles();
-            if (files.length > 0) {
-                let stamp = getTimestamp();
-                let index = 1;
-                for (let file of files) {
-                    let ext = getFileExtension(file.name);
-                    let tag = this.body.getTag();
-                    let ser = "";
-                    if (files.length > 1) {
-                        ser = `-${index}`;
-                        index += 1;
-                    }
-                    let filename = `${patientId}-${tag}-${stamp}${ser}${ext}`;
-                    formData.append(`file${index}`, file, filename);
-                }
-                $.ajax("/json/save-patient-image", {
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    method: "POST",
-                    success: () => this.close(),
-                    error: (xhr, status, err) => {
-                        let msg = xhr.responseText + " : " + err.toString() + " : " + status;
-                        alert(msg);
-                    }
-                });
-            }
-        }
-    }
 }
 
 function getFileExtension(filename) {

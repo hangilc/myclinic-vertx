@@ -52,7 +52,7 @@ let html = `
     <div class="row">
         <div id="practice-record-wrapper" class="col-xl-9"></div>
         <div id="practice-right-bar" class="col-xl-3">
-            <div id="practice-disease-wrapper"></div>
+            <div id="practice-disease-wrapper" class="mb-3"></div>
             <div id="practice-general-workarea"></div>
         </div>
     </div>
@@ -1074,6 +1074,7 @@ export async function initLayout(pane, rest, controller) {
     let {VisitMeisaiDialog} = await import("./visit-meisai-dialog.js");
     let {RegisteredDrugDialog} = await import("./registered-drug-dialog/registered-drug-dialog.js")
     let {UploadImageDialog} = await import("./upload-image-dialog.js");
+    let {UploadProgress} = await import("./upload-progress.js");
 
     function postStartSession(patientId, visitId) {
         pane.dispatchEvent(new CustomEvent("start-session",
@@ -1358,7 +1359,13 @@ export async function initLayout(pane, rest, controller) {
         map.uploadImage.on("click", async event => {
             let patientId = controller.getPatientId();
             if (patientId > 0) {
-                await (new UploadImageDialog(patientId, rest)).open();
+                let dialog = new UploadImageDialog(patientId);
+                let uploaders = await dialog.open();
+                if( uploaders ){
+                    console.log("uploaders", uploaders);
+                    let reporter = new UploadProgress(uploaders);
+                    document.getElementById("practice-general-workarea").append(reporter.ele);
+                }
             }
         });
 

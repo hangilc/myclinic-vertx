@@ -17,7 +17,6 @@ import dev.myclinic.vertx.scanner.Scanner;
 import dev.myclinic.vertx.scanner.wia.Wia;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -84,7 +83,7 @@ public class Main {
 
     private static class ProgressReport {
         HttpExchange ex;
-        byte[] response
+        byte[] response;
         int lastSent = 0;
 
         public ProgressReport(HttpExchange ex, byte[] response) {
@@ -92,23 +91,29 @@ public class Main {
             this.response = response;
         }
 
-        private int getIndex(int i){
+        private int getIndex(int i) {
             return response.length * i / 10;
         }
 
-        private byte[] writePart(int i) throws IOException {
-            int off = getIndex(i-1);
-            int len = getIndex(i);
-            ex.getResponseBody().write(response, off, len);
+        private void writePart(int i) throws IOException {
+            ex.getResponseBody().write("*".getBytes());
             ex.getResponseBody().flush();
+            System.out.println("flushed");
+//            if( i >= 1 && i <= 10 ) {
+//                int off = getIndex(i - 1);
+//                int len = getIndex(i) - off;
+//                ex.getResponseBody().write(response, off, len);
+//                ex.getResponseBody().flush();
+//                System.out.printf("output: %d, %d\n", off, len);
+//            }
         }
 
         public void update(int pct) throws IOException {
             int i = pct / 10;
-            if( i > 10 ){
+            if (i > 10) {
                 i = 10;
             }
-            for(int j=lastSent;j<=i;j++){
+            for (int j = lastSent + 1; j <= i; j++) {
                 writePart(j);
             }
             lastSent = i;
@@ -119,7 +124,7 @@ public class Main {
         }
     }
 
-    private static void handleScannerScan(Handler handler) throws IOException {
+    private static void handleScannerScan(Handler handler) throws Exception {
         switch (handler.getMethod()) {
             case "OPTIONS": {
                 handler.respondToOptions(List.of("GET", "OPTIONS"));
@@ -139,20 +144,102 @@ public class Main {
                             return;
                         }
                     }
+                    System.out.printf("deviceId: %s\n", deviceId);
                     Path savePath = createScannedImagePath();
-                    byte[] filename = savePath.getFileName().toString().getBytes(StandardCharsets.UTF_8);
-                    handler.getExchange().getResponseHeaders().add("content-type", "text/plain");
-                    handler.getExchange().sendResponseHeaders(200, filename.length);
-                    ProgressReport progressReport = new ProgressReport(handler.getExchange(), filename);
-                    try {
-                        ScanTask task = new ScanTask(deviceId, savePath, 200, pct -> {
-                            try {
-                                progressReport.update(pct);
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                    handler.getExchange().getResponseHeaders().add("content-type", "plain/text");
+                    handler.getExchange().sendResponseHeaders(200, 10);
+                    int[] ints = new int[]{0};
+                    ScanTask task = new ScanTask(deviceId, savePath, 200, pct -> {
+                        int i = pct / 10;
+                        System.out.printf("PCT %d %d\n", i, ints[0]);
+                        if (i > ints[0]) {
+                            System.out.printf("ENTER %d\n", i);
+                            for (int j = ints[0] + 1; j <= i; j++) {
+                                System.out.printf("OUTPUT %d\n", j);
+                                try {
+                                    handler.getExchange().getResponseBody().write("*".getBytes());
+                                    handler.getExchange().getResponseBody().flush();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                ints[0] = j;
                             }
-                        });
-                        task.run();
+                        }
+                    });
+                    task.run();
+//                    for (int i = 0; i < 10; i++) {
+//                        Thread.sleep(1000);
+//                        handler.getExchange().getResponseBody().write("*".getBytes());
+//                        handler.getExchange().getResponseBody().flush();
+//                    }
+//                    handler.getExchange().getResponseBody().close();
+//                    handler.getExchange().close();
+                } finally {
+                    Scanner.coUninitialize();
+                    handler.getExchange().close();
+                }
+                break;
+            }
+            default: {
+                handler.sendError("Invalid setting access.");
+                break;
+            }
+        }
+    }
+
+    private static void handleScannerScanBackup(Handler handler) throws Exception {
+        switch (handler.getMethod()) {
+            case "OPTIONS": {
+                handler.respondToOptions(List.of("GET", "OPTIONS"));
+                break;
+            }
+            case "GET": {
+                handler.allowCORS();
+                //Scanner.coInitialize();
+                try {
+//                    String deviceId = handler.getParam("device-id");
+//                    if (deviceId == null) {
+//                        List<Wia.Device> devices = Wia.listDevices();
+//                        if (devices.size() > 0) {
+//                            deviceId = devices.get(0).deviceId;
+//                        } else {
+//                            handler.sendError("スキャナーがみつかりません。");
+//                            return;
+//                        }
+//                    }
+//                    System.out.printf("deviceId: %s\n", deviceId);
+//                    Path savePath = createScannedImagePath();
+//                    System.out.printf("filename: %s\n", savePath.getFileName().toString());
+//                    byte[] filename = savePath.getFileName().toString().getBytes(StandardCharsets.UTF_8);
+                    handler.getExchange().getResponseHeaders().add("content-type", "text/plain");
+                    //handler.getExchange().sendResponseHeaders(200, filename.length);
+                    handler.getExchange().sendResponseHeaders(200, 5);
+//                    ProgressReport progressReport = new ProgressReport(handler.getExchange(), filename);
+                    Thread.sleep(1000);
+                    handler.getExchange().getResponseBody().write("*".getBytes());
+                    handler.getExchange().getResponseBody().flush();
+                    Thread.sleep(1000);
+                    handler.getExchange().getResponseBody().write("*".getBytes());
+                    handler.getExchange().getResponseBody().flush();
+                    Thread.sleep(1000);
+                    handler.getExchange().getResponseBody().write("*".getBytes());
+                    handler.getExchange().getResponseBody().flush();
+                    Thread.sleep(1000);
+                    handler.getExchange().getResponseBody().write("*".getBytes());
+                    handler.getExchange().getResponseBody().flush();
+                    Thread.sleep(1000);
+                    handler.getExchange().getResponseBody().write("*".getBytes());
+                    handler.getExchange().getResponseBody().flush();
+                    try {
+//                        ScanTask task = new ScanTask(deviceId, savePath, 200, pct -> {
+//                            try {
+//                                progressReport.update(pct);
+//                            } catch (IOException e) {
+//                                e.printStackTrace();
+//                            }
+//                        });
+//                        task.run();
+//                        progressReport.end();
                     } finally {
                         handler.getExchange().close();
                     }
@@ -183,6 +270,7 @@ public class Main {
                     handler.getExchange().getResponseBody().flush();
                 }
                 handler.getExchange().getResponseBody().close();
+                handler.getExchange().close();
                 break;
             }
             default: {

@@ -56,15 +56,29 @@
         })
 
         document.getElementById("start-scan").addEventListener("click", async event => {
-            let file = await printAPI.startScan();
-            alert(file);
+            let xhr = new XMLHttpRequest();
+            xhr.responseType = "";
+            xhr.addEventListener("progress", event => {
+                if( event.total !== 0 ){
+                    let pct = Math.round((event.loaded / event.total) * 100);
+                    console.error("pct", pct);
+                } else {
+                    console.error("handled", event.loaded);
+                }
+            }, {once: false});
+            xhr.onload = event => {
+                let filename = xhr.responseText;
+                console.log("done", filename);
+            };
+            xhr.open("GET", "/scanner/scan");
+            xhr.send();
         });
 
         document.getElementById("mock-scan").addEventListener("click", async event => {
             let xhr = new XMLHttpRequest();
             xhr.responseType = "text";
             xhr.onprogress = event => {
-                console.error("progress");
+                console.log("progress");
             };
             xhr.onload = event => {
                 console.log("done");

@@ -3,6 +3,7 @@ package dev.myclinic.vertx.drawersite;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.sun.net.httpserver.HttpExchange;
 import dev.myclinic.vertx.drawer.JacksonOpDeserializer;
 import dev.myclinic.vertx.drawer.JacksonOpSerializer;
 import dev.myclinic.vertx.drawer.Op;
@@ -13,10 +14,10 @@ import dev.myclinic.vertx.drawerprinterwin.DevnamesInfo;
 import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
 import dev.myclinic.vertx.scanner.ScanTask;
 import dev.myclinic.vertx.scanner.Scanner;
-import dev.myclinic.vertx.scanner.ScannerLib;
 import dev.myclinic.vertx.scanner.wia.Wia;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,6 +39,7 @@ public class Main {
         server.addContext("/print-dialog/", Main::handlePrintDialog);
         server.addContext("/scanner/device/", Main::handleScannerDevice);
         server.addContext("/scanner/scan", Main::handleScannerScan);
+        server.addContext("/scanner/mock-scan", Main::handleScannerMockScan);
         server.addContext("/web/", handler -> {
             if (cmdArgs.isDev) {
                 Path root = Path.of("./drawer-site/src/main/resources");
@@ -80,6 +82,43 @@ public class Main {
         }
     }
 
+    private static class ProgressReport {
+        HttpExchange ex;
+        byte[] response
+        int lastSent = 0;
+
+        public ProgressReport(HttpExchange ex, byte[] response) {
+            this.ex = ex;
+            this.response = response;
+        }
+
+        private int getIndex(int i){
+            return response.length * i / 10;
+        }
+
+        private byte[] writePart(int i) throws IOException {
+            int off = getIndex(i-1);
+            int len = getIndex(i);
+            ex.getResponseBody().write(response, off, len);
+            ex.getResponseBody().flush();
+        }
+
+        public void update(int pct) throws IOException {
+            int i = pct / 10;
+            if( i > 10 ){
+                i = 10;
+            }
+            for(int j=lastSent;j<=i;j++){
+                writePart(j);
+            }
+            lastSent = i;
+        }
+
+        public void end() throws IOException {
+            update(10);
+        }
+    }
+
     private static void handleScannerScan(Handler handler) throws IOException {
         switch (handler.getMethod()) {
             case "OPTIONS": {
@@ -101,14 +140,49 @@ public class Main {
                         }
                     }
                     Path savePath = createScannedImagePath();
-                    ScanTask task = new ScanTask(deviceId, savePath, 200, pct -> {
-                        // System.out.println(pct);
-                    });
-                    task.run();
-                    handler.sendJson(savePath.getFileName().toString());
+                    byte[] filename = savePath.getFileName().toString().getBytes(StandardCharsets.UTF_8);
+                    handler.getExchange().getResponseHeaders().add("content-type", "text/plain");
+                    handler.getExchange().sendResponseHeaders(200, filename.length);
+                    ProgressReport progressReport = new ProgressReport(handler.getExchange(), filename);
+                    try {
+                        ScanTask task = new ScanTask(deviceId, savePath, 200, pct -> {
+                            try {
+                                progressReport.update(pct);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        });
+                        task.run();
+                    } finally {
+                        handler.getExchange().close();
+                    }
                 } finally {
                     Scanner.coUninitialize();
                 }
+                break;
+            }
+            default: {
+                handler.sendError("Invalid setting access.");
+                break;
+            }
+        }
+    }
+
+    private static void handleScannerMockScan(Handler handler) throws Exception {
+        switch (handler.getMethod()) {
+            case "OPTIONS": {
+                handler.respondToOptions(List.of("GET", "OPTIONS"));
+                break;
+            }
+            case "GET": {
+                handler.getExchange().getResponseHeaders().add("content-type", "plain/text");
+                handler.getExchange().sendResponseHeaders(200, 10);
+                for (int i = 0; i < 10; i++) {
+                    Thread.sleep(1000);
+                    handler.getExchange().getResponseBody().write("*".getBytes());
+                    handler.getExchange().getResponseBody().flush();
+                }
+                handler.getExchange().getResponseBody().close();
                 break;
             }
             default: {
@@ -360,7 +434,7 @@ public class Main {
     private static Path getScannedImagesDir() throws IOException {
         Path dataDir = getDataDir();
         Path dir = dataDir.resolve("scanned-images");
-        if( !Files.exists(dir) ){
+        if (!Files.exists(dir)) {
             Files.createDirectories(dir);
         }
         return dir;

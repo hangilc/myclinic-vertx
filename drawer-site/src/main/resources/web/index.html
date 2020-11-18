@@ -21,6 +21,8 @@
     <button id="start-scan">スキャン開始</button>
 </div>
 
+<button id="mock-scan">Mock Scan</button>
+
 <script type="module">
     import {PrintAPI} from "./print-api.js";
     import {SettingItem} from "./setting-item.js";
@@ -58,6 +60,18 @@
             alert(file);
         });
 
+        document.getElementById("mock-scan").addEventListener("click", async event => {
+            let xhr = new XMLHttpRequest();
+            xhr.responseType = "text";
+            xhr.onprogress = event => {
+                console.error("progress");
+            };
+            xhr.onload = event => {
+                console.log("done");
+            };
+            xhr.open("GET", "/scanner/mock-scan");
+            xhr.send();
+        });
 
         await updateCurrentPrinterSettings();
         await refreshScannerList();

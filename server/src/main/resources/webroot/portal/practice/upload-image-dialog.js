@@ -2,6 +2,7 @@ import {Dialog} from "./dialog2.js";
 import {Component} from "./component2.js";
 import {parseElement} from "../js/parse-element.js";
 import {getTimestamp} from "../js/kanjidate.js";
+import {uploadFile} from "../js/upload.js";
 
 let bodyTemplate = `
     <div>
@@ -26,24 +27,24 @@ let bodyTemplate = `
 `;
 
 class Body extends Component {
-    constructor(){
+    constructor() {
         super($(bodyTemplate));
         let map = parseElement(this.ele);
         this.fileElement = map.file;
         this.tagElement = map.tag;
         map.tagExamples.find("a").on("click", event => {
             let tag = $(event.target).data("tag");
-            if( tag ){
+            if (tag) {
                 map.tag.val(tag);
             }
         });
     }
 
-    getFiles(){
+    getFiles() {
         return this.fileElement.get(0).files;
     }
 
-    getTag(){
+    getTag() {
         return this.tagElement.val();
     }
 }
@@ -56,26 +57,27 @@ let footerTemplate = `
 `;
 
 class Footer extends Component {
-    constructor(){
+    constructor() {
         super($(footerTemplate));
         let map = parseElement(this.ele);
         map.save.on("click", event => this.trigger("save"));
         map.cancel.on("click", event => this.trigger("cancel"));
     }
 
-    onSave(cb){
+    onSave(cb) {
         this.on("save", cb);
     }
 
-    onCancel(cb){
+    onCancel(cb) {
         this.on("cancel", cb);
     }
 }
 
 export class UploadImageDialog extends Dialog {
-    constructor(patientId){
+    constructor(patientId, rest) {
         super();
         this.patientId = patientId;
+        this.rest = rest;
         this.setDialogTitle("画像保存");
         let body = this.body = new Body();
         this.appendToBody(body.ele);
@@ -85,20 +87,42 @@ export class UploadImageDialog extends Dialog {
         footer.onCancel(() => this.close());
     }
 
-    async doSave(){
+    async doSave(progress) {
         let patientId = this.patientId;
-        if( patientId > 0 ){
+        if (patientId > 0) {
+            let files = this.body.getFiles();
+            let stamp = getTimestamp();
+            let conv = (name, index) => {
+                let ext = getFileExtension(name);
+                let tag = this.body.getTag();
+                let ser = "";
+                if (files.length > 1) {
+                    ser = `-${index}`;
+                }
+                return `${patientId}-${tag}-${stamp}${ser}${ext}`;
+            };
+            let promise = uploadFile("/json/save-patient-image", files, conv, progress, {
+                "patient-id": patientId
+            });
+            this.close();
+            return promise;
+        }
+    }
+
+    async doSaveOrig() {
+        let patientId = this.patientId;
+        if (patientId > 0) {
             let formData = new FormData();
             formData.append("patient-id", "" + patientId);
             let files = this.body.getFiles();
-            if( files.length > 0 ){
+            if (files.length > 0) {
                 let stamp = getTimestamp();
                 let index = 1;
-                for(let file of files){
+                for (let file of files) {
                     let ext = getFileExtension(file.name);
                     let tag = this.body.getTag();
                     let ser = "";
-                    if( files.length > 1 ){
+                    if (files.length > 1) {
                         ser = `-${index}`;
                         index += 1;
                     }
@@ -121,9 +145,9 @@ export class UploadImageDialog extends Dialog {
     }
 }
 
-function getFileExtension(filename){
+function getFileExtension(filename) {
     let i = filename.lastIndexOf(".");
-    if( i < 0 ){
+    if (i < 0) {
         return "";
     } else {
         return filename.substring(i);

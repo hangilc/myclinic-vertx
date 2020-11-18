@@ -96,6 +96,7 @@
                 let pane = document.createElement("div");
                 this._clearNode(this.paneWrapper);
                 this.paneWrapper.appendChild(pane);
+                // TODO: use MutationObserver to confirm that panel is ready
                 await item.start(pane, () => {
                     this.currentItem = name;
                     this._setActive(name);

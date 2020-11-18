@@ -1358,7 +1358,7 @@ export async function initLayout(pane, rest, controller) {
         map.uploadImage.on("click", async event => {
             let patientId = controller.getPatientId();
             if (patientId > 0) {
-                await (new UploadImageDialog(patientId)).open();
+                await (new UploadImageDialog(patientId, rest)).open();
             }
         });
 

@@ -56,22 +56,9 @@
         })
 
         document.getElementById("start-scan").addEventListener("click", async event => {
-            let xhr = new XMLHttpRequest();
-            xhr.responseType = "";
-            xhr.addEventListener("progress", event => {
-                if( event.total !== 0 ){
-                    let pct = Math.round((event.loaded / event.total) * 100);
-                    console.error("pct", pct);
-                } else {
-                    console.error("handled", event.loaded);
-                }
-            }, {once: false});
-            xhr.onload = event => {
-                let filename = xhr.responseText;
-                console.log("done", filename);
-            };
-            xhr.open("GET", "/scanner/scan");
-            xhr.send();
+            let deviceId = document.getElementById("scanner-list").value;
+            let filename = await printAPI.scan(deviceId, pct => console.log(pct));
+            console.log(filename);
         });
 
         document.getElementById("mock-scan").addEventListener("click", async event => {

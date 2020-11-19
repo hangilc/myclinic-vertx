@@ -147,15 +147,14 @@ public class Main {
                     System.out.printf("deviceId: %s\n", deviceId);
                     Path savePath = createScannedImagePath();
                     handler.getExchange().getResponseHeaders().add("content-type", "plain/text");
+                    handler.getExchange().getResponseHeaders().add("location", savePath.getFileName().toString());
                     handler.getExchange().sendResponseHeaders(200, 10);
                     int[] ints = new int[]{0};
                     ScanTask task = new ScanTask(deviceId, savePath, 200, pct -> {
                         int i = pct / 10;
-                        System.out.printf("PCT %d %d\n", i, ints[0]);
                         if (i > ints[0]) {
                             System.out.printf("ENTER %d\n", i);
                             for (int j = ints[0] + 1; j <= i; j++) {
-                                System.out.printf("OUTPUT %d\n", j);
                                 try {
                                     handler.getExchange().getResponseBody().write("*".getBytes());
                                     handler.getExchange().getResponseBody().flush();
@@ -167,13 +166,14 @@ public class Main {
                         }
                     });
                     task.run();
-//                    for (int i = 0; i < 10; i++) {
-//                        Thread.sleep(1000);
-//                        handler.getExchange().getResponseBody().write("*".getBytes());
-//                        handler.getExchange().getResponseBody().flush();
-//                    }
-//                    handler.getExchange().getResponseBody().close();
-//                    handler.getExchange().close();
+                    for(int j=ints[0]+1;j<=10;j++){
+                        try {
+                            handler.getExchange().getResponseBody().write("*".getBytes());
+                            handler.getExchange().getResponseBody().flush();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
                 } finally {
                     Scanner.coUninitialize();
                     handler.getExchange().close();

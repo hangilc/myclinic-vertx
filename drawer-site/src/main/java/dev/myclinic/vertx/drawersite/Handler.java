@@ -193,12 +193,14 @@ public class Handler {
         mimeMap.put(".html", "text/html;charset=UTF-8");
         mimeMap.put(".js", "text/javascript;charset=UTF-8");
         mimeMap.put(".css", "text/css;charset=UTF-8");
+        mimeMap.put(".jpg", "image/jpeg");
+        mimeMap.put(".jpeg", "image/jpeg");
     }
 
     private String resolveContentType(String path){
         int index = path.lastIndexOf('.');
         if( index >= 0 ){
-            String ext = path.substring(index);
+            String ext = path.substring(index).toLowerCase();
             return mimeMap.getOrDefault(ext, "application/octet-stream");
         } else {
             return "application/octet-stream";

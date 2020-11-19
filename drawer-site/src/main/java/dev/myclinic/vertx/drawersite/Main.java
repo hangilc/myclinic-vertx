@@ -39,6 +39,7 @@ public class Main {
         server.addContext("/scanner/device/", Main::handleScannerDevice);
         server.addContext("/scanner/scan", Main::handleScannerScan);
         server.addContext("/scanner/mock-scan", Main::handleScannerMockScan);
+        server.addContext("/scanner/image/", Main::handleScannerImage);
         server.addContext("/web/", handler -> {
             if (cmdArgs.isDev) {
                 Path root = Path.of("./drawer-site/src/main/resources");
@@ -50,6 +51,38 @@ public class Main {
         server.addContext("/pref/", Main::handlePref);
         server.addContext("/", Main::handleRoot);
         server.start();
+    }
+
+    private static Map<String, String> mimeMap = new HashMap<>();
+    static {
+        mimeMap.put(".jpg", "image/jpeg");
+        mimeMap.put(".jpeg", "image/jpeg");
+    }
+
+    private static void handleScannerImage(Handler handler) throws Exception {
+        switch(handler.getMethod()){
+            case "OPTIONS": {
+                handler.respondToOptions(List.of("GET", "OPTIONS"));
+                break;
+            }
+            case "GET": {
+                String[] subpaths = handler.getSubPaths();
+                if( subpaths.length == 0 ){ // "/scanner/image/"
+                    handler.sendJson(listScannedImage());
+                } else if( subpaths.length == 1 ){  // "/scanner/image/scanned-image...jpg"
+                    String filename = subpaths[0];
+                    Path path = getScannedImage(filename);
+                    handler.sendFile(path.toString());
+                } else {
+                    handler.sendError("Invalid setting access.");
+                }
+                break;
+            }
+            default: {
+                handler.sendError("Invalid setting access.");
+                break;
+            }
+        }
     }
 
     private static void handleScannerDevice(Handler handler) throws Exception {
@@ -81,49 +114,6 @@ public class Main {
         }
     }
 
-    private static class ProgressReport {
-        HttpExchange ex;
-        byte[] response;
-        int lastSent = 0;
-
-        public ProgressReport(HttpExchange ex, byte[] response) {
-            this.ex = ex;
-            this.response = response;
-        }
-
-        private int getIndex(int i) {
-            return response.length * i / 10;
-        }
-
-        private void writePart(int i) throws IOException {
-            ex.getResponseBody().write("*".getBytes());
-            ex.getResponseBody().flush();
-            System.out.println("flushed");
-//            if( i >= 1 && i <= 10 ) {
-//                int off = getIndex(i - 1);
-//                int len = getIndex(i) - off;
-//                ex.getResponseBody().write(response, off, len);
-//                ex.getResponseBody().flush();
-//                System.out.printf("output: %d, %d\n", off, len);
-//            }
-        }
-
-        public void update(int pct) throws IOException {
-            int i = pct / 10;
-            if (i > 10) {
-                i = 10;
-            }
-            for (int j = lastSent + 1; j <= i; j++) {
-                writePart(j);
-            }
-            lastSent = i;
-        }
-
-        public void end() throws IOException {
-            update(10);
-        }
-    }
-
     private static void handleScannerScan(Handler handler) throws Exception {
         switch (handler.getMethod()) {
             case "OPTIONS": {
@@ -146,8 +136,9 @@ public class Main {
                     }
                     System.out.printf("deviceId: %s\n", deviceId);
                     Path savePath = createScannedImagePath();
-                    handler.getExchange().getResponseHeaders().add("content-type", "plain/text");
-                    handler.getExchange().getResponseHeaders().add("location", savePath.getFileName().toString());
+                    handler.getExchange().getResponseHeaders().add("Content-type", "plain/text");
+                    handler.getExchange().getResponseHeaders().add("Access-control-expose-headers", "X-saved-image");
+                    handler.getExchange().getResponseHeaders().add("X-saved-image", savePath.getFileName().toString());
                     handler.getExchange().sendResponseHeaders(200, 10);
                     int[] ints = new int[]{0};
                     ScanTask task = new ScanTask(deviceId, savePath, 200, pct -> {
@@ -177,74 +168,6 @@ public class Main {
                 } finally {
                     Scanner.coUninitialize();
                     handler.getExchange().close();
-                }
-                break;
-            }
-            default: {
-                handler.sendError("Invalid setting access.");
-                break;
-            }
-        }
-    }
-
-    private static void handleScannerScanBackup(Handler handler) throws Exception {
-        switch (handler.getMethod()) {
-            case "OPTIONS": {
-                handler.respondToOptions(List.of("GET", "OPTIONS"));
-                break;
-            }
-            case "GET": {
-                handler.allowCORS();
-                //Scanner.coInitialize();
-                try {
-//                    String deviceId = handler.getParam("device-id");
-//                    if (deviceId == null) {
-//                        List<Wia.Device> devices = Wia.listDevices();
-//                        if (devices.size() > 0) {
-//                            deviceId = devices.get(0).deviceId;
-//                        } else {
-//                            handler.sendError("スキャナーがみつかりません。");
-//                            return;
-//                        }
-//                    }
-//                    System.out.printf("deviceId: %s\n", deviceId);
-//                    Path savePath = createScannedImagePath();
-//                    System.out.printf("filename: %s\n", savePath.getFileName().toString());
-//                    byte[] filename = savePath.getFileName().toString().getBytes(StandardCharsets.UTF_8);
-                    handler.getExchange().getResponseHeaders().add("content-type", "text/plain");
-                    //handler.getExchange().sendResponseHeaders(200, filename.length);
-                    handler.getExchange().sendResponseHeaders(200, 5);
-//                    ProgressReport progressReport = new ProgressReport(handler.getExchange(), filename);
-                    Thread.sleep(1000);
-                    handler.getExchange().getResponseBody().write("*".getBytes());
-                    handler.getExchange().getResponseBody().flush();
-                    Thread.sleep(1000);
-                    handler.getExchange().getResponseBody().write("*".getBytes());
-                    handler.getExchange().getResponseBody().flush();
-                    Thread.sleep(1000);
-                    handler.getExchange().getResponseBody().write("*".getBytes());
-                    handler.getExchange().getResponseBody().flush();
-                    Thread.sleep(1000);
-                    handler.getExchange().getResponseBody().write("*".getBytes());
-                    handler.getExchange().getResponseBody().flush();
-                    Thread.sleep(1000);
-                    handler.getExchange().getResponseBody().write("*".getBytes());
-                    handler.getExchange().getResponseBody().flush();
-                    try {
-//                        ScanTask task = new ScanTask(deviceId, savePath, 200, pct -> {
-//                            try {
-//                                progressReport.update(pct);
-//                            } catch (IOException e) {
-//                                e.printStackTrace();
-//                            }
-//                        });
-//                        task.run();
-//                        progressReport.end();
-                    } finally {
-                        handler.getExchange().close();
-                    }
-                } finally {
-                    Scanner.coUninitialize();
                 }
                 break;
             }
@@ -531,6 +454,23 @@ public class Main {
     private static Path createScannedImagePath() throws IOException {
         Path dir = getScannedImagesDir();
         return Files.createTempFile(dir, "scanned-image-", ".jpg");
+    }
+
+    private static List<String> listScannedImage() throws IOException {
+        Path dir = getScannedImagesDir();
+        String[] list = dir.toFile().list();
+        if( list == null ){
+            return Collections.emptyList();
+        } else {
+            return Arrays.asList(list);
+        }
+    }
+
+    private static Path getScannedImage(String filename) throws IOException {
+        if( filename.contains("/") || filename.contains("\\") ){
+            throw new RuntimeException("Invalid image file name.");
+        }
+        return getScannedImagesDir().resolve(filename);
     }
 
     private static void savePrintSetting(String name, PrintSetting setting) throws IOException {

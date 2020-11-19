@@ -67,8 +67,30 @@ export class PrintAPI {
         return await this.GET("/scanner/device/", {});
     }
 
-    async startScan(deviceId = null){
-        return await this.GET("/scanner/scan", {"device-id": deviceId});
+    async scan(deviceId = null, progress = null){
+        return new Promise((resolve, reject) => {
+            if( progress == null ){
+                progress = pct => {};
+            }
+            let xhr = new XMLHttpRequest();
+            let url = this.url + "/scanner/scan";
+            xhr.responseType = "";
+            xhr.onprogress = event => {
+                if( event.total !== 0 ){
+                    let pct = Math.round((event.loaded / event.total) * 100);
+                    progress(pct);
+                }
+            };
+            xhr.onload = event => {
+                let filename = xhr.getResponseHeader("x-saved-image");
+                resolve(filename);
+            };
+            xhr.onerror = event => {
+                reject(xhr.statusText + ": " + xhr.responseText);
+            };
+            xhr.open("GET", url);
+            xhr.send();
+        });
     }
 
     UPLOAD(path, files, fileNameToStoreNameConv = null, progress = null,

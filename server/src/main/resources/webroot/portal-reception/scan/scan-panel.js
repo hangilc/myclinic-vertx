@@ -27,6 +27,10 @@ let tmpl = `
             <button class="btn btn-primary x-start-scan">スキャン開始</button>
         </div>
         <div class="x-scanned-image-list mb-2 border border-success rounded p-2"> 
+            <div class="x-scanned-items"></div>
+            <div> 
+                <button class="btn btn-primary x-upload-button">アップロード</button>
+            </div>
         </div>
     </div>
 </div>
@@ -34,20 +38,30 @@ let tmpl = `
 
 let scannedImageTmpl = `
     <div>
-        <span class="x-file-name"></span>
+        <span class="x-name"></span>
     </div>
 `;
+
+class ScannedItem {
+    constructor(name){
+        this.ele = createElementFrom(scannedImageTmpl);
+        this.map = parseElement(this.ele);
+        this.map.name.innerText = name;
+    }
+}
 
 export class ScanPanel {
     constructor(rest, printAPI){
         this.rest = rest;
         this.printAPI = printAPI;
+        this.items = [];
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.map.searchPatientButton.addEventListener("click", async event => await this.doSearchPatient());
         this.map.selectPatientButton.addEventListener("click", async event => await this.doSelectPatient());
         this.map.refreshDeviceList.addEventListener("click", async event => await this.reloadHook());
         this.map.startScan.addEventListener("click", async event => await this.doStartScan());
+        this.map.uploadButton.addEventListener("click", async event => await this.doUpload());
     }
 
     async reloadHook(){
@@ -95,10 +109,14 @@ export class ScanPanel {
             console.log("scan device not selected");
             return;
         }
-        let file = await this.printAPI.startScan(deviceId);
+        let file = await this.printAPI.scan(deviceId, pct => console.log(pct));
         let item = this.createScannedImageItem(file);
         let wrapper = this.map.scannedImageList;
         wrapper.appendChild(item);
+    }
+
+    async doUpload(){
+
     }
 
     createScannedImageItem(fileName){

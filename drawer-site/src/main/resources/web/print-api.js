@@ -82,7 +82,7 @@ export class PrintAPI {
                 }
             };
             xhr.onload = event => {
-                let filename = xhr.getResponseHeader("location");
+                let filename = xhr.getResponseHeader("x-saved-image");
                 resolve(filename);
             };
             xhr.onerror = event => {

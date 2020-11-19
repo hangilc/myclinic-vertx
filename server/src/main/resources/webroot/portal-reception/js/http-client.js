@@ -8,6 +8,33 @@ export class HttpClient {
         this.url = url;
     }
 
+    async uploadFileBlob(path, fileBits, filename, attr = null, method = "POST"){
+        let file = new File(fileBits, filename);
+        return new Promise((resolve, reject) => {
+            let formData = new FormData();
+            if( attr ){
+                for(let key of Object.keys(attr)){
+                    formData.append(key, attr[key]);
+                }
+            }
+            formData.append("file", file);
+            let xhr = new XMLHttpRequest();
+            let url = this.url + path;
+            xhr.onload = e => {
+                if( xhr.status === 200 ){
+                    resolve(xhr.response);
+                } else {
+                    reject(xhr.statusText + ": " + xhr.responseText);
+                }
+            }
+            xhr.onerror = e => {
+                reject(xhr.statusText + ": " + xhr.responseText);
+            }
+            xhr.open(method, url);
+            xhr.send(formData);
+        });
+    }
+
     REQUEST(method, path, params, body){
         return new Promise((resolve, reject) => {
             let xhr = new XMLHttpRequest();

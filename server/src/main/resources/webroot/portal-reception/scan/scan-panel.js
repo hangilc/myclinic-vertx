@@ -172,13 +172,17 @@ export class ScanPanel {
     }
 
     async doUpload(){
-        let items = this.items;
-        if( items.length === 0 ){
-            return;
-        } else if( items.length === 1 ){
-            let item = items[0];
-
-        }
+        let file = new File(["hello"], "test.txt");
+        await this.rest.uploadFileBlob("/save-patient-image",
+            ["hello, world"],
+            "hello.txt",
+            {"patient-id": 3});
+        // let items = this.items;
+        // if( items.length === 0 ){
+        //     return;
+        // } else if( items.length === 1 ){
+        //     let item = items[0];
+        // }
     }
 
 }

@@ -1,5 +1,6 @@
 import {createElementFrom} from "../js/create-element-from.js";
 import {parseElement} from "../js/parse-node.js";
+import * as paperscan from "../../js/paper-scan.js";
 
 let tmpl = `
 <div>
@@ -19,10 +20,25 @@ let tmpl = `
         選択された患者：<span class="x-selected-patient-disp"></span>
     </div>
     <div class="mb-2">
-        <div class="form-inline mb-2"> 
+        <div class="h4">文書の種類</div>
+        <select class="form-control w-auto">
+            <option value="hokensho">保険証</option>
+            <option value="health-check">健診結果</option>
+            <option value="exam-report">検査結果</option>
+            <option value="refer">紹介状</option>
+            <option value="shijisho">訪問看護指示書など</option>
+            <option value="zaitaku">訪問看護などの報告書</option>
+            <option value="image" selected>その他</option>
+        </select>
+    </div>
+    <div class="mb-2"> 
+        <div class="h4">スキャナ選択</div>
+         <div class="form-inline mb-2"> 
             <select class="form-control x-device-list mr-2"></select>
             <button class="btn btn-secondary x-refresh-device-list">更新</button>
         </div>
+   </div>
+    <div class="mb-2">
         <div class="mb-2">
             <button class="btn btn-primary x-start-scan">スキャン開始</button>
         </div>
@@ -75,8 +91,12 @@ class ScannedItem {
         this.map.disp.addEventListener("click", async event => await this.doDisp());
     }
 
+    async getImageData(){
+        return await this.printAPI.getScannedImage(this.name);
+    }
+
     async doDisp(){
-        let blob = await this.printAPI.getScannedImage(this.name);
+        let blob = await this.getImageData();
         let pbox = new PreviewBox(blob);
         this.map.preview.append(pbox.ele);
     }
@@ -130,7 +150,7 @@ export class ScanPanel {
         if( !patientId ){
             return;
         }
-        let patient = await this.rest.getPatient(patientId);
+        let patient = this.patient = await this.rest.getPatient(patientId);
         this.map.selectedPatientDisp.innerText = patientRep(patient);
         this.map.patientSearchResultWrapper.classList.add("d-none");
     }
@@ -143,11 +163,22 @@ export class ScanPanel {
         }
         let file = await this.printAPI.scan(deviceId, pct => console.log(pct));
         let item = new ScannedItem(file, this.printAPI);
+        this.items.push(item);
         this.map.scannedItems.append(item.ele);
     }
 
-    async doUpload(){
+    getPatientId(){
+        return parseInt(this.map.patient)
+    }
 
+    async doUpload(){
+        let items = this.items;
+        if( items.length === 0 ){
+            return;
+        } else if( items.length === 1 ){
+            let item = items[0];
+
+        }
     }
 
 }

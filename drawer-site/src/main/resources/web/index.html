@@ -23,6 +23,8 @@
 
 <button id="mock-scan">Mock Scan</button>
 
+<div id="scanned-images-wrapper"></div>
+
 <script type="module">
     import {PrintAPI} from "./print-api.js";
     import {SettingItem} from "./setting-item.js";
@@ -31,6 +33,9 @@
     window.SettingItem = SettingItem;
 </script>
 <script>
+
+
+
     window.addEventListener('DOMContentLoaded', async event => {
         let printAPI = new PrintAPI();
 

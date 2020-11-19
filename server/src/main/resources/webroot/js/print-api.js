@@ -93,6 +93,22 @@ export class PrintAPI {
         });
     }
 
+    async getScannedImage(name){
+        return new Promise((resolve, reject) => {
+            let xhr = new XMLHttpRequest();
+            let url = this.url + `/scanner/image/${name}`;
+            xhr.responseType = "arraybuffer";
+            xhr.onload = event => {
+                resolve(new Uint8Array(xhr.response));
+            };
+            xhr.onerror = event => {
+                reject(xhr.statusText + ": " + xhr.responseText);
+            };
+            xhr.open("GET", url);
+            xhr.send();
+        });
+    }
+
     UPLOAD(path, files, fileNameToStoreNameConv = null, progress = null,
            additionalFormDataParams = null){
         return new Promise((resolve, reject) => {

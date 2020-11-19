@@ -68,8 +68,10 @@ public class Main {
             case "GET": {
                 String[] subpaths = handler.getSubPaths();
                 if( subpaths.length == 0 ){ // "/scanner/image/"
+                    handler.allowCORS();
                     handler.sendJson(listScannedImage());
                 } else if( subpaths.length == 1 ){  // "/scanner/image/scanned-image...jpg"
+                    handler.allowCORS();
                     String filename = subpaths[0];
                     Path path = getScannedImage(filename);
                     handler.sendFile(path.toString());

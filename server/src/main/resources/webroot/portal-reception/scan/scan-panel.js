@@ -27,7 +27,7 @@ let tmpl = `
             <button class="btn btn-primary x-start-scan">スキャン開始</button>
         </div>
         <div class="x-scanned-image-list mb-2 border border-success rounded p-2"> 
-            <div class="x-scanned-items"></div>
+            <div class="x-scanned-items mb-2"></div>
             <div> 
                 <button class="btn btn-primary x-upload-button">アップロード</button>
             </div>
@@ -38,15 +38,47 @@ let tmpl = `
 
 let scannedImageTmpl = `
     <div>
-        <span class="x-name"></span>
+        <span class="x-name mr-2"></span>
+        <button class="btn btn-link x-disp">表示</button>
+        <div class="x-preview"></div>
     </div>
 `;
 
+let previewTmpl = `
+<div class="d-flex align-items-start">
+    <div class="x-image-wrapper d-inline-block p-2 border border-info rounded mr-2"></div>
+    <button class="btn btn-secondary btn-sm x-close">閉じる</button>
+</div>
+`;
+
+class PreviewBox {
+    constructor(blob){
+        this.ele = createElementFrom(previewTmpl);
+        let map = parseElement(this.ele);
+        let img = document.createElement("img");
+        img.src = URL.createObjectURL(new Blob([blob.buffer], {type: "image/jpg"}));
+        let scale = 1.8;
+        img.width = 210 * scale;
+        img.height = 297 * scale;
+        map.imageWrapper.append(img);
+        map.close.addEventListener("click", event => this.ele.remove());
+    }
+}
+
 class ScannedItem {
-    constructor(name){
+    constructor(name, printAPI){
+        this.name = name;
+        this.printAPI = printAPI;
         this.ele = createElementFrom(scannedImageTmpl);
         this.map = parseElement(this.ele);
         this.map.name.innerText = name;
+        this.map.disp.addEventListener("click", async event => await this.doDisp());
+    }
+
+    async doDisp(){
+        let blob = await this.printAPI.getScannedImage(this.name);
+        let pbox = new PreviewBox(blob);
+        this.map.preview.append(pbox.ele);
     }
 }
 
@@ -110,21 +142,14 @@ export class ScanPanel {
             return;
         }
         let file = await this.printAPI.scan(deviceId, pct => console.log(pct));
-        let item = this.createScannedImageItem(file);
-        let wrapper = this.map.scannedImageList;
-        wrapper.appendChild(item);
+        let item = new ScannedItem(file, this.printAPI);
+        this.map.scannedItems.append(item.ele);
     }
 
     async doUpload(){
 
     }
 
-    createScannedImageItem(fileName){
-        let e = createElementFrom(scannedImageTmpl);
-        let map = parseElement(e);
-        map.fileName.innerText = fileName;
-        return e;
-    }
 }
 
 function patientRep(patient){

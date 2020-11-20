@@ -11,6 +11,7 @@ class Panel {
     setReloadHook(hook){
         this.reloadHook = hook;
     }
+
 }
 
 export class Menu {
@@ -57,6 +58,9 @@ export class Menu {
                     await panel.reloadHook();
                 }
                 this.panelWrapper.appendChild(panelWrap);
+                if( config.postConstruct ){
+                    await config.postConstruct();
+                }
             } else {
                 await panel.reloadHook();
                 this.panelWrapper.appendChild(panel.savedElement);

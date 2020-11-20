@@ -1,0 +1,14 @@
+digraph scan {
+	preparing -> scanning
+	preparing -> uploading
+	scanning -> preparing
+	uploading -> uploaded
+	uploading -> "partially-uploaded"
+	"partially-uploaded" -> "re-uploading"
+	"partially-uploaded" -> "single-uploading"
+	"partially-uploaded" -> abort
+	"re-uploading" -> uploaded
+	"re-uploading" -> "partially-uploaded"
+	"single-uploading" -> uploaded
+	"single-uploading" -> "partially-uploaded"
+}

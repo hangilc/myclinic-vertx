@@ -1,6 +1,6 @@
 import * as kanjidate from "./kanjidate.js";
 
-export function createTimestamp() {
+export function getTimestamp() {
     return kanjidate.getTimestamp();
 }
 

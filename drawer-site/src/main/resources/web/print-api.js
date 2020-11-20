@@ -99,7 +99,7 @@ export class PrintAPI {
             let url = this.url + `/scanner/image/${name}`;
             xhr.responseType = "arraybuffer";
             xhr.onload = event => {
-                resolve(new Uint8Array(xhr.response));
+                resolve(xhr.response);
             };
             xhr.onerror = event => {
                 reject(xhr.statusText + ": " + xhr.responseText);

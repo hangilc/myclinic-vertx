@@ -21,7 +21,7 @@ let tmpl = `
     </div>
     <div class="mb-2">
         <div class="h4">文書の種類</div>
-        <select class="form-control w-auto">
+        <select class="form-control w-auto x-tag-select">
             <option value="hokensho">保険証</option>
             <option value="health-check">健診結果</option>
             <option value="exam-report">検査結果</option>
@@ -68,11 +68,11 @@ let previewTmpl = `
 `;
 
 class PreviewBox {
-    constructor(blob){
+    constructor(buf){
         this.ele = createElementFrom(previewTmpl);
         let map = parseElement(this.ele);
         let img = document.createElement("img");
-        img.src = URL.createObjectURL(new Blob([blob.buffer], {type: "image/jpg"}));
+        img.src = URL.createObjectURL(new Blob([buf], {type: "image/jpeg"}));
         let scale = 1.8;
         img.width = 210 * scale;
         img.height = 297 * scale;
@@ -82,23 +82,48 @@ class PreviewBox {
 }
 
 class ScannedItem {
-    constructor(name, printAPI){
-        this.name = name;
+    constructor(savedName, printAPI, rest){
+        this.savedName = savedName;
         this.printAPI = printAPI;
+        this.rest = rest;
+        this.uploadName = null;
+        this.patientId = null;
         this.ele = createElementFrom(scannedImageTmpl);
         this.map = parseElement(this.ele);
-        this.map.name.innerText = name;
+        this.map.name.innerText = "";
         this.map.disp.addEventListener("click", async event => await this.doDisp());
     }
 
     async getImageData(){
-        return await this.printAPI.getScannedImage(this.name);
+        return await this.printAPI.getScannedImage(this.savedName);
+    }
+
+    setUpload(uploadName, patientId){
+        this.uploadName = uploadName;
+        this.patientId = patientId;
+        this.map.name.innerText = uploadName;
+    }
+
+    getSavedName(){
+        return this.savedName;
     }
 
     async doDisp(){
-        let blob = await this.getImageData();
-        let pbox = new PreviewBox(blob);
+        let buf = await this.getImageData();
+        let pbox = new PreviewBox(buf);
         this.map.preview.append(pbox.ele);
+    }
+
+    async upload(){
+        if( !(this.patientId && this.uploadName) ){
+            throw new Error("Upload setting is not specified.");
+        }
+        let buf = await this.getImageData();
+        await this.rest.uploadFileBlob("/save-patient-image",
+            [buf],
+            this.uploadName,
+            {"patient-id": this.patientId});
+
     }
 }
 
@@ -162,27 +187,50 @@ export class ScanPanel {
             return;
         }
         let file = await this.printAPI.scan(deviceId, pct => console.log(pct));
-        let item = new ScannedItem(file, this.printAPI);
+        let item = new ScannedItem(file, this.printAPI, this.rest);
         this.items.push(item);
+        this.renameItems();
         this.map.scannedItems.append(item.ele);
     }
 
     getPatientId(){
-        return parseInt(this.map.patient)
+        if( this.patient ){
+            return this.patient.patientId;
+        } else {
+            return null;
+        }
+    }
+
+    getTag(){
+        return this.map.tagSelect.value;
+    }
+
+    renameItems(){
+        let patientId = this.getPatientId();
+        let patientIdTag = patientId ? ("" + patientId) : "????";
+        let tag = this.getTag();
+        let timestamp = paperscan.getTimestamp();
+        let items = this.items;
+        if( items.length === 1 ){
+            let item = items[0];
+            let ext = paperscan.getFileExtension(item.getSavedName());
+            item.setUpload(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "", ext),
+                patientId);
+        } else {
+            let ser = 1;
+            for(let item of items){
+                let ext = paperscan.getFileExtension(item.getSavedName());
+                item.setUpload(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "" + ser, ext),
+                    patientId);
+                ser += 1;
+            }
+        }
     }
 
     async doUpload(){
-        let file = new File(["hello"], "test.txt");
-        await this.rest.uploadFileBlob("/save-patient-image",
-            ["hello, world"],
-            "hello.txt",
-            {"patient-id": 3});
-        // let items = this.items;
-        // if( items.length === 0 ){
-        //     return;
-        // } else if( items.length === 1 ){
-        //     let item = items[0];
-        // }
+        for(let item of this.items){
+            await item.upload();
+        }
     }
 
 }

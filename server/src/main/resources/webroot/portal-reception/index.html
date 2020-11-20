@@ -60,7 +60,8 @@
                 let panel = new ScanPanel(rest, printAPI);
                 e.appendChild(panel.ele);
                 return {
-                    reloadHook: async () => await panel.reloadHook()
+                    reloadHook: async () => await panel.reloadHook(),
+                    postConstruct: async() => await panel.focus()
                 };
             },
             document.getElementById("index-scan-link"));

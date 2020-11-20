@@ -1,19 +1,21 @@
 import {createElementFrom} from "../js/create-element-from.js";
 import {parseElement} from "../js/parse-node.js";
 import * as paperscan from "../../js/paper-scan.js";
+import {ScannedItem} from "./scanned-item.js";
 
 let tmpl = `
 <div>
     <div class="h3">スキャン</div>
     <div class="mb-2">
         <div class="h4">患者選択</div>
-        <div class="form-inline mb-2">
-            <input type="text" class="form-control mr-2 x-search-patient-text" /> 
-            <button class="btn btn-primary x-search-patient-button">検索</button>
-        </div>
+        <form class="form-inline mb-2 x-search-patient-form" onsubmit="return false;">
+            <input type="text" class="form-control mr-2 x-search-patient-text"/> 
+            <button class="btn btn-primary x-search-patient-button" type="submit">検索</button>
+        </form>
         <div class="x-patient-search-result-wrapper d-none">
             <select size="10" class="x-patient-search-result form-control mb-2 col-6"></select>
-            <button class="btn btn-primary x-select-patient-button">選択</button>
+            <button class="btn btn-primary btn-sm mr-2 x-select-patient-button">選択</button>
+            <button class="btn btn-link btn-sm x-search-patient-close">閉じる</button>
         </div>
     </div>
     <div class="x-selected-patient-disp-wrapper mb-2 border border-success rounded p-2">
@@ -45,107 +47,60 @@ let tmpl = `
         <div class="x-scanned-image-list mb-2 border border-success rounded p-2"> 
             <div class="x-scanned-items mb-2"></div>
             <div> 
-                <button class="btn btn-primary x-upload-button">アップロード</button>
+                <button class="btn btn-primary x-upload-button" disabled>アップロード</button>
             </div>
         </div>
     </div>
 </div>
 `;
 
-let scannedImageTmpl = `
-    <div>
-        <span class="x-name mr-2"></span>
-        <button class="btn btn-link x-disp">表示</button>
-        <div class="x-preview"></div>
-    </div>
-`;
-
-let previewTmpl = `
-<div class="d-flex align-items-start">
-    <div class="x-image-wrapper d-inline-block p-2 border border-info rounded mr-2"></div>
-    <button class="btn btn-secondary btn-sm x-close">閉じる</button>
-</div>
-`;
-
-class PreviewBox {
-    constructor(buf){
-        this.ele = createElementFrom(previewTmpl);
-        let map = parseElement(this.ele);
-        let img = document.createElement("img");
-        img.src = URL.createObjectURL(new Blob([buf], {type: "image/jpeg"}));
-        let scale = 1.8;
-        img.width = 210 * scale;
-        img.height = 297 * scale;
-        map.imageWrapper.append(img);
-        map.close.addEventListener("click", event => this.ele.remove());
-    }
-}
-
-class ScannedItem {
-    constructor(savedName, printAPI, rest){
-        this.savedName = savedName;
-        this.printAPI = printAPI;
-        this.rest = rest;
-        this.uploadName = null;
-        this.patientId = null;
-        this.ele = createElementFrom(scannedImageTmpl);
-        this.map = parseElement(this.ele);
-        this.map.name.innerText = "";
-        this.map.disp.addEventListener("click", async event => await this.doDisp());
-    }
-
-    async getImageData(){
-        return await this.printAPI.getScannedImage(this.savedName);
-    }
-
-    setUpload(uploadName, patientId){
-        this.uploadName = uploadName;
-        this.patientId = patientId;
-        this.map.name.innerText = uploadName;
-    }
-
-    getSavedName(){
-        return this.savedName;
-    }
-
-    async doDisp(){
-        let buf = await this.getImageData();
-        let pbox = new PreviewBox(buf);
-        this.map.preview.append(pbox.ele);
-    }
-
-    async upload(){
-        if( !(this.patientId && this.uploadName) ){
-            throw new Error("Upload setting is not specified.");
-        }
-        let buf = await this.getImageData();
-        await this.rest.uploadFileBlob("/save-patient-image",
-            [buf],
-            this.uploadName,
-            {"patient-id": this.patientId});
-
-    }
-}
 
 export class ScanPanel {
-    constructor(rest, printAPI){
+    constructor(rest, printAPI) {
         this.rest = rest;
         this.printAPI = printAPI;
+        this.status = "preparing";
         this.items = [];
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
-        this.map.searchPatientButton.addEventListener("click", async event => await this.doSearchPatient());
+        this.map.searchPatientForm.addEventListener("submit", async event => await this.doSearchPatient());
+        this.map.searchPatientClose.addEventListener("click", event => this.doSearchPatientClose());
         this.map.selectPatientButton.addEventListener("click", async event => await this.doSelectPatient());
         this.map.refreshDeviceList.addEventListener("click", async event => await this.reloadHook());
         this.map.startScan.addEventListener("click", async event => await this.doStartScan());
         this.map.uploadButton.addEventListener("click", async event => await this.doUpload());
+        this.ele.addEventListener("patient-changed", event => {
+            let patient = event.detail;
+            this.map.selectedPatientDisp.innerText = patientRep(patient);
+            this.renameItems();
+        });
+        this.map.tagSelect.addEventListener("change", event => {
+            this.renameItems();
+        });
+        this.ele.addEventListener("scan-started", event => {
+            this.map.startScan.disabled = true;
+        });
+        this.ele.addEventListener("scan-ended", event => {
+            this.map.startScan.disabled = false;
+        });
+        this.ele.addEventListener("items-changed", event => {
+            this.updateUploadButtonEnable();
+        });
     }
 
-    async reloadHook(){
+    changeStatus(status){
+        switch(status){
+            case "initial": {
+
+            }
+        }
+    }
+
+    async reloadHook() {
         let devices = await this.printAPI.listScannerDevices();
         let select = this.map.deviceList;
         select.innerHTML = "";
-        for(let device of devices){
+        for (let device of devices) {
             let opt = document.createElement("option");
             opt.innerText = device.name;
             opt.value = device.deviceId;
@@ -153,72 +108,102 @@ export class ScanPanel {
         }
     }
 
-    async doSearchPatient(){
+    focus() {
+        console.log("ScanPanel.focus");
+        this.map.searchPatientText.focus();
+    }
+
+    async doSearchPatient() {
         let text = this.map.searchPatientText.value.trim();
-        if( text === "" ){
+        if (text === "") {
             return;
         }
         let result = await this.rest.searchPatient(text);
         let select = this.map.patientSearchResult;
         select.innerHTML = "";
-        for(let patient of result){
+        if( result.length === 1 ){
+            select.size = 2;
+        } else if (result.length > 10) {
+            select.size = 10;
+        } else {
+            select.size = result.length;
+        }
+        select.scrollTop = 0;
+        for (let patient of result) {
             let opt = document.createElement("option");
             opt.value = patient.patientId;
             opt.innerText = patientRep(patient);
             select.appendChild(opt);
         }
+        if (result.length > 0) {
+            select.querySelector("option").selected = true;
+        }
         this.map.patientSearchResultWrapper.classList.remove("d-none");
+        select.focus();
     }
 
-    async doSelectPatient(){
-        let patientId = this.map.patientSearchResult.value;
-        if( !patientId ){
-            return;
-        }
-        let patient = this.patient = await this.rest.getPatient(patientId);
-        this.map.selectedPatientDisp.innerText = patientRep(patient);
+    doSearchPatientClose() {
+        this.map.patientSearchResult.innerHTML = "";
         this.map.patientSearchResultWrapper.classList.add("d-none");
     }
 
-    async doStartScan(){
-        let deviceId = this.map.deviceList.value;
-        if( !deviceId ){
-            console.log("scan device not selected");
+    async doSelectPatient() {
+        let patientId = this.map.patientSearchResult.value;
+        if (!patientId) {
             return;
         }
-        let file = await this.printAPI.scan(deviceId, pct => console.log(pct));
-        let item = new ScannedItem(file, this.printAPI, this.rest);
-        this.items.push(item);
-        this.renameItems();
-        this.map.scannedItems.append(item.ele);
+        let patient = this.patient = await this.rest.getPatient(patientId);
+        if( patient ) {
+            this.map.patientSearchResultWrapper.classList.add("d-none");
+            this.map.searchPatientText.value = "";
+            this.ele.dispatchEvent(new CustomEvent("patient-changed", {detail: patient}));
+        }
     }
 
-    getPatientId(){
-        if( this.patient ){
+    async doStartScan() {
+        this.ele.dispatchEvent(new Event("scan-started"));
+        try {
+            let deviceId = this.map.deviceList.value;
+            if (!deviceId) {
+                console.log("scan device not selected");
+                return;
+            }
+            let file = await this.printAPI.scan(deviceId, pct => console.log(pct));
+            let item = new ScannedItem(file, this.printAPI, this.rest);
+            this.items.push(item);
+            this.renameItems();
+            this.map.scannedItems.append(item.ele);
+        } finally {
+            this.ele.dispatchEvent(new Event("scan-ended"));
+        }
+    }
+
+    getPatientId() {
+        if (this.patient) {
             return this.patient.patientId;
         } else {
             return null;
         }
     }
 
-    getTag(){
+    getTag() {
         return this.map.tagSelect.value;
     }
 
-    renameItems(){
+    renameItems() {
         let patientId = this.getPatientId();
         let patientIdTag = patientId ? ("" + patientId) : "????";
         let tag = this.getTag();
         let timestamp = paperscan.getTimestamp();
         let items = this.items;
-        if( items.length === 1 ){
+        if (items.length === 1) {
             let item = items[0];
             let ext = paperscan.getFileExtension(item.getSavedName());
             item.setUpload(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "", ext),
                 patientId);
         } else {
             let ser = 1;
-            for(let item of items){
+            for (let item of items) {
                 let ext = paperscan.getFileExtension(item.getSavedName());
                 item.setUpload(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "" + ser, ext),
                     patientId);
@@ -227,15 +212,23 @@ export class ScanPanel {
         }
     }
 
-    async doUpload(){
-        for(let item of this.items){
-            await item.upload();
+    async doUpload() {
+        try {
+            for (let item of this.items) {
+                await item.upload();
+            }
+        } catch(e){
+            alert(e.toString());
         }
+    }
+
+    updateUploadButtonEnable(){
+
     }
 
 }
 
-function patientRep(patient){
+function patientRep(patient) {
     let patientIdRep = ("" + patient.patientId).padStart(4, "0");
     return `(${patientIdRep}) ${patient.lastName}${patient.firstName}`;
 }

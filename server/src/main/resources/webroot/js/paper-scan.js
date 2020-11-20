@@ -17,7 +17,7 @@ export function createPaperScanFileName(patientId, tag, timestamp, ser, ext) {
     if( ser == null || ser === "" ){
         ser = "";
     } else {
-        ser = `-${ser}-`;
+        ser = `-${ser}`;
     }
     return `${patientId}-${tag}-${timestamp}${ser}${ext}`;
 }

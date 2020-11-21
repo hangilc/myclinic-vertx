@@ -121,7 +121,10 @@ export class ScanPanel {
                 console.log(e.toString());
             }
         });
-        this.map.cancelUpload.addEventListener("click", async event => await this.doCancelUpload());
+        this.map.cancelUpload.addEventListener("click", async event => {
+            await this.doCancelUpload();
+            this.changeStatusTo(STATUS_PREPARING);
+        });
         this.ele.addEventListener("patient-changed", event => {
             if (this.status.isPreparing()) {
                 let patient = event.detail;
@@ -283,7 +286,20 @@ export class ScanPanel {
     }
 
     async doCancelUpload(){
-
+        for(let item of this.items){
+            if( item.isUploaded() ){
+                await item.deleteSavedImage();
+            }
+            let newItem = new ScannedItem(item.savedName, item.printAPI, item.rest);
+            newItem.setUpload(item.uploadName, item.patientId);
+            item.ele.parentNode.replaceChild(newItem.ele, item.ele);
+            for(let i = 0;i<this.items.length;i++){
+                if( this.items[i] === item ){
+                    this.items[i] = newItem;
+                    break;
+                }
+            }
+        }
     }
 
 }

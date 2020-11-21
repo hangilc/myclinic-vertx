@@ -50,11 +50,17 @@ let tmpl = `
         </div>
         <div class="x-scanned-image-list mb-2 border border-success rounded p-2"> 
             <div class="x-scanned-items mb-2"></div>
-            <div> 
+            <div class="x-upload-commands"> 
                 <button class="btn btn-primary x-upload-button">アップロード</button>
+            </div>
+            <div class="d-none x-re-upload-commands">
+                <span class="text-danger mr-2">アップロードに失敗しました。</span>
+                <button class="btn btn-secondary x-retry-upload">再試行</button>
+                <button class="btn btn-secondary x-cancel-upload">キャンセル</button>
             </div>
         </div>
     </div>
+
 </div>
 `;
 
@@ -62,10 +68,7 @@ let STATUS_PREPARING = "preparing";
 let STATUS_SCANNING = "scanning";
 let STATUS_UPLOADING = "uploading";
 let STATUS_PARTIALLY_UPLOADED = "partially-uploaded";
-let STATUS_RE_UPLOADING = "re-uploading";
-let STATUS_SINGLE_UPLOADING = "single-uploading";
 let STATUS_UPLOADED = "uploaded";
-let STATUS_ABORT = "abort";
 
 export class ScanPanel {
     constructor(rest, printAPI) {
@@ -89,18 +92,36 @@ export class ScanPanel {
             }
         });
         this.map.uploadButton.addEventListener("click", async event => {
+            if( !this.getPatientId() ){
+                alert("患者が設定されていません。");
+                return;
+            }
             this.changeStatusTo(STATUS_UPLOADING);
             try {
                 await this.doUpload();
                 this.changeStatusTo(STATUS_UPLOADED);
-                alert("アップロードが終了しました。");
-                this.reset();
-            } catch(e){
+                setTimeout(() => {
+                    alert("アップロードが終了しました。");
+                    this.reset();
+                }, 0);
+            } catch (e) {
                 console.log(e.toString());
                 this.changeStatusTo(STATUS_PARTIALLY_UPLOADED);
             }
         });
-        this.status = new StatusPreparing(this.map, this.items);
+        this.map.retryUpload.addEventListener("click", async event => {
+            try {
+                await this.doRetryUpload();
+                this.changeStatusTo(STATUS_UPLOADED);
+                setTimeout(() => {
+                    alert("アップロードが終了しました。");
+                    this.reset();
+                }, 0);
+            } catch(e){
+                console.log(e.toString());
+            }
+        });
+        this.map.cancelUpload.addEventListener("click", async event => await this.doCancelUpload());
         this.ele.addEventListener("patient-changed", event => {
             if (this.status.isPreparing()) {
                 let patient = event.detail;
@@ -113,11 +134,9 @@ export class ScanPanel {
                 this.renameItems();
             }
         });
-        this.ele.addEventListener("items-changed", event => {
-            this.status.updateUI();
-        });
         this.map.reset.addEventListener("click", event => this.reset());
-    }
+        this.status = new StatusPreparing(this.map, this.items);
+   }
 
     async postConstruct() {
         this.focus();
@@ -125,7 +144,7 @@ export class ScanPanel {
         this.status.updateUI();
     }
 
-    reset(){
+    reset() {
         this.ele.dispatchEvent(new CustomEvent("reload-panel", {bubbles: true}));
     }
 
@@ -205,11 +224,11 @@ export class ScanPanel {
         if (!deviceId) {
             throw new Error("患者が設定されていません。");
         }
-        this.map.scanProgress.innerText = "scanの準備中";
+        this.map.scanProgress.innerText = "スキャンの準備中";
         let file = await this.printAPI.scan(deviceId, pct => {
             this.map.scanProgress.innerText = `${pct}%`;
         });
-        this.map.scanProgress.innerText = "ｓｃａｎ終了";
+        this.map.scanProgress.innerText = "スキャン終了";
         let item = new ScannedItem(file, this.printAPI, this.rest);
         this.items.push(item);
         this.map.scannedItems.append(item.ele);
@@ -250,13 +269,21 @@ export class ScanPanel {
     }
 
     async doUpload() {
-        try {
-            for (let item of this.items) {
+        for (let item of this.items) {
+            await item.upload();
+        }
+    }
+
+    async doRetryUpload(){
+        for(let item of this.items){
+            if( !item.isUploaded() ){
                 await item.upload();
             }
-        } catch (e) {
-            alert(e.toString());
         }
+    }
+
+    async doCancelUpload(){
+
     }
 
 }
@@ -276,23 +303,26 @@ class Status {
         throw new Error("status change is not allowed to " + status);
     }
 
-    updateUI(){
+    updateUI() {
+        this.map.uploadButton.disabled = true;
         this.map.scanProgress.classList.add("d-none");
+        this.map.uploadCommands.classList.remove("d-none");
+        this.map.reUploadCommands.classList.add("d-none");
     }
 
     isPreparing() {
         return false;
     }
 
-    isScanning(){
+    isScanning() {
         return false;
     }
 
-    isUploading(){
+    isUploading() {
         return false;
     }
 
-    isUploaded(){
+    isUploaded() {
         return false;
     }
 }
@@ -309,7 +339,7 @@ class StatusPreparing extends Status {
     changeStatusTo(status) {
         if (status === STATUS_SCANNING) {
             return new StatusScanning(this.map, this.items);
-        } else if( status === STATUS_UPLOADING ){
+        } else if (status === STATUS_UPLOADING) {
             return new StatusUploading(this.map, this.items);
         } else {
             return super.changeStatusTo(status);
@@ -334,7 +364,7 @@ class StatusScanning extends Status {
     }
 
     changeStatusTo(status) {
-        if( status === STATUS_PREPARING ){
+        if (status === STATUS_PREPARING) {
             return new StatusPreparing(this.map, this.items);
         } else {
             super.changeStatusTo(status);
@@ -364,9 +394,9 @@ class StatusUploading extends Status {
     }
 
     changeStatusTo(status) {
-        if( status === STATUS_UPLOADED ) {
+        if (status === STATUS_UPLOADED) {
             return new StatusUploaded(this.map, this.items);
-        } else if( status === STATUS_PARTIALLY_UPLOADED ){
+        } else if (status === STATUS_PARTIALLY_UPLOADED) {
             return new StatusPartiallyUploaded(this.map, this.items);
         } else {
             super.changeStatusTo(status);
@@ -394,7 +424,7 @@ class StatusUploaded extends Status {
         super(map, items);
     }
 
-    isUploaded(){
+    isUploaded() {
         return true;
     }
 }
@@ -404,12 +434,23 @@ class StatusPartiallyUploaded extends Status {
         super(map, items);
     }
 
-    isUploaded(){
+    isPartiallyUploaded() {
         return true;
     }
 
-    updateUI(){
-        super.updateUI();
+    changeStatusTo(status){
+        if( status === STATUS_UPLOADED ) {
+            return new StatusUploaded(this.map, this.items);
+        } else if( status === STATUS_PREPARING ){
+            return new StatusPreparing(this.map, this.items);
+        } else {
+            return super.changeStatusTo(status);
+        }
+    }
 
+    updateUI() {
+        super.updateUI();
+        this.map.uploadCommands.classList.add("d-none");
+        this.map.reUploadCommands.classList.remove("d-none");
     }
 }

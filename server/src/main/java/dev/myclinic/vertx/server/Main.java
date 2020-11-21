@@ -44,12 +44,6 @@ public class Main {
         mapper.registerModule(module);
     }
 
-//    private static final ObjectMapper yamlMapper;
-//
-//    static {
-//        yamlMapper = new ObjectMapper(new YAMLFactory());
-//    }
-
     private static class CmdArgs {
         int port = 28080;
         // String webroot = null;
@@ -67,10 +61,6 @@ public class Main {
                         cmdArgs.port = Integer.parseInt(args[++i]);
                         break;
                     }
-//                    case "--webroot": {
-//                        cmdArgs.webroot = args[++i];
-//                        break;
-//                    }
                     case "--dev": {
                         cmdArgs.isDev = true;
                         break;
@@ -90,19 +80,10 @@ public class Main {
             for (; i < args.length; i++) {
                 cmdArgs.args.add(args[i]);
             }
-//            if( cmdArgs.webroot == null ){
-//                cmdArgs.webroot = findWebroot();
-//            }
             return cmdArgs;
         }
 
         public static String findWebroot() {
-//            List<String> lists = List.of("server/webroot", "webroot");
-//            for(String s: lists){
-//                if( Files.exists(Path.of(s)) ){
-//                    return s;
-//                }
-//            }
             String s = "./server/src/main/resources/webroot";
             Path path = Path.of(s);
             if (Files.exists(path) && Files.isDirectory(path)) {
@@ -143,7 +124,6 @@ public class Main {
         router.route("/integration/*").handler(BodyHandler.create());
         router.mountSubRouter("/integration", integrationRouter);
         router.route("/*").failureHandler(errorHandler);
-//        boolean isDevMode = "dev".equals(System.getenv("VERTXWEB_ENVIRONMENT"));
         Route portalRoute = router.route("/web/*");
         StaticHandler staticHandler;
         if (cmdArgs.isDev) {

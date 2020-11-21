@@ -108,4 +108,15 @@ export class Rest extends HttpClient {
         return await this.POST("/receipt-drawer", req);
     }
 
+    async savePatientImageBlob(patientId, blobParts, filename){
+        return await this.uploadFileBlob("/save-patient-image",
+            blobParts,
+            filename,
+            {"patient-id": patientId});
+    }
+
+    async deletePatientImage(patientId, file){
+        return await this.GET("/delete-patient-image", {"patient-id": patientId, file})
+    }
+
 }

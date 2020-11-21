@@ -320,6 +320,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("move-app-file", this::moveAppFile);
         noDatabaseFuncMap.put("delete-app-file", this::deleteAppFile);
         noDatabaseFuncMap.put("save-patient-image", this::savePatientImage);
+        noDatabaseFuncMap.put("delete-patient-image", this::deletePatientImage);
         noDatabaseFuncMap.put("view-drawer", this::viewDrawer);
         noDatabaseFuncMap.put("create-temp-file-name", this::createTempFileName);
         noDatabaseFuncMap.put("delete-file", this::deleteFile);
@@ -1191,7 +1192,12 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
+    private static int savePatientImageCount = 0;
+
     private void savePatientImage(RoutingContext ctx) {
+        if( ++savePatientImageCount % 2 == 0 ){
+            throw new RuntimeException("Intended save patient image failure");
+        }
         try {
             String patientIdParam = ctx.request().getParam("patient-id");
             if (patientIdParam == null || patientIdParam.isEmpty()) {
@@ -1227,6 +1233,37 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 }
             });
         } catch (Exception e) {
+            ctx.fail(e);
+        }
+    }
+
+    private void deletePatientImage(RoutingContext ctx){
+        try {
+            String patientIdParam = ctx.request().getParam("patient-id");
+            if( patientIdParam == null ){
+                throw new RuntimeException("Missing parameter: patient-id");
+            }
+            int patientId = Integer.parseInt(patientIdParam);
+            String file = ctx.request().getParam("file");
+            if( file == null ){
+                throw new RuntimeException("Missing param: file");
+            }
+            GlobalService.AppDirToken dirToken = new GlobalService.AppDirToken(
+                    GlobalService.getInstance().paperScanDirToken,
+                    List.of(String.format("%d", patientId))
+            );
+            GlobalService.AppFileToken fileToken = new GlobalService.AppFileToken(dirToken, file);
+            vertx.fileSystem().delete(
+                    fileToken.resolve().toString(),
+                    result -> {
+                        if( result.succeeded() ){
+                            ctx.response().end(jsonEncode(true));
+                        } else {
+                            ctx.fail(result.cause());
+                        }
+                    }
+            );
+        } catch(Exception e){
             ctx.fail(e);
         }
     }

@@ -5,7 +5,10 @@ import {ScannedItem} from "./scanned-item.js";
 
 let tmpl = `
 <div>
-    <div class="h3">スキャン</div>
+    <div class="d-flex align-items-center"> 
+        <div class="h3 d-inline-block mr-auto">スキャン</div>
+        <button class="btn btn-secondary btn-sm x-reset">リセット</button>
+    </div>
     <div class="mb-2">
         <div class="h4">患者選択</div>
         <form class="form-inline mb-2 x-search-patient-form" onsubmit="return false;">
@@ -42,61 +45,96 @@ let tmpl = `
    </div>
     <div class="mb-2">
         <div class="mb-2">
-            <button class="btn btn-primary x-start-scan">スキャン開始</button>
+            <button class="btn btn-primary mr-2 x-start-scan">スキャン開始</button>
+            <span class="x-scan-progress"></span>
         </div>
         <div class="x-scanned-image-list mb-2 border border-success rounded p-2"> 
             <div class="x-scanned-items mb-2"></div>
             <div> 
-                <button class="btn btn-primary x-upload-button" disabled>アップロード</button>
+                <button class="btn btn-primary x-upload-button">アップロード</button>
             </div>
         </div>
     </div>
 </div>
 `;
 
+let STATUS_PREPARING = "preparing";
+let STATUS_SCANNING = "scanning";
+let STATUS_UPLOADING = "uploading";
+let STATUS_PARTIALLY_UPLOADED = "partially-uploaded";
+let STATUS_RE_UPLOADING = "re-uploading";
+let STATUS_SINGLE_UPLOADING = "single-uploading";
+let STATUS_UPLOADED = "uploaded";
+let STATUS_ABORT = "abort";
 
 export class ScanPanel {
     constructor(rest, printAPI) {
         this.rest = rest;
         this.printAPI = printAPI;
-        this.status = "preparing";
         this.items = [];
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.map.searchPatientForm.addEventListener("submit", async event => await this.doSearchPatient());
         this.map.searchPatientClose.addEventListener("click", event => this.doSearchPatientClose());
         this.map.selectPatientButton.addEventListener("click", async event => await this.doSelectPatient());
-        this.map.refreshDeviceList.addEventListener("click", async event => await this.reloadHook());
-        this.map.startScan.addEventListener("click", async event => await this.doStartScan());
-        this.map.uploadButton.addEventListener("click", async event => await this.doUpload());
+        this.map.refreshDeviceList.addEventListener("click", async event => await this.refreshDeviceList());
+        this.map.startScan.addEventListener("click", async event => {
+            this.changeStatusTo(STATUS_SCANNING);
+            try {
+                await this.doStartScan();
+            } finally {
+                this.changeStatusTo(STATUS_PREPARING);
+                this.renameItems();
+                this.status.updateUI();
+            }
+        });
+        this.map.uploadButton.addEventListener("click", async event => {
+            this.changeStatusTo(STATUS_UPLOADING);
+            try {
+                await this.doUpload();
+                this.changeStatusTo(STATUS_UPLOADED);
+                alert("アップロードが終了しました。");
+                this.reset();
+            } catch(e){
+                console.log(e.toString());
+                this.changeStatusTo(STATUS_PARTIALLY_UPLOADED);
+            }
+        });
+        this.status = new StatusPreparing(this.map, this.items);
         this.ele.addEventListener("patient-changed", event => {
-            let patient = event.detail;
-            this.map.selectedPatientDisp.innerText = patientRep(patient);
-            this.renameItems();
+            if (this.status.isPreparing()) {
+                let patient = event.detail;
+                this.map.selectedPatientDisp.innerText = patientRep(patient);
+                this.renameItems();
+            }
         });
         this.map.tagSelect.addEventListener("change", event => {
-            this.renameItems();
-        });
-        this.ele.addEventListener("scan-started", event => {
-            this.map.startScan.disabled = true;
-        });
-        this.ele.addEventListener("scan-ended", event => {
-            this.map.startScan.disabled = false;
+            if (this.status.isPreparing()) {
+                this.renameItems();
+            }
         });
         this.ele.addEventListener("items-changed", event => {
-            this.updateUploadButtonEnable();
+            this.status.updateUI();
         });
+        this.map.reset.addEventListener("click", event => this.reset());
     }
 
-    changeStatus(status){
-        switch(status){
-            case "initial": {
-
-            }
-        }
+    async postConstruct() {
+        this.focus();
+        await this.refreshDeviceList();
+        this.status.updateUI();
     }
 
-    async reloadHook() {
+    reset(){
+        this.ele.dispatchEvent(new CustomEvent("reload-panel", {bubbles: true}));
+    }
+
+    changeStatusTo(status) {
+        this.status = this.status.changeStatusTo(status);
+        this.status.updateUI();
+    }
+
+    async refreshDeviceList() {
         let devices = await this.printAPI.listScannerDevices();
         let select = this.map.deviceList;
         select.innerHTML = "";
@@ -108,8 +146,10 @@ export class ScanPanel {
         }
     }
 
+    async reloadHook() {
+    }
+
     focus() {
-        console.log("ScanPanel.focus");
         this.map.searchPatientText.focus();
     }
 
@@ -121,7 +161,7 @@ export class ScanPanel {
         let result = await this.rest.searchPatient(text);
         let select = this.map.patientSearchResult;
         select.innerHTML = "";
-        if( result.length === 1 ){
+        if (result.length === 1) {
             select.size = 2;
         } else if (result.length > 10) {
             select.size = 10;
@@ -153,7 +193,7 @@ export class ScanPanel {
             return;
         }
         let patient = this.patient = await this.rest.getPatient(patientId);
-        if( patient ) {
+        if (patient) {
             this.map.patientSearchResultWrapper.classList.add("d-none");
             this.map.searchPatientText.value = "";
             this.ele.dispatchEvent(new CustomEvent("patient-changed", {detail: patient}));
@@ -161,21 +201,18 @@ export class ScanPanel {
     }
 
     async doStartScan() {
-        this.ele.dispatchEvent(new Event("scan-started"));
-        try {
-            let deviceId = this.map.deviceList.value;
-            if (!deviceId) {
-                console.log("scan device not selected");
-                return;
-            }
-            let file = await this.printAPI.scan(deviceId, pct => console.log(pct));
-            let item = new ScannedItem(file, this.printAPI, this.rest);
-            this.items.push(item);
-            this.renameItems();
-            this.map.scannedItems.append(item.ele);
-        } finally {
-            this.ele.dispatchEvent(new Event("scan-ended"));
+        let deviceId = this.map.deviceList.value;
+        if (!deviceId) {
+            throw new Error("患者が設定されていません。");
         }
+        this.map.scanProgress.innerText = "scanの準備中";
+        let file = await this.printAPI.scan(deviceId, pct => {
+            this.map.scanProgress.innerText = `${pct}%`;
+        });
+        this.map.scanProgress.innerText = "ｓｃａｎ終了";
+        let item = new ScannedItem(file, this.printAPI, this.rest);
+        this.items.push(item);
+        this.map.scannedItems.append(item.ele);
     }
 
     getPatientId() {
@@ -217,13 +254,9 @@ export class ScanPanel {
             for (let item of this.items) {
                 await item.upload();
             }
-        } catch(e){
+        } catch (e) {
             alert(e.toString());
         }
-    }
-
-    updateUploadButtonEnable(){
-
     }
 
 }
@@ -231,4 +264,152 @@ export class ScanPanel {
 function patientRep(patient) {
     let patientIdRep = ("" + patient.patientId).padStart(4, "0");
     return `(${patientIdRep}) ${patient.lastName}${patient.firstName}`;
+}
+
+class Status {
+    constructor(map, items) {
+        this.map = map;
+        this.items = items;
+    }
+
+    changeStatusTo(status) {
+        throw new Error("status change is not allowed to " + status);
+    }
+
+    updateUI(){
+        this.map.scanProgress.classList.add("d-none");
+    }
+
+    isPreparing() {
+        return false;
+    }
+
+    isScanning(){
+        return false;
+    }
+
+    isUploading(){
+        return false;
+    }
+
+    isUploaded(){
+        return false;
+    }
+}
+
+class StatusPreparing extends Status {
+    constructor(map, items) {
+        super(map, items);
+    }
+
+    isPreparing() {
+        return true;
+    }
+
+    changeStatusTo(status) {
+        if (status === STATUS_SCANNING) {
+            return new StatusScanning(this.map, this.items);
+        } else if( status === STATUS_UPLOADING ){
+            return new StatusUploading(this.map, this.items);
+        } else {
+            return super.changeStatusTo(status);
+        }
+    }
+
+    updateUI() {
+        super.updateUI();
+        let map = this.map;
+        map.searchPatientText.disabled = false;
+        map.searchPatientButton.disabled = false;
+        map.selectPatientButton.disabled = false;
+        map.deviceList.disabled = false;
+        map.startScan.disabled = !map.deviceList.value;
+        map.uploadButton.disabled = this.items.length <= 0;
+    }
+}
+
+class StatusScanning extends Status {
+    constructor(map, items) {
+        super(map, items);
+    }
+
+    changeStatusTo(status) {
+        if( status === STATUS_PREPARING ){
+            return new StatusPreparing(this.map, this.items);
+        } else {
+            super.changeStatusTo(status);
+        }
+    }
+
+    isScanning() {
+        return true;
+    }
+
+    updateUI() {
+        super.updateUI();
+        let map = this.map;
+        map.searchPatientText.disabled = false;
+        map.searchPatientButton.disabled = false;
+        map.selectPatientButton.disabled = false;
+        map.deviceList.disabled = false;
+        map.startScan.disabled = true;
+        map.scanProgress.classList.remove("d-none");
+        map.uploadButton.disabled = true;
+    }
+}
+
+class StatusUploading extends Status {
+    constructor(map, items) {
+        super(map, items);
+    }
+
+    changeStatusTo(status) {
+        if( status === STATUS_UPLOADED ) {
+            return new StatusUploaded(this.map, this.items);
+        } else if( status === STATUS_PARTIALLY_UPLOADED ){
+            return new StatusPartiallyUploaded(this.map, this.items);
+        } else {
+            super.changeStatusTo(status);
+        }
+    }
+
+    isUploading() {
+        return true;
+    }
+
+    updateUI() {
+        super.updateUI();
+        let map = this.map;
+        map.searchPatientText.disabled = true;
+        map.searchPatientButton.disabled = true;
+        map.selectPatientButton.disabled = true;
+        map.deviceList.disabled = true;
+        map.startScan.disabled = true;
+        map.uploadButton.disabled = true;
+    }
+}
+
+class StatusUploaded extends Status {
+    constructor(map, items) {
+        super(map, items);
+    }
+
+    isUploaded(){
+        return true;
+    }
+}
+
+class StatusPartiallyUploaded extends Status {
+    constructor(map, items) {
+        super(map, items);
+    }
+
+    isUploaded(){
+        return true;
+    }
+
+    updateUI(){
+        super.updateUI();
+
+    }
 }

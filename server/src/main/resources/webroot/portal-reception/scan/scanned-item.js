@@ -24,14 +24,28 @@ export class ScannedItem {
         this.map.disp.addEventListener("click", async event => await this.doDisp());
     }
 
+    isBeforeUpload(){
+        return this.state === "before-upload";
+    }
+
+    isUploaded(){
+        return this.state === "uploaded";
+    }
+
+    isUploadFailed(){
+        return this.state === "upload-failed";
+    }
+
     async getImageData(){
         return await this.printAPI.getScannedImage(this.savedName);
     }
 
     setUpload(uploadName, patientId){
-        this.uploadName = uploadName;
-        this.patientId = patientId;
-        this.map.name.innerText = uploadName;
+        if( this.isBeforeUpload() ) {
+            this.uploadName = uploadName;
+            this.patientId = patientId;
+            this.map.name.innerText = uploadName;
+        }
     }
 
     getSavedName(){
@@ -52,10 +66,17 @@ export class ScannedItem {
             throw new Error("アップロドー・ファイル名が設定されていません。");
         }
         let buf = await this.getImageData();
-        await this.rest.uploadFileBlob("/save-patient-image",
-            [buf],
-            this.uploadName,
-            {"patient-id": this.patientId});
-
+        this.state = "uploading";
+        try {
+            await this.rest.uploadFileBlob("/save-patient-image",
+                [buf],
+                this.uploadName,
+                {"patient-id": this.patientId});
+            this.state = "uploaded";
+        } catch(e){
+            console.log(e.toString());
+            this.state = "upload-failed";
+        }
     }
+
 }

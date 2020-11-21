@@ -61,6 +61,12 @@ export class Menu {
                 if( config.postConstruct ){
                     await config.postConstruct();
                 }
+                panelWrap.addEventListener("reload-panel", async event => {
+                    panel.savedElement = null;
+                    panelWrap.remove();
+                    this.currentPanel = null;
+                    await this.simulateClick(panel.name);
+                });
             } else {
                 await panel.reloadHook();
                 this.panelWrapper.appendChild(panel.savedElement);

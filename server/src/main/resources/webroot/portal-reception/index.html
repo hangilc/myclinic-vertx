@@ -61,7 +61,7 @@
                 e.appendChild(panel.ele);
                 return {
                     reloadHook: async () => await panel.reloadHook(),
-                    postConstruct: async() => await panel.focus()
+                    postConstruct: async() => await panel.postConstruct()
                 };
             },
             document.getElementById("index-scan-link"));

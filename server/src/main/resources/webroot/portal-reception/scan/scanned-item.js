@@ -1,6 +1,8 @@
 import {createElementFrom} from "../js/create-element-from.js";
 import {parseElement} from "../js/parse-node.js";
 import {PreviewBox} from "./preview-box.js";
+import * as STATUS from "./status.js";
+import {showUI, enableUI} from "../../js/dynamic-ui.js";
 
 let tmpl = `
     <div>
@@ -18,6 +20,8 @@ let tmpl = `
             </div>
            <span class="x-name mr-2"></span>
             <button class="btn btn-link x-disp">表示</button>
+            <button class="btn btn-link x-re-scan">再スキャン</button>
+            <button class="btn btn-link x-delete">削除</button>
         </div>
         <div class="x-preview"></div>
     </div>
@@ -35,6 +39,10 @@ export class ScannedItem {
         this.map = parseElement(this.ele);
         this.map.name.innerText = "";
         this.map.disp.addEventListener("click", async event => await this.doDisp());
+        this.map.delete.addEventListener("click",
+                event => this.ele.dispatchEvent(new CustomEvent("delete-item", {bubbles: true, detail: this})));
+        this.map.delete.addEventListener("click",
+                event => this.ele.dispatchEvent(new CustomEvent("rescan-item", {bubbles: true, detail: this})));
     }
 
     isBeforeUpload(){
@@ -96,4 +104,10 @@ export class ScannedItem {
         return await this.rest.deletePatientImage(this.patientId, this.uploadName);
     }
 
+    updateUI(status){
+        showUI(this.map.reScan, [STATUS.PREPARING].includes(status));
+        showUI(this.map.delete, [STATUS.PREPARING, STATUS.SCANNING].includes(status));
+    }
+
 }
+

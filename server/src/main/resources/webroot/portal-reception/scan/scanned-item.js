@@ -2,7 +2,7 @@ import {createElementFrom} from "../js/create-element-from.js";
 import {parseElement} from "../js/parse-node.js";
 import {PreviewBox} from "./preview-box.js";
 import * as STATUS from "./status.js";
-import {showUI, enableUI} from "../../js/dynamic-ui.js";
+import {showUI} from "../../js/dynamic-ui.js";
 
 let tmpl = `
     <div>
@@ -28,8 +28,8 @@ let tmpl = `
 `;
 
 export class ScannedItem {
-    constructor(savedName, printAPI, rest){
-        this.savedName = savedName;
+    constructor(scannedFile, printAPI, rest) {
+        this.scannedFile = scannedFile;
         this.printAPI = printAPI;
         this.rest = rest;
         this.state = "before-upload";
@@ -39,51 +39,62 @@ export class ScannedItem {
         this.map = parseElement(this.ele);
         this.map.name.innerText = "";
         this.map.disp.addEventListener("click", async event => await this.doDisp());
-        this.map.delete.addEventListener("click",
-                event => this.ele.dispatchEvent(new CustomEvent("delete-item", {bubbles: true, detail: this})));
-        this.map.delete.addEventListener("click",
-                event => this.ele.dispatchEvent(new CustomEvent("rescan-item", {bubbles: true, detail: this})));
+        this.map.reScan.addEventListener("click", event => {
+            if( confirm("再スキャンしますか？") ){
+                this.ele.dispatchEvent(new CustomEvent("rescan-item", {bubbles: true, detail: this}))
+            }
+        });
+        this.map.delete.addEventListener("click", event => {
+            if( confirm("このスキャンを削除していいですか？") ){
+                this.ele.dispatchEvent(new CustomEvent("delete-item", {bubbles: true, detail: this}))
+            }
+        });
     }
 
-    isBeforeUpload(){
+    isBeforeUpload() {
         return this.state === "before-upload";
     }
 
-    isUploaded(){
+    isUploaded() {
         return this.state === "uploaded";
     }
 
-    isUploadFailed(){
+    isUploadFailed() {
         return this.state === "upload-failed";
     }
 
-    async getImageData(){
-        return await this.printAPI.getScannedImage(this.savedName);
+    async getImageData() {
+        return await this.printAPI.getScannedImage(this.scannedFile);
     }
 
-    setUpload(uploadName, patientId){
-        if( this.isBeforeUpload() ) {
+    setScannedFile(filename){
+        this.scannedFile = filename;
+    }
+
+    setUpload(uploadName, patientId) {
+        if (this.isBeforeUpload()) {
             this.uploadName = uploadName;
             this.patientId = patientId;
             this.map.name.innerText = uploadName;
         }
     }
 
-    getSavedName(){
-        return this.savedName;
+    getScannedFile() {
+        return this.scannedFile;
     }
 
-    async doDisp(){
+    async doDisp() {
         let buf = await this.getImageData();
         let pbox = new PreviewBox(buf);
+        this.map.preview.innerHTML = "";
         this.map.preview.append(pbox.ele);
     }
 
-    async upload(){
-        if( !this.patientId ){
+    async upload() {
+        if (!this.patientId) {
             throw new Error("患者が設定されていません。");
         }
-        if( !this.uploadName ){
+        if (!this.uploadName) {
             throw new Error("アップロドー・ファイル名が設定されていません。");
         }
         let buf = await this.getImageData();
@@ -93,20 +104,24 @@ export class ScannedItem {
             this.state = "uploaded";
             this.map.failureIconWrapper.style.display = "none";
             this.map.successIconWrapper.style.display = "inline-block";
-        } catch(e){
+        } catch (e) {
             this.state = "upload-failed";
             this.map.failureIconWrapper.style.display = "inline-block";
             throw e;
         }
     }
 
-    async deleteSavedImage(){
+    async deleteScannedFile(){
+        return await this.printAPI.deleteScannedFile(this.scannedFile);
+    }
+
+    async deleteUploadedImage() {
         return await this.rest.deletePatientImage(this.patientId, this.uploadName);
     }
 
-    updateUI(status){
+    updateUI(status) {
         showUI(this.map.reScan, [STATUS.PREPARING].includes(status));
-        showUI(this.map.delete, [STATUS.PREPARING, STATUS.SCANNING].includes(status));
+        showUI(this.map.delete, [STATUS.PREPARING].includes(status));
     }
 
 }

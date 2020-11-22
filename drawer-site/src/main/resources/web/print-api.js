@@ -109,6 +109,10 @@ export class PrintAPI {
         });
     }
 
+    async deleteScannedFile(name){
+        return await this.DELETE(`/scanner/image/${name}`, {});
+    }
+
     UPLOAD(path, files, fileNameToStoreNameConv = null, progress = null,
            additionalFormDataParams = null){
         return new Promise((resolve, reject) => {

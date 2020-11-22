@@ -82,9 +82,18 @@ export class ScanPanel {
             try {
                 await this.doStartScan();
             } finally {
-                this.changeStatusTo(STATUS.PREPARING);
                 this.renameItems();
-                this.status.updateUI();
+                this.changeStatusTo(STATUS.PREPARING);
+            }
+        });
+        this.ele.addEventListener("rescan-item", async event => {
+            let item = event.detail;
+            this.changeStatusTo(STATUS.SCANNING);
+            try {
+                await this.doReScan(item);
+            } finally {
+                this.renameItems();
+                this.changeStatusTo(STATUS.PREPARING);
             }
         });
         this.map.uploadButton.addEventListener("click", async event => {
@@ -96,6 +105,9 @@ export class ScanPanel {
             try {
                 await this.doUpload();
                 this.changeStatusTo(STATUS.UPLOADED);
+                for (let item of this.items) {
+                    await item.deleteScannedFile();
+                }
                 setTimeout(() => {
                     alert("アップロードが終了しました。");
                     this.reset();
@@ -109,6 +121,9 @@ export class ScanPanel {
             try {
                 await this.doRetryUpload();
                 this.changeStatusTo(STATUS.UPLOADED);
+                for (let item of this.items) {
+                    await item.deleteScannedFile();
+                }
                 setTimeout(() => {
                     alert("アップロードが終了しました。");
                     this.reset();
@@ -127,6 +142,15 @@ export class ScanPanel {
                 this.map.selectedPatientDisp.innerText = patientRep(patient);
                 this.renameItems();
             }
+        });
+        this.ele.addEventListener("delete-item", async event => {
+            let item = event.detail;
+            await item.deleteScannedFile();
+            item.ele.remove();
+            let index = this.items.indexOf(item);
+            this.items.splice(index, 1);
+            this.renameItems();
+            this.status.updateUI();
         });
         this.map.tagSelect.addEventListener("change", event => {
             if (this.status.isPreparing()) {
@@ -165,6 +189,7 @@ export class ScanPanel {
     }
 
     async reloadHook() {
+        // nop
     }
 
     focus() {
@@ -233,6 +258,21 @@ export class ScanPanel {
         this.map.scannedItems.append(item.ele);
     }
 
+    async doReScan(item){
+        let deviceId = this.map.deviceList.value;
+        if (!deviceId) {
+            throw new Error("患者が設定されていません。");
+        }
+        this.map.scanProgress.innerText = "スキャンの準備中";
+        let file = await this.printAPI.scan(deviceId, pct => {
+            this.map.scanProgress.innerText = `${pct}%`;
+        });
+        this.map.scanProgress.innerText = "スキャン終了";
+        await item.deleteScannedFile();
+        item.setScannedFile(file);
+        await item.doDisp();
+    }
+
     getPatientId() {
         if (this.patient) {
             return this.patient.patientId;
@@ -253,13 +293,13 @@ export class ScanPanel {
         let items = this.items;
         if (items.length === 1) {
             let item = items[0];
-            let ext = paperscan.getFileExtension(item.getSavedName());
+            let ext = paperscan.getFileExtension(item.getScannedFile());
             item.setUpload(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "", ext),
                 patientId);
         } else {
             let ser = 1;
             for (let item of items) {
-                let ext = paperscan.getFileExtension(item.getSavedName());
+                let ext = paperscan.getFileExtension(item.getScannedFile());
                 item.setUpload(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "" + ser, ext),
                     patientId);
                 ser += 1;
@@ -284,7 +324,7 @@ export class ScanPanel {
     async doCancelUpload(){
         for(let item of this.items){
             if( item.isUploaded() ){
-                await item.deleteSavedImage();
+                await item.deleteUploadedImage();
             }
             let newItem = new ScannedItem(item.savedName, item.printAPI, item.rest);
             newItem.setUpload(item.uploadName, item.patientId);
@@ -348,7 +388,7 @@ class Status {
             [map.searchPatientText, map.searchPatientButton],
             [STATUS.PREPARING, STATUS.SCANNING].includes(status));
         enableUI(
-            [map.selectPatientButton, map.tagSelect, map.deviceList],
+            [map.selectPatientButton, map.tagSelect, map.deviceList, map.refreshDeviceList],
             [STATUS.PREPARING].includes(status)
         );
         enableUI(
@@ -362,6 +402,10 @@ class Status {
         showUI(
             [map.reUploadCommands],
             [STATUS.PARTIALLY_UPLOADED].includes(status)
+        );
+        showUI(
+            [map.scanProgress],
+            [STATUS.SCANNING].includes(status)
         );
         for(let item of this.items){
             item.updateUI(this.status);

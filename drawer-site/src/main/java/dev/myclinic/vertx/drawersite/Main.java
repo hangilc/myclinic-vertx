@@ -62,7 +62,7 @@ public class Main {
     private static void handleScannerImage(Handler handler) throws Exception {
         switch(handler.getMethod()){
             case "OPTIONS": {
-                handler.respondToOptions(List.of("GET", "OPTIONS"));
+                handler.respondToOptions(List.of("GET", "DELETE", "OPTIONS"));
                 break;
             }
             case "GET": {
@@ -75,6 +75,19 @@ public class Main {
                     String filename = subpaths[0];
                     Path path = getScannedImage(filename);
                     handler.sendFile(path.toString());
+                } else {
+                    handler.sendError("Invalid setting access.");
+                }
+                break;
+            }
+            case "DELETE": {
+                String[] subpaths = handler.getSubPaths();
+                if( subpaths.length == 1 ){
+                    handler.allowCORS();
+                    String filename = subpaths[0];
+                    Path path = getScannedImage(filename);
+                    Files.delete(path);
+                    handler.sendJson(true);
                 } else {
                     handler.sendError("Invalid setting access.");
                 }

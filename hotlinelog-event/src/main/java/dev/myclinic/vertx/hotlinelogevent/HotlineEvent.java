@@ -19,12 +19,12 @@ public class HotlineEvent {
         this.body = body;
     }
 
-    public static dev.myclinic.vertx.hotlinelogevent.HotlineEvent created(HotlineDTO created){
-        return new dev.myclinic.vertx.hotlinelogevent.HotlineEvent("created", new HotlineCreated(created));
+    public static HotlineEvent created(HotlineDTO created){
+        return new HotlineEvent("created", new HotlineCreated(created));
     }
 
-    public static dev.myclinic.vertx.hotlinelogevent.HotlineEvent beep(String target){
-        return new dev.myclinic.vertx.hotlinelogevent.HotlineEvent("beep", new HotlineBeep(target));
+    public static HotlineEvent beep(String target){
+        return new HotlineEvent("beep", new HotlineBeep(target));
     }
 
     @JsonIgnore

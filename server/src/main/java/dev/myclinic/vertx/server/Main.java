@@ -149,11 +149,15 @@ public class Main {
                 .putHeader("Location", "/web/portal-reception/index.html")
                 .end());
         server.requestHandler(router);
-//        server.webSocketHandler(ws -> {
-//            System.out.println("opened: " + ws.path());
-//            faxStreamingVerticle.addClient(ws);
-//            ws.closeHandler(e -> System.out.println("closed"));
-//        });
+        server.webSocketHandler(ws -> {
+            System.out.println("opened: " + ws.path());
+            if( ws.path().equals("/hotline") ){
+                hotlineVerticls.addClient(ws);
+            } else {
+                ws.reject();
+            }
+            ws.closeHandler(e -> System.out.println("closed"));
+        });
         int port = cmdArgs.port;
         server.listen(port);
         System.out.println(String.format("server started at port %d", port));

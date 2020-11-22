@@ -1,6 +1,7 @@
 package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.dto.HotlineDTO;
 import dev.myclinic.vertx.dto.HotlineLogDTO;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
@@ -23,7 +24,7 @@ class HotlineStreamerVerticle extends AbstractVerticle {
     public void start() throws Exception {
         super.start();
         EventBus bus = vertx.eventBus();
-        bus.<String>consumer("hotline-streamer", message -> this.handleMessage(message.body()));
+        bus.<String>consumer("hotline-streamer", message -> this.broadcast(message.body()));
     }
 
     public void addClient(ServerWebSocket client){
@@ -40,16 +41,6 @@ class HotlineStreamerVerticle extends AbstractVerticle {
             System.out.println("client throwed: " + client);
         });
         this.clients.add(client);
-    }
-
-    private void handleMessage(String msg){
-        try {
-            HotlineLogDTO log = mapper.readValue(msg, HotlineLogDTO.class);
-            System.out.println(log);
-
-        } catch(Exception e){
-            e.printStackTrace();
-        }
     }
 
     private void broadcast(String msg){

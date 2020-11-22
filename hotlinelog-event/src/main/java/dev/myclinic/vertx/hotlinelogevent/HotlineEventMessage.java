@@ -17,25 +17,25 @@ public class HotlineEventMessage {
 
     }
 
-    public static byte[] serialize(dev.myclinic.vertx.hotlinelogevent.HotlineEvent event) throws JsonProcessingException {
+    public static byte[] serialize(HotlineEvent event) throws JsonProcessingException {
         return mapper.writeValueAsBytes(event);
     }
 
-    public static dev.myclinic.vertx.hotlinelogevent.HotlineEvent deserialize(byte[] src) throws IOException {
+    public static HotlineEvent deserialize(byte[] src) throws IOException {
         JsonNode root = mapper.readTree(src);
         JsonNode kindNode = root.get("kind");
-        if( kindNode == null || !kindNode.isTextual() ){
+        if (kindNode == null || !kindNode.isTextual()) {
             throw new RuntimeException("Cannot find field 'kind': " +
                     new String(src, StandardCharsets.UTF_8));
         }
-        dev.myclinic.vertx.hotlinelogevent.HotlineEvent event = new dev.myclinic.vertx.hotlinelogevent.HotlineEvent();
+        HotlineEvent event = new HotlineEvent();
         event.kind = kindNode.asText();
         JsonNode bodyNode = root.get("body");
-        if( bodyNode == null ){
+        if (bodyNode == null) {
             throw new RuntimeException("Cannot find field 'body': " +
                     new String(src, StandardCharsets.UTF_8));
         }
-        switch(event.kind){
+        switch (event.kind) {
             case "created": {
                 event.body = mapper.readValue(bodyNode.traverse(), HotlineCreated.class);
                 break;

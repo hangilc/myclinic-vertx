@@ -1,6 +1,8 @@
 package dev.myclinic.vertx.hotlinelogevent.body;
 
-public class HotlineBeep implements dev.myclinic.vertx.hotlinelogevent.HotlineEventBody {
+import dev.myclinic.vertx.hotlinelogevent.HotlineEventBody;
+
+public class HotlineBeep implements HotlineEventBody {
 
     public String target;
 

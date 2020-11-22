@@ -1,8 +1,9 @@
 package dev.myclinic.vertx.hotlinelogevent.body;
 
 import dev.myclinic.vertx.dto.HotlineDTO;
+import dev.myclinic.vertx.hotlinelogevent.HotlineEventBody;
 
-public class HotlineCreated implements dev.myclinic.vertx.hotlinelogevent.HotlineEventBody {
+public class HotlineCreated implements HotlineEventBody {
 
     public HotlineDTO created;
 

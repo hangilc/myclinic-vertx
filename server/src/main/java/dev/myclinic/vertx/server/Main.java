@@ -113,11 +113,13 @@ public class Main {
         HoukatsuKensa houkatsuKensa = config.getHoukatsuKensa();
 //        FaxStreamingVerticle faxStreamingVerticle = new FaxStreamingVerticle();
 //        vertx.deployVerticle(faxStreamingVerticle);
+        HotlineStreamerVerticle hotlineVerticls = new HotlineStreamerVerticle(mapper);
+        vertx.deployVerticle(hotlineVerticls);
         HttpServer server = vertx.createHttpServer();
         Router router = Router.router(vertx);
         Route restRoute = router.route("/json/:action");
         restRoute.handler(BodyHandler.create());
-        restRoute.blockingHandler(new RestHandler(ds, ts, mapper, masterMap, houkatsuKensa));
+        restRoute.blockingHandler(new RestHandler(ds, ts, mapper, masterMap, houkatsuKensa, vertx));
         restRoute.handler(new NoDatabaseRestHandler(config, mapper, vertx, masterMap));
         restRoute.failureHandler(errorHandler);
         Router integrationRouter = IntegrationHandler.createRouter(vertx, mapper);

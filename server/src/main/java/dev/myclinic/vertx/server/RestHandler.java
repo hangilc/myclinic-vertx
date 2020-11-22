@@ -20,6 +20,8 @@ import dev.myclinic.vertx.util.HokenUtil;
 import dev.myclinic.vertx.util.RcptUtil;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
+import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
@@ -41,6 +43,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private final DataSource ds;
     private final TableSet ts;
     private final HoukatsuKensa houkatsuKensa;
+    private final Vertx vertx;
 
     private static class CallResult {
         public List<HotlineLogDTO> hotlineLogs;
@@ -57,11 +60,12 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     }
 
     public RestHandler(DataSource ds, TableSet ts, ObjectMapper mapper, MasterMap masterMap,
-                       HoukatsuKensa houkatsuKensa) {
+                       HoukatsuKensa houkatsuKensa, Vertx vertx) {
         super(mapper, masterMap);
         this.ds = ds;
         this.ts = ts;
         this.houkatsuKensa = houkatsuKensa;
+        this.vertx = vertx;
     }
 
     private final Map<String, RestFunction> funcMap = new HashMap<>();
@@ -947,8 +951,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private CallResult listRecentVisits(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        Integer page = params.contains("page") ? Integer.parseInt(params.get("page")) : 0;
-        Integer itemsPerPage = params.contains("items-per-page") ? Integer.parseInt(params.get("items-per-page")) : 30;
+        int page = params.contains("page") ? Integer.parseInt(params.get("page")) : 0;
+        int itemsPerPage = params.contains("items-per-page") ? Integer.parseInt(params.get("items-per-page")) : 30;
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<VisitPatientDTO> _value = backend.listRecentVisits(page, itemsPerPage);
@@ -2997,7 +3001,14 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
                 resp.putHeader("content-type", "application/json; charset=UTF-8");
                 conn = ds.getConnection();
                 conn.setAutoCommit(false);
-                f.call(routingContext, conn);
+                CallResult cr = f.call(routingContext, conn);
+                if( cr.hotlineLogs.size() > 0 ){
+                    EventBus bus = vertx.eventBus();
+                    for(HotlineLogDTO log: cr.hotlineLogs){
+                        String msg = mapper.writeValueAsString(log);
+                        bus.send("hotline-streamer", msg);
+                    }
+                }
             } catch (Exception e) {
                 if (conn != null) {
                     try {

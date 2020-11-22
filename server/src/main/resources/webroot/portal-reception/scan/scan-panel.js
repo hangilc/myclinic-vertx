@@ -3,7 +3,7 @@ import {parseElement} from "../js/parse-node.js";
 import * as paperscan from "../../js/paper-scan.js";
 import {ScannedItem} from "./scanned-item.js";
 import * as STATUS from "./status.js";
-import {showUI, enableUI} from "../../js/dynamic-ui.js";
+import {enableUI, showUI} from "../../js/dynamic-ui.js";
 
 let tmpl = `
 <div>
@@ -62,7 +62,6 @@ let tmpl = `
             </div>
         </div>
     </div>
-
 </div>
 `;
 
@@ -97,7 +96,7 @@ export class ScanPanel {
             }
         });
         this.map.uploadButton.addEventListener("click", async event => {
-            if( !this.getPatientId() ){
+            if (!this.getPatientId()) {
                 alert("患者が設定されていません。");
                 return;
             }
@@ -128,7 +127,7 @@ export class ScanPanel {
                     alert("アップロードが終了しました。");
                     this.reset();
                 }, 0);
-            } catch(e){
+            } catch (e) {
                 console.log(e.toString());
             }
         });
@@ -159,7 +158,7 @@ export class ScanPanel {
         });
         this.map.reset.addEventListener("click", event => this.reset());
         this.status = new Status(this);
-   }
+    }
 
     async postConstruct() {
         this.focus();
@@ -258,7 +257,7 @@ export class ScanPanel {
         this.map.scannedItems.append(item.ele);
     }
 
-    async doReScan(item){
+    async doReScan(item) {
         let deviceId = this.map.deviceList.value;
         if (!deviceId) {
             throw new Error("患者が設定されていません。");
@@ -313,31 +312,30 @@ export class ScanPanel {
         }
     }
 
-    async doRetryUpload(){
-        for(let item of this.items){
-            if( !item.isUploaded() ){
+    async doRetryUpload() {
+        for (let item of this.items) {
+            if (!item.isUploaded()) {
                 await item.upload();
             }
         }
     }
 
-    async doCancelUpload(){
-        for(let item of this.items){
-            if( item.isUploaded() ){
+    async doCancelUpload() {
+        for (let item of this.items) {
+            if (item.isUploaded()) {
                 await item.deleteUploadedImage();
             }
             let newItem = new ScannedItem(item.savedName, item.printAPI, item.rest);
             newItem.setUpload(item.uploadName, item.patientId);
             item.ele.parentNode.replaceChild(newItem.ele, item.ele);
-            for(let i = 0;i<this.items.length;i++){
-                if( this.items[i] === item ){
+            for (let i = 0; i < this.items.length; i++) {
+                if (this.items[i] === item) {
                     this.items[i] = newItem;
                     break;
                 }
             }
         }
     }
-
 }
 
 function patientRep(patient) {
@@ -346,15 +344,15 @@ function patientRep(patient) {
 }
 
 class Status {
-    constructor(panel){
+    constructor(panel) {
         this.panel = panel;
         this.map = panel.map;
         this.items = panel.items;
         this.status = STATUS.PREPARING;
     }
 
-    changeStatusTo(status){
-        if( STATUS.changeMap[this.status].includes(status) ){
+    changeStatusTo(status) {
+        if (STATUS.changeMap[this.status].includes(status)) {
             this.status = status;
         } else {
             throw new Error(`Invalid state transition from ${this.status} to ${status}`);
@@ -377,11 +375,11 @@ class Status {
         return this.status === STATUS.UPLOADED;
     }
 
-    isPartiallyUploaded(){
+    isPartiallyUploaded() {
         return this.status === STATUS.PARTIALLY_UPLOADED;
     }
 
-    updateUI(){
+    updateUI() {
         let map = this.map;
         let status = this.status;
         enableUI(
@@ -407,9 +405,8 @@ class Status {
             [map.scanProgress],
             [STATUS.SCANNING].includes(status)
         );
-        for(let item of this.items){
+        for (let item of this.items) {
             item.updateUI(this.status);
         }
     }
-
 }

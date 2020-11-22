@@ -2,7 +2,6 @@ package dev.myclinic.vertx.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.itextpdf.text.Image;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.appconfig.types.StampInfo;
@@ -14,17 +13,17 @@ import dev.myclinic.vertx.drawer.hint.Hint;
 import dev.myclinic.vertx.drawer.hint.HintParser;
 import dev.myclinic.vertx.drawer.hint.ParaHint;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
-import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawer;
-import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawerData;
-import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawerDataCreator;
-import dev.myclinic.vertx.drawerprinterwin.AuxSetting;
-import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
 import dev.myclinic.vertx.drawerform.FormCompiler;
 import dev.myclinic.vertx.drawerform.Paper;
 import dev.myclinic.vertx.drawerform.medcert.MedCertData;
 import dev.myclinic.vertx.drawerform.medcert.MedCertForm;
+import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawer;
+import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawerData;
+import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawerDataCreator;
 import dev.myclinic.vertx.drawerform.shujiiform.ShujiiData;
 import dev.myclinic.vertx.drawerform.shujiiform.ShujiiForm;
+import dev.myclinic.vertx.drawerprinterwin.AuxSetting;
+import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
 import dev.myclinic.vertx.dto.*;
 import dev.myclinic.vertx.mastermap.MasterMap;
 import dev.myclinic.vertx.pdf.Stamper;
@@ -36,7 +35,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.FileUpload;
@@ -54,7 +52,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -337,28 +334,28 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         try {
             HokenListDTO hokenList = mapper.readValue(ctx.getBody().getBytes(), HokenListDTO.class);
             Map<String, String> map = new HashMap<>();
-            for(var shahokokuho: hokenList.shahokokuhoList){
+            for (var shahokokuho : hokenList.shahokokuhoList) {
                 String key = String.format("shahokokuho:%d", shahokokuho.shahokokuhoId);
                 String val = ShahokokuhoUtil.rep(shahokokuho);
                 map.put(key, val);
             }
-            for(var koukikourei: hokenList.koukikoureiList){
+            for (var koukikourei : hokenList.koukikoureiList) {
                 String key = String.format("koukikourei:%d", koukikourei.koukikoureiId);
                 String val = KoukikoureiUtil.rep(koukikourei);
                 map.put(key, val);
             }
-            for(var roujin: hokenList.roujinList){
+            for (var roujin : hokenList.roujinList) {
                 String key = String.format("roujin:%d", roujin.roujinId);
                 String val = RoujinUtil.rep(roujin);
                 map.put(key, val);
             }
-            for(var kouhi: hokenList.kouhiList){
+            for (var kouhi : hokenList.kouhiList) {
                 String key = String.format("kouhi:%d", kouhi.kouhiId);
                 String val = KouhiUtil.rep(kouhi);
                 map.put(key, val);
             }
             ctx.response().end(jsonEncode(map));
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
@@ -367,16 +364,17 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private void listPrintSetting(RoutingContext ctx) {
         SocketAddress remoteAddr = ctx.request().remoteAddress();
         String host = remoteAddr.host();
-        if( host.contains(":") ){
+        if (host.contains(":")) {
             host = String.format("[%s]", host);
         }
         int port = 48080;
         String url = String.format("http://%s:%d/setting", host, port);
         GlobalService.getInstance().executorService.execute(() -> {
             try {
-                List<String> settings = Client.getAlt(new TypeReference<>(){}, url);
+                List<String> settings = Client.getAlt(new TypeReference<>() {
+                }, url);
                 ctx.response().end(jsonEncode(settings));
-            } catch(Throwable e){
+            } catch (Throwable e) {
                 ctx.fail(e);
             }
         });
@@ -406,7 +404,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             ReceiptDrawer drawer = new ReceiptDrawer(data);
             List<Op> ops = drawer.getOps();
             ctx.response().end(jsonEncode(ops));
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
@@ -546,7 +544,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 opt.scale = stampInfo.scale;
                 opt.stampCenterRelative = stampInfo.isImageCenterRelative;
                 Stamper stamper = new Stamper();
-                if( paraPage == null ){
+                if (paraPage == null) {
                     stamper.putStampAtLastPage(srcPath.toString(), stampInfo.imageFile,
                             dstPath.toString(), opt);
                 } else {
@@ -1195,7 +1193,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private static int savePatientImageCount = 0;
 
     private void savePatientImage(RoutingContext ctx) {
-        if( ++savePatientImageCount % 2 == 0 ){
+        if (++savePatientImageCount % 2 == 0) {
             throw new RuntimeException("Intended save patient image failure");
         }
         try {
@@ -1237,15 +1235,15 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void deletePatientImage(RoutingContext ctx){
+    private void deletePatientImage(RoutingContext ctx) {
         try {
             String patientIdParam = ctx.request().getParam("patient-id");
-            if( patientIdParam == null ){
+            if (patientIdParam == null) {
                 throw new RuntimeException("Missing parameter: patient-id");
             }
             int patientId = Integer.parseInt(patientIdParam);
             String file = ctx.request().getParam("file");
-            if( file == null ){
+            if (file == null) {
                 throw new RuntimeException("Missing param: file");
             }
             GlobalService.AppDirToken dirToken = new GlobalService.AppDirToken(
@@ -1256,14 +1254,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             vertx.fileSystem().delete(
                     fileToken.resolve().toString(),
                     result -> {
-                        if( result.succeeded() ){
+                        if (result.succeeded()) {
                             ctx.response().end(jsonEncode(true));
                         } else {
                             ctx.fail(result.cause());
                         }
                     }
             );
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
@@ -1488,13 +1486,8 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
         String pdfFile = GlobalService.getInstance().resolveAppPath(pdfFileToken).toString();
         vertx.<String>executeBlocking(promise -> {
-            EventBus bus = vertx.eventBus();
-            SendFax.send(faxNumber, pdfFile, msg -> {
-                        bus.send("fax-streaming", msg);
-                        logger.info("Fax {} {} {}", msg, faxNumber, pdfFile);
-                    },
-                    faxSid -> promise.complete(jsonEncode(faxSid)),
-                    vertx);
+            SendFax.send(faxNumber, pdfFile,
+                    faxSid -> promise.complete(jsonEncode(faxSid)));
         }, arr -> {
             if (arr.succeeded()) {
                 ctx.response().end(arr.result());
@@ -1512,26 +1505,6 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         String status = SendFax.pollStatus(faxSid);
         ctx.response().end(jsonEncode(status));
     }
-
-//    private void shohousenGrayStampInfo(RoutingContext ctx) {
-//        try {
-//            var info = appConfig.getShohousenGrayStampInfo();
-//            String rep = mapper.writeValueAsString(info);
-//            ctx.response().end(rep);
-//        } catch (Exception e) {
-//            ctx.fail(e);
-//        }
-//    }
-//
-//    private void referStampInfo(RoutingContext ctx){
-//        try {
-//            var info = appConfig.getReferStampInfo();
-//            String rep = mapper.writeValueAsString(info);
-//            ctx.response().end(rep);
-//        } catch (Exception e) {
-//            ctx.fail(e);
-//        }
-//    }
 
     private void convertToRomaji(RoutingContext ctx) {
         String text = ctx.request().getParam("text");

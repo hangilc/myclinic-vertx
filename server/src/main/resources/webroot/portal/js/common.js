@@ -697,6 +697,10 @@ class Rest extends Client {
         return await this.get("/list-recent-payment", {});
     }
 
+    async enterHotline(hotline){
+        return await this.post("/enter-hotline", hotline);
+    }
+
 }
 
 class Integration extends Client {

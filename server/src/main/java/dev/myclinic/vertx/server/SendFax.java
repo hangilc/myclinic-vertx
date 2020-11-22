@@ -33,8 +33,7 @@ class SendFax {
         cloudFrontPass = System.getenv("MYCLINIC_CLOUDFRONT_FAX_PASS");
     }
 
-    public static void send(String faxNumber, String pdfFile, Consumer<String> progressCallback,
-                     Consumer<String> startedCallback, Vertx vertx) {
+    public static void send(String faxNumber, String pdfFile, Consumer<String> startedCallback) {
         File srcFile = new File(pdfFile);
         try {
             String key = srcFile.getName();
@@ -43,9 +42,6 @@ class SendFax {
             String faxSid = fax.getSid();
             logger.info("started sending to {}, {}, FaxSID({})", faxNumber, pdfFile, faxSid);
             startedCallback.accept(faxSid);
-            int pollInterval = 10000; // 10 seconds
-            vertx.setTimer(pollInterval, createTimerCallback(faxSid, progressCallback,
-                    pollInterval, vertx, 20));
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e);

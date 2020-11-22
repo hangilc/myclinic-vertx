@@ -42,8 +42,18 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private final TableSet ts;
     private final HoukatsuKensa houkatsuKensa;
 
+    private static class CallResult {
+        public List<HotlineLogDTO> hotlineLogs;
+        public List<PracticeLogDTO> practiceLogs;
+
+        public CallResult(Backend backend){
+            this.hotlineLogs = backend.getHotlineLogs();
+            this.practiceLogs = backend.getPracticeLogs();
+        }
+    }
+
     interface RestFunction {
-        void call(RoutingContext ctx, Connection conn) throws Exception;
+        CallResult call(RoutingContext ctx, Connection conn) throws Exception;
     }
 
     public RestHandler(DataSource ds, TableSet ts, ObjectMapper mapper, MasterMap masterMap,
@@ -56,7 +66,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
 
     private final Map<String, RestFunction> funcMap = new HashMap<>();
 
-    private void searchByoumeiMaster(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult searchByoumeiMaster(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String text = params.get("text");
@@ -67,9 +77,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listVisitByPatientHavingHoken(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listVisitByPatientHavingHoken(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -81,9 +92,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listRecentlyRegisteredPatients(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listRecentlyRegisteredPatients(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         Integer n = params.contains("n") ? Integer.parseInt(params.get("n")) : 20;
@@ -93,9 +105,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listTodaysHotlineInRange(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listTodaysHotlineInRange(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int after = Integer.parseInt(params.get("after"));
@@ -106,9 +119,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listTodaysVisits(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listTodaysVisits(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -116,9 +130,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void batchGetDrugAttr(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchGetDrugAttr(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         List<Integer> drugIds = params.getAll("drug-ids[]").stream().map(Integer::valueOf).collect(toList());
@@ -128,9 +143,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getDrugFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getDrugFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int drugId = Integer.parseInt(params.get("drug-id"));
@@ -140,9 +156,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getShinryouFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getShinryouFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int shinryouId = Integer.parseInt(params.get("shinryou-id"));
@@ -152,9 +169,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void convertToHoken(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult convertToHoken(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         VisitDTO visit = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -166,9 +184,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void batchDeleteDrugs(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchDeleteDrugs(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         List<Integer> drugId = params.getAll("drug-id[]").stream().map(Integer::valueOf).collect(toList());
@@ -177,9 +196,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.batchDeleteDrugs(drugId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void getConductKizaiFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getConductKizaiFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int conductKizaiId = Integer.parseInt(params.get("conduct-kizai-id"));
@@ -189,9 +209,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void findByoumeiMasterByName(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult findByoumeiMasterByName(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String name = params.get("name");
@@ -202,9 +223,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listDrugFullByDrugIds(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listDrugFullByDrugIds(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         List<Integer> drugId = params.getAll("drug-id[]").stream().map(Integer::valueOf).collect(toList());
@@ -214,9 +236,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listWqueueFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listWqueueFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -224,9 +247,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getShahokokuho(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getShahokokuho(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int shahokokuhoId = Integer.parseInt(params.get("shahokokuho-id"));
@@ -236,9 +260,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void batchResolveShinryouNames(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchResolveShinryouNames(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate at = LocalDate.parse(params.get("at"));
@@ -250,9 +275,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void deleteConductKizai(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteConductKizai(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int conductKizaiId = Integer.parseInt(params.get("conduct-kizai-id"));
@@ -261,9 +287,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteConductKizai(conductKizaiId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void getPharmaQueueFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getPharmaQueueFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -273,9 +300,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void enterShinryouAttr(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterShinryouAttr(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         ShinryouAttrDTO attr = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -285,9 +313,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.enterShinryouAttr(attr);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void deleteGazouLabel(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteGazouLabel(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int conductId = Integer.parseInt(params.get("conduct-id"));
@@ -296,9 +325,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteGazouLabel(conductId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void findShinryouAttr(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult findShinryouAttr(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int shinryouId = Integer.parseInt(params.get("shinryou-id"));
@@ -308,9 +338,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listVisitFull2(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listVisitFull2(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -322,9 +353,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getText(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getText(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int textId = Integer.parseInt(params.get("text-id"));
@@ -334,9 +366,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void enterConductFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterConductFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         ConductEnterRequestDTO arg = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -347,9 +380,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void findShouki(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult findShouki(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -359,9 +393,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listConductFullByIds(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listConductFullByIds(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         List<Integer> conductId = params.getAll("conduct-id[]").stream().map(Integer::valueOf).collect(toList());
@@ -371,9 +406,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getKouhi(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getKouhi(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int kouhiId = Integer.parseInt(params.get("kouhi-id"));
@@ -383,9 +419,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void enterShouki(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterShouki(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         ShoukiDTO shouki = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -395,9 +432,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.enterShouki(shouki);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void deleteKoukikourei(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteKoukikourei(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         KoukikoureiDTO koukikourei = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -407,9 +445,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteKoukikoureiSafely(koukikourei.koukikoureiId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void listDiseaseFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listDiseaseFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -419,9 +458,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listHoken(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listHoken(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -431,9 +471,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void deleteShouki(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteShouki(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -442,9 +483,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteShouki(visitId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void findDrugAttr(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult findDrugAttr(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int drugId = Integer.parseInt(params.get("drug-id"));
@@ -454,9 +496,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void updateHoken(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult updateHoken(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         VisitDTO hoken = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -466,23 +509,25 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.updateHoken(hoken);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void listVisitTextDrugByPatientAndIyakuhincode(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listVisitTextDrugByPatientAndIyakuhincode(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
         int iyakuhincode = Integer.parseInt(params.get("iyakuhincode"));
-        Integer page = params.contains("page") ? Integer.parseInt(params.get("page")) : 0;
+        int page = params.contains("page") ? Integer.parseInt(params.get("page")) : 0;
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         VisitTextDrugPageDTO _value = backend.listVisitTextDrugByPatientAndIyakuhincode(patientId, iyakuhincode, page);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getWqueueFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getWqueueFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -492,9 +537,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listShinryou(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listShinryou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -504,9 +550,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listShinryouFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listShinryouFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -516,9 +563,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void searchShinryouMaster(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult searchShinryouMaster(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String text = params.get("text");
@@ -529,9 +577,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void enterConductKizai(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterConductKizai(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         ConductKizaiDTO conductKizai = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -542,9 +591,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void batchEnterDrugs(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchEnterDrugs(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         List<DrugDTO> drugs = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -555,9 +605,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void deleteDisease(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteDisease(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int diseaseId = Integer.parseInt(params.get("disease-id"));
@@ -566,9 +617,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteDiseaseWithAdj(diseaseId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void listAllPharmaDrugNames(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listAllPharmaDrugNames(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -576,9 +628,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listPayment(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listPayment(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -588,9 +641,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listVisitIdVisitedAtByPatientAndIyakuhincode(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listVisitIdVisitedAtByPatientAndIyakuhincode(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -601,9 +655,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void batchDeleteShinryou(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchDeleteShinryou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         List<Integer> shinryouId = params.getAll("shinryou-id[]").stream().map(Integer::valueOf).collect(toList());
@@ -612,9 +667,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.batchDeleteShinryouWithAttr(shinryouId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void listCurrentDiseaseFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listCurrentDiseaseFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -624,9 +680,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void enterDisease(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterDisease(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         DiseaseNewDTO diseaseNew = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -637,9 +694,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getCharge(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getCharge(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -649,9 +707,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void enterConductShinryou(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterConductShinryou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         ConductShinryouDTO conductShinryou = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -662,9 +721,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void enterKouhi(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterKouhi(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         KouhiDTO kouhi = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -675,9 +735,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listAllPrescExample(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listAllPrescExample(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -685,9 +746,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void finishCashier(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult finishCashier(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         PaymentDTO payment = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -697,9 +759,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.finishCashier(payment);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void enterDrugAttr(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterDrugAttr(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         DrugAttrDTO attr = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -709,9 +772,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.enterDrugAttr(attr);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void enterDrug(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         DrugDTO drug = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -722,9 +786,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void deletePharmaDrug(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deletePharmaDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int iyakuhincode = Integer.parseInt(params.get("iyakuhincode"));
@@ -733,9 +798,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deletePharmaDrug(iyakuhincode);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void updatePatient(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult updatePatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         PatientDTO patient = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -745,9 +811,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.updatePatient(patient);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void deleteText(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteText(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int textId = Integer.parseInt(params.get("text-id"));
@@ -756,9 +823,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteText(textId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void modifyCharge(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult modifyCharge(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -768,9 +836,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.modifyCharge(visitId, charge);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void listAvailableHoken(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listAvailableHoken(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -782,9 +851,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listAvailableAllHoken(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listAvailableAllHoken(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -795,9 +865,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void updateDrug(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult updateDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         DrugDTO drug = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -807,9 +878,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.updateDrug(drug);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void findGazouLabel(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult findGazouLabel(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int conductId = Integer.parseInt(params.get("conduct-id"));
@@ -819,9 +891,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void deleteConductShinryou(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteConductShinryou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int conductShinryouId = Integer.parseInt(params.get("conduct-shinryou-id"));
@@ -830,9 +903,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteConductShinryou(conductShinryouId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void listPharmaQueueForToday(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listPharmaQueueForToday(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -840,9 +914,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void deleteKouhi(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteKouhi(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         KouhiDTO kouhi = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -852,9 +927,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteKouhiSafely(kouhi);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void enterHotline(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterHotline(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         HotlineDTO hotline = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -865,9 +941,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listRecentVisits(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listRecentVisits(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         Integer page = params.contains("page") ? Integer.parseInt(params.get("page")) : 0;
@@ -878,9 +955,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void deleteConduct(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteConduct(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int conductId = Integer.parseInt(params.get("conduct-id"));
@@ -889,9 +967,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteConductFull(conductId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void listPharmaQueueForPrescription(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listPharmaQueueForPrescription(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -899,9 +978,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getDrug(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int drugId = Integer.parseInt(params.get("drug-id"));
@@ -911,9 +991,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void enterKoukikourei(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterKoukikourei(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         KoukikoureiDTO koukikourei = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -924,9 +1005,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void findShinryouMasterByName(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult findShinryouMasterByName(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String name = params.get("name");
@@ -937,9 +1019,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void updateShinryou(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult updateShinryou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         ShinryouDTO shinryou = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -949,9 +1032,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.updateShinryou(shinryou);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void getPatient(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getPatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -961,9 +1045,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void pageDiseaseFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult pageDiseaseFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -975,9 +1060,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void batchGetShinryouAttr(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchGetShinryouAttr(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         List<Integer> shinryouIds = params.getAll("shinryou-ids[]").stream().map(Integer::valueOf).collect(toList());
@@ -987,9 +1073,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void batchGetShouki(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchGetShouki(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         List<Integer> visitIds = params.getAll("visit-ids[]").stream().map(Integer::valueOf).collect(toList());
@@ -999,9 +1086,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getConduct(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getConduct(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int conductId = Integer.parseInt(params.get("conduct-id"));
@@ -1011,9 +1099,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void deleteConductDrug(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteConductDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int conductDrugId = Integer.parseInt(params.get("conduct-drug-id"));
@@ -1022,9 +1111,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteConductDrug(conductDrugId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void searchPrescExample(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult searchPrescExample(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String text = params.get("text");
@@ -1034,9 +1124,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void searchPatient(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult searchPatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String text = params.get("text");
@@ -1046,9 +1137,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void updateKoukikourei(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult updateKoukikourei(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         KoukikoureiDTO koukikourei = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1058,9 +1150,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.updateKoukikourei(koukikourei);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void deleteRoujin(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteRoujin(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         RoujinDTO roujin = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1070,9 +1163,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteRoujinSafely(roujin);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void deleteDrugTekiyou(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteDrugTekiyou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int drugId = Integer.parseInt(params.get("drug-id"));
@@ -1082,9 +1176,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void findPharmaDrug(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult findPharmaDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int iyakuhincode = Integer.parseInt(params.get("iyakuhincode"));
@@ -1094,9 +1189,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listDrugFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listDrugFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -1106,9 +1202,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listWqueueFullForExam(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listWqueueFullForExam(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1116,9 +1213,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void updateShouki(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult updateShouki(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         ShoukiDTO shouki = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1128,9 +1226,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.updateShouki(shouki);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void prescDone(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult prescDone(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -1139,9 +1238,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.prescDone(visitId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void searchTextGlobally(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult searchTextGlobally(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String text = params.get("text");
@@ -1152,9 +1252,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void enterShinryou(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterShinryou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         ShinryouDTO shinryou = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1165,9 +1266,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void setDrugTekiyou(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult setDrugTekiyou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int drugId = Integer.parseInt(params.get("drug-id"));
@@ -1178,9 +1280,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void enterPharmaDrug(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterPharmaDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         PharmaDrugDTO pharmaDrug = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1190,9 +1293,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.enterPharmaDrug(pharmaDrug);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void listDiseaseByPatientAt(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listDiseaseByPatientAt(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -1204,9 +1308,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getConductFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getConductFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int conductId = Integer.parseInt(params.get("conduct-id"));
@@ -1216,9 +1321,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listIyakuhinForPatient(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listIyakuhinForPatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -1228,9 +1334,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void searchShuushokugoMaster(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult searchShuushokugoMaster(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String text = params.get("text");
@@ -1241,9 +1348,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void deleteShahokokuho(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteShahokokuho(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         ShahokokuhoDTO shahokokuho = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1253,9 +1361,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteShahokokuhoSafely(shahokokuho);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void listVisitChargePatientAt(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listVisitChargePatientAt(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate at = LocalDate.parse(params.get("at"));
@@ -1265,9 +1374,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void deleteDuplicateShinryou(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteDuplicateShinryou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -1277,9 +1387,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getKoukikourei(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getKoukikourei(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int koukikoureiId = Integer.parseInt(params.get("koukikourei-id"));
@@ -1289,9 +1400,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void searchIyakuhinMaster(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult searchIyakuhinMaster(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String text = params.get("text");
@@ -1302,9 +1414,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void deleteShinryouTekiyou(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteShinryouTekiyou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int shinryouId = Integer.parseInt(params.get("shinryou-id"));
@@ -1314,9 +1427,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void searchTextByPage(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult searchTextByPage(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -1328,9 +1442,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void pageVisitDrug(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult pageVisitDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -1341,9 +1456,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getConductDrugFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getConductDrugFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int conductDrugId = Integer.parseInt(params.get("conduct-drug-id"));
@@ -1353,9 +1469,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void countPageOfDiseaseByPatient(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult countPageOfDiseaseByPatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -1366,9 +1483,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void startExam(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult startExam(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -1377,9 +1495,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.startExam(visitId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void getShinryouMaster(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getShinryouMaster(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int shinryoucode = Integer.parseInt(params.get("shinryoucode"));
@@ -1390,9 +1509,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void searchPrevDrug(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult searchPrevDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String text = params.contains("text") ? params.get("text") : "";
@@ -1403,9 +1523,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listShinryouFullByIds(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listShinryouFullByIds(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         List<Integer> shinryouId = params.getAll("shinryou-id[]").stream().map(Integer::valueOf).collect(toList());
@@ -1415,9 +1536,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void startVisit(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult startVisit(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -1427,9 +1549,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void modifyDisease(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult modifyDisease(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         DiseaseModifyDTO diseaseModify = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1439,9 +1562,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.modifyDisease(diseaseModify);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void deleteShinryou(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteShinryou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int shinryouId = Integer.parseInt(params.get("shinryou-id"));
@@ -1450,9 +1574,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteShinryouWithAttr(shinryouId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void listVisitTextDrugForPatient(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listVisitTextDrugForPatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -1463,9 +1588,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void endExam(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult endExam(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -1475,9 +1601,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.endExam(visitId, charge);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void searchKizaiMaster(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult searchKizaiMaster(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String text = params.get("text");
@@ -1488,9 +1615,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void batchUpdateDiseaseEndReason(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchUpdateDiseaseEndReason(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         List<DiseaseModifyEndReasonDTO> args = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1500,9 +1628,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.batchUpdateDiseaseEndReason(args);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void listPracticeLogInRange(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listPracticeLogInRange(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate date = LocalDate.parse(params.get("date"));
@@ -1514,9 +1643,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getHoken(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getHoken(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -1527,9 +1657,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void updateKouhi(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult updateKouhi(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         KouhiDTO kouhi = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1539,9 +1670,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.updateKouhi(kouhi);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void suspendExam(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult suspendExam(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -1550,9 +1682,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.suspendExam(visitId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void listPaymentVisitByPatient(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listPaymentVisitByPatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -1563,9 +1696,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listVisitingPatientIdHavingHoken(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listVisitingPatientIdHavingHoken(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int year = Integer.parseInt(params.get("year"));
@@ -1576,9 +1710,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void updateText(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult updateText(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         TextDTO text = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1588,9 +1723,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.updateText(text);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void listVisitIdByPatient(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listVisitIdByPatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
@@ -1600,9 +1736,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getPharmaDrug(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getPharmaDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int iyakuhincode = Integer.parseInt(params.get("iyakuhincode"));
@@ -1612,9 +1749,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void batchUpdateDrugDays(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchUpdateDrugDays(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         List<Integer> drugId = params.getAll("drug-id[]").stream().map(Integer::valueOf).collect(toList());
@@ -1624,9 +1762,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.batchUpdateDrugDays(drugId, days);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void deleteDrug(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int drugId = Integer.parseInt(params.get("drug-id"));
@@ -1635,9 +1774,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteDrugWithAttr(drugId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void getConductShinryouFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getConductShinryouFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int conductShinryouId = Integer.parseInt(params.get("conduct-shinryou-id"));
@@ -1647,9 +1787,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void enterConductDrug(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterConductDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         ConductDrugDTO conductDrug = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1660,9 +1801,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void deleteVisitFromReception(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteVisitFromReception(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -1671,9 +1813,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteVisitFromReception(visitId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void enterPrescExample(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterPrescExample(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         PrescExampleDTO prescExample = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1684,9 +1827,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void deletePrescExample(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deletePrescExample(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int prescExampleId = Integer.parseInt(params.get("presc-example-id"));
@@ -1695,9 +1839,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deletePrescExample(prescExampleId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void getShuushokugoMasterByName(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getShuushokugoMasterByName(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String name = params.get("name");
@@ -1707,9 +1852,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getNameOfIyakuhin(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getNameOfIyakuhin(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int iyakuhincode = Integer.parseInt(params.get("iyakuhincode"));
@@ -1719,9 +1865,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void setShinryouTekiyou(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult setShinryouTekiyou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int shinryouId = Integer.parseInt(params.get("shinryou-id"));
@@ -1732,9 +1879,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getVisit(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getVisit(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -1744,9 +1892,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void modifyGazouLabel(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult modifyGazouLabel(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int conductId = Integer.parseInt(params.get("conduct-id"));
@@ -1756,9 +1905,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.setGazouLabel(conductId, label);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void updatePharmaDrug(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult updatePharmaDrug(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         PharmaDrugDTO pharmaDrug = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1768,9 +1918,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.updatePharmaDrug(pharmaDrug);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void listRecentHotline(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listRecentHotline(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int thresholdHotlineId = Integer.parseInt(params.get("threshold-hotline-id"));
@@ -1780,9 +1931,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listText(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listText(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -1792,9 +1944,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void getRoujin(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getRoujin(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int roujinId = Integer.parseInt(params.get("roujin-id"));
@@ -1804,9 +1957,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listPracticeLogAt(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listPracticeLogAt(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate date = LocalDate.parse(params.get("date"));
@@ -1816,9 +1970,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listAllPracticeLogAfter(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listAllPracticeLogAfter(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate date = LocalDate.parse(params.get("date"));
@@ -1829,9 +1984,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listRecentPayment(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listRecentPayment(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         Integer n = params.contains("n") ? Integer.parseInt(params.get("n")) : 30;
@@ -1841,9 +1997,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void batchResolveKizaiNames(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchResolveKizaiNames(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate at = LocalDate.parse(params.get("at"));
@@ -1855,9 +2012,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listTodaysHotline(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listTodaysHotline(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
@@ -1865,9 +2023,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void enterShahokokuho(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterShahokokuho(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         ShahokokuhoDTO shahokokuho = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1878,9 +2037,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void updatePrescExample(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult updatePrescExample(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         PrescExampleDTO prescExample = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1890,9 +2050,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.updatePrescExample(prescExample);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void modifyConductKind(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult modifyConductKind(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int conductId = Integer.parseInt(params.get("conduct-id"));
@@ -1902,9 +2063,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.modifyConductKind(conductId, kind);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void enterPatient(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterPatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         PatientDTO patient = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1915,9 +2077,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void pageVisitFullWithPatientAt(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult pageVisitFullWithPatientAt(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate at = LocalDate.parse(params.get("at"));
@@ -1928,9 +2091,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void updateShahokokuho(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult updateShahokokuho(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         ShahokokuhoDTO shahokokuho = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1940,9 +2104,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.updateShahokokuho(shahokokuho);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void enterText(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterText(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         TextDTO text = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
@@ -1953,9 +2118,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void deleteVisit(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult deleteVisit(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -1964,9 +2130,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.deleteVisitSafely(visitId);
         conn.commit();
         req.response().end("true");
+        return new CallResult(backend);
     }
 
-    private void getDiseaseFull(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getDiseaseFull(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int diseaseId = Integer.parseInt(params.get("disease-id"));
@@ -1976,9 +2143,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listRecentVisitWithPatient(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listRecentVisitWithPatient(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int page = 0;
@@ -1997,9 +2165,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void listVisitPatientAt(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listVisitPatientAt(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate at = LocalDate.parse(params.get("at"));
@@ -2009,6 +2178,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
 
@@ -2139,7 +2309,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("get-hoken", this::getHoken);
         funcMap.put("update-kouhi", this::updateKouhi);
         funcMap.put("suspend-exam", this::suspendExam);
-        //funcMap.put("list-payment-by-patient", this::listPaymentByPatient);
         funcMap.put("list-payment-visit-by-patient", this::listPaymentVisitByPatient);
         funcMap.put("list-visiting-patient-id-having-hoken", this::listVisitingPatientIdHavingHoken);
         funcMap.put("update-text", this::updateText);
@@ -2202,7 +2371,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("enter-xp", this::enterXp);
     }
 
-    private void updateVisitAttr(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult updateVisitAttr(RoutingContext ctx, Connection conn) throws Exception {
         String visitIdParam = ctx.request().getParam("visit-id");
         String attr = ctx.request().getParam("attr");
         if( visitIdParam == null ){
@@ -2214,9 +2383,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         backend.updateVisitAttr(visitId, attr);
         conn.commit();
         ctx.response().end(jsonEncode(true));
+        return new CallResult(backend);
     }
 
-    private void listVisitIdInDateInRange(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listVisitIdInDateInRange(RoutingContext ctx, Connection conn) throws Exception {
         String fromDateArg = ctx.request().getParam("from");
         if( fromDateArg == null ){
             throw new RuntimeException("Missing parameter: from");
@@ -2232,9 +2402,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         List<Integer> visitIds = backend.listVisitIdInDateInRange(fromDate, uptoDate);
         conn.commit();
         ctx.response().end(jsonEncode(visitIds));
+        return new CallResult(backend);
     }
 
-    private void getByoumeiMaster(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getByoumeiMaster(RoutingContext ctx, Connection conn) throws Exception {
         String shoubyoumeicodeParam = ctx.request().getParam("shoubyoumeicode");
         String atParam = ctx.request().getParam("at");
         if( shoubyoumeicodeParam == null ){
@@ -2250,9 +2421,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         ByoumeiMasterDTO result = backend.getByoumeiMaster(shoubyoumeicode, at);
         conn.commit();
         ctx.response().end(jsonEncode(result));
+        return new CallResult(backend);
     }
 
-    private void getShuushokugoMaster(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getShuushokugoMaster(RoutingContext ctx, Connection conn) throws Exception {
         String shuushokugocodeParam = ctx.request().getParam("shuushokugocode");
         String atParam = ctx.request().getParam("at");
         if( shuushokugocodeParam == null ){
@@ -2268,9 +2440,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         ShuushokugoMasterDTO result = backend.getShuushokugoMaster(shuushokugocode, at);
         conn.commit();
         ctx.response().end(jsonEncode(result));
+        return new CallResult(backend);
     }
 
-    private void getMostRecentVisitOfPatient(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getMostRecentVisitOfPatient(RoutingContext ctx, Connection conn) throws Exception {
         String patientIdParam = ctx.request().getParam("patient-id");
         if( patientIdParam == null ){
             throw new RuntimeException("Missing parameter: patient-id.");
@@ -2281,9 +2454,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         VisitDTO result = backend.getMostRecentVisitOfPatient(patientId);
         conn.commit();
         ctx.response().end(jsonEncode(result));
+        return new CallResult(backend);
     }
 
-    private void batchGetPatient(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchGetPatient(RoutingContext ctx, Connection conn) throws Exception {
         List<Integer> patientIds = this.mapper.readValue(ctx.getBody().getBytes(),
                 new TypeReference<>(){});
         List<PatientDTO> result = new ArrayList<>();
@@ -2295,6 +2469,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         }
         conn.commit();
         ctx.response().end(jsonEncode(result));
+        return new CallResult(backend);
     }
 
     private ConductShinryouDTO createConductShinryouReq(String name, LocalDate at) {
@@ -2351,7 +2526,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return creq;
     }
 
-    private void batchEnterShinryouByName(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchEnterShinryouByName(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         List<String> names = params.getAll("name[]");
@@ -2362,6 +2537,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
     public BatchEnterResultDTO batchEnterShinryouByName(Backend backend, List<String> names, int visitId)
@@ -2389,7 +2565,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return backend.batchEnter(req);
     }
 
-    private void batchResolveIyakuhinMaster(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchResolveIyakuhinMaster(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         List<Integer> iyakuhincodes = params.getAll("iyakuhincode[]").stream().map(Integer::valueOf).collect(toList());
@@ -2404,6 +2580,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
     private List<Integer> batchCopyShinryou(Backend backend, int visitId, List<ShinryouDTO> srcList)
@@ -2423,7 +2600,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return shinryouIds;
     }
 
-    private void batchCopyShinryou(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchCopyShinryou(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -2435,6 +2612,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
     public int enterInject(Backend backend, int visitId, int kind, int iyakuhincode, double amount)
@@ -2461,7 +2639,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         }
     }
 
-    private void enterInject(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterInject(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -2474,13 +2652,14 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
     private int resolveShinryoucode(int shinryoucode, LocalDate at) throws Exception {
         return masterMap.resolve(MasterKind.Shinryou, shinryoucode, at);
     }
 
-    private void resolveShinryoucode(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult resolveShinryoucode(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int shinryoucode = Integer.parseInt(params.get("shinryoucode"));
@@ -2491,6 +2670,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
     private IyakuhinMasterDTO resolveIyakuhinMaster(Backend backend, int iyakuhincode, LocalDate at)
@@ -2499,7 +2679,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return backend.getIyakuhinMaster(iyakuhincode, at);
     }
 
-    private void resolveIyakuhinMaster(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult resolveIyakuhinMaster(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int iyakuhincode = Integer.parseInt(params.get("iyakuhincode"));
@@ -2510,6 +2690,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
     private Map<String, Integer> batchResolveByoumeiNames(LocalDate at, List<List<String>> args)
@@ -2531,7 +2712,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return map;
     }
 
-    private void batchResolveByoumeiNames(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchResolveByoumeiNames(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate at = LocalDate.parse(params.get("at"));
@@ -2543,6 +2724,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
     public ShinryouMasterDTO resolveShinryouMaster(Backend backend, int shinryoucode, LocalDate at)
@@ -2551,7 +2733,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return backend.getShinryouMaster(shinryoucode, at);
     }
 
-    private void resolveShinryouMaster(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult resolveShinryouMaster(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int shinryoucode = Integer.parseInt(params.get("shinryoucode"));
@@ -2562,6 +2744,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
     private MeisaiDTO composeMeisai(Backend backend, int visitId) throws JsonProcessingException {
@@ -2618,7 +2801,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return meisaiDTO;
     }
 
-    private void getVisitMeisai(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult getVisitMeisai(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         int visitId = Integer.parseInt(ctx.request().getParam("visit-id"));
         Query query = new Query(conn);
@@ -2627,9 +2810,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
-    private void batchResolveShuushokugoNames(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult batchResolveShuushokugoNames(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         LocalDate at = LocalDate.parse(params.get("at"));
@@ -2641,6 +2825,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
     public Map<String, Integer> batchResolveShuushokugoNames(LocalDate at, List<List<String>> args) throws Exception {
@@ -2666,7 +2851,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return backend.getKizaiMaster(code, at);
     }
 
-    private void resolveKizaiMasterByName(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult resolveKizaiMasterByName(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String name = params.get("name");
@@ -2677,6 +2862,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
     private List<Integer> copyAllConducts(Backend backend, int targetVisitId, int sourceVisitId)
@@ -2708,7 +2894,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return result.conductIds;
     }
 
-    private void copyAllConducts(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult copyAllConducts(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int targetVisitId = Integer.parseInt(params.get("target-visit-id"));
@@ -2719,6 +2905,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
     private KizaiMasterDTO resolveKizaiMaster(Backend backend, int kizaicode, LocalDate at) throws Exception {
@@ -2726,7 +2913,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return backend.getKizaiMaster(code, at);
     }
 
-    private void resolveKizaiMaster(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult resolveKizaiMaster(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int kizaicode = Integer.parseInt(params.get("kizaicode"));
@@ -2737,6 +2924,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
     private ShinryouMasterDTO resolveShinryouMasterByName(Backend backend, String name, LocalDate at)
@@ -2749,7 +2937,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         }
     }
 
-    private void resolveShinryouMasterByName(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult resolveShinryouMasterByName(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         String name = params.get("name");
@@ -2760,6 +2948,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
     private int enterXp(Backend backend, int visitId, String label, String film) throws Exception {
@@ -2780,7 +2969,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         }
     }
 
-    private void enterXp(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult enterXp(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int visitId = Integer.parseInt(params.get("visit-id"));
@@ -2792,6 +2981,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
     }
 
     @Override

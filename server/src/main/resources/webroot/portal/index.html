@@ -10,11 +10,6 @@
     <script src="js/common.js"></script>
     <script src="js/popper.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
-    <script type="module">
-        import * as kanjidate from "./js/kanjidate.js";
-
-        window.kanjidate = kanjidate;
-    </script>
     <link rel="stylesheet" href="css/main.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
@@ -28,8 +23,8 @@
 <div class="container-fluid">
 
     <div class="row ml-5 mr-5">
-        <div class="col-xl-2 sidebar">
-            <ul class="list-unstyled menu-elements mt-1">
+        <div class="col-lg-2 px-0">
+            <ul class="list-unstyled menu-elements mt-1 sidebar p-2 mx-0">
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-practice-link">診察</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-cashier-link">会計</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-reception-link">受付</a></li>
@@ -41,226 +36,243 @@
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-refer-link">紹介状</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-medcert-link">診断書</a></li>
             </ul>
+            <div id="index-hotline-part">
+                <form class="x-hotline-form" onsubmit="return false;">
+                    <div class="mb-2">
+                        <input type="text" class="form-control mb-2 x-hotline-input" />
+                        <button class="btn btn-primary btn-sm" type="submit">送信</button>
+                    </div>
+                </form>
+                <div class="border border-secondary rounded p-2 x-hotline-list"
+                         style="max-height: 20em; overflow-y: auto"></div>
+            </div>
         </div>
 
-        <div class="col-xl-10" id="index-pane-wrapper"></div>
+        <div class="col-lg-10" id="index-pane-wrapper"></div>
 
     </div>
 </div>
 
 <script>
 
-    let rest = new Rest("/json");
-    let integration = new Integration("/integration");
+    (async function(){
+        let rest = new Rest("/json");
+        let integration = new Integration("/integration");
+        let {HotlineController} = await import("../hotline/hotline-controller.js");
+        let {parseElement} = await import("./js/parse-node.js");
 
-    window.onerror = message => alert(message);
+        window.onerror = message => alert(message);
 
-    class Menu {
-        constructor(paneWrapper) {
-            this._clearNode(paneWrapper);
-            this.paneWrapper = paneWrapper;
-            this.itemMap = {};
-            this.currentItem = null;
-        }
-
-        addItem(name, item) {
-            let info = {
-                name: name,
-                link: item.link,
-                savedElement: null,
-                item: item
-            };
-            this.itemMap[name] = info;
-            if( item.init ) {
-                item.init(this);
-            }
-            item.link.onclick = async event => await this.simulateClick(name);
-        }
-
-        async simulateClick(name){
-            if( name === this.currentItem ){
-                return;
-            }
-            let info = this.itemMap[name];
-            let item = info.item;
-            this._saveCurrentItem();
-            this._clearNode(this.paneWrapper);
-            if( info.savedElement ){
-                this.paneWrapper.appendChild(info.savedElement);
-                this.currentItem = name;
-                this._setActive(name);
-                if( item.onReloaded ){
-                    item.onReloaded(info.savedElement);
-                }
-            } else {
-                let pane = document.createElement("div");
-                this._clearNode(this.paneWrapper);
-                this.paneWrapper.appendChild(pane);
-                // TODO: use MutationObserver to confirm that panel is ready
-                await item.start(pane, () => {
-                    this.currentItem = name;
-                    this._setActive(name);
-                }, async () => await this._restart(name));
-            }
-        }
-
-        async _restart(name){
-            this._saveCurrentItem();
-            let info = this.itemMap[name];
-            let item = info.item;
-            info.savedElement = null;
-            await this.simulateClick(name);
-        }
-
-        _setActive(name){
-            Object.keys(this.itemMap).forEach(key => {
-                let link = this.itemMap[key].link;
-                if( key === name ){
-                    link.classList.add("active");
-                } else {
-                    link.classList.remove("active");
-                }
-            });
-        }
-
-        _clearNode(node){
-            if( node ) {
-                while (node.firstChild) {
-                    node.removeChild(node.firstChild);
-                }
-            }
-        }
-
-        _saveCurrentItem() {
-            let c = this.currentItem;
-            if( c ) {
-                let info = this.itemMap[c];
-                info.savedElement = this.paneWrapper.firstElementChild;
-                this.paneWrapper.removeChild(info.savedElement);
+        class Menu {
+            constructor(paneWrapper) {
+                this._clearNode(paneWrapper);
+                this.paneWrapper = paneWrapper;
+                this.itemMap = {};
                 this.currentItem = null;
             }
-        }
-    }
 
-    let menu = new Menu(document.getElementById("index-pane-wrapper"));
-    menu.addItem("practice", {
-        link: document.getElementById("index-practice-link"),
-        async start(pane, cb, reload) {
-            let practice = await import("./practice/practice.js");
-            pane.innerHTML = practice.getHtml();
-            await practice.initPractice(pane, rest);
-            cb();
-        },
-        onReloaded(pane) {
+            addItem(name, item) {
+                let info = {
+                    name: name,
+                    link: item.link,
+                    savedElement: null,
+                    item: item
+                };
+                this.itemMap[name] = info;
+                if( item.init ) {
+                    item.init(this);
+                }
+                item.link.onclick = async event => await this.simulateClick(name);
+            }
+
+            async simulateClick(name){
+                if( name === this.currentItem ){
+                    return;
+                }
+                let info = this.itemMap[name];
+                let item = info.item;
+                this._saveCurrentItem();
+                this._clearNode(this.paneWrapper);
+                if( info.savedElement ){
+                    this.paneWrapper.appendChild(info.savedElement);
+                    this.currentItem = name;
+                    this._setActive(name);
+                    if( item.onReloaded ){
+                        item.onReloaded(info.savedElement);
+                    }
+                } else {
+                    let pane = document.createElement("div");
+                    this._clearNode(this.paneWrapper);
+                    this.paneWrapper.appendChild(pane);
+                    // TODO: use MutationObserver to confirm that panel is ready
+                    await item.start(pane, () => {
+                        this.currentItem = name;
+                        this._setActive(name);
+                    }, async () => await this._restart(name));
+                }
+            }
+
+            async _restart(name){
+                this._saveCurrentItem();
+                let info = this.itemMap[name];
+                let item = info.item;
+                info.savedElement = null;
+                await this.simulateClick(name);
+            }
+
+            _setActive(name){
+                Object.keys(this.itemMap).forEach(key => {
+                    let link = this.itemMap[key].link;
+                    if( key === name ){
+                        link.classList.add("active");
+                    } else {
+                        link.classList.remove("active");
+                    }
+                });
+            }
+
+            _clearNode(node){
+                if( node ) {
+                    while (node.firstChild) {
+                        node.removeChild(node.firstChild);
+                    }
+                }
+            }
+
+            _saveCurrentItem() {
+                let c = this.currentItem;
+                if( c ) {
+                    let info = this.itemMap[c];
+                    info.savedElement = this.paneWrapper.firstElementChild;
+                    this.paneWrapper.removeChild(info.savedElement);
+                    this.currentItem = null;
+                }
+            }
         }
-    });
-    menu.addItem("cashier", {
-        link: document.getElementById("index-cashier-link"),
-        async start(pane, cb) {
-            let cashier = await import("./cashier/cashier.js");
-            pane.innerHTML = cashier.getHtml();
-            await cashier.initCashier(pane);
-            cb();
-        },
-        onReloaded(pane) {
-            pane.dispatchEvent(new Event("onreloaded"))
-        }
-    });
-    menu.addItem("reception", {
-        link: document.getElementById("index-reception-link"),
-        async start(pane, cb) {
-            let app = await import("./reception/reception.js");
-            pane.innerHTML = app.getHtml();
-            await app.initReception(pane);
-            cb();
-        },
-        onReloaded(pane) {
-            pane.dispatchEvent(new Event("onreloaded"))
-        }
-    });
-    menu.addItem("faxed-shohousen", {
-        link: document.getElementById("index-faxed-shohousen-link"),
-        async start(pane, cb) {
-            let app = await import("./faxed-shohousen/faxed-shohousen.js");
-            pane.innerHTML = app.getHtml();
-            await app.initFaxedShohousen(pane);
-            cb();
-        },
-        onReloaded(pane) {
-            pane.dispatchEvent(new Event("onreloaded"))
-        }
-    });
-    menu.addItem("houmon-kango", {
-        link: document.getElementById("index-houmon-kango-link"),
-        async start(pane, cb) {
-            let app = await import("./houmon-kango/houmon-kango.js");
-            await app.initHoumonKango(pane);
-            cb();
-        },
-        onReloaded(pane) {
-            pane.dispatchEvent(new Event("onreloaded"))
-        }
-    });
-    menu.addItem("shujii", {
-        link: document.getElementById("index-shujii-link"),
-        async start(pane, cb, reload) {
-            let app = await import("./shujii/shujii.js");
-            pane.innerHTML = app.getHtml();
-            await app.initShujii(pane, reload);
-            cb();
-        },
-        onReloaded(pane) {
-            pane.dispatchEvent(new Event("onreloaded"))
-        }
-    });
-    menu.addItem("send-fax", {
-        link: document.getElementById("index-send-fax-link"),
-        async start(pane, cb, reload) {
-            let app = await import("./send-fax/send-fax.js");
-            pane.innerHTML = app.getHtml();
-            await app.initSendFax(pane, reload);
-            cb();
-        },
-        onReloaded(pane) {
-            pane.dispatchEvent(new Event("onreloaded"))
-        }
-    });
-    menu.addItem("printer-setting", {
-        link: document.getElementById("index-printer-setting-link"),
-        async start(pane, cb, reload) {
-            let app = await import("./printer-setting/printer-setting.js");
-            pane.innerHTML = app.getHtml();
-            await app.initPrinterSetting(pane, reload);
-            cb();
-        },
-        onReloaded(pane) {
-            pane.dispatchEvent(new Event("onreloaded"))
-        }
-    });
-    menu.addItem("refer", {
-        link: document.getElementById("index-refer-link"),
-        async start(pane, cb, reload) {
-            let app = await import("./refer/refer.js");
-            pane.innerHTML = app.getHtml();
-            await app.initRefer(pane, reload);
-            cb();
-        },
-        onReloaded(pane) {
-            pane.dispatchEvent(new Event("onreloaded"))
-        }
-    });
-    menu.addItem("medcert", {
-        link: document.getElementById("index-medcert-link"),
-        async start(pane, cb, reload) {
-            let app = await import("./medcert/medcert.js");
-            pane.innerHTML = app.getHtml();
-            await app.initMedcert(pane, reload);
-            cb();
-        },
-        onReloaded(pane) {
-            pane.dispatchEvent(new Event("onreloaded"))
-        }
-    });
+
+        let menu = new Menu(document.getElementById("index-pane-wrapper"));
+        menu.addItem("practice", {
+            link: document.getElementById("index-practice-link"),
+            async start(pane, cb, reload) {
+                let practice = await import("./practice/practice.js");
+                pane.innerHTML = practice.getHtml();
+                await practice.initPractice(pane, rest);
+                cb();
+            },
+            onReloaded(pane) {
+            }
+        });
+        menu.addItem("cashier", {
+            link: document.getElementById("index-cashier-link"),
+            async start(pane, cb) {
+                let cashier = await import("./cashier/cashier.js");
+                pane.innerHTML = cashier.getHtml();
+                await cashier.initCashier(pane);
+                cb();
+            },
+            onReloaded(pane) {
+                pane.dispatchEvent(new Event("onreloaded"))
+            }
+        });
+        menu.addItem("reception", {
+            link: document.getElementById("index-reception-link"),
+            async start(pane, cb) {
+                let app = await import("./reception/reception.js");
+                pane.innerHTML = app.getHtml();
+                await app.initReception(pane);
+                cb();
+            },
+            onReloaded(pane) {
+                pane.dispatchEvent(new Event("onreloaded"))
+            }
+        });
+        menu.addItem("faxed-shohousen", {
+            link: document.getElementById("index-faxed-shohousen-link"),
+            async start(pane, cb) {
+                let app = await import("./faxed-shohousen/faxed-shohousen.js");
+                pane.innerHTML = app.getHtml();
+                await app.initFaxedShohousen(pane);
+                cb();
+            },
+            onReloaded(pane) {
+                pane.dispatchEvent(new Event("onreloaded"))
+            }
+        });
+        menu.addItem("houmon-kango", {
+            link: document.getElementById("index-houmon-kango-link"),
+            async start(pane, cb) {
+                let app = await import("./houmon-kango/houmon-kango.js");
+                await app.initHoumonKango(pane);
+                cb();
+            },
+            onReloaded(pane) {
+                pane.dispatchEvent(new Event("onreloaded"))
+            }
+        });
+        menu.addItem("shujii", {
+            link: document.getElementById("index-shujii-link"),
+            async start(pane, cb, reload) {
+                let app = await import("./shujii/shujii.js");
+                pane.innerHTML = app.getHtml();
+                await app.initShujii(pane, reload);
+                cb();
+            },
+            onReloaded(pane) {
+                pane.dispatchEvent(new Event("onreloaded"))
+            }
+        });
+        menu.addItem("send-fax", {
+            link: document.getElementById("index-send-fax-link"),
+            async start(pane, cb, reload) {
+                let app = await import("./send-fax/send-fax.js");
+                pane.innerHTML = app.getHtml();
+                await app.initSendFax(pane, reload);
+                cb();
+            },
+            onReloaded(pane) {
+                pane.dispatchEvent(new Event("onreloaded"))
+            }
+        });
+        menu.addItem("printer-setting", {
+            link: document.getElementById("index-printer-setting-link"),
+            async start(pane, cb, reload) {
+                let app = await import("./printer-setting/printer-setting.js");
+                pane.innerHTML = app.getHtml();
+                await app.initPrinterSetting(pane, reload);
+                cb();
+            },
+            onReloaded(pane) {
+                pane.dispatchEvent(new Event("onreloaded"))
+            }
+        });
+        menu.addItem("refer", {
+            link: document.getElementById("index-refer-link"),
+            async start(pane, cb, reload) {
+                let app = await import("./refer/refer.js");
+                pane.innerHTML = app.getHtml();
+                await app.initRefer(pane, reload);
+                cb();
+            },
+            onReloaded(pane) {
+                pane.dispatchEvent(new Event("onreloaded"))
+            }
+        });
+        menu.addItem("medcert", {
+            link: document.getElementById("index-medcert-link"),
+            async start(pane, cb, reload) {
+                let app = await import("./medcert/medcert.js");
+                pane.innerHTML = app.getHtml();
+                await app.initMedcert(pane, reload);
+                cb();
+            },
+            onReloaded(pane) {
+                pane.dispatchEvent(new Event("onreloaded"))
+            }
+        });
+
+        let hotlineMap = parseElement(document.getElementById("index-hotline-part"));
+
+    })();
 
 </script>
 </body>

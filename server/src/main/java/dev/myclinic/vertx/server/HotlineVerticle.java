@@ -1,26 +1,16 @@
 package dev.myclinic.vertx.server;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.ServerWebSocket;
 
 import java.util.HashSet;
 import java.util.Set;
 
-class FaxStreamingVerticle extends AbstractVerticle {
+class HotlineVerticle extends AbstractVerticle {
 
     private final Set<ServerWebSocket> clients = new HashSet<>();
-
-    @Override
-    public void start() throws Exception {
-        super.start();
-        EventBus bus = vertx.eventBus();
-        bus.<String>consumer("fax-streaming", message -> {
-            for(ServerWebSocket sock: clients){
-                sock.writeTextMessage(message.body());
-            }
-        });
-    }
 
     public void addClient(ServerWebSocket client){
         client.closeHandler(_dummy -> {
@@ -36,6 +26,12 @@ class FaxStreamingVerticle extends AbstractVerticle {
             System.out.println("client throwed: " + client);
         });
         this.clients.add(client);
-        client.writeTextMessage("hello");
     }
+
+    private void broadcast(String msg){
+        for(var client: clients){
+            client.writeTextMessage(msg);
+        }
+    }
+
 }

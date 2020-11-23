@@ -701,6 +701,18 @@ class Rest extends Client {
         return await this.post("/enter-hotline", hotline);
     }
 
+    async listTodaysHotline(){
+        return await this.get("/list-todays-hotline", {});
+    }
+
+    async listHotlineAfter(hotlineId){
+        return await this.get("/list-recent-hotline", {"threshold-hotline-id": hotlineId});
+    }
+
+    async listTodaysHotlineInRange(after, before){
+        return await this.get("/list-todays-hotline-in-range", {after, before});
+    }
+
 }
 
 class Integration extends Client {

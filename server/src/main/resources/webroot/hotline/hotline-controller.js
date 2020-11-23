@@ -12,7 +12,6 @@ export class HotlineController {
         this.ws.addEventListener("message", async event => await this.doMessage(event.data));
         this.lastHotlineId = 0;
         this.timer = setInterval(async () => this.doCheckMessages(), 20000); // every 20 seconds
-        console.log(this.printAPI);
     }
 
     async init(){

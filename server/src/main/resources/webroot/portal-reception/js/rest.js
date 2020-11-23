@@ -119,4 +119,20 @@ export class Rest extends HttpClient {
         return await this.GET("/delete-patient-image", {"patient-id": patientId, file})
     }
 
+    async enterHotline(hotline){
+        return await this.POST("/enter-hotline", hotline);
+    }
+
+    async listTodaysHotline(){
+        return await this.GET("/list-todays-hotline", {});
+    }
+
+    async listHotlineAfter(hotlineId){
+        return await this.GET("/list-recent-hotline", {"threshold-hotline-id": hotlineId});
+    }
+
+    async listTodaysHotlineInRange(after, before){
+        return await this.GET("/list-todays-hotline-in-range", {after, before});
+    }
+
 }

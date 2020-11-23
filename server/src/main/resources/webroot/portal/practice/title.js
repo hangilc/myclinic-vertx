@@ -58,7 +58,6 @@ export class Title extends Component {
     }
 
     rep(sqldatetime) {
-        console.log("kanjidate", kanjidate);
         let data = kanjidate.sqldatetimeToData(sqldatetime);
         let nen = (data.nen + "").padStart(2, "0");
         let month = (data.month + "").padStart(2, "0");

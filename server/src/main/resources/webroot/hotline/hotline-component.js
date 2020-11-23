@@ -94,7 +94,15 @@ export class HotlineComponent {
         let value = ta.value;
         let left = value.substring(0, ta.selectionStart);
         let right = value.substring(ta.selectionEnd, value.length);
-        ta.value = left + s + right;
+        let braIndex = s.indexOf("{}");
+        if( braIndex >= 0 ){
+            let braLeft = s.substring(0, braIndex);
+            let braRight = s.substring(braIndex +2, s.length);
+            ta.value = left + braLeft + braRight + right;
+            ta.selectionStart = ta.selectionEnd = left.length + braLeft.length;
+        } else {
+            ta.value = left + s + right;
+        }
     }
 
 }

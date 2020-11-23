@@ -42,7 +42,18 @@
                         <textarea rows="3" class="form-control mb-2 x-hotline-input"
                             style="font-size:80%"></textarea>
                         <button class="btn btn-primary btn-sm" type="submit">送信</button>
+                        <button class="btn btn-secondary btn-sm x-roger">了解</button>
                         <button class="btn btn-secondary btn-sm x-beep">Beep</button>
+                        <div class="dropdown d-inline-block x-freqs-menu">
+                            <button class="btn btn-link btn-sm dropdown-toggle x-hotlinie-freqs"
+                                    data-toggle="dropdown">常用
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="javascript:void(0)">おはようございます。</a>
+                                <a class="dropdown-item" href="javascript:void(0)">診察室におねがいします。</a>
+                                <a class="dropdown-item" href="javascript:void(0)">処方箋おねがいします。</a>
+                            </div>
+                        </div>
                     </div>
                 </form>
                 <div class="border border-secondary rounded p-2 x-hotline-list"
@@ -285,8 +296,17 @@
             }
             hotlineMap.hotlineInput.value = "";
         });
+        hotlineMap.roger.addEventListener("click", async event => {
+            await hotlineController.submit("了解");
+        });
         hotlineMap.beep.addEventListener("click", async event => {
             await hotlineController.sendBeep();
+        });
+        hotlineMap.freqsMenu.querySelectorAll(".dropdown-item").forEach(e => {
+            e.addEventListener("click", async event => {
+                let text = event.target.innerText;
+                await hotlineController.submit(text);
+            });
         });
 
     })();

@@ -10,3 +10,11 @@
 .reception .payment-search .search-result tr {
     cursor: pointer;
 }
+
+.dropdown-menu {
+    border-color: orange;
+}
+
+.dropdown-item {
+    font-size: 80%;
+}

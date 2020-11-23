@@ -15,11 +15,11 @@ a:hover {text-decoration: none;}
 }
 .practice .practice-record.temp-visit .practice-title { background-color: #9ff; }
 
-.dropdown-menu {
+.hotline .dropdown-menu {
     border-color: orange;
 }
 
-.dropdown-item {
+.hotline .dropdown-item {
     font-size: 80%;
 }
 

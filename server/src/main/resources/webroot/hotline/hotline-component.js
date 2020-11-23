@@ -3,7 +3,7 @@ import {createElementFrom} from "../js/create-element-from.js";
 import {HotlineController} from "./hotline-controller.js";
 
 let tmpl = `
-    <form class="x-hotline-form" onsubmit="return false;">
+    <form class="x-hotline-form hotline" onsubmit="return false;">
         <div class="mb-2">
             <textarea rows="3" class="form-control mb-2 x-hotline-input"
                 style="font-size:80%"></textarea>

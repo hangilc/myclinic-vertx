@@ -40,6 +40,7 @@ public class Main {
         server.addContext("/scanner/scan", Main::handleScannerScan);
         server.addContext("/scanner/mock-scan", Main::handleScannerMockScan);
         server.addContext("/scanner/image/", Main::handleScannerImage);
+        server.addContext("/beep", Main::handleBeep);
         server.addContext("/web/", handler -> {
             if (cmdArgs.isDev) {
                 Path root = Path.of("./drawer-site/src/main/resources");
@@ -53,10 +54,23 @@ public class Main {
         server.start();
     }
 
-    private static Map<String, String> mimeMap = new HashMap<>();
-    static {
-        mimeMap.put(".jpg", "image/jpeg");
-        mimeMap.put(".jpeg", "image/jpeg");
+    private static void handleBeep(Handler handler) throws Exception {
+        switch(handler.getMethod()){
+            case "OPTIONS": {
+                handler.respondToOptions(List.of("GET", "OPTIONS"));
+                break;
+            }
+            case "GET": {
+                handler.allowCORS();
+                handler.sendJson(true);
+                java.awt.Toolkit.getDefaultToolkit().beep();
+                break;
+            }
+            default: {
+                handler.sendError("Invalid beep access.");
+                break;
+            }
+        }
     }
 
     private static void handleScannerImage(Handler handler) throws Exception {

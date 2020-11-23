@@ -2,15 +2,17 @@ import {nowAsSqldatetime} from "../js/kanjidate.js";
 import {createElementFrom} from "../js/create-element-from.js";
 
 export class HotlineController {
-    constructor(name, peer, listElement, rest){
+    constructor(name, peer, listElement, rest, printAPI){
         this.name = name;
         this.peer = peer;
         this.listElement = listElement;
         this.rest = rest;
+        this.printAPI = printAPI;
         this.ws = new WebSocket(`ws://${window.location.host}/hotline`);
         this.ws.addEventListener("message", async event => await this.doMessage(event.data));
         this.lastHotlineId = 0;
         this.timer = setInterval(async () => this.doCheckMessages(), 20000); // every 20 seconds
+        console.log(this.printAPI);
     }
 
     async init(){
@@ -29,6 +31,10 @@ export class HotlineController {
             postedAt
         }
         return await this.rest.enterHotline(hotline);
+    }
+
+    async sendBeep(){
+        return await this.rest.sendHotlineBeep(this.peer);
     }
 
     addMessage(message){
@@ -80,7 +86,7 @@ export class HotlineController {
     }
 
     async doBeep(){
-        console.log("BEEP");
+        await this.printAPI.beep();
     }
 
     isMyMessage(hotline){

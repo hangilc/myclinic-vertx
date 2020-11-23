@@ -701,6 +701,10 @@ class Rest extends Client {
         return await this.post("/enter-hotline", hotline);
     }
 
+    async sendHotlineBeep(target){
+        return await this.get("/send-hotline-beep", {target});
+    }
+
     async listTodaysHotline(){
         return await this.get("/list-todays-hotline", {});
     }

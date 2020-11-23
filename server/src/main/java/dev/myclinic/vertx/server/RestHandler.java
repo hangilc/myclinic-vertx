@@ -9,6 +9,7 @@ import dev.myclinic.vertx.db.Backend;
 import dev.myclinic.vertx.db.Query;
 import dev.myclinic.vertx.db.TableSet;
 import dev.myclinic.vertx.dto.*;
+import dev.myclinic.vertx.hotlinelogevent.body.HotlineBeep;
 import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
 import dev.myclinic.vertx.mastermap.MasterKind;
 import dev.myclinic.vertx.mastermap.MasterMap;
@@ -52,6 +53,11 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         public CallResult(Backend backend){
             this.hotlineLogs = backend.getHotlineLogs();
             this.practiceLogs = backend.getPracticeLogs();
+        }
+
+        public CallResult(){
+            this.hotlineLogs = new ArrayList<>();
+            this.practiceLogs = new ArrayList<>();
         }
     }
 
@@ -946,6 +952,24 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
         return new CallResult(backend);
+    }
+
+    private CallResult sendHotlineBeep(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        String target = ctx.request().getParam("target");
+        if( target == null ){
+            throw new RuntimeException("Missing param: target");
+        }
+        conn.commit();
+        req.response().end(jsonEncode(true));
+        HotlineLogDTO log = new HotlineLogDTO();
+        HotlineBeep body = new HotlineBeep();
+        body.target = target;
+        log.kind = "beep";
+        log.body = mapper.writeValueAsString(body);
+        CallResult cr = new CallResult();
+        cr.hotlineLogs.add(log);
+        return cr;
     }
 
     private CallResult listRecentVisits(RoutingContext ctx, Connection conn) throws Exception {
@@ -2256,6 +2280,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("list-pharma-queue-full-for-today", this::listPharmaQueueForToday);
         funcMap.put("delete-kouhi", this::deleteKouhi);
         funcMap.put("enter-hotline", this::enterHotline);
+        funcMap.put("send-hotline-beep", this::sendHotlineBeep);
         funcMap.put("list-visit-with-patient", this::listRecentVisits);
         funcMap.put("delete-conduct", this::deleteConduct);
         funcMap.put("list-pharma-queue-full-for-prescription", this::listPharmaQueueForPrescription);

@@ -42,6 +42,7 @@
                         <textarea rows="3" class="form-control mb-2 x-hotline-input"
                             style="font-size:80%"></textarea>
                         <button class="btn btn-primary btn-sm" type="submit">送信</button>
+                        <button class="btn btn-secondary btn-sm x-beep">Beep</button>
                     </div>
                 </form>
                 <div class="border border-secondary rounded p-2 x-hotline-list"
@@ -58,10 +59,12 @@
 
     (async function () {
         let rest = new Rest("/json");
-        let integration = new Integration("/integration");
+        //let integration = new Integration("/integration");
         let {HotlineController} = await import("../hotline/hotline-controller.js");
         let {parseElement} = await import("./js/parse-node.js");
+        let {PrintAPI} = await import("../js/print-api.js");
 
+        let printAPI = new PrintAPI("http://localhost:48080");
         window.onerror = message => alert(message);
 
         class Menu {
@@ -273,7 +276,7 @@
 
         let hotlineMap = parseElement(document.getElementById("index-hotline-part"));
         let hotlineController = new HotlineController("practice", "reception",
-            hotlineMap.hotlineList, rest);
+            hotlineMap.hotlineList, rest, printAPI);
         await hotlineController.init();
         hotlineMap.hotlineForm.addEventListener("submit", async event => {
             let m = hotlineMap.hotlineInput.value.trim();
@@ -281,6 +284,9 @@
                 await hotlineController.submit(m);
             }
             hotlineMap.hotlineInput.value = "";
+        });
+        hotlineMap.beep.addEventListener("click", async event => {
+            await hotlineController.sendBeep();
         });
 
     })();

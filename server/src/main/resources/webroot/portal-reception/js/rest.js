@@ -123,6 +123,10 @@ export class Rest extends HttpClient {
         return await this.POST("/enter-hotline", hotline);
     }
 
+    async sendHotlineBeep(target){
+        return await this.GET("/send-hotline-beep", {target});
+    }
+
     async listTodaysHotline(){
         return await this.GET("/list-todays-hotline", {});
     }

@@ -37,27 +37,27 @@
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-medcert-link">診断書</a></li>
             </ul>
             <div id="index-hotline-part">
-                <form class="x-hotline-form" onsubmit="return false;">
-                    <div class="mb-2">
-                        <textarea rows="3" class="form-control mb-2 x-hotline-input"
-                            style="font-size:80%"></textarea>
-                        <button class="btn btn-primary btn-sm" type="submit">送信</button>
-                        <button class="btn btn-secondary btn-sm x-roger">了解</button>
-                        <button class="btn btn-secondary btn-sm x-beep">Beep</button>
-                        <div class="dropdown d-inline-block x-freqs-menu">
-                            <button class="btn btn-link btn-sm dropdown-toggle x-hotlinie-freqs"
-                                    data-toggle="dropdown">常用
-                            </button>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" href="javascript:void(0)">おはようございます。</a>
-                                <a class="dropdown-item" href="javascript:void(0)">診察室におねがいします。</a>
-                                <a class="dropdown-item" href="javascript:void(0)">処方箋おねがいします。</a>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-                <div class="border border-secondary rounded p-2 x-hotline-list"
-                     style="max-height: 20em; overflow-y: auto; font-size:80%"></div>
+                <!--                <form class="x-hotline-form" onsubmit="return false;">-->
+                <!--                    <div class="mb-2">-->
+                <!--                        <textarea rows="3" class="form-control mb-2 x-hotline-input"-->
+                <!--                            style="font-size:80%"></textarea>-->
+                <!--                        <button class="btn btn-primary btn-sm" type="submit">送信</button>-->
+                <!--                        <button class="btn btn-secondary btn-sm x-roger">了解</button>-->
+                <!--                        <button class="btn btn-secondary btn-sm x-beep">Beep</button>-->
+                <!--                        <div class="dropdown d-inline-block x-freqs-menu">-->
+                <!--                            <button class="btn btn-link btn-sm dropdown-toggle x-hotlinie-freqs"-->
+                <!--                                    data-toggle="dropdown">常用-->
+                <!--                            </button>-->
+                <!--                            <div class="dropdown-menu">-->
+                <!--                                <a class="dropdown-item" href="javascript:void(0)">おはようございます。</a>-->
+                <!--                                <a class="dropdown-item" href="javascript:void(0)">診察室におねがいします。</a>-->
+                <!--                                <a class="dropdown-item" href="javascript:void(0)">処方箋おねがいします。</a>-->
+                <!--                            </div>-->
+                <!--                        </div>-->
+                <!--                    </div>-->
+                <!--                </form>-->
+                <!--                <div class="border border-secondary rounded p-2 x-hotline-list"-->
+                <!--                     style="max-height: 20em; overflow-y: auto; font-size:80%"></div>-->
             </div>
         </div>
 
@@ -71,7 +71,7 @@
     (async function () {
         let rest = new Rest("/json");
         //let integration = new Integration("/integration");
-        let {HotlineController} = await import("../hotline/hotline-controller.js");
+        let {HotlineComponent} = await import("../hotline/hotline-component.js");
         let {parseElement} = await import("./js/parse-node.js");
         let {PrintAPI} = await import("../js/print-api.js");
 
@@ -285,29 +285,18 @@
             }
         });
 
-        let hotlineMap = parseElement(document.getElementById("index-hotline-part"));
-        let hotlineController = new HotlineController("practice", "reception",
-            hotlineMap.hotlineList, rest, printAPI);
-        await hotlineController.init();
-        hotlineMap.hotlineForm.addEventListener("submit", async event => {
-            let m = hotlineMap.hotlineInput.value.trim();
-            if( m !== "" ){
-                await hotlineController.submit(m);
-            }
-            hotlineMap.hotlineInput.value = "";
-        });
-        hotlineMap.roger.addEventListener("click", async event => {
-            await hotlineController.submit("了解");
-        });
-        hotlineMap.beep.addEventListener("click", async event => {
-            await hotlineController.sendBeep();
-        });
-        hotlineMap.freqsMenu.querySelectorAll(".dropdown-item").forEach(e => {
-            e.addEventListener("click", async event => {
-                let text = event.target.innerText;
-                await hotlineController.submit(text);
-            });
-        });
+        let hotlineComp = new HotlineComponent(
+            document.getElementById("index-hotline-part"),
+            "practice", "recipient",
+            [
+                "おはようございます。",
+                "診察室におねがいします。",
+                "処方箋おねがいします。",
+            ],
+            rest,
+            printAPI
+        );
+        await hotlineComp.init();
 
     })();
 

@@ -7,6 +7,7 @@ import {sexAsKanji} from "../js/sex-util.js";
 export class PatientSearchDialog extends Dialog {
     constructor(ele, map, rest){
         super(ele, map, rest);
+        console.log("dialog rest", rest);
         this.search = map.search;
         this.disp = new PatientDisp(map.disp);
         this.registerEnterElement = map.registerEnter;
@@ -47,7 +48,7 @@ export class PatientSearchDialog extends Dialog {
     async doRegisterEnter(){
         let patient = this.getSelectedPatient();
         if( patient ){
-            let visitId = await rest.startVisit(patient.patientId);
+            let visitId = await this.rest.startVisit(patient.patientId);
             this.setDialogResult({
                 mode: "register-enter",
                 patient: patient,

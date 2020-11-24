@@ -9,6 +9,7 @@ export class KoukikoureiDisp extends DispTable {
         this.add("開始日", validFromRep(koukikourei.validFrom));
         this.add("終了日", validUptoRep(koukikourei.validUpto));
         this.add("負担割", `${koukikourei.futanWari}割`);
+        this.set(koukikourei);
     }
 }
 

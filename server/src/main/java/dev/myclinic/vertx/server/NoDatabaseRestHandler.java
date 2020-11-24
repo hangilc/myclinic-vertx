@@ -1193,9 +1193,9 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private static int savePatientImageCount = 0;
 
     private void savePatientImage(RoutingContext ctx) {
-        if (++savePatientImageCount % 2 == 0) {
-            throw new RuntimeException("Intended save patient image failure");
-        }
+//        if (++savePatientImageCount % 2 == 0) {
+//            throw new RuntimeException("Intended save patient image failure");
+//        }
         try {
             String patientIdParam = ctx.request().getParam("patient-id");
             if (patientIdParam == null || patientIdParam.isEmpty()) {

@@ -8,6 +8,7 @@ export class KouhiDisp extends DispTable {
         this.add("受給者番号", kouhi.jukyuusha);
         this.add("開始日", validFromRep(kouhi.validFrom));
         this.add("終了日", validUptoRep(kouhi.validUpto));
+        this.set(kouhi);
     }
 }
 

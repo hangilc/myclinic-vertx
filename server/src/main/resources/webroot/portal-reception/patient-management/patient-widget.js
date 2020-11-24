@@ -80,9 +80,10 @@ export class PatientWidget extends Widget {
             this.map.workarea.prepend(e);
         } else {
             let part = new NewShahokokuhoBox(this.patient.patientId, this.rest);
-            part.ele.addEventListener("shahokokuho-entered", event => {
+            part.ele.addEventListener("shahokokuho-entered", async event => {
                 part.ele.remove();
                 this.ele.dispatchEvent(new Event("refresh-hoken"));
+                await this.refreshHokenItemLists();
             });
             this.map.workarea.prepend(part.ele);
         }
@@ -95,9 +96,10 @@ export class PatientWidget extends Widget {
             this.map.workarea.prepend(e);
         } else {
             let part = new NewKoukikoureiBox(this.patient.patientId, this.rest);
-            part.ele.addEventListener("koukikourei-entered", event => {
+            part.ele.addEventListener("koukikourei-entered", async event => {
                 part.ele.remove();
                 this.ele.dispatchEvent(new Event("refresh-hoken"));
+                await this.refreshHokenItemLists();
             });
             this.map.workarea.prepend(part.ele);
         }
@@ -110,9 +112,10 @@ export class PatientWidget extends Widget {
             this.map.workarea.prepend(e);
         } else {
             let part = new NewKouhiBox(this.patient.patientId, this.rest);
-            part.ele.addEventListener("kouhi-entered", event => {
+            part.ele.addEventListener("kouhi-entered", async event => {
                 part.ele.remove();
                 this.ele.dispatchEvent(new Event("refresh-hoken"));
+                await this.refreshHokenItemLists();
             });
             this.map.workarea.prepend(part.ele);
         }

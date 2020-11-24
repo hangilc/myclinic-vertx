@@ -10,6 +10,7 @@ export class ShahokokuhoDisp extends DispTable {
         this.add("開始日", validFromRep(shahokokuho.validFrom));
         this.add("終了日", validUptoRep(shahokokuho.validUpto));
         this.add("高齢", koureiRep(shahokokuho.kourei));
+        this.set(shahokokuho);
     }
 }
 

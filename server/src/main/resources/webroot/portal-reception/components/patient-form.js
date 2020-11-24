@@ -24,7 +24,7 @@ let tmpl = `
         <div class="col-sm-2 col-form-label d-flex justify-content-end">生年月日</div>
         <div class="col-sm-10 form-inline x-birthday"></div>
     </div>
-    <div class="form-group row">
+    <div class="form-group row x-sex">
         <div class="col-sm-2 col-form-label d-flex justify-content-end">性別</div>
         <div class="col-sm-10 form-inline">
             <div class="form-check form-check-inline">

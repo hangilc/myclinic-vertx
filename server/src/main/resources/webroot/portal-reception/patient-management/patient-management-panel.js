@@ -57,10 +57,13 @@ export class PatientManagementPanel {
 
     doNewPatient(){
         let w = new NewPatientWidget(this.rest);
-        w.ele.addEventListener("patient-entered", event => {
+        w.ele.addEventListener("patient-entered", async event => {
             let patient = event.detail;
-            console.log(patient);
             w.close();
+            let newWidget = new PatientWidget(patient, this.rest);
+            await newWidget.init();
+            this.map.workarea.prepend(newWidget.ele);
+
         });
         this.map.workarea.prepend(w.ele);
     }

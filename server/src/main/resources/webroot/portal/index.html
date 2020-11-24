@@ -52,8 +52,11 @@
         let {HotlineComponent} = await import("../hotline/hotline-component.js");
         let {parseElement} = await import("./js/parse-node.js");
         let {PrintAPI} = await import("../js/print-api.js");
-
         let printAPI = new PrintAPI("http://localhost:48080");
+        let kanjidate = await import("../js/kanjidate.js");
+
+        window.rest = rest;
+        window.kanjidate = kanjidate;
         window.onerror = message => alert(message);
 
         class Menu {

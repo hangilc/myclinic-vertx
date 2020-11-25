@@ -717,6 +717,14 @@ class Rest extends Client {
         return await this.get("/list-todays-hotline-in-range", {after, before});
     }
 
+    async getDrugFull(drugId){
+        return await this.get("/get-drug-full", {"drug-id": drugId});
+    }
+
+    async getConductFull(conductId){
+        return await this.get("/get-conduct-full", {"conduct-id": conductId});
+    }
+
 }
 
 class Integration extends Client {

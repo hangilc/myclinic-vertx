@@ -1,6 +1,7 @@
 import {Component} from "./component.js";
 import {shinryouSearchEnterWidgetFactory} from "./shinryou-search-enter-widget/shinryou-search-enter-widget.js";
 import {createShohousenPdfForFax} from "./funs.js";
+import {ShinryouKensaDialog} from "./shinryou-kensa-dialog.js";
 
 export class Record extends Component {
     constructor(ele, map, rest) {
@@ -52,6 +53,9 @@ export class Record extends Component {
         this.sendShohousenFaxElement.on("click", event => this.doSendShohousenFax());
         this.createHokenComponent(visitFull.hoken, hokenRep).appendTo(this.hokenWrapperElement);
         this.shinryouMenuElement.on("click", async event => {
+            if( !this.confirmEdit("診療行為を入力しますか？") ){
+                return;
+            }
             let result = await shinryouRegularDialogFactory.create(visitFull.visit.visitId).open();
             if (result.mode === "entered") {
                 if (result.shinryouIds.length > 0) {
@@ -73,8 +77,9 @@ export class Record extends Component {
         visitFull.conducts.forEach(cfull => this.addConduct(cfull));
         let compCharge = chargeFactory.create(visitFull.charge);
         compCharge.appendTo(this.chargeWrapperElement);
+        this.shinryouAuxMenuMap.kensa.on("click", async event => await this.doKensa());
         this.shinryouAuxMenuMap.searchEnter.on("click", event => this.doSearchEnter());
-        this.shinryouAuxMenuMap.copyAll.on("click", event => this.doCopyAll());
+        this.shinryouAuxMenuMap.copyAll.on("click", async event => await this.doCopyAll());
     }
 
     getVisitId(){
@@ -99,7 +104,44 @@ export class Record extends Component {
         this.on("shinryou-copied", (event, targetVisitId, shinryouList) => cb(targetVisitId, shinryouList));
     }
 
-    async doSearchEnter(){
+    confirmEdit(msg){
+        let visitId = this.getVisitId();
+        if( visitId === this.currentVisitManager.getCurrentVisitId() ){
+            return true;
+        }
+        if( visitId === this.currentVisitManager.getTempVisitId() ){
+            return true;
+        }
+        return confirm("現在診察中でありませんが、" + msg);
+    }
+
+    async doKensa(){
+        if( !this.confirmEdit("検査を入力しますか？") ){
+            return;
+        }
+        let dialog = new ShinryouKensaDialog(this.getVisitId(), this.rest);
+        dialog.setTitle("検査入力");
+        let result = await dialog.open();
+        if( result ){
+            for(let shinryouId of result.shinryouIds){
+                let s = await this.rest.getShinryouFull(shinryouId);
+                this.addShinryou(s, true);
+            }
+            for(let drugId of result.drugIds){
+                let d = await this.rest.getDrugFull(drugId);
+                this.addDrug(d);
+            }
+            for(let conductId of result.conductIds){
+                let c = await this.rest.getConductFull(conductId);
+                this.addConduct(c);
+            }
+        }
+    }
+
+    doSearchEnter(){
+        if( !this.confirmEdit("診療行為を入力しますか？") ){
+            return;
+        }
         let widget = shinryouSearchEnterWidgetFactory.create(this.getVisitId(), this.getVisitedAt(), this.rest);
         widget.onEntered(entered => this.addShinryou(entered));
         widget.prependTo(this.shinryouWidgetWorkareaElement);
@@ -234,9 +276,9 @@ export class Record extends Component {
         this.on("text-copied", (event, copiedText) => cb(event, copiedText));
     }
 
-    getVisitId() {
-        return this.visitFull.visit.visitId;
-    }
+    // getVisitId() {
+    //     return this.visitFull.visit.visitId;
+    // }
 
     markAsCurrent() {
         this.ele.addClass("current-visit");

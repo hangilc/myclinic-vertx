@@ -83,6 +83,7 @@ let html = `
                                 data-toggle="dropdown">その他
                         </button>
                         <div class="dropdown-menu x-shinryou-aux-menu_">
+                            <a href="javascript:void(0)" class="x-kensa dropdown-item">検査</a>
                             <a href="javascript:void(0)" class="x-search-enter dropdown-item">検索入力</a>
                             <a href="javascript:void(0)" class="x-copy-all dropdown-item">全部コピー</a>
                         </div>
@@ -513,9 +514,6 @@ let html = `
                                 </label>
                             </div>
                         </div>
-                    </div>
-                    <div>
-                        Foot Row
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1112,6 +1110,14 @@ export async function initLayout(pane, rest, controller) {
         resolveCopyTarget() {
             return controller.getVisitId() || controller.getTempVisitId();
             //return practiceState.getVisitId() || practiceState.getTempVisitId();
+        }
+
+        getCurrentVisitId(){
+            return controller.getVisitId();
+        }
+
+        getTempVisitId(){
+            return controller.getTempVisitId();
         }
     }
 

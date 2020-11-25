@@ -1,4 +1,5 @@
 import {Dialog} from "./dialog.js";
+import {PrintAPI} from "../../js/print-api.js";
 
 export class ShohousenPreviewDialog extends Dialog {
     constructor(ele, map, rest) {
@@ -15,7 +16,9 @@ export class ShohousenPreviewDialog extends Dialog {
         this.dispElement.html("");
         this.dispElement.append(svg);
         this.printElement.on("click", async event => {
-            await this.rest.printDrawer([ops]);
+            let printAPI = new PrintAPI("http://127.0.0.1:48080");
+            await printAPI.print([], [ops], null);
+            //await this.rest.printDrawer([ops]);
             this.hide();
         });
         this.closeElement.on("click", event => this.hide());

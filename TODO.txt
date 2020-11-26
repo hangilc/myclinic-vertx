@@ -1,4 +1,4 @@
-
+* First message of hotline fails (invalid 'after' arg for fillGapMessages in hotlie-controller.js)
 ### FIXED ######################################################
 * 新規患者入力の追加 -- done 2020-10-25
 * 受付で、後期高齢番号入力時、８桁であることを確認 -- fixed 2020-10-24

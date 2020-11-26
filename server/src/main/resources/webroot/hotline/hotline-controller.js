@@ -77,7 +77,8 @@ export class HotlineController {
                 if( (this.lastHotlineId + 1) < hotline.hotlineId ){
                     await this.fillGapMessages(this.lastHotlineId, hotline.hotlineId);
                 }
-                this.addMessage(hotline);
+                await this.addMessage(hotline);
+                await this.doBeep();
             }
         } else if( log.kind === "beep" ){
             await this.doBeep();

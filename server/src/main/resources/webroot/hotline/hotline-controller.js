@@ -48,7 +48,7 @@ export class HotlineController {
         }
     }
 
-    async fillGapMessages(afer, before){
+    async fillGapMessages(after, before){
         let gaps = await this.rest.listTodaysHotlineInRange(after, before);
         for(let hotline of gaps){
             this.addMessage(hotline);

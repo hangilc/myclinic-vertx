@@ -1,3 +1,4 @@
+* Stop error alert of polling in hotline
 * Paper scan の閲覧
 * add get-my-ip rest service (for AWS ACL setup)
 * 会計時に請求額変更できるように (practice)

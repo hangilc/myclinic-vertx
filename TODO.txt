@@ -1,3 +1,4 @@
+* スキャンのアップロードが遅い件 (reception)
 * Stop error alert of polling in hotline
 * Paper scan の閲覧
 * add get-my-ip rest service (for AWS ACL setup)

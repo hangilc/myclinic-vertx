@@ -33,6 +33,7 @@
 </div>
 <script>
     window.onerror = message => alert(message);
+    window.addEventListener("unhandledrejection", event => alert(event.reason));
 
     (async function () {
         let {Menu} = await import("./index-menu.js");

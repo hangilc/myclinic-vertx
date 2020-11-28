@@ -2,6 +2,7 @@
 * Paper scan の閲覧
 * add get-my-ip rest service (for AWS ACL setup)
 * 会計時に請求額変更できるように (practice)
+* 紹介状が機能しない (practice)
 ### FIXED ######################################################
 * Stop error alert of polling in hotline -- 2020-11-28
 * Beep when message accepted (hotline) -- 2020-11-26

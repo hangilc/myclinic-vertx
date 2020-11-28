@@ -54,6 +54,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -318,6 +319,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("delete-app-file", this::deleteAppFile);
         noDatabaseFuncMap.put("save-patient-image", this::savePatientImage);
         noDatabaseFuncMap.put("delete-patient-image", this::deletePatientImage);
+        noDatabaseFuncMap.put("list-patient-image", this::listPatientImage);
         noDatabaseFuncMap.put("view-drawer", this::viewDrawer);
         noDatabaseFuncMap.put("create-temp-file-name", this::createTempFileName);
         noDatabaseFuncMap.put("delete-file", this::deleteFile);
@@ -1262,6 +1264,33 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     }
             );
         } catch (Exception e) {
+            ctx.fail(e);
+        }
+    }
+
+    private void listPatientImage(RoutingContext ctx){
+        try {
+            String patientIdParam = ctx.request().getParam("patient-id");
+            if (patientIdParam == null) {
+                throw new RuntimeException("Missing parameter: patient-id");
+            }
+            int patientId = Integer.parseInt(patientIdParam);
+            GlobalService.AppDirToken dirToken = new GlobalService.AppDirToken(
+                    GlobalService.getInstance().paperScanDirToken,
+                    List.of(String.format("%d", patientId))
+            );
+            Path dirPath = dirToken.resolve();
+            vertx.fileSystem().readDir(dirPath.toString(), ar -> {
+                if( ar.failed() ){
+                    ctx.fail(ar.cause());
+                } else {
+                    List<String> files = ar.result().stream()
+                            .map(f -> Path.of(f).getFileName().toString())
+                            .collect(Collectors.toList());
+                    ctx.response().end(jsonEncode(files));
+                }
+            });
+        } catch(Exception e){
             ctx.fail(e);
         }
     }

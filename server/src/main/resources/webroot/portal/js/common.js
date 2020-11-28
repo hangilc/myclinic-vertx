@@ -727,6 +727,10 @@ class Rest extends Client {
         return await this.get("/get-conduct-full", {"conduct-id": conductId});
     }
 
+    async listPatientImage(patientId){
+        return await this.get("/list-patient-image", {"patient-id": patientId});
+    }
+
 }
 
 class Integration extends Client {

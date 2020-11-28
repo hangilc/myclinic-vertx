@@ -59,6 +59,7 @@
         window.integration = integration;
         window.kanjidate = kanjidate;
         window.onerror = message => alert(message);
+        window.addEventListener("unhandledrejection", event => alert(event.reason));
 
         class Menu {
             constructor(paneWrapper) {

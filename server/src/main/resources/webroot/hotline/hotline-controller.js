@@ -56,16 +56,20 @@ export class HotlineController {
     }
 
     async doCheckMessages(){
-        if( this.lastHotlineId > 0 ){
-            let messages = await this.rest.listHotlineAfter(this.lastHotlineId);
-            for(let m of messages){
-                this.addMessage(m);
+        try {
+            if (this.lastHotlineId > 0) {
+                let messages = await this.rest.listHotlineAfter(this.lastHotlineId);
+                for (let m of messages) {
+                    this.addMessage(m);
+                }
+            } else {
+                let messages = await this.rest.listTodaysHotline();
+                for (let m of messages) {
+                    this.addMessage(m);
+                }
             }
-        } else {
-            let messages = await this.rest.listTodaysHotline();
-            for(let m of messages){
-                this.addMessage(m);
-            }
+        } catch(e){
+            // nop; suppress alert
         }
     }
 

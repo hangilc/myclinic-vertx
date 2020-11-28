@@ -9,7 +9,8 @@ function ajaxGet(url, data) {
             success: resolve,
             error: (xhr, status, err) => {
                 let msg = xhr.responseText || err.toString() || status;
-                alert(msg);
+                //alert(msg);
+                console.error(msg);
                 fail(msg);
             }
         });
@@ -28,7 +29,8 @@ function ajaxPost(url, data, encodeJson = true) {
             success: resolve,
             error: (xhr, status, err) => {
                 let msg = xhr.responseText + " : " + err.toString() + " : " + status;
-                alert(msg);
+                //alert(msg);
+                console.error(msg);
                 fail(msg);
             }
         });

@@ -84,6 +84,32 @@ export class PatientImageList extends Widget {
                     img.width = img.width / 1.5;
                     img.height = img.height / 1.5;
                 });
+                let startX = null;
+                let startY = null;
+                let startScrollLeft = null;
+                let startScrollTop = null;
+                m.preview.addEventListener("mousedown", event => {
+                    if( m.preview.scrollHeight > m.preview.clientHeight ||
+                        m.preview.scrollWidth > m.preview.clientWidth ){
+                        startX = event.clientX;
+                        startY = event.clientY;
+                        startScrollLeft = m.preview.scrollLeft;
+                        startScrollTop = m.preview.scrollTop;
+                    }
+                });
+                m.preview.addEventListener("mousemove", event => {
+                    if( m.preview.scrollHeight > m.preview.clientHeight && startX != null ){
+                        event.preventDefault();
+                        let dx = event.clientX - startX;
+                        let dy = event.clientY - startY;
+                        m.preview.scrollLeft = startScrollLeft - dx;
+                        m.preview.scrollTop = startScrollTop - dy;
+                    }
+                });
+                m.preview.addEventListener("mouseup", event => {
+                    startX = null;
+                    startY = null;
+                });
             }
         }
     }

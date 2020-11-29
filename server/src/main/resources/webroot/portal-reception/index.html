@@ -90,30 +90,6 @@
         );
         await hotlineComp.init();
 
-        // let hotlineMap = parseElement(document.getElementById("index-hotline-part"));
-        // let hotlineController = new HotlineController("reception", "practice",
-        //     hotlineMap.hotlineList, rest, printAPI);
-        // await hotlineController.init();
-        // hotlineMap.hotlineForm.addEventListener("submit", async event => {
-        //     let m = hotlineMap.hotlineInput.value.trim();
-        //     if (m !== "") {
-        //         await hotlineController.submit(m);
-        //     }
-        //     hotlineMap.hotlineInput.value = "";
-        // });
-        // hotlineMap.roger.addEventListener("click", async event => {
-        //     await hotlineController.submit("了解");
-        // });
-        // hotlineMap.beep.addEventListener("click", async event => {
-        //     await hotlineController.sendBeep();
-        // });
-        // hotlineMap.freqsMenu.querySelectorAll(".dropdown-item").forEach(e => {
-        //     e.addEventListener("click", async event => {
-        //         let text = event.target.innerText;
-        //         await hotlineController.submit(text);
-        //     });
-        // });
-
         await menu.simulateClick("main");
 
     })

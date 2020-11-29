@@ -123,6 +123,10 @@ export class Rest extends HttpClient {
         return await this.GET("/list-patient-image", {"patient-id": patientId});
     }
 
+    urlOfPatientImage(patientId, file){
+        return this.composeUrl("/get-patient-image", {"patient-id": patientId, file});
+    }
+
     async getPatientImageBlob(patientId, file){
         return await this.downloadFileBlob("/get-patient-image", {"patient-id": patientId, file})
     }

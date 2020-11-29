@@ -212,6 +212,16 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
+    private void respondFile(RoutingContext ctx, Path path){
+        String ext = getFileExtension(path.getFileName().toString());
+        String mime = mimeMap.get(ext);
+        if( mime == null ){
+            mime = "application/octet-stream";
+        }
+        ctx.response().putHeader("content-type", mime);
+        ctx.response().sendFile(path.toString());
+    }
+
     private void getHokensho(RoutingContext ctx) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
@@ -1312,7 +1322,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     List.of(String.format("%d", patientId))
             );
             GlobalService.AppFileToken fileToken = dirToken.toFileToken(fileParam);
-            ctx.response().sendFile(fileToken.resolve().toString());
+            respondFile(ctx, Path.of(fileToken.resolve().toString()));
         } catch(Exception e){
             ctx.fail(e);
         }

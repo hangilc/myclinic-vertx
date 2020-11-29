@@ -736,6 +736,10 @@ class Rest extends Client {
         return await this.topRest.getPatientImageBlob(patientId, file);
     }
 
+    urlOfPatientImage(patientId, file){
+        return this.topRest.urlOfPatientImage(patientId, file);
+    }
+
 }
 
 class Integration extends Client {

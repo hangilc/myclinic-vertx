@@ -1310,6 +1310,10 @@ export async function initLayout(pane, rest, controller) {
         }
     }
 
+    addPatientChangedListener(patient => {
+        document.getElementById("practice-patient-manip-workarea").innerHTML = "";
+    });
+
     (function () {
         let ele = $("#practice-patient-manip");
         let map = parseElement(ele);

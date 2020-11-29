@@ -32,6 +32,10 @@ let itemTmpl = `
 <option></option>
 `;
 
+let footerTmpl = `
+    <button class="btn btn-secondary x-close">閉じる</button>
+`;
+
 export class PatientImageList extends Widget {
     #rest;
     #patientId = 0;
@@ -42,6 +46,8 @@ export class PatientImageList extends Widget {
         this.setTitle("画像一覧");
         this.bmap = this.setBody(bodyTmpl);
         this.bmap.select.addEventListener("change", async event => await this.doSelect());
+        this.cmap = this.setFooter(footerTmpl);
+        this.cmap.close.addEventListener("click", event => this.close());
     }
 
     async init(patientId) {
@@ -89,6 +95,9 @@ export class PatientImageList extends Widget {
                 let startScrollLeft = null;
                 let startScrollTop = null;
                 m.preview.addEventListener("mousedown", event => {
+                    if( event.buttons !== 1 ){ // if it's not left button click
+                        return;
+                    }
                     if( m.preview.scrollHeight > m.preview.clientHeight ||
                         m.preview.scrollWidth > m.preview.clientWidth ){
                         startX = event.clientX;
@@ -98,6 +107,9 @@ export class PatientImageList extends Widget {
                     }
                 });
                 m.preview.addEventListener("mousemove", event => {
+                    if( event.buttons !== 1 ){
+                        return;
+                    }
                     if( m.preview.scrollHeight > m.preview.clientHeight && startX != null ){
                         event.preventDefault();
                         let dx = event.clientX - startX;

@@ -2,6 +2,7 @@ import {Widget} from "../js/widget.js";
 import {createElementFrom} from "../js/create-element-from.js";
 import {createImageFromBlob} from "../js/createImageFromBlob.js";
 import {parseElement} from "../js/parse-node.js";
+import * as kanjidate from "../js/kanjidate.js";
 
 let defaultScale = 4.0;
 let defaultImageWidth = 210 * defaultScale;
@@ -36,6 +37,33 @@ let footerTmpl = `
     <button class="btn btn-secondary x-close">閉じる</button>
 `;
 
+let dateRegex = /\b(\d{4})(\d{2})(\d{2})/;
+
+class Item {
+    constructor(file){
+        this.file = file;
+        let m = file.match(dateRegex);
+        if( m ){
+            console.log(m);
+            this.date = m[0];
+            this.year = parseInt(m[1]);
+            this.month = parseInt(m[2]);
+            this.day = parseInt(m[3]);
+        } else {
+            this.date = "0000-00-00";
+        }
+    }
+
+    getDateRep(){
+        if( this.year ){
+            let [g, n] = kanjidate.seirekiToGengou(this.year, this.month, this.day);
+            return `${g}${n}年${this.month}月${this.day}日`;
+        } else {
+            return "";
+        }
+    }
+}
+
 export class PatientImageList extends Widget {
     #rest;
     #patientId = 0;
@@ -56,11 +84,32 @@ export class PatientImageList extends Widget {
         if (list.length > 10) {
             this.bmap.select.setAttribute("size", 10);
         }
-        for (let file of list) {
+        let items = list.map(file => new Item(file));
+        items.sort((a, b) => {
+            let da = a.date;
+            let db = b.date;
+            if( da < db ){
+                return -1;
+            } else if( da > db ){
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+        items.reverse();
+        for(let item of items){
+            let date = item.getDateRep();
+            let datePart = date ? ` (${date})` : "";
             let opt = createElementFrom(itemTmpl);
-            opt.innerText = file;
+            opt.innerText = `${item.file}${datePart}`;
+            opt.value = item.file;
             this.bmap.select.append(opt);
         }
+        // for (let file of list) {
+        //     let opt = createElementFrom(itemTmpl);
+        //     opt.innerText = file;
+        //     this.bmap.select.append(opt);
+        // }
     }
 
     async doSelect() {

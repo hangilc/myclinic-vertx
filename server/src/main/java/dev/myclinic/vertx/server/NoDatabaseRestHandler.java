@@ -331,6 +331,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("delete-patient-image", this::deletePatientImage);
         noDatabaseFuncMap.put("list-patient-image", this::listPatientImage);
         noDatabaseFuncMap.put("get-patient-image", this::getPatientImage);
+        noDatabaseFuncMap.put("change-patient-of-image", this::changePatientOfImage);
         noDatabaseFuncMap.put("view-drawer", this::viewDrawer);
         noDatabaseFuncMap.put("create-temp-file-name", this::createTempFileName);
         noDatabaseFuncMap.put("delete-file", this::deleteFile);
@@ -1203,12 +1204,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private static int savePatientImageCount = 0;
-
     private void savePatientImage(RoutingContext ctx) {
-//        if (++savePatientImageCount % 2 == 0) {
-//            throw new RuntimeException("Intended save patient image failure");
-//        }
         try {
             String patientIdParam = ctx.request().getParam("patient-id");
             if (patientIdParam == null || patientIdParam.isEmpty()) {
@@ -1326,6 +1322,63 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         } catch(Exception e){
             ctx.fail(e);
         }
+    }
+
+    private void changePatientOfImage(RoutingContext ctx) throws Exception {
+        String srcPatientIdPara = ctx.request().getParam("src-patient-id");
+        if( srcPatientIdPara == null ){
+            throw new RuntimeException("Missing parameter: src-patient-id");
+        }
+        int srcPatientId = Integer.parseInt(srcPatientIdPara);
+        String srcFile = ctx.request().getParam("src-file");
+        if( srcFile == null ){
+            throw new RuntimeException("Missing parameters: src-file");
+        }
+        String dstPatientIdPara = ctx.request().getParam("dst-patient-id");
+        if( dstPatientIdPara == null ){
+            throw new RuntimeException("Missing parameter: dst-patient-id");
+        }
+        int dstPatientId = Integer.parseInt(dstPatientIdPara);
+        String dstFile = ctx.request().getParam("dst-file");
+        if( dstFile == null ){
+            throw new RuntimeException("Missing parameters: dst-file");
+        }
+        GlobalService.AppDirToken srcDirToken = new GlobalService.AppDirToken(
+                GlobalService.getInstance().paperScanDirToken,
+                List.of(String.format("%d", srcPatientId))
+        );
+        GlobalService.AppFileToken srcFileToken = srcDirToken.toFileToken(srcFile);
+        GlobalService.AppDirToken dstDirToken = new GlobalService.AppDirToken(
+                GlobalService.getInstance().paperScanDirToken,
+                List.of(String.format("%d", dstPatientId))
+        );
+        GlobalService.AppFileToken dstFileToken = dstDirToken.toFileToken(dstFile);
+        System.out.println(srcFileToken.resolve().toString());
+        System.out.println(dstFileToken.resolve().toString());
+        vertx.<Void>executeBlocking(promise -> {
+            try {
+                Files.move(srcFileToken.resolve(), dstFileToken.resolve());
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, ar -> {
+            if (ar.succeeded()) {
+                ctx.response().end(jsonEncode(true));
+            } else {
+                ctx.fail(ar.cause());
+            }
+        });
+//
+//        vertx.fileSystem().move(srcFileToken.resolve().toString(),
+//                dstFileToken.resolve().toString(),
+//                ar -> {
+//                    if( ar.failed() ){
+//                        ctx.fail(ar.cause());
+//                    } else {
+//                        ctx.response().end(jsonEncode(true));
+//                    }
+//                });
     }
 
 

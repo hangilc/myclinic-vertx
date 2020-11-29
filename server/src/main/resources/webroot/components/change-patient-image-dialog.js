@@ -27,6 +27,7 @@ export class ChangePatientImageDialog extends Dialog {
         super();
         this.srcPatientId = srcPatientId;
         this.file = file;
+        this.dstPatientId = null;
         this.rest = rest;
         this.setTitle("画像の患者を変更");
         this.getBody().innerHTML = bodyTmpl;
@@ -35,6 +36,7 @@ export class ChangePatientImageDialog extends Dialog {
         this.getFooter().innerHTML = commandsTmpl;
         this.cmap = parseElement(this.getFooter());
         this.cmap.enter.disabled = true;
+        this.cmap.enter.addEventListener("click", async event => await this.doEnter());
         this.cmap.cancel.addEventListener("click", event => this.close());
     }
 
@@ -52,7 +54,21 @@ export class ChangePatientImageDialog extends Dialog {
         let patient = await this.rest.getPatient(patientId);
         this.bmap.targetPatientLabel.innerText = `${patient.lastName}${patient.firstName}`;
         this.bmap.fileInput.value = this.rewriteFileName(patient.patientId);
+        this.dstPatientId = patient.patientId;
         this.cmap.enter.disabled = false;
+    }
+
+    async doEnter(){
+        let srcPatientId = this.srcPatientId;
+        let srcFile = this.file;
+        let dstPatientId = this.dstPatientId;
+        let dstFile = this.bmap.fileInput.value;
+        if( !(srcPatientId > 0 && dstPatientId > 0 && srcFile && dstFile) ){
+            alert("Invalid setting");
+            return;
+        }
+        await this.rest.changePatientOfImage(srcPatientId, srcFile, dstPatientId, dstFile);
+        this.close(true);
     }
 
     rewriteFileName(targetPatientId){

@@ -131,6 +131,15 @@ export class Rest extends HttpClient {
         return await this.downloadFileBlob("/get-patient-image", {"patient-id": patientId, file})
     }
 
+    async changePatientOfImage(srcPatientId, srcFile, dstPatientId, dstFile){
+        return await this.GET("/change-patient-of-image", {
+            "src-patient-id": srcPatientId,
+            "src-file": srcFile,
+            "dst-patient-id": dstPatientId,
+            "dst-file": dstFile
+        });
+    }
+
     async enterHotline(hotline){
         return await this.POST("/enter-hotline", hotline);
     }

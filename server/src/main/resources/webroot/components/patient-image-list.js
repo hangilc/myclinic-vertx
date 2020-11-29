@@ -46,7 +46,6 @@ class Item {
         this.file = file;
         let m = file.match(dateRegex);
         if( m ){
-            console.log(m);
             this.date = m[0];
             this.year = parseInt(m[1]);
             this.month = parseInt(m[2]);
@@ -90,9 +89,10 @@ export class PatientImageList extends Widget {
     async init(patientId) {
         this.#patientId = patientId;
         let list = await this.#rest.listPatientImage(patientId);
-        if (list.length > 10) {
-            this.bmap.select.setAttribute("size", 10);
-        }
+        let size = list.length;
+        size = Math.max(size, 2);
+        size = Math.min(size, 10);
+        this.bmap.select.setAttribute("size", size);
         let items = list.map(file => new Item(file));
         items.sort((a, b) => {
             let da = a.date;

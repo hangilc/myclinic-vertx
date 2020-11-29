@@ -740,6 +740,9 @@ class Rest extends Client {
         return this.topRest.urlOfPatientImage(patientId, file);
     }
 
+    async changePatientOfImage(srcPatientId, srcFile, dstPatientId, dstFile){
+        return await this.topRest.changePatientOfImage(srcPatientId, srcFile, dstPatientId, dstFile);
+    }
 }
 
 class Integration extends Client {

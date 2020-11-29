@@ -16,6 +16,7 @@ let itemTmpl = `
 export class PatientImageList extends Widget {
     #rest;
     #patientId = 0;
+    #scale = 4.0;
 
     constructor(rest){
         super();
@@ -42,8 +43,8 @@ export class PatientImageList extends Widget {
         let value = this.bmap.select.querySelector("option:checked").value;
         let blob = await this.#rest.getPatientImageBlob(this.#patientId, value);
         let img = createImageFromBlob(blob);
-        img.width = 210;
-        img.height = 297;
+        img.width = 210 * this.#scale;
+        img.height = 297 * this.#scale;
         this.bmap.preview.innerHTML = "";
         this.bmap.preview.append(img);
     }

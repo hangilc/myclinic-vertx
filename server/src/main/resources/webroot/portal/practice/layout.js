@@ -38,14 +38,17 @@ let html = `
         </div>
     </div>
 
-    <div id="practice-patient-manip" class="d-none mx-2 form-inline">
+    <div id="practice-patient-manip" class="d-none mx-2 mb-2 form-inline">
         <button class="x-cashier btn btn-secondary">会計</button>
         <button class="x-end  ml-2 btn btn-secondary">患者終了</button>
         <a href="javascript:void(0)" class="x-register-current  ml-2">診察登録</a>
         <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>
         <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>
         <a href="javascript:void(0)" class="x-upload-image ml-2">画像保存</a>
+        <a href="javascript:void(0)" class="x-list-image ml-2">画像一覧</a>
     </div>
+    
+    <div id="practice-patient-manip-workarea"></div>
 
     <div id="practice-nav-upper"></div>
 
@@ -1073,6 +1076,7 @@ export async function initLayout(pane, rest, controller) {
     let {RegisteredDrugDialog} = await import("./registered-drug-dialog/registered-drug-dialog.js")
     let {UploadImageDialog} = await import("./upload-image-dialog.js");
     let {UploadProgress} = await import("./upload-progress.js");
+    let {PatientImageList} = await import("../../components/patient-image-list.js");
 
     function postStartSession(patientId, visitId) {
         pane.dispatchEvent(new CustomEvent("start-session",
@@ -1372,6 +1376,16 @@ export async function initLayout(pane, rest, controller) {
                     let reporter = new UploadProgress(uploaders);
                     document.getElementById("practice-general-workarea").append(reporter.ele);
                 }
+            }
+        });
+
+        map.listImage.on("click", async event => {
+            let patientId = controller.getPatientId();
+            if( patientId > 0 ){
+                let w = new PatientImageList(rest);
+                await w.init(patientId);
+                let wrapper = document.getElementById("practice-patient-manip-workarea");
+                wrapper.prepend(w.ele);
             }
         });
 

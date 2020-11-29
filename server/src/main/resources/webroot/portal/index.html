@@ -47,7 +47,8 @@
 
 <script>
     (async function () {
-        let rest = new Rest("/json");
+        let {Rest: TopRest} = await import("../js/rest.js");
+        let rest = new Rest("/json", new TopRest("/json"));
         let integration = new Integration("/integration");
         let {HotlineComponent} = await import("../hotline/hotline-component.js");
         let {parseElement} = await import("./js/parse-node.js");

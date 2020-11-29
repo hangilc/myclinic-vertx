@@ -320,6 +320,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("save-patient-image", this::savePatientImage);
         noDatabaseFuncMap.put("delete-patient-image", this::deletePatientImage);
         noDatabaseFuncMap.put("list-patient-image", this::listPatientImage);
+        noDatabaseFuncMap.put("get-patient-image", this::getPatientImage);
         noDatabaseFuncMap.put("view-drawer", this::viewDrawer);
         noDatabaseFuncMap.put("create-temp-file-name", this::createTempFileName);
         noDatabaseFuncMap.put("delete-file", this::deleteFile);
@@ -1294,6 +1295,29 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             ctx.fail(e);
         }
     }
+
+    private void getPatientImage(RoutingContext ctx){
+        try {
+            String patientIdParam = ctx.request().getParam("patient-id");
+            if (patientIdParam == null) {
+                throw new RuntimeException("Missing parameter: patient-id");
+            }
+            int patientId = Integer.parseInt(patientIdParam);
+            String fileParam = ctx.request().getParam("file");
+            if( fileParam == null ){
+                throw new RuntimeException("Missing parameter: file");
+            }
+            GlobalService.AppDirToken dirToken = new GlobalService.AppDirToken(
+                    GlobalService.getInstance().paperScanDirToken,
+                    List.of(String.format("%d", patientId))
+            );
+            GlobalService.AppFileToken fileToken = dirToken.toFileToken(fileParam);
+            ctx.response().sendFile(fileToken.resolve().toString());
+        } catch(Exception e){
+            ctx.fail(e);
+        }
+    }
+
 
     private void saveShujiiImage(RoutingContext ctx) {
         try {

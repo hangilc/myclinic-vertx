@@ -8,13 +8,26 @@ export class HttpClient {
         this.url = url;
     }
 
-    async uploadFileBlob(path, fileBits, filename, attr = null, method = "POST"){
+    composeUrl(path, params){
+        let url = this.url + path;
+        if( params && Object.keys(params).length !== 0 ){
+            let parts = [];
+            for(let key of Object.keys(params) ){
+                let val = params[key];
+                parts.push(encodeURIComponent(key) + "=" + encodeURIComponent(val));
+            }
+            url += "?" + parts.join("&");
+        }
+        return url;
+    }
+
+    async uploadFileBlob(path, fileBits, filename, params = null, method = "POST"){
         let file = new File(fileBits, filename);
         return new Promise((resolve, reject) => {
             let formData = new FormData();
-            if( attr ){
-                for(let key of Object.keys(attr)){
-                    formData.append(key, attr[key]);
+            if( params ){
+                for(let key of Object.keys(params)){
+                    formData.append(key, params[key]);
                 }
             }
             formData.append("file", file);
@@ -35,18 +48,35 @@ export class HttpClient {
         });
     }
 
+    async downloadFileBlob(path, params = null){
+        return new Promise((resolve, reject) => {
+            let xhr = new XMLHttpRequest();
+            let url = this.composeUrl(path, params);
+            xhr.responseType = "arraybuffer";
+            xhr.onload = event => {
+                resolve(xhr.response);
+            };
+            xhr.onerror = event => {
+                reject(xhr.statusText + ": " + xhr.responseText);
+            };
+            xhr.open("GET", url);
+            xhr.send();
+        });
+    }
+
     REQUEST(method, path, params, body){
         return new Promise((resolve, reject) => {
             let xhr = new XMLHttpRequest();
-            let url = this.url + path;
-            if( params && Object.keys(params).length !== 0 ){
-                let parts = [];
-                for(let key of Object.keys(params) ){
-                    let val = params[key];
-                    parts.push(encodeURIComponent(key) + "=" + encodeURIComponent(val));
-                }
-                url += "?" + parts.join("&");
-            }
+            let url = this.composeUrl(path, params);
+            // let url = this.url + path;
+            // if( params && Object.keys(params).length !== 0 ){
+            //     let parts = [];
+            //     for(let key of Object.keys(params) ){
+            //         let val = params[key];
+            //         parts.push(encodeURIComponent(key) + "=" + encodeURIComponent(val));
+            //     }
+            //     url += "?" + parts.join("&");
+            // }
             xhr.onload = e => {
                 let contentType = xhr.getResponseHeader("Content-Type");
                 if( contentType.startsWith("application/json") ){

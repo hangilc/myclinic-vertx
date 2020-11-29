@@ -84,8 +84,9 @@ class Client {
 }
 
 class Rest extends Client {
-    constructor(baseUrl) {
+    constructor(baseUrl, topRest) {
         super(baseUrl);
+        this.topRest = topRest;
     }
 
     async listWqueueFullForExam(){
@@ -728,7 +729,11 @@ class Rest extends Client {
     }
 
     async listPatientImage(patientId){
-        return await this.get("/list-patient-image", {"patient-id": patientId});
+        return await this.topRest.listPatientImage(patientId);
+    }
+
+    async getPatientImageBlob(patientId, file){
+        return await this.topRest.getPatientImageBlob(patientId, file);
     }
 
 }

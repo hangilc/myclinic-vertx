@@ -1386,7 +1386,7 @@ export async function initLayout(pane, rest, controller) {
         map.listImage.on("click", async event => {
             let patientId = controller.getPatientId();
             if( patientId > 0 ){
-                let w = new PatientImageList(rest);
+                let w = new PatientImageList(rest, true);
                 await w.init(patientId);
                 let wrapper = document.getElementById("practice-patient-manip-workarea");
                 wrapper.prepend(w.ele);

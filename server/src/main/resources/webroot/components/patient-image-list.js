@@ -3,6 +3,7 @@ import {createElementFrom} from "../js/create-element-from.js";
 import {createImageFromBlob} from "../js/createImageFromBlob.js";
 import {parseElement} from "../js/parse-node.js";
 import * as kanjidate from "../js/kanjidate.js";
+import {ChangePatientImageDialog} from "./change-patient-image-dialog.js";
 
 let defaultScale = 4.0;
 let defaultImageWidth = 210 * defaultScale;
@@ -34,6 +35,7 @@ let itemTmpl = `
 `;
 
 let footerTmpl = `
+    <button class="btn btn-secondary d-none x-change-patient">患者変更</button>
     <button class="btn btn-secondary x-close">閉じる</button>
 `;
 
@@ -66,16 +68,23 @@ class Item {
 
 export class PatientImageList extends Widget {
     #rest;
+    #isAdmin;
     #patientId = 0;
+    #file = null;
 
-    constructor(rest) {
+    constructor(rest, isAdmin = false) {
         super();
         this.#rest = rest;
+        this.#isAdmin = isAdmin;
         this.setTitle("画像一覧");
         this.bmap = this.setBody(bodyTmpl);
         this.bmap.select.addEventListener("change", async event => await this.doSelect());
         this.cmap = this.setFooter(footerTmpl);
         this.cmap.close.addEventListener("click", event => this.close());
+        if( this.#isAdmin ){
+            this.cmap.changePatient.classList.remove("d-none");
+            this.cmap.changePatient.addEventListener("click", async event => await this.doChangePatient());
+        }
     }
 
     async init(patientId) {
@@ -105,15 +114,12 @@ export class PatientImageList extends Widget {
             opt.value = item.file;
             this.bmap.select.append(opt);
         }
-        // for (let file of list) {
-        //     let opt = createElementFrom(itemTmpl);
-        //     opt.innerText = file;
-        //     this.bmap.select.append(opt);
-        // }
     }
 
     async doSelect() {
         let wrapper = this.bmap.previewWrapper;
+        wrapper.innerHTML = "";
+        this.#file = null;
         let file = this.bmap.select.querySelector("option:checked").value;
         if (file) {
             if( file.endsWith(".pdf") ){
@@ -172,6 +178,14 @@ export class PatientImageList extends Widget {
                     startY = null;
                 });
             }
+            this.#file = file;
+        }
+    }
+
+    async doChangePatient(){
+        if( this.#patientId > 0 && this.#file ){
+            let dialog = new ChangePatientImageDialog(this.#patientId, this.#file, this.#rest);
+            await dialog.open();
         }
     }
 

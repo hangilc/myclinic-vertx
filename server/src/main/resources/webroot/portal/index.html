@@ -46,7 +46,9 @@
 </div>
 
 <script>
+
     (async function () {
+        let {Menu} = await import("../js/index-menu.js");
         let {Rest: TopRest} = await import("../js/rest.js");
         let rest = new Rest("/json", new TopRest("/json"));
         let integration = new Integration("/integration");
@@ -56,218 +58,96 @@
         let printAPI = new PrintAPI("http://localhost:48080");
         let kanjidate = await import("../js/kanjidate.js");
 
+        let practice = await import("./practice/practice.js");
+        let cashier = await import("./cashier/cashier.js");
+        let reception = await import("./reception/reception.js");
+        let faxedShohousen = await import("./faxed-shohousen/faxed-shohousen.js");
+        let houmonKango = await import("./houmon-kango/houmon-kango.js");
+        let shujii = await import("./shujii/shujii.js");
+        let sendFax = await import("./send-fax/send-fax.js");
+        let printerSetting = await import("./printer-setting/printer-setting.js");
+        let refer = await import("./refer/refer.js");
+        let medcert = await import("./medcert/medcert.js");
+
         window.rest = rest;
         window.integration = integration;
         window.kanjidate = kanjidate;
         window.onerror = message => alert(message);
         window.addEventListener("unhandledrejection", event => alert(event.reason));
 
-        class Menu {
-            constructor(paneWrapper) {
-                this._clearNode(paneWrapper);
-                this.paneWrapper = paneWrapper;
-                this.itemMap = {};
-                this.currentItem = null;
-            }
-
-            addItem(name, item) {
-                let info = {
-                    name: name,
-                    link: item.link,
-                    savedElement: null,
-                    item: item
-                };
-                this.itemMap[name] = info;
-                if (item.init) {
-                    item.init(this);
-                }
-                item.link.onclick = async event => await this.simulateClick(name);
-            }
-
-            async simulateClick(name) {
-                if (name === this.currentItem) {
-                    return;
-                }
-                let info = this.itemMap[name];
-                let item = info.item;
-                this._saveCurrentItem();
-                this._clearNode(this.paneWrapper);
-                if (info.savedElement) {
-                    this.paneWrapper.appendChild(info.savedElement);
-                    this.currentItem = name;
-                    this._setActive(name);
-                    if (item.onReloaded) {
-                        item.onReloaded(info.savedElement);
-                    }
-                } else {
-                    let pane = document.createElement("div");
-                    this._clearNode(this.paneWrapper);
-                    this.paneWrapper.appendChild(pane);
-                    // TODO: use MutationObserver to confirm that panel is ready
-                    await item.start(pane, () => {
-                        this.currentItem = name;
-                        this._setActive(name);
-                    }, async () => await this._restart(name));
-                }
-            }
-
-            async _restart(name) {
-                this._saveCurrentItem();
-                let info = this.itemMap[name];
-                let item = info.item;
-                info.savedElement = null;
-                await this.simulateClick(name);
-            }
-
-            _setActive(name) {
-                Object.keys(this.itemMap).forEach(key => {
-                    let link = this.itemMap[key].link;
-                    if (key === name) {
-                        link.classList.add("active");
-                    } else {
-                        link.classList.remove("active");
-                    }
-                });
-            }
-
-            _clearNode(node) {
-                if (node) {
-                    while (node.firstChild) {
-                        node.removeChild(node.firstChild);
-                    }
-                }
-            }
-
-            _saveCurrentItem() {
-                let c = this.currentItem;
-                if (c) {
-                    let info = this.itemMap[c];
-                    info.savedElement = this.paneWrapper.firstElementChild;
-                    this.paneWrapper.removeChild(info.savedElement);
-                    this.currentItem = null;
-                }
-            }
-        }
-
         let menu = new Menu(document.getElementById("index-pane-wrapper"));
-        menu.addItem("practice", {
-            link: document.getElementById("index-practice-link"),
-            async start(pane, cb, reload) {
-                let practice = await import("./practice/practice.js");
-                pane.innerHTML = practice.getHtml();
-                await practice.initPractice(pane, rest);
-                cb();
-            },
-            onReloaded(pane) {
+        menu.addItem("practice", e => {
+            e.innerHTML = practice.getHtml();
+            return {
+                postConstruct: async () => {
+                    await practice.initPractice(e, rest);
+                },
+                reloadHook: async () => {
+                }
+            };
+        }, document.getElementById("index-practice-link"));
+        menu.addItem("cashier", e => {
+            e.innerHTML = cashier.getHtml();
+            return {
+                postConstruct: async () => await cashier.initCashier(e),
+                reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
             }
-        });
-        menu.addItem("cashier", {
-            link: document.getElementById("index-cashier-link"),
-            async start(pane, cb) {
-                let cashier = await import("./cashier/cashier.js");
-                pane.innerHTML = cashier.getHtml();
-                await cashier.initCashier(pane);
-                cb();
-            },
-            onReloaded(pane) {
-                pane.dispatchEvent(new Event("onreloaded"))
+        }, document.getElementById("index-cashier-link"));
+        menu.addItem("reception", e => {
+            e.innerHTML = reception.getHtml();
+            return {
+                postConstruct: async () => await reception.initReception(e),
+                reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
             }
-        });
-        menu.addItem("reception", {
-            link: document.getElementById("index-reception-link"),
-            async start(pane, cb) {
-                let app = await import("./reception/reception.js");
-                pane.innerHTML = app.getHtml();
-                await app.initReception(pane);
-                cb();
-            },
-            onReloaded(pane) {
-                pane.dispatchEvent(new Event("onreloaded"))
+        }, document.getElementById("index-reception-link"));
+        menu.addItem("faxed-shohousen", e => {
+            e.innerHTML = faxedShohousen.getHtml();
+            return {
+                postConstruct: async () => await faxedShohousen.initFaxedShohousen(e),
+                reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
             }
-        });
-        menu.addItem("faxed-shohousen", {
-            link: document.getElementById("index-faxed-shohousen-link"),
-            async start(pane, cb) {
-                let app = await import("./faxed-shohousen/faxed-shohousen.js");
-                pane.innerHTML = app.getHtml();
-                await app.initFaxedShohousen(pane);
-                cb();
-            },
-            onReloaded(pane) {
-                pane.dispatchEvent(new Event("onreloaded"))
+        }, document.getElementById("index-faxed-shohousen-link"));
+        menu.addItem("houmon-kango", e => {
+            return {
+                postConstruct: async () => await houmonKango.initHoumonKango(e),
+                reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
             }
-        });
-        menu.addItem("houmon-kango", {
-            link: document.getElementById("index-houmon-kango-link"),
-            async start(pane, cb) {
-                let app = await import("./houmon-kango/houmon-kango.js");
-                await app.initHoumonKango(pane);
-                cb();
-            },
-            onReloaded(pane) {
-                pane.dispatchEvent(new Event("onreloaded"))
+        }, document.getElementById("index-houmon-kango-link"));
+        menu.addItem("shujii", e => {
+            e.innerHTML = shujii.getHtml();
+            return {
+                postConstruct: async () => await shujii.initShujii(e),
+                reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
             }
-        });
-        menu.addItem("shujii", {
-            link: document.getElementById("index-shujii-link"),
-            async start(pane, cb, reload) {
-                let app = await import("./shujii/shujii.js");
-                pane.innerHTML = app.getHtml();
-                await app.initShujii(pane, reload);
-                cb();
-            },
-            onReloaded(pane) {
-                pane.dispatchEvent(new Event("onreloaded"))
+        }, document.getElementById("index-shujii-link"));
+        menu.addItem("send-fax", e => {
+            e.innerHTML = sendFax.getHtml();
+            return {
+                postConstruct: async () => await sendFax.initSendFax(e),
+                reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
             }
-        });
-        menu.addItem("send-fax", {
-            link: document.getElementById("index-send-fax-link"),
-            async start(pane, cb, reload) {
-                let app = await import("./send-fax/send-fax.js");
-                pane.innerHTML = app.getHtml();
-                await app.initSendFax(pane, reload);
-                cb();
-            },
-            onReloaded(pane) {
-                pane.dispatchEvent(new Event("onreloaded"))
+        }, document.getElementById("index-send-fax-link"));
+        menu.addItem("printer-setting", e => {
+            e.innerHTML = printerSetting.getHtml();
+            return {
+                postConstruct: async () => await printerSetting.initPrinterSetting(e),
+                reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
             }
-        });
-        menu.addItem("printer-setting", {
-            link: document.getElementById("index-printer-setting-link"),
-            async start(pane, cb, reload) {
-                let app = await import("./printer-setting/printer-setting.js");
-                pane.innerHTML = app.getHtml();
-                await app.initPrinterSetting(pane, reload);
-                cb();
-            },
-            onReloaded(pane) {
-                pane.dispatchEvent(new Event("onreloaded"))
+        }, document.getElementById("index-printer-setting-link"));
+        menu.addItem("refer", e => {
+            e.innerHTML = refer.getHtml();
+            return {
+                postConstruct: async () => await refer.initRefer(e),
+                reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
             }
-        });
-        menu.addItem("refer", {
-            link: document.getElementById("index-refer-link"),
-            async start(pane, cb, reload) {
-                let app = await import("./refer/refer.js");
-                pane.innerHTML = app.getHtml();
-                await app.initRefer(pane, reload);
-                cb();
-            },
-            onReloaded(pane) {
-                pane.dispatchEvent(new Event("onreloaded"))
+        }, document.getElementById("index-refer-link"));
+        menu.addItem("medcert", e => {
+            e.innerHTML = medcert.getHtml();
+            return {
+                postConstruct: async () => await medcert.initMedcert(e),
+                reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
             }
-        });
-        menu.addItem("medcert", {
-            link: document.getElementById("index-medcert-link"),
-            async start(pane, cb, reload) {
-                let app = await import("./medcert/medcert.js");
-                pane.innerHTML = app.getHtml();
-                await app.initMedcert(pane, reload);
-                cb();
-            },
-            onReloaded(pane) {
-                pane.dispatchEvent(new Event("onreloaded"))
-            }
-        });
+        }, document.getElementById("index-medcert-link"));
 
         let hotlineComp = new HotlineComponent(
             document.getElementById("index-hotline-part"),
@@ -282,7 +162,6 @@
             printAPI
         );
         await hotlineComp.init();
-
     })();
 
 </script>

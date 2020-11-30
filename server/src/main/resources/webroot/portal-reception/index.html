@@ -36,7 +36,7 @@
     window.addEventListener("unhandledrejection", event => alert(event.reason));
 
     (async function () {
-        let {Menu} = await import("./index-menu.js");
+        let {Menu} = await import("../js/index-menu.js");
         let {MainPanel} = await import("./main/main-panel.js");
         let {PatientManagementPanel} = await import("./patient-management/patient-management-panel.js");
         let {ScanPanel} = await import("./scan/scan-panel.js");

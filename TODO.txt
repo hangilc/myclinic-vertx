@@ -2,6 +2,7 @@
 * 会計時に請求額変更できるように (practice)
 * 紹介状が機能しない (practice)
 * Paper-scan 患者変更の polish (practice)
+* set label for regular shinryou input (practice)
 ### FIXED ######################################################
 * Beep の調整。送信もとでも beep してしまう。(practice, reception) -- 2020-11-30
 * Paper scan の閲覧 -- 2020-11-28

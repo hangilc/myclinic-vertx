@@ -263,9 +263,10 @@ export class ScanPanel {
             throw new Error("患者が設定されていません。");
         }
         this.map.scanProgress.innerText = "スキャンの準備中";
+        let resolution = 100;
         let file = await this.printAPI.scan(deviceId, pct => {
             this.map.scanProgress.innerText = `${pct}%`;
-        });
+        }, resolution);
         this.map.scanProgress.innerText = "スキャン終了";
         await item.deleteScannedFile();
         item.setScannedFile(file);

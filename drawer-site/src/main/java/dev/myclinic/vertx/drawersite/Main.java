@@ -164,13 +164,18 @@ public class Main {
                         }
                     }
                     System.out.printf("deviceId: %s\n", deviceId);
+                    int resolution = 100;
+                    String resolutionParam = handler.getParam("resolution");
+                    if( resolutionParam != null ){
+                        resolution = Integer.parseInt(resolutionParam);
+                    }
                     Path savePath = createScannedImagePath();
                     handler.getExchange().getResponseHeaders().add("Content-type", "plain/text");
                     handler.getExchange().getResponseHeaders().add("Access-control-expose-headers", "X-saved-image");
                     handler.getExchange().getResponseHeaders().add("X-saved-image", savePath.getFileName().toString());
                     handler.getExchange().sendResponseHeaders(200, 10);
                     int[] ints = new int[]{0};
-                    ScanTask task = new ScanTask(deviceId, savePath, 200, pct -> {
+                    ScanTask task = new ScanTask(deviceId, savePath, resolution, pct -> {
                         int i = pct / 10;
                         if (i > ints[0]) {
                             System.out.printf("ENTER %d\n", i);

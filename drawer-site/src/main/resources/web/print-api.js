@@ -67,13 +67,22 @@ export class PrintAPI {
         return await this.GET("/scanner/device/", {});
     }
 
-    async scan(deviceId = null, progress = null){
+    async scan(deviceId = null, progress = null, resolution = null){
         return new Promise((resolve, reject) => {
             if( progress == null ){
                 progress = pct => {};
             }
             let xhr = new XMLHttpRequest();
             let url = this.url + "/scanner/scan";
+            let hasParam = false;
+            if( resolution ){
+                if( !hasParam ){
+                    url += "?";
+                    hasParam = true;
+                }
+                let resolutionParam = encodeURIComponent(resolution);
+                url += `resolution=${resolutionParam}`;
+            }
             xhr.responseType = "";
             xhr.onprogress = event => {
                 if( event.total !== 0 ){

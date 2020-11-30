@@ -85,7 +85,11 @@ export class HotlineController {
                 await this.doBeep();
             }
         } else if( log.kind === "beep" ){
-            await this.doBeep();
+            let target = JSON.parse(log.body).target;
+            if( target === this.name ){
+                console.log("beep");
+                await this.doBeep();
+            }
         }
     }
 

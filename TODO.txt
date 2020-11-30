@@ -1,9 +1,9 @@
-* Beep の調整。送信もとでも beep してしまう。(practice, reception)
 * スキャンのアップロードが遅い件 (reception)
 * 会計時に請求額変更できるように (practice)
 * 紹介状が機能しない (practice)
 * Paper-scan 患者変更の polish (practice)
 ### FIXED ######################################################
+* Beep の調整。送信もとでも beep してしまう。(practice, reception) -- 2020-11-30
 * Paper scan の閲覧 -- 2020-11-28
 * Stop error alert of polling in hotline -- 2020-11-28
 * Beep when message accepted (hotline) -- 2020-11-26

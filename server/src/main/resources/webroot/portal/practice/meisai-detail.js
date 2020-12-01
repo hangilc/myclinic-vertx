@@ -13,6 +13,10 @@ export class MeisaiDetail extends Component {
             return `${sect.label}：${sect.sectionTotalTen.toLocaleString()} 点`;
         }).join("\n"));
         this.summaryElement.text(`総点：${meisai.totalTen.toLocaleString()} 点、負担割：${meisai.futanWari}割`);
-        this.valueElement.text(`請求額：${meisai.charge.toLocaleString()} 円`);
+        this.updateChargeValue(meisai.charge);
+    }
+
+    updateChargeValue(chargeValue){
+        this.valueElement.text(`請求額：${chargeValue.toLocaleString()} 円`);
     }
 }

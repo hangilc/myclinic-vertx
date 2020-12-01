@@ -6,6 +6,11 @@ export class MeisaiDialog extends Dialog {
         super(ele, map, rest);
         this.detailElement = map.detail_;
         this.detailMap = map.detail;
+        this.modifyChargeButton = this.detailMap.modifyChargeButton;
+        this.modifyChargeWorkarea = this.detailMap.modifyChargeWorkarea;
+        this.modifyChargeInput = this.detailMap.modifyChargeInput;
+        this.modifyChargeEnter = this.detailMap.modifyChargeEnter;
+        this.modifyChargeCancel = this.detailMap.modifyChargeCancel;
         this.enterElement = map.enter;
         this.cancelElement = map.cancel;
         this.setDialogResult(false);
@@ -22,6 +27,22 @@ export class MeisaiDialog extends Dialog {
         this.cancelElement.on("click", event => {
             this.setDialogResult(false);
             this.hide();
+        });
+        this.modifyChargeButton.on("click", event => {
+            this.modifyChargeWorkarea.removeClass("d-none");
+        });
+        this.modifyChargeEnter.on("click", event => {
+            let v = parseInt(this.modifyChargeInput.val().trim());
+            if( isNaN(v) ){
+                alert("請求額の入力が不適切です。");
+            } else {
+                meisai.charge = v;
+                meisaiDetail.updateChargeValue(v);
+                this.modifyChargeWorkarea.addClass("d-none");
+            }
+        });
+        this.modifyChargeCancel.on("click", event => {
+            this.modifyChargeWorkarea.addClass("d-none");
         });
     }
 

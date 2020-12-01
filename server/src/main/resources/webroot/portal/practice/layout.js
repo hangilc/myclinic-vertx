@@ -690,7 +690,16 @@ let html = `
                     <div class="x-detail_">
                         <pre class="x-items"></pre>
                         <div class="x-summary"></div>
-                        <div class="x-value"></div>
+                        <div class="mb-2 x-value-wrapper">
+                            <span class="x-value"></span> 
+                            <a href="javascript:void(0)" class="x-modify-charge-button">変更</a>
+                        </div>
+                        <div class="d-none form-inline x-modify-charge-workarea">
+                            <input type="text" class="form-control mr-2 x-modify-charge-input"/>
+                            <span class="mr-2">円</span>
+                            <button class="btn btn-primary btn-sm mr-2 x-modify-charge-enter">入力</button>
+                            <button class="btn btn-secondary btn-sm x-modify-charge-cancel">キャンセル</button>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

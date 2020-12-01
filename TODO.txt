@@ -1,3 +1,4 @@
+* Beep 解決していない。(practice, reception)
 * スキャンのアップロードが遅い件 (reception)
 * 紹介状が機能しない (practice)
 * Paper-scan 患者変更の polish (practice)

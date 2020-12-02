@@ -126,6 +126,18 @@ export class PrintAPI {
         return await this.GET("/beep", {});
     }
 
+    async createUploadJob(job){  // job: dev.myclinic.vertx.drawersite.UploadJob
+        return await this.POST("/upload-job");
+    }
+
+    async deleteUploadJob(jobName){
+        return await this.DELETE("/upload-job/" + jobName);
+    }
+
+    async listUploadJob(){
+        return await this.GET("/upload-job/");
+    }
+
     UPLOAD(path, files, fileNameToStoreNameConv = null, progress = null,
            additionalFormDataParams = null){
         return new Promise((resolve, reject) => {

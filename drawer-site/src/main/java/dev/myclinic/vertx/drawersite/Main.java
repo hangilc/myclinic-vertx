@@ -3,7 +3,6 @@ package dev.myclinic.vertx.drawersite;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.sun.net.httpserver.HttpExchange;
 import dev.myclinic.vertx.drawer.JacksonOpDeserializer;
 import dev.myclinic.vertx.drawer.JacksonOpSerializer;
 import dev.myclinic.vertx.drawer.Op;
@@ -29,7 +28,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         CmdArgs cmdArgs = CmdArgs.parse(args);
         String bind = "127.0.0.1";
-        int port = 48080;
+        int port = cmdArgs.port;
         Server server = new Server(bind, port, 6);
         System.out.printf("Drawer-site server is listening to %s:%d\n", bind, port);
         server.addContext("/ping", handler -> handler.sendText("pong"));
@@ -40,6 +39,17 @@ public class Main {
         server.addContext("/scanner/scan", Main::handleScannerScan);
         server.addContext("/scanner/mock-scan", Main::handleScannerMockScan);
         server.addContext("/scanner/image/", Main::handleScannerImage);
+        server.addContext("/upload-job", UploadJobHandlers::createJob);
+        server.addContext("/upload-job/", handler -> {
+            String[] subpaths = handler.getSubPaths();
+            if( subpaths.length == 0 ) { // "/upload-job/"
+                UploadJobHandlers.listJobs(handler);
+            } else if( subpaths.length == 1 ){ // "/upload-job/jobname
+                UploadJobHandlers.handleJob(handler, subpaths[0]);
+            } else {
+                handler.sendError("Invalid access to /upload-job/");
+            }
+        });
         server.addContext("/beep", Main::handleBeep);
         server.addContext("/web/", handler -> {
             if (cmdArgs.isDev) {
@@ -55,7 +65,7 @@ public class Main {
     }
 
     private static void handleBeep(Handler handler) throws Exception {
-        switch(handler.getMethod()){
+        switch (handler.getMethod()) {
             case "OPTIONS": {
                 handler.respondToOptions(List.of("GET", "OPTIONS"));
                 break;
@@ -74,17 +84,17 @@ public class Main {
     }
 
     private static void handleScannerImage(Handler handler) throws Exception {
-        switch(handler.getMethod()){
+        switch (handler.getMethod()) {
             case "OPTIONS": {
                 handler.respondToOptions(List.of("GET", "DELETE", "OPTIONS"));
                 break;
             }
             case "GET": {
                 String[] subpaths = handler.getSubPaths();
-                if( subpaths.length == 0 ){ // "/scanner/image/"
+                if (subpaths.length == 0) { // "/scanner/image/"
                     handler.allowCORS();
                     handler.sendJson(listScannedImage());
-                } else if( subpaths.length == 1 ){  // "/scanner/image/scanned-image...jpg"
+                } else if (subpaths.length == 1) {  // "/scanner/image/scanned-image...jpg"
                     handler.allowCORS();
                     String filename = subpaths[0];
                     Path path = getScannedImage(filename);
@@ -96,7 +106,7 @@ public class Main {
             }
             case "DELETE": {
                 String[] subpaths = handler.getSubPaths();
-                if( subpaths.length == 1 ){
+                if (subpaths.length == 1) {
                     handler.allowCORS();
                     String filename = subpaths[0];
                     Path path = getScannedImage(filename);
@@ -166,7 +176,7 @@ public class Main {
                     System.out.printf("deviceId: %s\n", deviceId);
                     int resolution = 100;
                     String resolutionParam = handler.getParam("resolution");
-                    if( resolutionParam != null ){
+                    if (resolutionParam != null) {
                         resolution = Integer.parseInt(resolutionParam);
                     }
                     Path savePath = createScannedImagePath();
@@ -191,7 +201,7 @@ public class Main {
                         }
                     });
                     task.run();
-                    for(int j=ints[0]+1;j<=10;j++){
+                    for (int j = ints[0] + 1; j <= 10; j++) {
                         try {
                             handler.getExchange().getResponseBody().write("*".getBytes());
                             handler.getExchange().getResponseBody().flush();
@@ -468,7 +478,7 @@ public class Main {
         return mapper;
     }
 
-    private static Path getDataDir() throws IOException {
+    static Path getDataDir() throws IOException {
         Path dir = Path.of(System.getProperty("user.home"), "drawer-site-data");
         if (!Files.exists(dir)) {
             Files.createDirectories(dir);
@@ -493,7 +503,7 @@ public class Main {
     private static List<String> listScannedImage() throws IOException {
         Path dir = getScannedImagesDir();
         String[] list = dir.toFile().list();
-        if( list == null ){
+        if (list == null) {
             return Collections.emptyList();
         } else {
             return Arrays.asList(list);
@@ -501,7 +511,7 @@ public class Main {
     }
 
     private static Path getScannedImage(String filename) throws IOException {
-        if( filename.contains("/") || filename.contains("\\") ){
+        if (filename.contains("/") || filename.contains("\\")) {
             throw new RuntimeException("Invalid image file name.");
         }
         return getScannedImagesDir().resolve(filename);

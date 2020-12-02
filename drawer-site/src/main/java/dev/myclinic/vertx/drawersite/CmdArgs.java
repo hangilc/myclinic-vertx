@@ -3,6 +3,7 @@ package dev.myclinic.vertx.drawersite;
 class CmdArgs {
 
     public boolean isDev;
+    public int port = 48080;
 
     public static void usage(){
         System.err.println("usage: drawer-site [OPTIONS]");
@@ -16,6 +17,10 @@ class CmdArgs {
             switch(arg){
                 case "--dev": {
                     cmdArgs.isDev = true;
+                    break;
+                }
+                case "--port": {
+                    cmdArgs.port = Integer.parseInt(args[++i]);
                     break;
                 }
                 default: {

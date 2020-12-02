@@ -74,6 +74,13 @@ public class Data {
         return m.find();
     }
 
+    private final static Pattern presc0410Pattern = Pattern.compile("\\n@0410対応");
+
+    public static boolean is0410Presc(String content){
+        Matcher m = presc0410Pattern.matcher(content);
+        return m.find();
+    }
+
     private final static Pattern pharmaFaxPattern = Pattern.compile("^(.+)にファックス（(\\+\\d+)）");
 
     public static class PharmaFax {

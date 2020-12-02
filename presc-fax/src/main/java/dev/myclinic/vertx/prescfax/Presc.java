@@ -33,42 +33,74 @@ public class Presc {
         this.patient = patient;
     }
 
+    public static class PrescError extends RuntimeException {
+        public String kind;
+        public String message;
+        public int visitId;
+
+        public PrescError(String kind, String message, int visitId) {
+            this.kind = kind;
+            this.message = message;
+            this.visitId = visitId;
+        }
+    }
+
+    private static Presc probeVisit(Client client, int visitId){
+        List<TextDTO> texts = client.listText(visitId);
+        String presc = null;
+        boolean is0410 = false;
+        Data.PharmaFax pharmaFax = null;
+        boolean handled = false;
+        for(TextDTO text: texts) {
+            if (Data.isPrescContent(text.content)) {
+                if (presc != null) {
+                    throw new PrescError("multiple-prescriptions",
+                            "複数の処方箋が発行されています。",
+                            visitId);
+                    //throw new RuntimeException("Multiple prescriptions.");
+                }
+                presc = text.content;
+                if( Data.is0410Presc(text.content) ){
+                    is0410 = true;
+                }
+                continue;
+            }
+            if (presc != null) {
+                Data.PharmaFax pf = Data.isPharmaFax(text.content);
+                if (pf != null) {
+                    if (pharmaFax != null) {
+                        throw new PrescError("multiple-pharmacies",
+                                "薬局が複数設定されています。",
+                                visitId);
+                        //throw new RuntimeException("Multiple pharma faxes.");
+                    }
+                    pharmaFax = pf;
+                } else if (Data.isPrescNotFax(text.content)) {
+                    handled = true;
+                }
+            }
+        }
+        if( presc != null && is0410 && !handled ){
+            if( pharmaFax == null ){
+                throw new PrescError("missing-pharmacy", "ファックス先の薬局が指定されていません。", visitId);
+                //throw new RuntimeException(String.format("Unknown presc handling: visitId=%d", visitId));
+            }
+            VisitDTO visit = client.getVisit(visitId);
+            HokenDTO hoken = client.getHoken(visitId);
+            PatientDTO patient = client.getPatient(visit.patientId);
+            return new Presc(visit, presc, pharmaFax.fax, hoken, patient);
+        } else {
+            return null;
+        }
+    }
+
     public static List<Presc> listPresc(Client client, LocalDate from, LocalDate upto) throws IOException, InterruptedException {
         List<Presc> result = new ArrayList<>();
         List<Integer> visitIds = client.listVisitIdInDateInterval(from, upto);
         for(int visitId: visitIds){
-            List<TextDTO> texts = client.listText(visitId);
-            String presc = null;
-            Data.PharmaFax pharmaFax = null;
-            boolean handled = false;
-            for(TextDTO text: texts) {
-                if (Data.isPrescContent(text.content)) {
-                    if (presc != null) {
-                        throw new RuntimeException("Multiple prescriptions.");
-                    }
-                    presc = text.content;
-                    continue;
-                }
-                if (presc != null) {
-                    Data.PharmaFax pf = Data.isPharmaFax(text.content);
-                    if (pf != null) {
-                        if (pharmaFax != null) {
-                            throw new RuntimeException("Multiple pharma faxes.");
-                        }
-                        pharmaFax = pf;
-                    } else if (Data.isPrescNotFax(text.content)) {
-                        handled = true;
-                    }
-                }
-            }
-            if( presc != null && !handled ){
-                if( pharmaFax == null ){
-                    throw new RuntimeException(String.format("Unknown presc handling: visitId=%d", visitId));
-                }
-                VisitDTO visit = client.getVisit(visitId);
-                HokenDTO hoken = client.getHoken(visitId);
-                PatientDTO patient = client.getPatient(visit.patientId);
-                result.add(new Presc(visit, presc, pharmaFax.fax, hoken, patient));
+            Presc presc = probeVisit(client, visitId);
+            if( presc != null ){
+                result.add(presc);
             }
         }
         return result;

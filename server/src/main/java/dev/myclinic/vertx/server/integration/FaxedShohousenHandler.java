@@ -11,6 +11,7 @@ import dev.myclinic.vertx.multidrawer.seal8x3.Seal8x3Data;
 import dev.myclinic.vertx.multidrawer.seal8x3.Seal8x3Drawer;
 import dev.myclinic.vertx.multidrawer.text.TextDrawer;
 import dev.myclinic.vertx.prescfax.Data;
+import dev.myclinic.vertx.prescfax.Presc;
 import dev.myclinic.vertx.prescfax.ShohousenGroup;
 import dev.myclinic.vertx.server.GlobalService;
 import dev.myclinic.vertx.shohousendrawer.ShohousenData;
@@ -535,6 +536,17 @@ public class FaxedShohousenHandler {
                 map.put("success", true);
                 reportFileStatus(map, dataFile.resolve(), "dataFile");
                 ctx.response().end(mapper.writeValueAsString(map));
+            } catch(Presc.PrescError e){
+                try {
+                    Map<String, Object> err = new HashMap<>();
+                    err.put("success", false);
+                    err.put("kind", e.kind);
+                    err.put("message", e.message);
+                    err.put("visit-id", e.visitId);
+                    ctx.response().end(mapper.writeValueAsString(err));
+                } catch (JsonProcessingException jsonProcessingException) {
+                    jsonProcessingException.printStackTrace();
+                }
             } catch (Exception e) {
                 ctx.fail(e);
             }

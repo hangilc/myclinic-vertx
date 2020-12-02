@@ -103,7 +103,7 @@
         menu.addItem("faxed-shohousen", e => {
             e.innerHTML = faxedShohousen.getHtml();
             return {
-                postConstruct: async () => await faxedShohousen.initFaxedShohousen(e),
+                postConstruct: async () => await faxedShohousen.initFaxedShohousen(e, rest),
                 reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
             }
         }, document.getElementById("index-faxed-shohousen-link"));

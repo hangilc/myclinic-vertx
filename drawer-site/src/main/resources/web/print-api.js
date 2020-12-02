@@ -127,7 +127,7 @@ export class PrintAPI {
     }
 
     async createUploadJob(job){  // job: dev.myclinic.vertx.drawersite.UploadJob
-        return await this.POST("/upload-job");
+        return await this.POST("/upload-job", job);
     }
 
     async deleteUploadJob(jobName){

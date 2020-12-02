@@ -1,5 +1,8 @@
 package dev.myclinic.vertx.drawersite;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,14 +12,21 @@ public class UploadJob {
         public String scannedFileName;
         public String uploadFileName;
 
-        public UploadFile(String scannedFileName, String uploadFileName) {
+        @JsonCreator()
+        public UploadFile(@JsonProperty("scannedFileName") String scannedFileName,
+                          @JsonProperty("uploadFileName") String uploadFileName) {
             this.scannedFileName = scannedFileName;
             this.uploadFileName = uploadFileName;
         }
     }
 
-    public final int patientId;
-    public final List<UploadFile> uploadFiles;
+    public int patientId;
+    public List<UploadFile> uploadFiles;
+
+    @JsonCreator()
+    public UploadJob(){
+
+    }
 
     public UploadJob(int patientId){
         this.patientId = patientId;

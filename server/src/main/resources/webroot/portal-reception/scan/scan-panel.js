@@ -102,11 +102,14 @@ export class ScanPanel {
             }
             this.changeStatusTo(STATUS.UPLOADING);
             try {
+                let uploadJob = this.createUploadJob();
+                let jobName = await this.printAPI.createUploadJob(uploadJob);
                 await this.doUpload();
                 this.changeStatusTo(STATUS.UPLOADED);
                 for (let item of this.items) {
                     await item.deleteScannedFile();
                 }
+                await this.printAPI.deleteUploadJob(jobName);
                 setTimeout(() => {
                     alert("アップロードが終了しました。");
                     this.reset();
@@ -304,6 +307,17 @@ export class ScanPanel {
                     patientId);
                 ser += 1;
             }
+        }
+    }
+
+    createUploadJob() {
+        let files = this.items.map(item => ({
+            scannedFileName: item.scannedFile,
+            uploadFileName: item.uploadName
+        }));
+        return {
+            "patientId": this.getPatientId(),
+            "uploadFiles": files
         }
     }
 

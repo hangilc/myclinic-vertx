@@ -1,4 +1,5 @@
 * 処方箋印刷時に 0410対応でないことを確認する (practice)
+* 処方箋ファックス時に 0410対応であることを確認する (practice)
 * Beep 解決していない。(practice, reception)
 * スキャンのアップロードが遅い件 (reception)
 * 紹介状が機能しない (practice)

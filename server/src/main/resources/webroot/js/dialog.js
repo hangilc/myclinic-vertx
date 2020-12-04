@@ -1,4 +1,4 @@
-import {createElementFrom} from "../js/create-element-from.js";
+import {createElementFrom} from "./create-element-from.js";
 
 let tmpl = `
     <div class="modal" tabindex="-1" data-backdrop="true">
@@ -55,6 +55,7 @@ export class Dialog {
         return new Promise(resolve => {
             this.resolve = resolve;
             $(this.ele).modal("show");
+            this.ele.dispatchEvent(new Event("opened"));
         });
     }
 }

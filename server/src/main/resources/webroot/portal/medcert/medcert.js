@@ -1,42 +1,78 @@
-import {parseElement} from "../js/parse-element.js";
-
-let html = `
-<h2>診断書作成</h2>
-
-<div id="medcert-wrapper"></div>
-`;
+import {parseElement} from "../../js/parse-node.js";
+import {createElementFrom} from "../../js/create-element-from.js";
+import {SelectPatientDialog} from "../../components/select-patient-dialog.js";
+import * as kanjidate from "../../js/kanjidate.js";
 
 let tmpl = `
 <div>
-    <div>
-        氏名 <input name="shimei">
+    <h2>診断書作成</h2>
+    
+    <div class="mb-2">
+        <button type="button" class="btn btn-secondary x-select-patient-button">患者選択</button>
+        <button type="button" class="btn btn-link x-end-patient-button">患者終了</button>
     </div>
-    <div>
-        生年月日 <input name="birth-date">
-    </div>
-    <div>
-        診断名 <input name="diagnosis">
-    </div>
-    <textarea rows="6" cols="40" name="text"></textarea>
-    <div>
-        発行日 <input name="issue-date">
-    </div>
+    
+    <div class="d-table mb-2">
+        <div class="d-table-row">
+            <div class="d-table-cell text-right py-1 pr-2">氏名</div>
+            <div class="d-table-cell py-1">
+                <input class="form-control x-name">
+            </div>
+        </div>
+        <div class="d-table-row">
+            <div class="d-table-cell text-right py-1 pr-2">生年月日</div>
+            <div class="d-table-cell py-1">
+                <input class="form-control x-birth-date">
+            </div>
+        </div>
+        <div class="d-table-row">
+            <div class="d-table-cell text-right py-1 pr-2">診断名</div>
+            <div class="d-table-cell py-1">
+                 <input class="form-control x-diagnosis">
+            </div>
+        </div>
+        <div class="d-table-row">
+            <div class="d-table-cell text-right py-1 pr-2">内容</div>
+            <div class="d-table-cell py-1">
+                 <textarea rows="6" cols="40" class="form-control x-text"></textarea>
+            </div>
+        </div>
+        <div class="d-table-row">
+            <div class="d-table-cell text-right py-1 pr-2">発行日</div>
+            <div class="d-table-cell py-1">
+                 <input class="form-control x-issue-date">
+            </div>
+        </div>
+     </div>
     <div>
         <button type="button" class="btn btn-primary x-create">作成</button>
     </div>
 </div>
 `;
 
-export function getHtml() {
-    return html;
-}
 
-class MedCert {
+export class MedCert {
     constructor(rest) {
         this.rest = rest;
-        this.ele = $(tmpl);
-        let map = parseElement(this.ele);
-        map.create.on("click", event => this.doCreate());
+        this.ele = createElementFrom(tmpl);
+        let map = this.map = parseElement(this.ele);
+        map.selectPatientButton.addEventListener("click", async event => await this.doSelectPatient());
+        map.issueDate.value = kanjidate.sqldateToKanji(kanjidate.todayAsSqldate());
+        map.create.addEventListener("click", event => this.doCreate());
+    }
+
+    async init() {
+
+    }
+
+    async doSelectPatient() {
+        let dialog = new SelectPatientDialog(this.rest);
+        let patient = await dialog.open();
+        if (patient) {
+            let map = this.map;
+            map.name.value = `${patient.lastName}${patient.firstName}`;
+            map.birthDate.value = kanjidate.sqldateToKanji(patient.birthday);
+        }
     }
 
     async doCreate() {
@@ -68,7 +104,3 @@ class MedCert {
 
 }
 
-export async function initMedcert() {
-    let medCert = new MedCert(rest);
-    $("#medcert-wrapper").append(medCert.ele);
-}

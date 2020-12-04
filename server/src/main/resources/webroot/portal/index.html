@@ -67,7 +67,7 @@
         let sendFax = await import("./send-fax/send-fax.js");
         let printerSetting = await import("./printer-setting/printer-setting.js");
         let refer = await import("./refer/refer.js");
-        let medcert = await import("./medcert/medcert.js");
+        let {MedCert} = await import("./medcert/medcert.js");
 
         window.rest = rest;
         window.integration = integration;
@@ -142,9 +142,10 @@
             }
         }, document.getElementById("index-refer-link"));
         menu.addItem("medcert", e => {
-            e.innerHTML = medcert.getHtml();
+            let medcert = new MedCert(rest);
+            e.append(medcert.ele);
             return {
-                postConstruct: async () => await medcert.initMedcert(e),
+                postConstruct: async () => await medcert.init(),
                 reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
             }
         }, document.getElementById("index-medcert-link"));

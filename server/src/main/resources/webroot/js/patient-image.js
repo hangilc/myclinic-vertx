@@ -13,7 +13,14 @@ export function getFileExtension(filename) {
     }
 }
 
-export function createPaperScanFileName(patientId, tag, timestamp, ser, ext) {
+export function createPaperScanFileName(patientId, tag, timestamp = null, ser = null, ext) {
+    return createPatientImageFileName(patientId, tag, ext, timestamp, ser);
+}
+
+export function createPatientImageFileName(patientId, tag, ext, timestamp = null, ser = null) {
+    if( timestamp == null ){
+        timestamp = getTimestamp();
+    }
     if( ser == null || ser === "" ){
         ser = "";
     } else {

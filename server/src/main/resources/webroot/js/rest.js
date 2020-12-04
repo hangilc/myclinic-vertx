@@ -140,6 +140,10 @@ export class Rest extends HttpClient {
         });
     }
 
+    async savedPatientImageToken(patientId, file){
+        return await this.GET("/saved-patient-image-token", {"patient-id": patientId, file});
+    }
+
     async enterHotline(hotline){
         return await this.POST("/enter-hotline", hotline);
     }

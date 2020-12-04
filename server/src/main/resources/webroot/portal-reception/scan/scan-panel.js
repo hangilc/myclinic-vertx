@@ -1,6 +1,6 @@
 import {createElementFrom} from "../js/create-element-from.js";
 import {parseElement} from "../js/parse-node.js";
-import * as paperscan from "../../js/paper-scan.js";
+import * as patientImage from "../../js/patient-image.js";
 import {ScannedItem} from "./scanned-item.js";
 import * as STATUS from "./status.js";
 import {enableUI, showUI} from "../../js/dynamic-ui.js";
@@ -289,18 +289,18 @@ export class ScanPanel {
         let patientId = this.getPatientId();
         let patientIdTag = patientId ? ("" + patientId) : "????";
         let tag = this.getTag();
-        let timestamp = paperscan.getTimestamp();
+        let timestamp = patientImage.getTimestamp();
         let items = this.items;
         if (items.length === 1) {
             let item = items[0];
-            let ext = paperscan.getFileExtension(item.getScannedFile());
-            item.setUpload(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "", ext),
+            let ext = patientImage.getFileExtension(item.getScannedFile());
+            item.setUpload(patientImage.createPaperScanFileName(patientIdTag, tag, timestamp, "", ext),
                 patientId);
         } else {
             let ser = 1;
             for (let item of items) {
-                let ext = paperscan.getFileExtension(item.getScannedFile());
-                item.setUpload(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "" + ser, ext),
+                let ext = patientImage.getFileExtension(item.getScannedFile());
+                item.setUpload(patientImage.createPaperScanFileName(patientIdTag, tag, timestamp, "" + ser, ext),
                     patientId);
                 ser += 1;
             }

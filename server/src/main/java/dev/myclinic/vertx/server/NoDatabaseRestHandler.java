@@ -332,6 +332,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("list-patient-image", this::listPatientImage);
         noDatabaseFuncMap.put("get-patient-image", this::getPatientImage);
         noDatabaseFuncMap.put("change-patient-of-image", this::changePatientOfImage);
+        noDatabaseFuncMap.put("saved-patient-image-token", this::savedPatientImageToken);
         noDatabaseFuncMap.put("view-drawer", this::viewDrawer);
         noDatabaseFuncMap.put("create-temp-file-name", this::createTempFileName);
         noDatabaseFuncMap.put("delete-file", this::deleteFile);
@@ -1369,16 +1370,24 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                 ctx.fail(ar.cause());
             }
         });
-//
-//        vertx.fileSystem().move(srcFileToken.resolve().toString(),
-//                dstFileToken.resolve().toString(),
-//                ar -> {
-//                    if( ar.failed() ){
-//                        ctx.fail(ar.cause());
-//                    } else {
-//                        ctx.response().end(jsonEncode(true));
-//                    }
-//                });
+    }
+
+    private void savedPatientImageToken(RoutingContext ctx) throws Exception {
+        String patientIdParam = ctx.request().getParam("patient-id");
+        if( patientIdParam == null ){
+            throw new RuntimeException("Missing parameter: patient-id");
+        }
+        int patientId = Integer.parseInt(patientIdParam);
+        String file = ctx.request().getParam("file");
+        if( file == null ){
+            throw new RuntimeException("Missing parameter: file");
+        }
+        GlobalService.AppDirToken dirToken = new GlobalService.AppDirToken(
+                GlobalService.getInstance().paperScanDirToken,
+                List.of(String.format("%d", patientId))
+        );
+        GlobalService.AppFileToken fileToken = dirToken.toFileToken(file);
+        ctx.response().end(jsonEncode(fileToken.toString()));
     }
 
 

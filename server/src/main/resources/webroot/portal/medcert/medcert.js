@@ -2,6 +2,8 @@ import {parseElement} from "../../js/parse-node.js";
 import {createElementFrom} from "../../js/create-element-from.js";
 import {SelectPatientDialog} from "../../components/select-patient-dialog.js";
 import * as kanjidate from "../../js/kanjidate.js";
+import {SavedPdfWidget} from "../../components/saved-pdf-widget.js";
+import * as patientImage from "../../js/patient-image.js";
 
 let tmpl = `
 <div>
@@ -43,7 +45,10 @@ let tmpl = `
                  <input class="form-control x-issue-date">
             </div>
         </div>
-     </div>
+    </div>
+    
+    <div class="mb-2 x-saved-pdf-wrapper"></div>
+    
     <div>
         <button type="button" class="btn btn-primary x-create">作成</button>
     </div>
@@ -54,6 +59,7 @@ let tmpl = `
 export class MedCert {
     constructor(rest) {
         this.rest = rest;
+        this.patient = null;
         this.ele = createElementFrom(tmpl);
         let map = this.map = parseElement(this.ele);
         map.selectPatientButton.addEventListener("click", async event => await this.doSelectPatient());
@@ -72,23 +78,54 @@ export class MedCert {
             let map = this.map;
             map.name.value = `${patient.lastName}${patient.firstName}`;
             map.birthDate.value = kanjidate.sqldateToKanji(patient.birthday);
+            this.patient = patient;
         }
+    }
+
+    imagePathToUrl(path){
+        return this.rest.url("/show-pdf", {file: path});
     }
 
     async doCreate() {
         let data = await this.collectData();
-        let savePath = await this.rest.renderMedCert(data);
-        alert("Saved to " + savePath);
+        let savedPath = await this.rest.renderMedCert(data);
+        let url = this.imagePathToUrl(savedPath);
+        let box = new SavedPdfWidget(url);
+        box.setTitle("診断書PDF");
+        box.enableStamp(async () => {
+            let newPath = await this.doStamp(savedPath);
+            box.setImageUrl(this.imagePathToUrl(newPath));
+            savedPath = newPath;
+        });
+        box.enableSave(async () => {
+            let patientId = this.patient ? this.patient.patientId : 0;
+            let file = patientImage.createPatientImageFileName(patientId, "medcert", ".pdf");
+            let targetFile = await this.rest.savedPatientImageToken(patientId, file);
+            await this.rest.copyFile(savedPath, targetFile, true);
+            alert("診断書ファイルを保存しました。");
+            box.close();
+        });
+        box.ele.addEventListener("close", async event => {
+            await this.rest.deleteFile(savedPath);
+        });
+        this.map.savedPdfWrapper.prepend(box.ele);
+    }
+
+    async doStamp(srcFile){
+        let dstFile = await this.rest.createTempFileName("medcert-stamped-", ".pdf");
+        await this.rest.putStampOnPdf(srcFile, "medcert-gray", dstFile);
+        await this.rest.deleteFile(srcFile);
+        return dstFile;
     }
 
     async collectData() {
         let clinicInfo = await this.rest.getClinicInfo();
         return {
-            patientName: this.inputValue("shimei"),
-            birthDate: this.inputValue("birth-date"),
+            patientName: this.inputValue("name"),
+            birthDate: this.inputValue("birthDate"),
             diagnosis: this.inputValue("diagnosis"),
-            text: this.ele.find("textarea[name=text]").val(),
-            issueDate: this.inputValue("issue-date"),
+            text: this.inputValue("text").value,
+            issueDate: this.inputValue("issueDate"),
             postalCode: clinicInfo.postalCode,
             address: clinicInfo.address,
             phone: "Tel: " + clinicInfo.tel,
@@ -99,7 +136,7 @@ export class MedCert {
     }
 
     inputValue(name) {
-        return this.ele.find("input[name=" + name + "]").val();
+        return this.map[name].value;
     }
 
 }

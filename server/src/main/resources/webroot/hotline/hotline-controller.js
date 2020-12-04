@@ -82,12 +82,13 @@ export class HotlineController {
                     await this.fillGapMessages(this.lastHotlineId, hotline.hotlineId);
                 }
                 await this.addMessage(hotline);
-                await this.doBeep();
+                if( hotline.recipient === this.name ){
+                    await this.doBeep();
+                }
             }
         } else if( log.kind === "beep" ){
             let target = JSON.parse(log.body).target;
             if( target === this.name ){
-                console.log("beep");
                 await this.doBeep();
             }
         }

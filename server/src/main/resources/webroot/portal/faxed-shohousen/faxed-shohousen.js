@@ -96,7 +96,7 @@ export function getHtml(){
     return html;
 }
 
-export async function initFaxedShohousen(pane) {
+export async function initFaxedShohousen(pane, rest) {
 
     function shohousenUrl(path, attr=null) {
         let url = "/integration/faxed-shohousen-data/" + path;
@@ -386,14 +386,24 @@ export async function initFaxedShohousen(pane) {
         let result = await createData(from, upto);
         progressReport.report(null);
         if (!result.success) {
-            let m = isNoPharmaError(result.errorMessage);
-            if( m ){
-                let form = await createNoPharmaCorrectForm(m.visitId);
-                errorReport.setBody(form);
+            console.log(result);
+            if( result.kind === "missing-pharmacy" ){
+                let message = result.message;
+                let visitId = parseInt(result["visit-id"]);
+                let visit = await rest.getVisit(visitId);
+                let patient = await rest.getPatient(visit.patientId);
+                errorReport.setBody(`${message}; (${patient.patientId})${patient.lastName}${patient.firstName}; ${visit.visitedAt}`);
             } else {
-                errorReport.setBody(result.errorMessage);
+                alert(result);
             }
-            dataStatusReport.updateByObject(await getGroup(from, upto));
+            // let m = isNoPharmaError(result.errorMessage);
+            // if( m ){
+            //     let form = await createNoPharmaCorrectForm(m.visitId);
+            //     errorReport.setBody(form);
+            // } else {
+            //     errorReport.setBody(result.errorMessage);
+            // }
+            // dataStatusReport.updateByObject(await getGroup(from, upto));
             return false;
         } else {
             dataStatusReport.updateByObject(result);

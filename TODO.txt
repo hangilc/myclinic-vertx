@@ -1,3 +1,6 @@
+* 診断書の改善 (practice)
+* 処方箋印刷時に 0410対応でないことを確認する (practice)
+* 処方箋ファックス時に 0410対応であることを確認する (practice)
 * スキャンのアップロードが遅い件 (reception)
 * Paper-scan 患者変更の polish (practice)
 * set label for regular shinryou input (practice)

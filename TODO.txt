@@ -1,9 +1,9 @@
-* Beep 解決していない。(practice, reception)
 * スキャンのアップロードが遅い件 (reception)
-* 紹介状が機能しない (practice)
 * Paper-scan 患者変更の polish (practice)
 * set label for regular shinryou input (practice)
 ### FIXED ######################################################
+* 紹介状が機能しない (practice) -- 2020-12-03
+* Beep 解決していない。(practice, reception) -- 2020-12-03
 * 会計時に請求額変更できるように (practice) -- 2020-12-01
 * Beep の調整。送信もとでも beep してしまう。(practice, reception) -- 2020-11-30
 * Paper scan の閲覧 -- 2020-11-28

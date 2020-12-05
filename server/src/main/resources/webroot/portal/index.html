@@ -115,8 +115,9 @@
         }, document.getElementById("index-houmon-kango-link"));
         menu.addItem("shujii", e => {
             e.innerHTML = shujii.getHtml();
+            let reloadFunc = () => e.dispatchEvent(new Event("reload-panel"));
             return {
-                postConstruct: async () => await shujii.initShujii(e),
+                postConstruct: async () => await shujii.initShujii(e, reloadFunc),
                 reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
             }
         }, document.getElementById("index-shujii-link"));

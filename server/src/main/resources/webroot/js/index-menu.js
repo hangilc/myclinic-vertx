@@ -62,6 +62,7 @@ export class Menu {
                     await config.postConstruct();
                 }
                 panelWrap.addEventListener("reload-panel", async event => {
+                    event.stopPropagation();
                     panel.savedElement = null;
                     panelWrap.remove();
                     this.currentPanel = null;

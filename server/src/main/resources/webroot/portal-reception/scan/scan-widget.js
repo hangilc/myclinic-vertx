@@ -6,7 +6,7 @@ import * as STATUS from "./status.js";
 import {enableUI, showUI} from "../../js/dynamic-ui.js";
 
 let tmpl = `
-<div class="border border-dark rounded p-3 mb-3">
+<div class="scan-widget border border-dark rounded p-3 mb-3">
     <div class="mb-2">
         <div class="h4">患者選択</div>
         <form class="form-inline mb-2 x-search-patient-form" onsubmit="return false;">
@@ -70,6 +70,7 @@ export class ScanWidget {
         this.rest = rest;
         this.printAPI = printAPI;
         this.items = [];
+        this.jobName = null;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.map.searchPatientForm.addEventListener("submit", async event => await this.doSearchPatient());
@@ -102,18 +103,12 @@ export class ScanWidget {
             }
             this.changeStatusTo(STATUS.UPLOADING);
             try {
-                let uploadJob = this.createUploadJob();
-                let jobName = await this.printAPI.createUploadJob(uploadJob);
                 await this.doUpload();
                 this.changeStatusTo(STATUS.UPLOADED);
-                for (let item of this.items) {
-                    await item.deleteScannedFile();
-                }
-                await this.printAPI.deleteUploadJob(jobName);
-                await this.closeWidget();
-                setTimeout(() => {
-                    alert("アップロードが終了しました。");
-                }, 0);
+                await this.deleteScannedFiles();
+                await this.printAPI.deleteUploadJob(this.jobName);
+                this.closeWidget();
+                alert("アップロードが終了しました。");
             } catch (e) {
                 console.log(e.toString());
                 this.changeStatusTo(STATUS.PARTIALLY_UPLOADED);
@@ -123,13 +118,10 @@ export class ScanWidget {
             try {
                 await this.doRetryUpload();
                 this.changeStatusTo(STATUS.UPLOADED);
-                for (let item of this.items) {
-                    await item.deleteScannedFile();
-                }
-                setTimeout(() => {
-                    alert("アップロードが終了しました。");
-                    this.reset();
-                }, 0);
+                await this.deleteScannedFiles();
+                await this.printAPI.deleteUploadJob(this.jobName);
+                alert("アップロードが終了しました。");
+                this.closeWidget();
             } catch (e) {
                 console.log(e.toString());
             }
@@ -165,16 +157,31 @@ export class ScanWidget {
                     return;
                 }
             }
-            await this.closeWidget()
+            await this.deleteScannedFiles();
+            if( this.jobName ){
+                this.printAPI.deleteUploadJob(this.jobName);
+            }
+            this.closeWidget()
+        });
+        this.ele.addEventListener("suppress-scan", event => {
+            this.status.suppressScan = true;
+            this.status.updateUI();
+        });
+        this.ele.addEventListener("release-scan", event => {
+            this.status.suppressScan = false;
+            this.status.updateUI();
         });
         this.status = new Status(this);
     }
 
-    async closeWidget() {
+    async deleteScannedFiles(){
         for (let item of this.items) {
             await item.deleteScannedFile();
         }
-        this.ele.remove();
+    }
+
+    closeWidget() {
+        this.ele.dispatchEvent(new Event("remove"));
     }
 
     changeStatusTo(status) {
@@ -246,18 +253,27 @@ export class ScanWidget {
     }
 
     async doStartScan() {
-        let deviceId = this.map.deviceList.value;
-        if (!deviceId) {
-            throw new Error("患者が設定されていません。");
+        this.ele.dispatchEvent(new Event("start-scan"));
+        try {
+            let deviceId = this.map.deviceList.value;
+            if (!deviceId) {
+                throw new Error("患者が設定されていません。");
+            }
+            this.map.scanProgress.innerText = "スキャンの準備中";
+            let file = await this.printAPI.scan(deviceId, pct => {
+                this.map.scanProgress.innerText = `${pct}%`;
+            });
+            this.map.scanProgress.innerText = "スキャン終了";
+            let item = new ScannedItem(file, this.printAPI, this.rest);
+            this.items.push(item);
+            this.map.scannedItems.append(item.ele);
+            if (this.jobName == null) {
+                let uploadJob = this.createUploadJob();
+                this.jobName = await this.printAPI.createUploadJob(uploadJob);
+            }
+        } finally {
+            this.ele.dispatchEvent(new Event("end-scan"));
         }
-        this.map.scanProgress.innerText = "スキャンの準備中";
-        let file = await this.printAPI.scan(deviceId, pct => {
-            this.map.scanProgress.innerText = `${pct}%`;
-        });
-        this.map.scanProgress.innerText = "スキャン終了";
-        let item = new ScannedItem(file, this.printAPI, this.rest);
-        this.items.push(item);
-        this.map.scannedItems.append(item.ele);
     }
 
     async doReScan(item) {
@@ -364,6 +380,7 @@ class Status {
         this.map = panel.map;
         this.items = panel.items;
         this.status = STATUS.PREPARING;
+        this.suppressScan = false;
     }
 
     changeStatusTo(status) {
@@ -406,7 +423,7 @@ class Status {
         );
         enableUI(
             [map.startScan],
-            [STATUS.PREPARING].includes(status) && !!map.deviceList.value
+            [STATUS.PREPARING].includes(status) && !!map.deviceList.value && !this.suppressScan
         );
         enableUI(
             [map.uploadButton],

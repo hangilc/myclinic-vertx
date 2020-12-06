@@ -1,3 +1,5 @@
+* set timeout for ScanTask (scan)
+* Delete file when error occurred in ScanTask (scan)
 * 処方箋印刷時に 0410対応でないことを確認する (practice)
 * 処方箋ファックス時に 0410対応であることを確認する (practice)
 * Beep 解決していない。(practice, reception)

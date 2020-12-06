@@ -11,6 +11,7 @@ let tmpl = `
     <div class="x-workarea"></div>
 </div>
 `;
+
 export class ScanPanel {
     constructor(rest, printAPI) {
         this.rest = rest;
@@ -28,11 +29,25 @@ export class ScanPanel {
         // nop
     }
 
-    async addWidget(){
+    async addWidget() {
         let widget = new ScanWidget(this.rest, this.printAPI);
         await widget.refreshDeviceList();
         widget.status.updateUI();
         this.map.workarea.prepend(widget.ele);
+        widget.ele.addEventListener("remove", async event => {
+            widget.ele.remove();
+            if (this.ele.querySelector(".scan-widget") == null) {
+                await this.addWidget();
+            }
+        });
+        widget.ele.addEventListener("start-scan", event =>
+            this.ele.querySelectorAll(".scan-widget").forEach(we => {
+                we.dispatchEvent(new Event("suppress-scan"));
+            }));
+        widget.ele.addEventListener("end-scan", event =>
+            this.ele.querySelectorAll(".scan-widget").forEach(we => {
+                we.dispatchEvent(new Event("release-scan"));
+            }));
         widget.focus();
         return widget;
     }

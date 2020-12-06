@@ -92,7 +92,7 @@ export function getHtml(){
     return html;
 }
 
-export async function initShujii(pane, reloadFunc) {
+export async function initShujii(pane, rest, printAPI, reloadFunc) {
     let {parseElement} = await import("../js/parse-element.js");
     let {PatientSelectDialog} = await import("./patient-select-dialog.js");
     let {Nav} = await import("./nav.js");
@@ -265,9 +265,11 @@ export async function initShujii(pane, reloadFunc) {
             fax: clinicInfo.fax,
             detail: detail
         };
-        let setting = "shujii";
-        let ops = await rest.compileShujiiDrawer(data, setting);
-        await rest.printDrawer([ops], setting);
+        let ops = await rest.compileShujiiDrawer(data);
+        //let setting = "shujii";
+        let setting = null;
+        //await rest.printDrawer([ops], setting);
+        printAPI.print([], [ops], setting);
     });
 
     (function(){

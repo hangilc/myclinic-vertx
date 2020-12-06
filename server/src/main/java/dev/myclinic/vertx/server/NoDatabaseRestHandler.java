@@ -1447,13 +1447,13 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     private void compileShujiiDrawer(RoutingContext ctx) {
         try {
             ShujiiData data = mapper.readValue(ctx.getBody().getBytes(), ShujiiData.class);
-            String settingName = ctx.request().getParam("setting");
-            PrinterJsonSetting jsonSetting = PrinterJsonSetting.get(settingName, mapper);
+            // String settingName = ctx.request().getParam("setting");
+            // PrinterJsonSetting jsonSetting = PrinterJsonSetting.get(settingName, mapper);
             ShujiiForm form = new ShujiiForm();
             FormCompiler c = form.getCompiler();
-            c.setScale(jsonSetting.scaleX, jsonSetting.scaleY);
-            c.setOffsetX(jsonSetting.offsetX);
-            c.setOffsetY(jsonSetting.offsetY);
+            // c.setScale(jsonSetting.scaleX, jsonSetting.scaleY);
+            // c.setOffsetX(jsonSetting.offsetX);
+            // c.setOffsetY(jsonSetting.offsetY);
             List<Op> ops = form.render(data);
             ctx.response().end(jsonEncode(ops));
         } catch (Exception e) {

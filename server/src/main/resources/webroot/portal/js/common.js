@@ -560,10 +560,14 @@ class Rest extends Client {
         });
     }
 
-    async compileShujiiDrawer(shujiiData, setting) {
-        return await this.post("/compile-shujii-drawer", shujiiData, {
-            params: {setting}
-        });
+    // async compileShujiiDrawer(shujiiData, setting) {
+    //     return await this.post("/compile-shujii-drawer", shujiiData, {
+    //         params: {setting}
+    //     });
+    // }
+
+    async compileShujiiDrawer(shujiiData) {
+        return await this.post("/compile-shujii-drawer", shujiiData);
     }
 
     async listPrinterSetting() {

@@ -120,7 +120,6 @@ export async function initShujii(pane, rest, printAPI, reloadFunc) {
     class NavFactory {
         constructor() {
             this.html = $("template#shujii-nav-template").html();
-            console.log("navfactory html", this.html);
         }
 
         create() {
@@ -301,7 +300,7 @@ export async function initShujii(pane, rest, printAPI, reloadFunc) {
                     formData.append(`file${index}`, file, fname);
                     index += 1;
                 }
-                $.ajax("../json/save-shujii-image", {
+                $.ajax("/json/save-shujii-image", {
                     data: formData,
                     processData: false,
                     contentType: false,

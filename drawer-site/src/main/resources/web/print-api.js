@@ -92,7 +92,12 @@ export class PrintAPI {
             };
             xhr.onload = event => {
                 let filename = xhr.getResponseHeader("x-saved-image");
-                resolve(filename);
+                let response = xhr.responseText;
+                if( response.includes("X") ){
+                    reject("スキャナーエラー");
+                } else {
+                    resolve(filename);
+                }
             };
             xhr.onerror = event => {
                 reject(xhr.statusText + ": " + xhr.responseText);

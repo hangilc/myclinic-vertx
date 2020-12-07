@@ -200,10 +200,20 @@ public class Main {
                             }
                         }
                     });
-                    task.run();
+                    boolean hasError = false;
+                    try {
+                        task.run();
+                    } catch(Exception e){
+                        String msg = task.getErrorMessage();
+                        if( msg == null ){
+                            System.out.println(msg);
+                        }
+                        hasError = true;
+                    }
+                    String progressChar = hasError ? "X" : "*";
                     for (int j = ints[0] + 1; j <= 10; j++) {
                         try {
-                            handler.getExchange().getResponseBody().write("*".getBytes());
+                            handler.getExchange().getResponseBody().write(progressChar.getBytes());
                             handler.getExchange().getResponseBody().flush();
                         } catch (Exception e) {
                             e.printStackTrace();

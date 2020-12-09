@@ -49,6 +49,12 @@ public class Main {
         if( cmdArgs.simulateSlowDownload ){
             GlobalService.getInstance().setSimulateSlowDownload(true);
         }
+        if( cmdArgs.simulateSlowUpload ){
+            GlobalService.getInstance().setSimulateSlowUpload(true);
+        }
+        if( cmdArgs.simulateUploadFail ){
+            GlobalService.getInstance().setSimulateUploadFail(true);
+        }
         MysqlDataSourceConfig mysqlConfig = new MysqlDataSourceConfig();
         DataSource ds = MysqlDataSourceFactory.create(mysqlConfig);
         TableSet ts = TableSet.create();

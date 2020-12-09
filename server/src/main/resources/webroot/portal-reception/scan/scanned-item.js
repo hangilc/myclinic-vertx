@@ -51,11 +51,9 @@ export class ScannedItem {
         this.updateUploadNameUI();
     }
 
-    enableScan(enabled){
-        let disabled = !enabled;
-        this.map.disp.disabled = disabled;
-        this.map.reScan.disabled = disabled;
-        this.map.delete.disabled = disabled;
+    updateUI(isScanning, isUploading){
+        this.map.reScan.disabled = isScanning || isUploading;
+        this.map.delete.disabled = isScanning || isUploading;
     }
 
     setUploadName(uploadName){

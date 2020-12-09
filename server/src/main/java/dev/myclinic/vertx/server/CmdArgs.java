@@ -9,6 +9,8 @@ class CmdArgs {
 
     int port = 28080;
     boolean isDev = false;
+    boolean simulateSlowUpload = false;
+    boolean simulateUploadFail = false;
     boolean simulateSlowDownload = false;
     List<String> args = new ArrayList<>();
 
@@ -29,6 +31,14 @@ class CmdArgs {
                 }
                 case "--simulate-slow-download": {
                     cmdArgs.simulateSlowDownload = true;
+                    break;
+                }
+                case "--simulate-upload-fail": {
+                    cmdArgs.simulateUploadFail = true;
+                    break;
+                }
+                case "--simulate-slow-upload": {
+                    cmdArgs.simulateSlowUpload = true;
                     break;
                 }
                 default: {
@@ -63,8 +73,11 @@ class CmdArgs {
     public static void usage() {
         System.err.println("Usage: server [options]");
         System.err.println("  options:");
-        System.err.println("    --port PORT    server listening port");
-        System.err.println("    --dev          server files instead of resources");
+        System.err.println("    --port PORT              server listening port");
+        System.err.println("    --dev                    server files instead of resources");
+        System.err.println("    --simulate-slow-upload   ");
+        System.err.println("    --simulate-upload-fail   ");
+        System.err.println("    --simulate-slow-download ");
     }
 
 }

@@ -50,11 +50,11 @@ let tmpl = `
             <div class="x-upload-commands"> 
                 <button class="btn btn-primary x-upload-button">アップロード</button>
             </div>
-            <div class="d-none x-re-upload-commands">
-                <span class="text-danger mr-2">アップロードに失敗しました。</span>
-                <button class="btn btn-secondary x-retry-upload">再試行</button>
-                <button class="btn btn-secondary x-cancel-upload">キャンセル</button>
-            </div>
+<!--            <div class="d-none x-re-upload-commands">-->
+<!--                <span class="text-danger mr-2">アップロードに失敗しました。</span>-->
+<!--                <button class="btn btn-secondary x-retry-upload">再試行</button>-->
+<!--                <button class="btn btn-secondary x-cancel-upload">キャンセル</button>-->
+<!--            </div>-->
         </div>
     </div>
     <div class="d-flex align-items-center"> 
@@ -71,6 +71,8 @@ export class ScanWidget {
         this.patient = null;
         this.items = [];
         this.jobName = null;
+        this.scannersInUse = [];
+        this.isUploading = false;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.status = new Status(this);
@@ -82,51 +84,38 @@ export class ScanWidget {
             let patient = await this.doSelectPatient();
             if (patient) {
                 this.setPatient(patient);
-                this.enableUpload(true);
-                this.firePatientChanged();
+                this.renameItems();
+                this.updateUI();
             }
         });
         this.map.refreshDeviceList.addEventListener("click", async event => {
             await this.loadDeviceList();
-            this.enableScan(this.map.deviceList.value);
+            this.updateUI();
         });
         this.map.startScan.addEventListener("click", async event => {
-            this.enablePatientSelection(false);
-            this.enableTagSelection(false);
-            this.enableScannerSelection(false);
-            this.enableScan(false);
-            this.enableUpload(false);
-            this.enableCancel(false);
-            this.fireScanStarted();
+            let scanner = this.getSelectedScanner();
+            if( !scanner ){
+                alert("スキャナーが選択されていません。");
+                return;
+            }
+            this.fireScanStarted(scanner);
             try {
-                let item = await this.doStartScan();
+                let item = await this.doStartScan(scanner);
                 this.items.push(item);
                 this.renameItems();
                 this.map.scannedItems.append(item.ele);
-                item.ele.addEventListener("rescan", async event => {
-
-                });
+                item.ele.addEventListener("rescan", async event => await this.doReScan(item));
                 if (this.jobName == null) {
                     let uploadJob = this.createUploadJob();
                     this.jobName = await this.printAPI.createUploadJob(uploadJob);
                 }
             } finally {
-                this.enablePatientSelection(true);
-                this.enableTagSelection(true);
-                this.enableScannerSelection(true);
-                this.enableScan(true);
-                this.enableUpload(this.items.length > 0);
-                this.enableCancel(true);
-                this.fireScanEnded();
+                this.fireScanEnded(scanner);
             }
         });
         this.map.uploadButton.addEventListener("click", async event => {
-            this.enablePatientSelection(false);
-            this.enableTagSelection(false);
-            this.enableScannerSelection(false);
-            this.enableScan(false);
-            this.enableUpload(false);
-            this.enableCancel(false);
+            this.isUploading = true;
+            this.updateUI();
             try {
                 for (let item of this.items) {
                     await item.upload();
@@ -135,18 +124,11 @@ export class ScanWidget {
                 await this.printAPI.deleteUploadJob(this.jobName);
                 this.fireRemove();
                 alert("アップロードが終了しました。");
-            } catch (e) {
-                this.enablePatientSelection(true);
-                this.enableTagSelection(true);
-                this.enableScannerSelection(true);
-                this.enableScan(true);
-                this.enableUpload(this.items.length > 0);
-                this.enableCancel(true);
+            } finally {
+                this.isUploading = false;
+                this.updateUI();
             }
         });
-        this.enableScan(false);
-        this.enableUpload(false);
-        this.enableCancel(false);
 
         // this.ele.addEventListener("rescan-item", async event => {
         //     let item = event.detail;
@@ -215,18 +197,18 @@ export class ScanWidget {
         // this.renameItems();
     }
 
-    firePatientChanged() {
-        this.ele.dispatchEvent(new CustomEvent("patient-changed", {
-            detail: this.patient
+    fireScanStarted(scanner) {
+        this.ele.dispatchEvent(new CustomEvent("use-scanner", {
+            bubbles:true,
+            detail: scanner
         }));
     }
 
-    fireScanStarted() {
-        this.ele.dispatchEvent(new Event("scan-started"));
-    }
-
-    fireScanEnded(){
-        this.ele.dispatchEvent(new Event("scan-ended"));
+    fireScanEnded(scanner){
+        this.ele.dispatchEvent(new CustomEvent("unuse-scanner", {
+            bubbles:true,
+            detail: scanner
+        }));
     }
 
     fireRemove(){
@@ -244,17 +226,38 @@ export class ScanWidget {
         }
     }
 
-    updateUI() {
-        this.status.updateUI();
+    getSelectedScanner(){
+        return this.map.deviceList.value;
     }
 
-    closeWidget() {
-        this.ele.dispatchEvent(new Event("remove"));
+    countUnuploadedItems(){
+        let count = 0;
+        this.items.forEach(item => {
+            if( !item.isUploaded() ){
+                count += 1;
+            }
+        });
+        console.log(count);
+        return count;
     }
 
-    changeStatusTo(status) {
-        this.status.changeStatusTo(status);
-        this.status.updateUI();
+    updateUI(scannersInUse=null) {
+        if( scannersInUse !== null ){
+            this.scannersInUse = scannersInUse;
+        } else {
+            scannersInUse = this.scannersInUse;
+        }
+        let isScanning = scannersInUse.includes(this.getSelectedScanner());
+        let isUploading = this.isUploading;
+        this.map.selectPatientButton.disabled = isScanning || isUploading;
+        this.map.tagSelect.disabled = isScanning || isUploading;
+        this.map.startScan.disabled = isScanning || isUploading;
+        this.map.uploadButton.disabled = !(!isScanning && !isUploading &&
+            this.patient && this.countUnuploadedItems() > 0);
+        this.map.cancelWidget.disabled = isScanning || isUploading;
+        for(let item of this.items){
+            item.updateUI(isScanning, isUploading);
+        }
     }
 
     async loadDeviceList() {
@@ -327,33 +330,35 @@ export class ScanWidget {
         this.map.selectedPatientDisp.innerText = patientRep(patient);
     }
 
-    async doStartScan() {
-        let deviceId = this.map.deviceList.value;
-        if (!deviceId) {
-            throw new Error("患者が設定されていません。");
-        }
+    async doScan(deviceId){
         this.map.scanProgress.innerText = "スキャンの準備中";
         let file = await this.printAPI.scan(deviceId, pct => {
             this.map.scanProgress.innerText = `${pct}%`;
         });
         this.map.scanProgress.innerText = "";
+        return file;
+    }
+
+    async doStartScan(deviceId) {
+        let file = await this.doScan(deviceId);
         return new ScannedItem(file, "", this.printAPI, this.rest);
     }
 
     async doReScan(item) {
-        let deviceId = this.map.deviceList.value;
+        let deviceId = this.getSelectedScanner();
         if (!deviceId) {
-            throw new Error("患者が設定されていません。");
+            alert("スキャナーが設定されていません。");
+            return;
         }
-        this.map.scanProgress.innerText = "スキャンの準備中";
-        let resolution = 100;
-        let file = await this.printAPI.scan(deviceId, pct => {
-            this.map.scanProgress.innerText = `${pct}%`;
-        }, resolution);
-        this.map.scanProgress.innerText = "スキャン終了";
-        await item.deleteScannedFile();
-        item.setScannedFile(file);
-        await item.doDisp();
+        this.fireScanStarted(deviceId);
+        try {
+            let file = await this.doScan(deviceId);
+            await item.deleteScannedFile();
+            item.setScannedFile(file);
+            await item.doDisp();
+        } finally {
+            this.fireScanEnded(deviceId);
+        }
     }
 
     getPatientId() {

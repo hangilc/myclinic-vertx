@@ -21,13 +21,27 @@ export class ScanPanel {
     constructor(rest, printAPI) {
         this.rest = rest;
         this.printAPI = printAPI;
+        this.scannersInUse = [];
+        this.widgets = [];
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.setupBindings();
     }
 
     setupBindings(){
-        this.map.newScan.addEventListener("click", async event => await this.addWidget());
+        this.map.newScan.addEventListener("click",
+            async event => await this.addWidget());
+        this.ele.addEventListener("use-scanner", event => {
+            event.stopPropagation();
+            this.scannersInUse.push(event.detail);
+            this.widgets.forEach(w => w.updateUI(this.scannersInUse));
+        });
+        this.ele.addEventListener("unuse-scanner", event => {
+            event.stopPropagation();
+            let scanner = event.detail;
+            this.scannersInUse = this.scannersInUse.filter(s => s !== scanner);
+            this.widgets.forEach(w => w.updateUI(this.scannersInUse));
+        });
     }
 
     async postConstruct() {
@@ -37,6 +51,22 @@ export class ScanPanel {
 
     async reloadHook() {
         //await this.probeForUnfinished();
+    }
+
+    async addWidget() {
+        let widget = new ScanWidget(this.rest, this.printAPI);
+        await widget.postConstruct();
+        widget.updateUI(this.scannersInUse);
+        this.map.workarea.prepend(widget.ele);
+        widget.ele.addEventListener("remove", async event => {
+            widget.ele.remove();
+            if (this.ele.querySelector(".scan-widget") == null) {
+                await this.addWidget();
+            }
+        });
+        widget.focus();
+        this.widgets.push(widget);
+        return widget;
     }
 
     async probeForUnfinished(){
@@ -60,29 +90,6 @@ export class ScanPanel {
         } else {
             this.map.unfinishedWrapper.classList.remove("d-none");
         }
-    }
-
-    async addWidget() {
-        let widget = new ScanWidget(this.rest, this.printAPI);
-        await widget.postConstruct();
-        this.map.workarea.prepend(widget.ele);
-        widget.ele.addEventListener("remove", async event => {
-            console.log("widget remove");
-            widget.ele.remove();
-            if (this.ele.querySelector(".scan-widget") == null) {
-                await this.addWidget();
-            }
-        });
-        widget.ele.addEventListener("start-scan", event =>
-            this.ele.querySelectorAll(".scan-widget").forEach(we => {
-                we.dispatchEvent(new Event("suppress-scan"));
-            }));
-        widget.ele.addEventListener("end-scan", event =>
-            this.ele.querySelectorAll(".scan-widget").forEach(we => {
-                we.dispatchEvent(new Event("release-scan"));
-            }));
-        widget.focus();
-        return widget;
     }
 
 }

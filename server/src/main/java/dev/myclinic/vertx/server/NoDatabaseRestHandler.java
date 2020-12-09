@@ -212,7 +212,14 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void respondFile(RoutingContext ctx, Path path){
+    private void respondFile(RoutingContext ctx, Path path, boolean simulateSlowDownload){
+        if( simulateSlowDownload ){
+            try {
+                Thread.sleep(60000 * 3);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         String ext = getFileExtension(path.getFileName().toString());
         String mime = mimeMap.get(ext);
         if( mime == null ){
@@ -220,6 +227,10 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
         ctx.response().putHeader("content-type", mime);
         ctx.response().sendFile(path.toString());
+    }
+
+    private void respondFile(RoutingContext ctx, Path path){
+        respondFile(ctx, path, false);
     }
 
     private void getHokensho(RoutingContext ctx) throws Exception {
@@ -1303,6 +1314,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private void getPatientImage(RoutingContext ctx){
+        boolean simulateSlowDownload = GlobalService.getInstance().getSimulateSlowDownload();
         try {
             String patientIdParam = ctx.request().getParam("patient-id");
             if (patientIdParam == null) {
@@ -1318,7 +1330,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     List.of(String.format("%d", patientId))
             );
             GlobalService.AppFileToken fileToken = dirToken.toFileToken(fileParam);
-            respondFile(ctx, Path.of(fileToken.resolve().toString()));
+            respondFile(ctx, Path.of(fileToken.resolve().toString()), simulateSlowDownload);
         } catch(Exception e){
             ctx.fail(e);
         }

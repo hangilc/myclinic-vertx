@@ -82,7 +82,7 @@ export class ScanWidget {
             let patient = await this.doSelectPatient();
             if (patient) {
                 this.setPatient(patient);
-                this.updateUI();
+                this.enableUpload(true);
                 this.firePatientChanged();
             }
         });
@@ -103,6 +103,9 @@ export class ScanWidget {
                 this.items.push(item);
                 this.renameItems();
                 this.map.scannedItems.append(item.ele);
+                item.ele.addEventListener("rescan", async event => {
+
+                });
                 if (this.jobName == null) {
                     let uploadJob = this.createUploadJob();
                     this.jobName = await this.printAPI.createUploadJob(uploadJob);
@@ -454,6 +457,9 @@ export class ScanWidget {
 
     enableUpload(enabled) {
         let disabled = !enabled;
+        if( !(this.patient && this.map.deviceList.value) ){
+            disabled = true;
+        }
         this.map.uploadButton.disabled = disabled;
         this.map.retryUpload.disabled = disabled;
         this.map.cancelUpload.disabled = disabled;

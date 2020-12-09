@@ -40,19 +40,22 @@ export class ScannedItem {
         this.map.disp.addEventListener("click", async event => await this.doDisp());
         this.map.reScan.addEventListener("click", event => {
             if( confirm("再スキャンしますか？") ){
-                this.ele.dispatchEvent(new CustomEvent("rescan-item", {bubbles: true, detail: this}))
+                this.ele.dispatchEvent(new Event("rescan"));
             }
         });
         this.map.delete.addEventListener("click", event => {
             if( confirm("このスキャンを削除していいですか？") ){
-                this.ele.dispatchEvent(new CustomEvent("delete-item", {bubbles: true, detail: this}))
+                this.ele.dispatchEvent(new CustomEvent("delete", {bubbles: true, detail: this}))
             }
         });
         this.updateUploadNameUI();
     }
 
     enableScan(enabled){
-
+        let disabled = !enabled;
+        this.map.disp.disabled = disabled;
+        this.map.reScan.disabled = disabled;
+        this.map.delete.disabled = disabled;
     }
 
     setUploadName(uploadName){
@@ -129,18 +132,6 @@ export class ScannedItem {
 
     async deleteUploadedImage() {
         return await this.rest.deletePatientImage(this.patientId, this.uploadName);
-    }
-
-    enableScanner(){
-        this.map.disp.disabled = false;
-        this.map.reScan.disabled = false;
-        this.map.delete.disabled = false;
-    }
-
-    disableScanner(){
-        this.map.disp.disabled = true;
-        this.map.reScan.disabled = true;
-        this.map.delete.disabled = true;
     }
 
 }

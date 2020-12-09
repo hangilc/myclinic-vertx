@@ -128,13 +128,11 @@ export class ScanWidget {
                 for (let item of this.items) {
                     await item.upload();
                 }
-                this.changeStatusTo(STATUS.UPLOADED);
                 await this.deleteScannedFiles();
                 await this.printAPI.deleteUploadJob(this.jobName);
-                this.closeWidget();
+                this.fireRemove();
                 alert("アップロードが終了しました。");
             } catch (e) {
-            } finally {
                 this.enablePatientSelection(true);
                 this.enableTagSelection(true);
                 this.enableScannerSelection(true);
@@ -226,6 +224,10 @@ export class ScanWidget {
 
     fireScanEnded(){
         this.ele.dispatchEvent(new Event("scan-ended"));
+    }
+
+    fireRemove(){
+        this.ele.dispatchEvent(new Event("remove"));
     }
 
     async postConstruct() {
@@ -429,7 +431,6 @@ export class ScanWidget {
 
     enablePatientSelection(enabled) {
         let disabled = !enabled;
-        console.log(disabled);
         this.map.searchPatientText.disabled = disabled;
         this.map.searchPatientButton.disabled = disabled;
     }

@@ -67,6 +67,7 @@ export class ScanPanel {
         await widget.postConstruct();
         this.map.workarea.prepend(widget.ele);
         widget.ele.addEventListener("remove", async event => {
+            console.log("widget remove");
             widget.ele.remove();
             if (this.ele.querySelector(".scan-widget") == null) {
                 await this.addWidget();

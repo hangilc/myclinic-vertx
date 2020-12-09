@@ -18,7 +18,7 @@ let tmpl = `
                   <path fill-rule="evenodd" d="M4.146 4.146a.5.5 0 0 0 0 .708l7 7a.5.5 0 0 0 .708-.708l-7-7a.5.5 0 0 0-.708 0z"/>
                 </svg>
             </div>
-           <span class="x-name mr-2"></span>
+            <span class="x-name mr-2"></span>
             <button class="btn btn-link x-disp">表示</button>
             <button class="btn btn-link x-re-scan">再スキャン</button>
             <button class="btn btn-link x-delete">削除</button>
@@ -28,16 +28,15 @@ let tmpl = `
 `;
 
 export class ScannedItem {
-    constructor(scannedFile, printAPI, rest) {
+    constructor(scannedFile, uploadName, printAPI, rest) {
         this.scannedFile = scannedFile;
+        this.uploadName = uploadName;
         this.printAPI = printAPI;
         this.rest = rest;
         this.state = "before-upload";
-        this.uploadName = null;
         this.patientId = null;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
-        this.map.name.innerText = "";
         this.map.disp.addEventListener("click", async event => await this.doDisp());
         this.map.reScan.addEventListener("click", event => {
             if( confirm("再スキャンしますか？") ){
@@ -49,6 +48,19 @@ export class ScannedItem {
                 this.ele.dispatchEvent(new CustomEvent("delete-item", {bubbles: true, detail: this}))
             }
         });
+        this.updateUploadNameUI();
+    }
+
+    enableScan(enabled){
+
+    }
+
+    setUploadName(uploadName){
+        this.uploadName = uploadName;
+    }
+
+    updateUploadNameUI(){
+        this.map.name.innerText = this.uploadName;
     }
 
     isBeforeUpload() {
@@ -119,9 +131,16 @@ export class ScannedItem {
         return await this.rest.deletePatientImage(this.patientId, this.uploadName);
     }
 
-    updateUI(status) {
-        showUI(this.map.reScan, [STATUS.PREPARING].includes(status));
-        showUI(this.map.delete, [STATUS.PREPARING].includes(status));
+    enableScanner(){
+        this.map.disp.disabled = false;
+        this.map.reScan.disabled = false;
+        this.map.delete.disabled = false;
+    }
+
+    disableScanner(){
+        this.map.disp.disabled = true;
+        this.map.reScan.disabled = true;
+        this.map.delete.disabled = true;
     }
 
 }

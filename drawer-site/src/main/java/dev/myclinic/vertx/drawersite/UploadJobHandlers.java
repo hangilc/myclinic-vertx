@@ -49,7 +49,9 @@ class UploadJobHandlers {
                 Path dir = getJobDir();
                 List<String> result = new ArrayList<>();
                 for(Path p: Files.newDirectoryStream(dir)){
-                    result.add(p.getFileName().toString());
+                    String fileName = p.getFileName().toString();
+                    String jobName = fileName.replaceAll("\\.json$", "");
+                    result.add(jobName);
                 }
                 handler.sendJson(result);
                 break;
@@ -64,7 +66,15 @@ class UploadJobHandlers {
     static void handleJob(Handler handler, String jobName) throws Exception {
         switch(handler.getMethod()){
             case "OPTIONS": {
-                handler.respondToOptions(List.of("DELETE", "OPTIONS"));
+                handler.respondToOptions(List.of("GET", "DELETE", "OPTIONS"));
+                break;
+            }
+            case "GET": {
+                handler.allowCORS();
+                Path dir = getJobDir();
+                Path file = dir.resolve(jobName + ".json");
+                byte[] bytes = Files.readAllBytes(file);
+                handler.sendJsonBytes(bytes);
                 break;
             }
             case "DELETE": {

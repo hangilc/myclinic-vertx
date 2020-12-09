@@ -3,7 +3,6 @@ import {parseElement} from "../js/parse-node.js";
 import * as paperscan from "../../js/paper-scan.js";
 import {ScannedItem} from "./scanned-item.js";
 import * as STATUS from "./status.js";
-import {enableUI, showUI} from "../../js/dynamic-ui.js";
 
 let tmpl = `
 <div class="scan-widget border border-dark rounded p-3 mb-3">
@@ -69,115 +68,179 @@ export class ScanWidget {
     constructor(rest, printAPI) {
         this.rest = rest;
         this.printAPI = printAPI;
+        this.patient = null;
         this.items = [];
         this.jobName = null;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
-        this.map.searchPatientForm.addEventListener("submit", async event => await this.doSearchPatient());
-        this.map.searchPatientClose.addEventListener("click", event => this.doSearchPatientClose());
-        this.map.selectPatientButton.addEventListener("click", async event => await this.doSelectPatient());
-        this.map.refreshDeviceList.addEventListener("click", async event => await this.refreshDeviceList());
-        this.map.startScan.addEventListener("click", async event => {
-            this.changeStatusTo(STATUS.SCANNING);
-            try {
-                await this.doStartScan();
-            } finally {
-                this.renameItems();
-                this.changeStatusTo(STATUS.PREPARING);
+        this.status = new Status(this);
+        this.map.searchPatientForm.addEventListener("submit", async event =>
+            await this.doSearchPatient());
+        this.map.searchPatientClose.addEventListener("click", event =>
+            this.doSearchPatientClose());
+        this.map.selectPatientButton.addEventListener("click", async event => {
+            let patient = await this.doSelectPatient();
+            if (patient) {
+                this.setPatient(patient);
+                this.updateUI();
+                this.firePatientChanged();
             }
         });
-        this.ele.addEventListener("rescan-item", async event => {
-            let item = event.detail;
-            this.changeStatusTo(STATUS.SCANNING);
+        this.map.refreshDeviceList.addEventListener("click", async event => {
+            await this.loadDeviceList();
+            this.enableScan(this.map.deviceList.value);
+        });
+        this.map.startScan.addEventListener("click", async event => {
+            this.enablePatientSelection(false);
+            this.enableTagSelection(false);
+            this.enableScannerSelection(false);
+            this.enableScan(false);
+            this.enableUpload(false);
+            this.enableCancel(false);
+            this.fireScanStarted();
             try {
-                await this.doReScan(item);
-            } finally {
+                let item = await this.doStartScan();
+                this.items.push(item);
                 this.renameItems();
-                this.changeStatusTo(STATUS.PREPARING);
+                this.map.scannedItems.append(item.ele);
+                if (this.jobName == null) {
+                    let uploadJob = this.createUploadJob();
+                    this.jobName = await this.printAPI.createUploadJob(uploadJob);
+                }
+            } finally {
+                this.enablePatientSelection(true);
+                this.enableTagSelection(true);
+                this.enableScannerSelection(true);
+                this.enableScan(true);
+                this.enableUpload(this.items.length > 0);
+                this.enableCancel(true);
+                this.fireScanEnded();
             }
         });
         this.map.uploadButton.addEventListener("click", async event => {
-            if (!this.getPatientId()) {
-                alert("患者が設定されていません。");
-                return;
-            }
-            this.changeStatusTo(STATUS.UPLOADING);
+            this.enablePatientSelection(false);
+            this.enableTagSelection(false);
+            this.enableScannerSelection(false);
+            this.enableScan(false);
+            this.enableUpload(false);
+            this.enableCancel(false);
             try {
-                await this.doUpload();
-                this.changeStatusTo(STATUS.UPLOADED);
-                await this.deleteScannedFiles();
-                await this.printAPI.deleteUploadJob(this.jobName);
-                this.closeWidget();
-                alert("アップロードが終了しました。");
-            } catch (e) {
-                console.log(e.toString());
-                this.changeStatusTo(STATUS.PARTIALLY_UPLOADED);
-            }
-        });
-        this.map.retryUpload.addEventListener("click", async event => {
-            try {
-                await this.doRetryUpload();
-                this.changeStatusTo(STATUS.UPLOADED);
-                await this.deleteScannedFiles();
-                await this.printAPI.deleteUploadJob(this.jobName);
-                alert("アップロードが終了しました。");
-                this.closeWidget();
-            } catch (e) {
-                console.log(e.toString());
-            }
-        });
-        this.map.cancelUpload.addEventListener("click", async event => {
-            await this.doCancelUpload();
-            this.changeStatusTo(STATUS.PREPARING);
-        });
-        this.ele.addEventListener("patient-changed", event => {
-            if (this.status.isPreparing()) {
-                let patient = event.detail;
-                this.map.selectedPatientDisp.innerText = patientRep(patient);
-                this.renameItems();
-            }
-        });
-        this.ele.addEventListener("delete-item", async event => {
-            let item = event.detail;
-            await item.deleteScannedFile();
-            item.ele.remove();
-            let index = this.items.indexOf(item);
-            this.items.splice(index, 1);
-            this.renameItems();
-            this.status.updateUI();
-        });
-        this.map.tagSelect.addEventListener("change", event => {
-            if (this.status.isPreparing()) {
-                this.renameItems();
-            }
-        });
-        this.map.cancelWidget.addEventListener("click", async event => {
-            if (this.items.length > 0) {
-                if (!confirm("このスキャンを本当にキャンセルしますか？")) {
-                    return;
+                for (let item of this.items) {
+                    await item.upload();
                 }
+                this.changeStatusTo(STATUS.UPLOADED);
+                await this.deleteScannedFiles();
+                await this.printAPI.deleteUploadJob(this.jobName);
+                this.closeWidget();
+                alert("アップロードが終了しました。");
+            } catch (e) {
+            } finally {
+                this.enablePatientSelection(true);
+                this.enableTagSelection(true);
+                this.enableScannerSelection(true);
+                this.enableScan(true);
+                this.enableUpload(this.items.length > 0);
+                this.enableCancel(true);
             }
-            await this.deleteScannedFiles();
-            if( this.jobName ){
-                this.printAPI.deleteUploadJob(this.jobName);
-            }
-            this.closeWidget()
         });
-        this.ele.addEventListener("suppress-scan", event => {
-            this.status.suppressScan = true;
-            this.status.updateUI();
-        });
-        this.ele.addEventListener("release-scan", event => {
-            this.status.suppressScan = false;
-            this.status.updateUI();
-        });
-        this.status = new Status(this);
+        this.enableScan(false);
+        this.enableUpload(false);
+        this.enableCancel(false);
+
+        // this.ele.addEventListener("rescan-item", async event => {
+        //     let item = event.detail;
+        //     this.changeStatusTo(STATUS.SCANNING);
+        //     try {
+        //         await this.doReScan(item);
+        //     } finally {
+        //         this.renameItems();
+        //         this.changeStatusTo(STATUS.PREPARING);
+        //     }
+        // });
+        // this.map.retryUpload.addEventListener("click", async event => {
+        //     try {
+        //         await this.doRetryUpload();
+        //         this.changeStatusTo(STATUS.UPLOADED);
+        //         await this.deleteScannedFiles();
+        //         await this.printAPI.deleteUploadJob(this.jobName);
+        //         alert("アップロードが終了しました。");
+        //         this.closeWidget();
+        //     } catch (e) {
+        //         console.log(e.toString());
+        //     }
+        // });
+        // this.map.cancelUpload.addEventListener("click", async event => {
+        //     await this.doCancelUpload();
+        //     this.changeStatusTo(STATUS.PREPARING);
+        // });
+        // this.ele.addEventListener("delete-item", async event => {
+        //     let item = event.detail;
+        //     await item.deleteScannedFile();
+        //     item.ele.remove();
+        //     let index = this.items.indexOf(item);
+        //     this.items.splice(index, 1);
+        //     this.renameItems();
+        //     this.status.updateUI();
+        // });
+        // this.map.tagSelect.addEventListener("change", event => {
+        //     if (this.status.isPreparing()) {
+        //         this.renameItems();
+        //     }
+        // });
+        // this.map.cancelWidget.addEventListener("click", async event => {
+        //     if (this.items.length > 0) {
+        //         if (!confirm("このスキャンを本当にキャンセルしますか？")) {
+        //             return;
+        //         }
+        //     }
+        //     await this.deleteScannedFiles();
+        //     if( this.jobName ){
+        //         this.printAPI.deleteUploadJob(this.jobName);
+        //     }
+        //     this.closeWidget()
+        // });
+        // this.ele.addEventListener("suppress-scan", event => {
+        //     this.status.suppressScan = true;
+        //     this.status.updateUI();
+        // });
+        // this.ele.addEventListener("release-scan", event => {
+        //     this.status.suppressScan = false;
+        //     this.status.updateUI();
+        // });
+        // if( this.patient ){
+        //     this.setPatient(this.patient);
+        // }
+        // this.items.forEach(item => this.map.scannedItems.append(item.ele));
+        // this.renameItems();
     }
 
-    async deleteScannedFiles(){
+    firePatientChanged() {
+        this.ele.dispatchEvent(new CustomEvent("patient-changed", {
+            detail: this.patient
+        }));
+    }
+
+    fireScanStarted() {
+        this.ele.dispatchEvent(new Event("scan-started"));
+    }
+
+    fireScanEnded(){
+        this.ele.dispatchEvent(new Event("scan-ended"));
+    }
+
+    async postConstruct() {
+        await this.loadDeviceList();
+        this.enableScan(this.map.deviceList.value);
+    }
+
+    async deleteScannedFiles() {
         for (let item of this.items) {
             await item.deleteScannedFile();
         }
+    }
+
+    updateUI() {
+        this.status.updateUI();
     }
 
     closeWidget() {
@@ -189,7 +252,7 @@ export class ScanWidget {
         this.status.updateUI();
     }
 
-    async refreshDeviceList() {
+    async loadDeviceList() {
         let devices = await this.printAPI.listScannerDevices();
         let select = this.map.deviceList;
         select.innerHTML = "";
@@ -242,38 +305,34 @@ export class ScanWidget {
     async doSelectPatient() {
         let patientId = this.map.patientSearchResult.value;
         if (!patientId) {
-            return;
+            return null;
         }
         let patient = this.patient = await this.rest.getPatient(patientId);
         if (patient) {
             this.map.patientSearchResultWrapper.classList.add("d-none");
             this.map.searchPatientText.value = "";
-            this.ele.dispatchEvent(new CustomEvent("patient-changed", {detail: patient}));
+            return patient;
+        } else {
+            return null;
         }
     }
 
+    setPatient(patient) {
+        this.patient = patient;
+        this.map.selectedPatientDisp.innerText = patientRep(patient);
+    }
+
     async doStartScan() {
-        this.ele.dispatchEvent(new Event("start-scan"));
-        try {
-            let deviceId = this.map.deviceList.value;
-            if (!deviceId) {
-                throw new Error("患者が設定されていません。");
-            }
-            this.map.scanProgress.innerText = "スキャンの準備中";
-            let file = await this.printAPI.scan(deviceId, pct => {
-                this.map.scanProgress.innerText = `${pct}%`;
-            });
-            this.map.scanProgress.innerText = "スキャン終了";
-            let item = new ScannedItem(file, this.printAPI, this.rest);
-            this.items.push(item);
-            this.map.scannedItems.append(item.ele);
-            if (this.jobName == null) {
-                let uploadJob = this.createUploadJob();
-                this.jobName = await this.printAPI.createUploadJob(uploadJob);
-            }
-        } finally {
-            this.ele.dispatchEvent(new Event("end-scan"));
+        let deviceId = this.map.deviceList.value;
+        if (!deviceId) {
+            throw new Error("患者が設定されていません。");
         }
+        this.map.scanProgress.innerText = "スキャンの準備中";
+        let file = await this.printAPI.scan(deviceId, pct => {
+            this.map.scanProgress.innerText = `${pct}%`;
+        });
+        this.map.scanProgress.innerText = "";
+        return new ScannedItem(file, "", this.printAPI, this.rest);
     }
 
     async doReScan(item) {
@@ -337,11 +396,11 @@ export class ScanWidget {
         }
     }
 
-    async doUpload() {
-        for (let item of this.items) {
-            await item.upload();
-        }
-    }
+    // async doUpload() {
+    //     for (let item of this.items) {
+    //         await item.upload();
+    //     }
+    // }
 
     async doRetryUpload() {
         for (let item of this.items) {
@@ -366,6 +425,41 @@ export class ScanWidget {
                 }
             }
         }
+    }
+
+    enablePatientSelection(enabled) {
+        let disabled = !enabled;
+        console.log(disabled);
+        this.map.searchPatientText.disabled = disabled;
+        this.map.searchPatientButton.disabled = disabled;
+    }
+
+    enableScannerSelection(enabled) {
+        let disabled = !enabled;
+        this.map.deviceList.disabled = disabled;
+        this.map.refreshDeviceList.disabled = disabled;
+    }
+
+    enableTagSelection(enabled) {
+        this.map.tagSelect.disabled = !enabled;
+    }
+
+    enableScan(enabled) {
+        this.map.startScan.disabled = !enabled;
+        for (let item of this.items) {
+            item.enableScan(enabled);
+        }
+    }
+
+    enableUpload(enabled) {
+        let disabled = !enabled;
+        this.map.uploadButton.disabled = disabled;
+        this.map.retryUpload.disabled = disabled;
+        this.map.cancelUpload.disabled = disabled;
+    }
+
+    enableCancel(enabled) {
+        this.map.cancelWidget.disabled = !enabled;
     }
 }
 
@@ -412,33 +506,33 @@ class Status {
     }
 
     updateUI() {
-        let map = this.map;
-        let status = this.status;
-        enableUI(
-            [map.searchPatientText, map.searchPatientButton],
-            [STATUS.PREPARING, STATUS.SCANNING].includes(status));
-        enableUI(
-            [map.selectPatientButton, map.tagSelect, map.deviceList, map.refreshDeviceList],
-            [STATUS.PREPARING].includes(status)
-        );
-        enableUI(
-            [map.startScan],
-            [STATUS.PREPARING].includes(status) && !!map.deviceList.value && !this.suppressScan
-        );
-        enableUI(
-            [map.uploadButton],
-            [STATUS.PREPARING].includes(status) && this.items.length > 0
-        );
-        showUI(
-            [map.reUploadCommands],
-            [STATUS.PARTIALLY_UPLOADED].includes(status)
-        );
-        showUI(
-            [map.scanProgress],
-            [STATUS.SCANNING].includes(status)
-        );
-        for (let item of this.items) {
-            item.updateUI(this.status);
-        }
+        // let map = this.map;
+        // let status = this.status;
+        // enableUI(
+        //     [map.searchPatientText, map.searchPatientButton],
+        //     [STATUS.PREPARING, STATUS.SCANNING].includes(status));
+        // enableUI(
+        //     [map.selectPatientButton, map.tagSelect, map.deviceList, map.refreshDeviceList],
+        //     [STATUS.PREPARING].includes(status)
+        // );
+        // enableUI(
+        //     [map.startScan],
+        //     [STATUS.PREPARING].includes(status) && !!map.deviceList.value && !this.suppressScan
+        // );
+        // enableUI(
+        //     [map.uploadButton],
+        //     [STATUS.PREPARING].includes(status) && this.items.length > 0
+        // );
+        // showUI(
+        //     [map.reUploadCommands],
+        //     [STATUS.PARTIALLY_UPLOADED].includes(status)
+        // );
+        // showUI(
+        //     [map.scanProgress],
+        //     [STATUS.SCANNING].includes(status)
+        // );
+        // for (let item of this.items) {
+        //     item.updateUI(this.status);
+        // }
     }
 }

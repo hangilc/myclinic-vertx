@@ -135,6 +135,10 @@ export class PrintAPI {
         return await this.POST("/upload-job", job);
     }
 
+    async getUploadJob(job) {
+        return await this.GET("/upload-job/" + job, {});
+    }
+
     async deleteUploadJob(jobName){
         return await this.DELETE("/upload-job/" + jobName);
     }

@@ -183,6 +183,10 @@ public class Handler {
         }
     }
 
+    public void sendJsonBytes(byte[] bytes){
+        send(bytes, "application/json");
+    }
+
     public void sendEncodedJson(byte[] bytes){
         send(bytes, "application/json");
     }

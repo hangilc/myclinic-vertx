@@ -53,10 +53,10 @@
         let rest = new Rest("/json", new TopRest("/json"));
         let integration = new Integration("/integration");
         let {HotlineComponent} = await import("../hotline/hotline-component.js");
-        let {parseElement} = await import("./js/parse-node.js");
+        //let {parseElement} = await import("./js/parse-node.js");
         let {PrintAPI} = await import("../js/print-api.js");
-        let printAPI = new PrintAPI("http://localhost:48080");
         let kanjidate = await import("../js/kanjidate.js");
+        let {parseQueryParams} = await import ("../js/parse-query-params.js");
 
         let practice = await import("./practice/practice.js");
         let cashier = await import("./cashier/cashier.js");
@@ -69,6 +69,16 @@
         let refer = await import("./refer/refer.js");
         let medcert = await import("./medcert/medcert.js");
 
+        let printAPI = null;
+        (function(){
+            let printPort = 48080;
+            let queryParams = parseQueryParams();
+            if( queryParams["print-port"] ){
+                printPort = parseInt(queryParams["print-port"]);
+            }
+            printAPI = new PrintAPI(`http://localhost:${printPort}`);
+            console.log(printAPI.url);
+        })();
         window.rest = rest;
         window.integration = integration;
         window.kanjidate = kanjidate;
@@ -80,7 +90,7 @@
             e.innerHTML = practice.getHtml();
             return {
                 postConstruct: async () => {
-                    await practice.initPractice(e, rest);
+                    await practice.initPractice(e, rest, printAPI);
                 },
                 reloadHook: async () => {
                 }
@@ -96,7 +106,7 @@
         menu.addItem("reception", e => {
             e.innerHTML = reception.getHtml();
             return {
-                postConstruct: async () => await reception.initReception(e),
+                postConstruct: async () => await reception.initReception(e, printAPI),
                 reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
             }
         }, document.getElementById("index-reception-link"));

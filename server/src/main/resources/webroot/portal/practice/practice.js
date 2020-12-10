@@ -103,7 +103,7 @@ class Controller {
 
 }
 
-export async function initPractice(pane, rest) {
+export async function initPractice(pane, rest, printAPI) {
     let cont = new Controller(pane, rest);
-    await Layout.initLayout(pane, rest, cont);
+    await Layout.initLayout(pane, rest, cont, printAPI);
 }

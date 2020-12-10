@@ -1,5 +1,4 @@
 import {parseElement} from "./parse-node.js";
-import {PrintAPI} from "./print-api.js";
 import {showSettingDetailDialog} from "./setting-detail-dialog.js";
 import {openEditAuxSettingDialog} from "./setting-edit-aux-dialog.js";
 
@@ -12,8 +11,8 @@ let tmpl = `
 `;
 
 export class SettingItem {
-    constructor(ele, name){
-        this.api = new PrintAPI();
+    constructor(ele, name, printAPI){
+        this.api = printAPI;
         if( !ele ){
             ele = document.createElement("div");
         }

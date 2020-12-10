@@ -252,7 +252,7 @@ export function getHtml() {
     return html;
 }
 
-export async function initReception(pane) {
+export async function initReception(pane, printAPI) {
     let {parseElement} = await import("../js/parse-element.js");
     let {PatientSearchDialog} = await import("./patient-search-dialog.js");
     let {PatientAndHokenEditWidget} = await import("./patient-and-hoken-edit-widget.js");
@@ -297,6 +297,7 @@ export async function initReception(pane) {
         let ele = $("#reception-main-commands");
         let map = parseElement(ele);
 
+
         map.newPatient.on("click", event => {
             let w = new PatientNewWidget(rest);
             w.onEntered(async patient => {
@@ -339,7 +340,7 @@ export async function initReception(pane) {
             setup: [],
             pages: [ops]
         };
-        await openPrintDialog("領収書", req.setup, req.pages, "receipt");
+        await openPrintDialog("領収書", req.setup, req.pages, "receipt", printAPI);
     }
 
     class CashierDialogFactory {

@@ -1040,7 +1040,7 @@ export function getHtml() {
     return html;
 }
 
-export async function initLayout(pane, rest, controller) {
+export async function initLayout(pane, rest, controller, printAPI) {
     let {parseElement} = await import("./parse-element.js");
     let {PatientDisplay} = await import("./patient-display.js");
     let {wqueueStateCodeToRep} = await import("../js/consts.js");
@@ -1626,7 +1626,7 @@ export async function initLayout(pane, rest, controller) {
         create(ops) {
             let ele = $(this.html);
             let map = parseElement(ele);
-            let dialog = new ShohousenPreviewDialog(ele, map, rest);
+            let dialog = new ShohousenPreviewDialog(ele, map, rest, printAPI);
             dialog.init(ops, this.drawerSvgModule);
             return dialog;
         }

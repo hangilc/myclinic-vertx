@@ -101,7 +101,7 @@
             for(let name of settings){
                 let ele = document.createElement("div");
                 ele.classList.add("setting-item");
-                let item = new SettingItem(ele, name);
+                let item = new SettingItem(ele, name, printAPI);
                 wrapper.appendChild(item.ele);
             }
         }

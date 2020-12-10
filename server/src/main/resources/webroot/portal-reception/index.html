@@ -42,13 +42,23 @@
         let {ScanPanel} = await import("./scan/scan-panel.js");
         let {Rest} = await import("../js/rest.js");
         let {PrintAPI} = await import("../js/print-api.js");
+        let {parseQueryParams} = await import("../js/parse-query-params.js");
         let {HotlineComponent} = await import("../hotline/hotline-component.js");
 
         let rest = new Rest("/json");
-        let printAPI = new PrintAPI("http://127.0.0.1:48080");
+        let printAPI = null;
+        (function(){
+            let printPort = 48080;
+            let queryParams = parseQueryParams();
+            if( queryParams["print-port"] ){
+                printPort = parseInt(queryParams["print-port"]);
+            }
+            printAPI = new PrintAPI(`http://localhost:${printPort}`);
+            console.log(printAPI.url);
+        })();
         let menu = new Menu(document.getElementById("index-pane-wrapper"));
         menu.addItem("main", e => {
-                let panel = new MainPanel(e, rest);
+                let panel = new MainPanel(e, rest, printAPI);
                 return {
                     reloadHook: async () => await panel.reloadHook()
                 };

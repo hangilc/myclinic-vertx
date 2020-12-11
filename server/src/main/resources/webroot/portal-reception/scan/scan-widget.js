@@ -50,11 +50,6 @@ let tmpl = `
             <div class="x-upload-commands"> 
                 <button class="btn btn-primary x-upload-button">アップロード</button>
             </div>
-<!--            <div class="d-none x-re-upload-commands">-->
-<!--                <span class="text-danger mr-2">アップロードに失敗しました。</span>-->
-<!--                <button class="btn btn-secondary x-retry-upload">再試行</button>-->
-<!--                <button class="btn btn-secondary x-cancel-upload">キャンセル</button>-->
-<!--            </div>-->
         </div>
     </div>
     <div class="d-flex align-items-center"> 
@@ -241,12 +236,8 @@ export class ScanWidget {
         return count;
     }
 
-    updateUI(scannersInUse=null) {
-        if( scannersInUse !== null ){
-            this.scannersInUse = scannersInUse;
-        } else {
-            scannersInUse = this.scannersInUse;
-        }
+    updateDisabled() {
+        let scannersInUse = this.scannersInUse;
         let isScanning = scannersInUse.includes(this.getSelectedScanner());
         let isUploading = this.isUploading;
         this.map.selectPatientButton.disabled = isScanning || isUploading;
@@ -256,7 +247,9 @@ export class ScanWidget {
             this.patient && this.countUnuploadedItems() > 0);
         this.map.cancelWidget.disabled = isScanning || isUploading;
         for(let item of this.items){
-            item.updateUI(isScanning, isUploading);
+            item.isScanning = isScanning;
+            item.isUploading = isUploading;
+            item.updateDisabled();
         }
     }
 

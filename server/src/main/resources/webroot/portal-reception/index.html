@@ -52,9 +52,9 @@
             let queryParams = parseQueryParams();
             if( queryParams["print-port"] ){
                 printPort = parseInt(queryParams["print-port"]);
+                console.log("print-port", printPort);
             }
             printAPI = new PrintAPI(`http://localhost:${printPort}`);
-            console.log(printAPI.url);
         })();
         let menu = new Menu(document.getElementById("index-pane-wrapper"));
         menu.addItem("main", e => {

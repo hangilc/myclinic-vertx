@@ -56,7 +56,8 @@ export class ScanPanel {
     async addWidget() {
         let widget = new ScanWidget(this.rest, this.printAPI);
         await widget.postConstruct();
-        widget.updateUI(this.scannersInUse);
+        widget.scannersInUse = this.scannersInUse;
+        widget.updateDisabled();
         this.map.workarea.prepend(widget.ele);
         widget.ele.addEventListener("remove", async event => {
             widget.ele.remove();

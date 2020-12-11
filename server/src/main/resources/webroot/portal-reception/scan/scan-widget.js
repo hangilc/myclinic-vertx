@@ -109,10 +109,12 @@ export class ScanWidget {
         });
         this.map.uploadButton.addEventListener("click", async event => {
             this.isUploading = true;
-            this.updateUI();
+            this.updateDisabled();
             try {
                 for (let item of this.items) {
-                    await item.upload();
+                    if( !item.isUploaded() ){
+                        await item.upload(this.patient.patientId);
+                    }
                 }
                 await this.deleteScannedFiles();
                 await this.printAPI.deleteUploadJob(this.jobName);
@@ -120,7 +122,7 @@ export class ScanWidget {
                 alert("アップロードが終了しました。");
             } finally {
                 this.isUploading = false;
-                this.updateUI();
+                this.updateDisabled();
             }
         });
 
@@ -231,7 +233,6 @@ export class ScanWidget {
                 count += 1;
             }
         });
-        console.log(count);
         return count;
     }
 
@@ -336,7 +337,13 @@ export class ScanWidget {
 
     async doStartScan(deviceId) {
         let file = await this.doScan(deviceId);
-        return new ScannedItem(file, "", this.printAPI, this.rest);
+        let item = new ScannedItem(file, "", this.printAPI, this.rest);
+        item.ele.addEventListener("delete", async event => {
+            await item.deleteScannedFile();
+            item.ele.remove();
+            this.renameItems();
+        });
+        return item;
     }
 
     async doReScan(item) {

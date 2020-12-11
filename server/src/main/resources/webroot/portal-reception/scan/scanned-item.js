@@ -45,7 +45,7 @@ export class ScannedItem {
         });
         this.map.delete.addEventListener("click", event => {
             if (confirm("このスキャンを削除していいですか？")) {
-                htis.fireDelete();
+                this.fireDelete();
             }
         });
         this.updateUploadNameUI();
@@ -62,8 +62,8 @@ export class ScannedItem {
     updateDisabled() {
         let isScanning = this.isScanning;
         let isUploading = this.isUploading;
-        this.map.reScan.disabled = isScanning || isUploading;
-        this.map.delete.disabled = isScanning || isUploading;
+        this.map.reScan.disabled = isScanning || isUploading || !this.isBeforeUpload();
+        this.map.delete.disabled = isScanning || isUploading || !this.isBeforeUpload();
     }
 
     setUploadName(uploadName) {
@@ -84,6 +84,10 @@ export class ScannedItem {
 
     setStateUploadFailed() {
         this.state = "upload-failed";
+    }
+
+    isBeforeUpload(){
+        return this.state === "before-upload";
     }
 
     isUploaded(){

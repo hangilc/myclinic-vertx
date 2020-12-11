@@ -34,13 +34,19 @@ export class ScanPanel {
         this.ele.addEventListener("use-scanner", event => {
             event.stopPropagation();
             this.scannersInUse.push(event.detail);
-            this.widgets.forEach(w => w.updateUI(this.scannersInUse));
+            this.widgets.forEach(w => {
+                w.scannersInUse = this.scannersInUse;
+                w.updateDisabled()
+            });
         });
         this.ele.addEventListener("unuse-scanner", event => {
             event.stopPropagation();
             let scanner = event.detail;
             this.scannersInUse = this.scannersInUse.filter(s => s !== scanner);
-            this.widgets.forEach(w => w.updateUI(this.scannersInUse));
+            this.widgets.forEach(w => {
+                w.scannersInUse = this.scannersInUse;
+                w.updateDisabled()
+            });
         });
     }
 

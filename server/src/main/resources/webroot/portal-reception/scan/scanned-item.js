@@ -1,8 +1,6 @@
 import {createElementFrom} from "../js/create-element-from.js";
 import {parseElement} from "../js/parse-node.js";
 import {PreviewBox} from "./preview-box.js";
-import * as STATUS from "./status.js";
-import {showUI} from "../../js/dynamic-ui.js";
 
 let tmpl = `
     <div>
@@ -134,14 +132,6 @@ export class ScannedItem {
 
     setScannedFile(filename) {
         this.scannedFile = filename;
-    }
-
-    setUpload(uploadName, patientId) {
-        if (this.isBeforeUpload()) {
-            this.uploadName = uploadName;
-            this.patientId = patientId;
-            this.map.name.innerText = uploadName;
-        }
     }
 
     getScannedFile() {

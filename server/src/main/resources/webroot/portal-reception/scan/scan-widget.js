@@ -2,7 +2,6 @@ import {createElementFrom} from "../js/create-element-from.js";
 import {parseElement} from "../js/parse-node.js";
 import * as paperscan from "../../js/paper-scan.js";
 import {ScannedItem} from "./scanned-item.js";
-import * as STATUS from "./status.js";
 
 let tmpl = `
 <div class="scan-widget border border-dark rounded p-3 mb-3">
@@ -70,7 +69,6 @@ export class ScanWidget {
         this.isUploading = false;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
-        this.status = new Status(this);
         this.map.searchPatientForm.addEventListener("submit", async event =>
             await this.doSearchPatient());
         this.map.searchPatientClose.addEventListener("click", event =>
@@ -79,13 +77,14 @@ export class ScanWidget {
             let patient = await this.doSelectPatient();
             if (patient) {
                 this.setPatient(patient);
+                this.updatePatientUI();
                 this.renameItems();
-                this.updateUI();
+                this.updateDisabled();
             }
         });
         this.map.refreshDeviceList.addEventListener("click", async event => {
             await this.loadDeviceList();
-            this.updateUI();
+            this.updateDisabled();
         });
         this.map.startScan.addEventListener("click", async event => {
             let scanner = this.getSelectedScanner();
@@ -320,7 +319,10 @@ export class ScanWidget {
 
     setPatient(patient) {
         this.patient = patient;
-        this.map.selectedPatientDisp.innerText = patientRep(patient);
+    }
+
+    updatePatientUI(){
+        this.map.selectedPatientDisp.innerText = patientRep(this.patient);
     }
 
     async doScan(deviceId){
@@ -375,14 +377,14 @@ export class ScanWidget {
         if (items.length === 1) {
             let item = items[0];
             let ext = paperscan.getFileExtension(item.getScannedFile());
-            item.setUpload(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "", ext),
-                patientId);
+            item.setUploadName(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "", ext));
+            item.updateUploadNameUI();
         } else {
             let ser = 1;
             for (let item of items) {
                 let ext = paperscan.getFileExtension(item.getScannedFile());
-                item.setUpload(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "" + ser, ext),
-                    patientId);
+                item.setUploadName(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "" + ser, ext));
+                item.updateUploadNameUI();
                 ser += 1;
             }
         }
@@ -469,75 +471,11 @@ export class ScanWidget {
 }
 
 function patientRep(patient) {
-    let patientIdRep = ("" + patient.patientId).padStart(4, "0");
-    return `(${patientIdRep}) ${patient.lastName}${patient.firstName}`;
-}
-
-class Status {
-    constructor(panel) {
-        this.panel = panel;
-        this.map = panel.map;
-        this.items = panel.items;
-        this.status = STATUS.PREPARING;
-        this.suppressScan = false;
-    }
-
-    changeStatusTo(status) {
-        if (STATUS.changeMap[this.status].includes(status)) {
-            this.status = status;
-        } else {
-            throw new Error(`Invalid state transition from ${this.status} to ${status}`);
-        }
-    }
-
-    isPreparing() {
-        return this.status === STATUS.PREPARING;
-    }
-
-    isScanning() {
-        return this.status === STATUS.SCANNING;
-    }
-
-    isUploading() {
-        return this.status === STATUS.UPLOADING;
-    }
-
-    isUploaded() {
-        return this.status === STATUS.UPLOADED;
-    }
-
-    isPartiallyUploaded() {
-        return this.status === STATUS.PARTIALLY_UPLOADED;
-    }
-
-    updateUI() {
-        // let map = this.map;
-        // let status = this.status;
-        // enableUI(
-        //     [map.searchPatientText, map.searchPatientButton],
-        //     [STATUS.PREPARING, STATUS.SCANNING].includes(status));
-        // enableUI(
-        //     [map.selectPatientButton, map.tagSelect, map.deviceList, map.refreshDeviceList],
-        //     [STATUS.PREPARING].includes(status)
-        // );
-        // enableUI(
-        //     [map.startScan],
-        //     [STATUS.PREPARING].includes(status) && !!map.deviceList.value && !this.suppressScan
-        // );
-        // enableUI(
-        //     [map.uploadButton],
-        //     [STATUS.PREPARING].includes(status) && this.items.length > 0
-        // );
-        // showUI(
-        //     [map.reUploadCommands],
-        //     [STATUS.PARTIALLY_UPLOADED].includes(status)
-        // );
-        // showUI(
-        //     [map.scanProgress],
-        //     [STATUS.SCANNING].includes(status)
-        // );
-        // for (let item of this.items) {
-        //     item.updateUI(this.status);
-        // }
+    if(patient){
+        let patientIdRep = ("" + patient.patientId).padStart(4, "0");
+        return `(${patientIdRep}) ${patient.lastName}${patient.firstName}`;
+    } else {
+        return "";
     }
 }
+

@@ -63,23 +63,101 @@ function extendProp(prop, values){
     return Object.assign(Object.create(prop), values);
 }
 
+function on(element, event, handler){
+    element.addEventListener(event, handler);
+}
+
+function click(element, handler){
+    on(element, "click", handler);
+}
+
+function submit(element, handler){
+    on(element, "submit", handler);
+}
+
+function show(element, show){
+    if( show ){
+        element.classList.remove("d-none");
+    } else {
+        element.classList.add("d-none");
+    }
+}
+
+class ScanWidgetDomHelper {
+    constructor(ele){
+        this.map = parseElement(ele);
+    }
+
+    getSearchPatientText(){
+        return this.map.searchPatientText;
+    }
+
+    getSearchPatientForm(){
+        return this.map.searchPatientForm;
+    }
+
+    getSearchPatientResultWrapper(){
+        return this.map.patientSearchResultWrapper;
+    }
+
+    getSearchPatientResult(){
+        return this.map.patientSearchResult;
+    }
+
+    getSelectPatient(){
+        return this.map.selectPatientButton;
+    }
+
+    getCloseSearchPatientResult(){
+        return this.map.searchPatientClose;
+    }
+
+    getSelectedPatientDisp(){
+        return this.map.selectedPatientDisp;
+    }
+
+    getTagSelect(){
+        return this.map.tagSelect;
+    }
+
+    getDeviceList(){
+        return this.map.deviceList;
+    }
+
+    getRefreshDeviceList(){
+        return this.map.refreshDeviceList;
+    }
+
+    getStartScan(){
+        return this.map.startScan;
+    }
+
+    getScanProgress(){
+        return this.map.scanProgress;
+    }
+
+    getCancel(){
+        return this.map.cancelWidget;
+    }
+}
+
 export class ScanWidget {
     constructor(prop) {
         this.prop = extendProp(prop, {
             patient: null,
-            tag: null
         });
         this.ele = createElementFrom(tmpl);
-        this.map = parseElement(this.ele);
+        this.d = new ScanWidgetDomHelper(this.ele);
         this.bindSearchPatient();
         this.bindSearchPatientSelect();
         this.bindSearchPatientClose();
+        this.bindRefreshDeviceList();
+        this.bindStartScan();
         this.bindCancel();
     }
 
     async postConstruct() {
         await this.loadDeviceList();
-        this.enableScan(this.map.deviceList.value);
     }
 
     fireDeleted() {
@@ -89,51 +167,96 @@ export class ScanWidget {
         }));
     }
 
-    getSearchResultElement(){
-        return this.map.patientSearchResult;
-    }
-
     bindSearchPatient() {
-        this.map.searchPatientForm.addEventListener("submit", async event => {
-            let patients = await searchPatient(this.prop.rest, this.map.searchPatientText.value);
-            setSearchResult(this.getSearchResultElement(), patients);
-            showSearchResult(this.map.patientSearchResultWrapper, patients.length > 0);
-            this.map.patientSearchResult.focus();
-        });
-    }
-
-    bindSearchPatientSelect(){
-        this.map.selectPatientButton.addEventListener("click", async event => {
-            let patient = await getSelectedPatient(
-                this.getSearchResultElement(), this.prop.rest
-            );
-            if( patient ){
-                this.prop.patient = patient;
-                console.log(this.prop);
+        submit(this.d.getSearchPatientForm(), async event => {
+            let patients = await searchPatient(this.prop.rest, this.d.getSearchPatientText().value);
+            if( patients.length > 0 ){
+                setSearchResult(this.d.getSearchPatientResult(), patients);
+                show(this.d.getSearchPatientResultWrapper(), true);
+                this.d.getSearchPatientResult().focus();
             }
         });
     }
 
+    bindSearchPatientSelect(){
+        click(this.d.getSelectPatient(), async event => {
+            let patient = await getSelectedPatient(
+                this.d.getSearchPatientResult(), this.prop.rest
+            );
+            if( patient ){
+                this.prop.patient = patient;
+                show(this.d.getSearchPatientResult(), false);
+                this.setPatient(patient);
+            }
+        })
+    }
+
     bindSearchPatientClose(){
-        this.map.searchPatientClose.addEventListener("click", event =>
-            showSearchResult(this.map.patientSearchResultWrapper, false)
-        );
+        click(this.d.getCloseSearchPatientResult(), event =>
+            show(this.d.getSearchPatientResultWrapper(), false));
+    }
+
+    bindRefreshDeviceList(){
+        click(this.d.getRefreshDeviceList(), async event => await this.loadDeviceList());
+    }
+
+    bindStartScan(){
+        click(this.d.getStartScan(), async event => {
+            let file = await this.scan();
+            console.log(file);
+        });
     }
 
     bindCancel() {
-        this.map.cancelWidget.addEventListener("click", async event => {
+        click(this.d.getCancel(), async event => {
             this.ele.remove();
             this.fireDeleted();
         });
     }
 
     focus(){
-        this.map.searchPatientText.focus();
+        this.d.getSearchPatientText().focus();
     }
 
     setPatient(patient){
-
+        this.prop.patient = patient;
+        this.d.getSelectedPatientDisp().innerText = patientRep(patient);
     }
+
+    async loadDeviceList() {
+        let devices = await this.prop.printAPI.listScannerDevices();
+        let select = this.d.getDeviceList();
+        select.innerHTML = "";
+        for (let device of devices) {
+            let opt = document.createElement("option");
+            opt.innerText = device.name;
+            opt.value = device.deviceId;
+            select.appendChild(opt);
+        }
+    }
+
+    getSelectedTag(){
+        return this.d.getTagSelect().value;
+    }
+
+    getSelectedScanner(){
+        return this.d.getDeviceList().value;
+    }
+
+    async scan() {
+        let deviceId = this.getSelectedScanner();
+        if( deviceId == null ){
+            throw new Error("スキャナーが見つかりません。");
+        }
+        let progress = this.d.getScanProgress();
+        progress.innerText = "スキャンの準備中";
+        let file = await this.prop.printAPI.scan(deviceId, pct => {
+            progress.innerText = `${pct}%`;
+        });
+        progress.innerText = "";
+        return file;
+    }
+
 }
 
 async function searchPatient(rest, text) {
@@ -174,14 +297,6 @@ function setSearchResult(select, patients) {
     select.scrollTop = 0;
     if (patients.length > 0) {
         select.querySelector("option").selected = true;
-    }
-}
-
-function showSearchResult(wrapper, show) {
-    if (show) {
-        wrapper.classList.remove("d-none");
-    } else {
-        wrapper.classList.add("d-none");
     }
 }
 

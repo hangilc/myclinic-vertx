@@ -19,11 +19,14 @@ let tmpl = `
 
 export class ScanPanel {
     constructor(rest, printAPI){
-        this.rest = rest;
-        this.printAPI = printAPI;
+        this.prop = Object.create({
+            rest, printAPI
+        });
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
+        this.widgets = [];
         this.bindNewScan();
+        this.bindWidgetDeleted();
     }
 
     async postConstruct(){
@@ -36,7 +39,18 @@ export class ScanPanel {
 
     bindNewScan(){
         this.map.newScan.addEventListener("click", async event => {
+            let widget = new ScanWidget(this.prop);
+            await widget.postConstruct();
+            this.widgets.push(widget);
+            this.map.workarea.prepend(widget.ele);
+            widget.focus();
+        });
+    }
 
+    bindWidgetDeleted(){
+        this.ele.addEventListener("widget-deleted", event => {
+            let widget = event.detail;
+            this.widgets = this.widgets.filter(w => w !== widget);
         });
     }
 }
@@ -84,7 +98,7 @@ export class ScanPanelOrig {
     }
 
     async addWidget() {
-        let widget = new ScanWidget(this.rest, this.printAPI);
+        let widget = new ScanWidgetOrig(this.rest, this.printAPI);
         await widget.postConstruct();
         widget.scannersInUse = this.scannersInUse;
         widget.updateDisabled();

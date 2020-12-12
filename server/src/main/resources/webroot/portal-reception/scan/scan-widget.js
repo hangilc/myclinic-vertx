@@ -59,7 +59,142 @@ let tmpl = `
 </div>
 `;
 
+function extendProp(prop, values){
+    return Object.assign(Object.create(prop), values);
+}
+
 export class ScanWidget {
+    constructor(prop) {
+        this.prop = extendProp(prop, {
+            patient: null,
+            tag: null
+        });
+        this.ele = createElementFrom(tmpl);
+        this.map = parseElement(this.ele);
+        this.bindSearchPatient();
+        this.bindSearchPatientSelect();
+        this.bindSearchPatientClose();
+        this.bindCancel();
+    }
+
+    async postConstruct() {
+        await this.loadDeviceList();
+        this.enableScan(this.map.deviceList.value);
+    }
+
+    fireDeleted() {
+        this.ele.dispatchEvent(new CustomEvent("widget-deleted", {
+            bubble: true,
+            detail: this
+        }));
+    }
+
+    getSearchResultElement(){
+        return this.map.patientSearchResult;
+    }
+
+    bindSearchPatient() {
+        this.map.searchPatientForm.addEventListener("submit", async event => {
+            let patients = await searchPatient(this.prop.rest, this.map.searchPatientText.value);
+            setSearchResult(this.getSearchResultElement(), patients);
+            showSearchResult(this.map.patientSearchResultWrapper, patients.length > 0);
+            this.map.patientSearchResult.focus();
+        });
+    }
+
+    bindSearchPatientSelect(){
+        this.map.selectPatientButton.addEventListener("click", async event => {
+            let patient = await getSelectedPatient(
+                this.getSearchResultElement(), this.prop.rest
+            );
+            if( patient ){
+                this.prop.patient = patient;
+                console.log(this.prop);
+            }
+        });
+    }
+
+    bindSearchPatientClose(){
+        this.map.searchPatientClose.addEventListener("click", event =>
+            showSearchResult(this.map.patientSearchResultWrapper, false)
+        );
+    }
+
+    bindCancel() {
+        this.map.cancelWidget.addEventListener("click", async event => {
+            this.ele.remove();
+            this.fireDeleted();
+        });
+    }
+
+    focus(){
+        this.map.searchPatientText.focus();
+    }
+
+    setPatient(patient){
+
+    }
+}
+
+async function searchPatient(rest, text) {
+    text = text.trim();
+    if (text === "") {
+        return [];
+    } else {
+        return await rest.searchPatient(text);
+    }
+}
+
+function patientToOption(patient) {
+    let opt = document.createElement("option");
+    opt.value = patient.patientId;
+    opt.innerText = patientRep(patient);
+    return opt;
+}
+
+function patientRep(patient) {
+    if (patient) {
+        let patientIdRep = ("" + patient.patientId).padStart(4, "0");
+        return `(${patientIdRep}) ${patient.lastName}${patient.firstName}`;
+    } else {
+        return "";
+    }
+}
+
+function setSearchResult(select, patients) {
+    select.innerHTML = "";
+    patients.forEach(patient => select.append(patientToOption(patient)));
+    if (patients.length === 1) {
+        select.size = 2;
+    } else if (patients.length > 10) {
+        select.size = 10;
+    } else {
+        select.size = patients.length;
+    }
+    select.scrollTop = 0;
+    if (patients.length > 0) {
+        select.querySelector("option").selected = true;
+    }
+}
+
+function showSearchResult(wrapper, show) {
+    if (show) {
+        wrapper.classList.remove("d-none");
+    } else {
+        wrapper.classList.add("d-none");
+    }
+}
+
+async function getSelectedPatient(select, rest){
+    let patientId = select.value;
+    if (!patientId) {
+        return null;
+    }
+    return await rest.getPatient(patientId);
+}
+
+
+class ScanWidgetOrig {
     constructor(rest, printAPI) {
         this.rest = rest;
         this.printAPI = printAPI;
@@ -217,7 +352,7 @@ export class ScanWidget {
         this.enableScan(this.map.deviceList.value);
     }
 
-    setScannersInUse(scannersInUse){
+    setScannersInUse(scannersInUse) {
         this.scannersInUse = scannersInUse;
         this.itemList.setScannersInUse(scannersInUse);
     }
@@ -476,15 +611,6 @@ export class ScanWidget {
 
     enableCancel(enabled) {
         this.map.cancelWidget.disabled = !enabled;
-    }
-}
-
-function patientRep(patient) {
-    if (patient) {
-        let patientIdRep = ("" + patient.patientId).padStart(4, "0");
-        return `(${patientIdRep}) ${patient.lastName}${patient.firstName}`;
-    } else {
-        return "";
     }
 }
 

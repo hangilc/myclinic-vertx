@@ -18,6 +18,30 @@ let tmpl = `
 `;
 
 export class ScanPanel {
+    constructor(rest, printAPI){
+        this.rest = rest;
+        this.printAPI = printAPI;
+        this.ele = createElementFrom(tmpl);
+        this.map = parseElement(this.ele);
+        this.bindNewScan();
+    }
+
+    async postConstruct(){
+
+    }
+
+    async reloadHook(){
+
+    }
+
+    bindNewScan(){
+        this.map.newScan.addEventListener("click", async event => {
+
+        });
+    }
+}
+
+export class ScanPanelOrig {
     constructor(rest, printAPI) {
         this.rest = rest;
         this.printAPI = printAPI;
@@ -35,7 +59,7 @@ export class ScanPanel {
             event.stopPropagation();
             this.scannersInUse.push(event.detail);
             this.widgets.forEach(w => {
-                w.scannersInUse = this.scannersInUse;
+                w.setScannersInUse(this.scannersInUse);
                 w.updateDisabled()
             });
         });
@@ -44,7 +68,7 @@ export class ScanPanel {
             let scanner = event.detail;
             this.scannersInUse = this.scannersInUse.filter(s => s !== scanner);
             this.widgets.forEach(w => {
-                w.scannersInUse = this.scannersInUse;
+                w.setScannersInUse(this.scannersInUse);
                 w.updateDisabled()
             });
         });

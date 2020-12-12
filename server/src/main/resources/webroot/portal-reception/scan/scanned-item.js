@@ -33,7 +33,7 @@ export class ScannedItem {
         this.printAPI = printAPI;
         this.rest = rest;
         this.isScanning = false;
-        this.isUploading = false;
+        this.isListUploading = false;
         this.state = "before-upload";
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
@@ -61,9 +61,17 @@ export class ScannedItem {
 
     updateDisabled() {
         let isScanning = this.isScanning;
-        let isUploading = this.isUploading;
-        this.map.reScan.disabled = isScanning || isUploading || !this.isBeforeUpload();
-        this.map.delete.disabled = isScanning || isUploading || !this.isBeforeUpload();
+        let isListUploading = this.isListUploading;
+        this.map.reScan.disabled = isScanning || isListUploading || !this.isBeforeUpload();
+        this.map.delete.disabled = isScanning || isListUploading || !this.isBeforeUpload();
+    }
+
+    setIsScanning(value){
+        this.isScanning = value;
+    }
+
+    setIsListUploading(value){
+        this.isListUploading = value;
     }
 
     setUploadName(uploadName) {

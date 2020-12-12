@@ -2,6 +2,7 @@ import {createElementFrom} from "../js/create-element-from.js";
 import {parseElement} from "../js/parse-node.js";
 import * as paperscan from "../../js/paper-scan.js";
 import {ScannedItem} from "./scanned-item.js";
+import {ItemList} from "./item-list.js";
 
 let tmpl = `
 <div class="scan-widget border border-dark rounded p-3 mb-3">
@@ -63,7 +64,7 @@ export class ScanWidget {
         this.rest = rest;
         this.printAPI = printAPI;
         this.patient = null;
-        this.items = [];
+        this.itemList = new ItemList(this.rest, this.printAPI);
         this.jobName = null;
         this.scannersInUse = [];
         this.isUploading = false;
@@ -88,7 +89,7 @@ export class ScanWidget {
         });
         this.map.startScan.addEventListener("click", async event => {
             let scanner = this.getSelectedScanner();
-            if( !scanner ){
+            if (!scanner) {
                 alert("スキャナーが選択されていません。");
                 return;
             }
@@ -112,7 +113,7 @@ export class ScanWidget {
             this.updateDisabled();
             try {
                 for (let item of this.items) {
-                    if( !item.isUploaded() ){
+                    if (!item.isUploaded()) {
                         await item.upload(this.patient.patientId);
                     }
                 }
@@ -195,19 +196,19 @@ export class ScanWidget {
 
     fireScanStarted(scanner) {
         this.ele.dispatchEvent(new CustomEvent("use-scanner", {
-            bubbles:true,
+            bubbles: true,
             detail: scanner
         }));
     }
 
-    fireScanEnded(scanner){
+    fireScanEnded(scanner) {
         this.ele.dispatchEvent(new CustomEvent("unuse-scanner", {
-            bubbles:true,
+            bubbles: true,
             detail: scanner
         }));
     }
 
-    fireRemove(){
+    fireRemove() {
         this.ele.dispatchEvent(new Event("remove"));
     }
 
@@ -216,20 +217,25 @@ export class ScanWidget {
         this.enableScan(this.map.deviceList.value);
     }
 
+    setScannersInUse(scannersInUse){
+        this.scannersInUse = scannersInUse;
+        this.itemList.setScannersInUse(scannersInUse);
+    }
+
     async deleteScannedFiles() {
         for (let item of this.items) {
             await item.deleteScannedFile();
         }
     }
 
-    getSelectedScanner(){
+    getSelectedScanner() {
         return this.map.deviceList.value;
     }
 
-    countUnuploadedItems(){
+    countUnuploadedItems() {
         let count = 0;
         this.items.forEach(item => {
-            if( !item.isUploaded() ){
+            if (!item.isUploaded()) {
                 count += 1;
             }
         });
@@ -246,11 +252,7 @@ export class ScanWidget {
         this.map.uploadButton.disabled = !(!isScanning && !isUploading &&
             this.patient && this.countUnuploadedItems() > 0);
         this.map.cancelWidget.disabled = isScanning || isUploading;
-        for(let item of this.items){
-            item.isScanning = isScanning;
-            item.isUploading = isUploading;
-            item.updateDisabled();
-        }
+        this.itemList.updateDisabled();
     }
 
     async loadDeviceList() {
@@ -322,11 +324,11 @@ export class ScanWidget {
         this.patient = patient;
     }
 
-    updatePatientUI(){
+    updatePatientUI() {
         this.map.selectedPatientDisp.innerText = patientRep(this.patient);
     }
 
-    async doScan(deviceId){
+    async doScan(deviceId) {
         this.map.scanProgress.innerText = "スキャンの準備中";
         let file = await this.printAPI.scan(deviceId, pct => {
             this.map.scanProgress.innerText = `${pct}%`;
@@ -464,7 +466,7 @@ export class ScanWidget {
 
     enableUpload(enabled) {
         let disabled = !enabled;
-        if( !(this.patient && this.map.deviceList.value) ){
+        if (!(this.patient && this.map.deviceList.value)) {
             disabled = true;
         }
         this.map.uploadButton.disabled = disabled;
@@ -478,7 +480,7 @@ export class ScanWidget {
 }
 
 function patientRep(patient) {
-    if(patient){
+    if (patient) {
         let patientIdRep = ("" + patient.patientId).padStart(4, "0");
         return `(${patientIdRep}) ${patient.lastName}${patient.firstName}`;
     } else {

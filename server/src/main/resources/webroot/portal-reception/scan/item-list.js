@@ -1,98 +1,69 @@
 import * as paperscan from "../../js/paper-scan.js";
+import {extendProp} from "../../js/extend-prop.js";
+import {ScannedItem} from "./scanned-item.js";
+import {createElementFrom} from "../../js/create-element-from.js";
+
+let tmpl = `
+<div></div>
+`;
 
 export class ItemList {
-    constructor(rest, printAPI) {
-        this.rest = rest;
-        this.printAPI = printAPI;
+    constructor(prop) {
+        this.prop = extendProp(prop, {});
         this.items = [];
         this.state = "before-upload";
+        this.ele = createElementFrom(tmpl);
     }
 
-    addScan(scannedFile){
-
+    addScan(scannedFile, uploadName){
+        let item = new ScannedItem(this.prop, scannedFile, "");
+        this.items.push(item);
+        this.ele.append(item.ele);
+        this.renameUploadNames();
     }
 
-    remove(item){
-        this.items = this.items.filter(i => i !== item);
-    }
-
-    setScannersInUse(scannersInUse){
-        this.items.forEach(item => item.setScannersInUse(scannersInUse));
-    }
-
-    setIsListUploading(value){
-        this.items.forEach(item => item.setIsListUploading(value));
-    }
-
-    updateDiabled(){
-        this.items.forEach(item => item.updateDisabled());
-    }
-
-    setStateBeforeUpload(){
-        this.state = "before-upload";
-    }
-
-    isStateBeforeUpload(){
-        return this.state === "before-upload";
-    }
-
-    setStateUploading(){
-        this.state = "uploading";
-    }
-
-    isStateUploading(){
-        return this.state === "uploading";
-    }
-
-    setStateUploadFail(){
-        this.state = "upload-fail";
-    }
-
-    isStateUploadFail(){
-        return this.state === "upload-fail";
-    }
-
-    setStateUploaded(){
-        this.state = "uploaded";
-    }
-
-    isStateUploaded(){
-        return this.state === "uploaded";
-    }
-
-    renameUploadNames(patientId, tag){
-        let patientIdTag = patientId ? ("" + patientId) : "????";
+    renameUploadNames(){
+        let patientIdTag = this.makePatientIdTag();
+        let tag = this.prop.getTag();
         let timestamp = paperscan.getTimestamp();
         let items = this.items;
         if (items.length === 1) {
             let item = items[0];
-            setUploadName(item, patientIdTag, tag, timestamp);
             let ext = paperscan.getFileExtension(item.getScannedFile());
-            item.setUploadName(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "", ext));
-            item.updateUploadNameUI();
+            let uploadName = paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "", ext);
+            item.setUploadFile(uploadName);
         } else {
             let ser = 1;
             for (let item of items) {
-                setUploadName(item, patientIdTag, tag, timestamp);
                 let ext = paperscan.getFileExtension(item.getScannedFile());
-                item.setUploadName(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, "" + ser, ext));
-                item.updateUploadNameUI();
+                let uploadName = paperscan.createPaperScanFileName(patientIdTag, tag, timestamp,
+                    "" + ser, ext);
+                item.setUploadFile(uploadName);
                 ser += 1;
             }
         }
-
     }
 
-    updateDisabled(isScanning){
-        this.items.forEach(item => {
-            item.updateDisabled(isScanning, this);
-        });
+    makePatientIdTag(){
+        let patient = this.prop.patient;
+        if( patient ){
+            return "" + patient.patientId;
+        } else {
+            return "????";
+        }
+    }
+
+    async upload(){
+        for(let item of this.items){
+            if( !item.isUploaded() ){
+                let ok = await item.upload();
+                if( !ok ){
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
 }
 
-function setUploadName(item, patientIdTag, tag, timestamp, ser=""){
-    let ext = paperscan.getFileExtension(item.getScannedFile());
-    item.setUploadName(paperscan.createPaperScanFileName(patientIdTag, tag, timestamp, ser, ext));
-    item.updateUploadNameUI();
-}

@@ -136,6 +136,14 @@ class ScanWidgetDomHelper {
         return this.map.scanProgress;
     }
 
+    getScannedItems(){
+        return this.map.scannedItems;
+    }
+
+    getUpload(){
+        return this.map.uploadButton;
+    }
+
     getCancel(){
         return this.map.cancelWidget;
     }
@@ -145,14 +153,18 @@ export class ScanWidget {
     constructor(prop) {
         this.prop = extendProp(prop, {
             patient: null,
+            getTag: () => this.getSelectedTag()
         });
         this.ele = createElementFrom(tmpl);
         this.d = new ScanWidgetDomHelper(this.ele);
+        this.itemList = new ItemList(this.prop);
+        this.d.getScannedItems().append(this.itemList.ele);
         this.bindSearchPatient();
         this.bindSearchPatientSelect();
         this.bindSearchPatientClose();
         this.bindRefreshDeviceList();
         this.bindStartScan();
+        this.bindUpload();
         this.bindCancel();
     }
 
@@ -203,7 +215,18 @@ export class ScanWidget {
     bindStartScan(){
         click(this.d.getStartScan(), async event => {
             let file = await this.scan();
-            console.log(file);
+            this.itemList.addScan(file);
+        });
+    }
+
+    bindUpload(){
+        click(this.d.getUpload(), async event => {
+            let ok = await this.itemList.upload();
+            if( ok ){
+                alert("アップロードされました。");
+                this.ele.remove();
+                this.fireDeleted();
+            }
         });
     }
 

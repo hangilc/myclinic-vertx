@@ -26,7 +26,123 @@ let tmpl = `
     </div>
 `;
 
+class ScannedItemDom {
+    constructor(ele){
+        this.map = parseElement(ele);
+    }
+
+    getSuccessIconWrapper(){
+        return this.map.successIconWrapper;
+    }
+
+    getFailureIconWrapper(){
+        return this.map.failureIconWrapper;
+    }
+
+    getUploadFile(){
+        return this.map.name;
+    }
+
+    getDisp(){
+        return this.map.disp;
+    }
+
+    getReScan(){
+        return this.map.reScan;
+    }
+
+    getDelete(){
+        return this.map.delete;
+    }
+
+    getUploadingNotice(){
+        return this.map.uploadingNotice;
+    }
+}
+
 export class ScannedItem {
+    constructor(prop, scannedFile, uploadName){
+        this.prop = prop;
+        this.scannedFile = scannedFile;
+        this.uploadName = uploadName;
+        this.ele = createElementFrom(tmpl);
+        this.d = new ScannedItemDom(this.ele);
+        this.state = "before-upload"; // "success", "failure"
+        this.updateUploadFileUI();
+    }
+
+    getScannedFile(){
+        return this.scannedFile;
+    }
+
+    updateUploadFileUI(){
+        this.d.getUploadFile().innerText = this.uploadName;
+    }
+
+    setUploadFile(uploadName){
+        this.uploadName = uploadName;
+        this.updateUploadFileUI();
+    }
+
+    isUploaded(){
+        return this.state === "success";
+    }
+
+    async upload(){
+        return new Promise(async resolve => {
+            let patient = this.prop.patient;
+            if( !patient ){
+                throw new Error("患者が指定されていません。");
+            }
+            let patientId = patient.patientId;
+            if (!this.uploadName) {
+                throw new Error("アップロード・ファイル名が設定されていません。");
+            }
+            let buf = await this.prop.printAPI.getScannedImage(this.scannedFile);
+            try {
+                await this.prop.rest.savePatientImageBlob(patientId, [buf], this.uploadName);
+                this.state = "success";
+                this.updateUploadResultUI();
+                setTimeout(() => resolve(true), 0);
+            } catch (e) {
+                console.log(e);
+                this.state = "failure";
+                this.updateUploadResultUI();
+                setTimeout(() => resolve(false), 0);
+            }
+        });
+    }
+
+    showSuccessIcon(show){
+        this.d.getSuccessIconWrapper().style.display = show ? "inline-block" : "none";
+    }
+
+    showFailureIcon(show){
+        this.d.getFailureIconWrapper().style.display = show ? "inline-block" : "none";
+    }
+
+    updateUploadResultUI(){
+        switch(this.state){
+            case "before-upload": {
+                this.showSuccessIcon(false);
+                this.showFailureIcon(false);
+                break;
+            }
+            case "success": {
+                this.showSuccessIcon(true);
+                this.showFailureIcon(false);
+                break;
+            }
+            case "failure": {
+                this.showSuccessIcon(false);
+                this.showFailureIcon(true);
+                break;
+            }
+        }
+    }
+}
+
+class ScannedItemOrig {
     constructor(scannedFile, uploadName, printAPI, rest) {
         this.scannedFile = scannedFile;
         this.uploadName = uploadName;

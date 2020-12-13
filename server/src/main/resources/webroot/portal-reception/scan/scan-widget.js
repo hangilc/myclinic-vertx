@@ -172,6 +172,7 @@ export class ScanWidget {
         this.bindReScan();
         this.bindUpload();
         this.bindCancel();
+        this.bindItemDeleted();
     }
 
     async postConstruct() {
@@ -301,6 +302,10 @@ export class ScanWidget {
                 this.fireDeleted();
             }
         });
+    }
+
+    bindItemDeleted(){
+        on(this.d.getScannedItems(), "item-deleted", event => this.updateDisabled());
     }
 
     focus() {

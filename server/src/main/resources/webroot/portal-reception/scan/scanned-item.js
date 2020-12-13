@@ -76,10 +76,15 @@ export class ScannedItem {
         this.updateUploadFileUI();
         this.bindDisp();
         this.bindReScan();
+        this.bindDelete();
     }
 
     fireReScan(){
         this.ele.dispatchEvent(new CustomEvent("re-scan", {bubbles: true, detail: this}));
+    }
+
+    fireDeleted(){
+        this.ele.dispatchEvent(new CustomEvent("item-deleted", {bubbles: true, detail: this}));
     }
 
     bindDisp(){
@@ -90,6 +95,16 @@ export class ScannedItem {
         click(this.d.getReScan(), event => {
             if( confirm("再スキャンを実施しますか？") ){
                 this.fireReScan();
+            }
+        });
+    }
+
+    bindDelete(){
+        click(this.d.getDelete(), async event => {
+            if( confirm("このスキャン画像を削除しますか？") ){
+                await this.deleteScannedFile();
+                this.fireDeleted();
+                this.ele.remove();
             }
         });
     }

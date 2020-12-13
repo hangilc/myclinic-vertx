@@ -2,6 +2,7 @@ import * as paperscan from "../../js/paper-scan.js";
 import {extendProp} from "../../js/extend-prop.js";
 import {ScannedItem} from "./scanned-item.js";
 import {createElementFrom} from "../../js/create-element-from.js";
+import {on} from "../../js/dom-helper.js";
 
 let tmpl = `
 <div></div>
@@ -13,6 +14,15 @@ export class ItemList {
         this.items = [];
         this.state = "before-upload";
         this.ele = createElementFrom(tmpl);
+        this.bindItemDeleted();
+    }
+
+    bindItemDeleted(){
+        on(this.ele, "item-deleted", event => {
+            let item = event.detail;
+            this.items = this.items.filter(i => i !== item);
+            this.renameUploadNames();
+        });
     }
 
     addScan(scannedFile, uploadName){

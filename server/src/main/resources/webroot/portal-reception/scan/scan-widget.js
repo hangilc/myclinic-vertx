@@ -156,6 +156,7 @@ export class ScanWidget {
         this.prop = extendProp(prop, {
             patient: null,
             getTag: () => this.getSelectedTag(),
+            getSelectedScanner: () => this.getSelectedScanner(),
             isUploading: false
         });
         this.ele = createElementFrom(tmpl);
@@ -167,6 +168,7 @@ export class ScanWidget {
         this.bindSearchPatientClose();
         this.bindRefreshDeviceList();
         this.bindStartScan();
+        this.bindReScan();
         this.bindUpload();
         this.bindCancel();
     }
@@ -240,6 +242,27 @@ export class ScanWidget {
                 this.fireUseScanner(scanner);
                 let file = await this.scan();
                 this.itemList.addScan(file);
+                this.updateDisabled();
+            } finally {
+                this.fireUnuseScanner(scanner);
+            }
+        });
+    }
+
+    bindReScan(){
+        on(this.ele, "re-scan", async event => {
+            event.stopPropagation();
+            let item = event.detail;
+            let scanner = this.getSelectedScanner();
+            if( !scanner ){
+                console.log("no scanner");
+                return;
+            }
+            try {
+                this.fireUseScanner(scanner);
+                let file = await this.scan();
+                await item.deleteScannedFile();
+                item.setScannedFile(file);
                 this.updateDisabled();
             } finally {
                 this.fireUnuseScanner(scanner);

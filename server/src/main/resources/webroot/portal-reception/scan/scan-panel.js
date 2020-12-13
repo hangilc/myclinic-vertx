@@ -61,6 +61,7 @@ export class ScanPanel {
 
     bindUseScanner(){
         on(this.ele, "use-scanner", event => {
+            event.stopPropagation();
             let scanner = event.detail;
             this.prop.scannersInUse.push(scanner);
             this.widgets.forEach(w => w.updateDisabled());
@@ -69,6 +70,7 @@ export class ScanPanel {
 
     bindUnuseScanner(){
         on(this.ele, "unuse-scanner", event => {
+            event.stopPropagation();
             let scanner = event.detail;
             this.prop.scannersInUse = this.prop.scannersInUse.filter(s => s !== scanner);
             this.widgets.forEach(w => w.updateDisabled());

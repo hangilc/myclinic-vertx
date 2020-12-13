@@ -1,6 +1,7 @@
 import {createElementFrom} from "../js/create-element-from.js";
 import {parseElement} from "../js/parse-node.js";
 import {PreviewBox} from "./preview-box.js";
+import {click} from "../../js/dom-helper.js";
 
 let tmpl = `
     <div>
@@ -58,6 +59,10 @@ class ScannedItemDom {
     getUploadingNotice() {
         return this.map.uploadingNotice;
     }
+
+    getPreview(){
+        return this.map.preview;
+    }
 }
 
 export class ScannedItem {
@@ -69,6 +74,30 @@ export class ScannedItem {
         this.d = new ScannedItemDom(this.ele);
         this.state = "before-upload"; // "success", "failure"
         this.updateUploadFileUI();
+        this.bindDisp();
+        this.bindReScan();
+    }
+
+    fireReScan(){
+        this.ele.dispatchEvent(new CustomEvent("re-scan", {bubbles: true, detail: this}));
+    }
+
+    bindDisp(){
+        click(this.d.getDisp(), async event => {
+            let buf = await this.prop.printAPI.getScannedImage(this.scannedFile);
+            let pbox = new PreviewBox(buf);
+            let preview = this.d.getPreview();
+            preview.innerHTML = "";
+            preview.append(pbox.ele);
+        });
+    }
+
+    bindReScan(){
+        click(this.d.getReScan(), event => this.fireReScan());
+    }
+
+    setScannedFile(file){
+        this.scannedFile = file;
     }
 
     getScannedFile() {

@@ -1,7 +1,7 @@
 import {createElementFrom} from "../js/create-element-from.js";
 import {parseElement} from "../js/parse-node.js";
 import {PreviewBox} from "./preview-box.js";
-import {click} from "../../js/dom-helper.js";
+import {click, show} from "../../js/dom-helper.js";
 
 let tmpl = `
     <div>
@@ -83,17 +83,15 @@ export class ScannedItem {
     }
 
     bindDisp(){
-        click(this.d.getDisp(), async event => {
-            let buf = await this.prop.printAPI.getScannedImage(this.scannedFile);
-            let pbox = new PreviewBox(buf);
-            let preview = this.d.getPreview();
-            preview.innerHTML = "";
-            preview.append(pbox.ele);
-        });
+        click(this.d.getDisp(), async event => await this.disp());
     }
 
     bindReScan(){
-        click(this.d.getReScan(), event => this.fireReScan());
+        click(this.d.getReScan(), event => {
+            if( confirm("再スキャンを実施しますか？") ){
+                this.fireReScan();
+            }
+        });
     }
 
     setScannedFile(file){
@@ -117,6 +115,18 @@ export class ScannedItem {
         return this.state === "success";
     }
 
+    showUploadingNotice(value){
+        show(this.d.getUploadingNotice(), value);
+    }
+
+    async disp(){
+        let buf = await this.prop.printAPI.getScannedImage(this.scannedFile);
+        let pbox = new PreviewBox(buf);
+        let preview = this.d.getPreview();
+        preview.innerHTML = "";
+        preview.append(pbox.ele);
+    }
+
     async upload() {
         let patient = this.prop.patient;
         if (!patient) {
@@ -128,6 +138,7 @@ export class ScannedItem {
         }
         let buf = await this.prop.printAPI.getScannedImage(this.scannedFile);
         try {
+            this.showUploadingNotice(true);
             await this.prop.rest.savePatientImageBlob(patientId, [buf], this.uploadName);
             this.state = "success";
             this.updateUploadResultUI();
@@ -137,6 +148,8 @@ export class ScannedItem {
             this.state = "failure";
             this.updateUploadResultUI();
             return false;
+        } finally {
+            this.showUploadingNotice(false);
         }
     }
 
@@ -169,6 +182,15 @@ export class ScannedItem {
                 this.showFailureIcon(true);
                 break;
             }
+        }
+    }
+
+    updateDisabled(){
+        if( !this.prop.isBeforeUpload ){
+            show(this.d.getReScan(), false);
+            show(this.d.getDelete(), false);
+        } else {
+
         }
     }
 }

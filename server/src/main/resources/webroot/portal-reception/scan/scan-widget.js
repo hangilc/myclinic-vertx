@@ -157,7 +157,8 @@ export class ScanWidget {
             patient: null,
             getTag: () => this.getSelectedTag(),
             getSelectedScanner: () => this.getSelectedScanner(),
-            isUploading: false
+            isUploading: false,
+            isBeforeUpload: true
         });
         this.ele = createElementFrom(tmpl);
         this.d = new ScanWidgetDomHelper(this.ele);
@@ -264,6 +265,7 @@ export class ScanWidget {
                 await item.deleteScannedFile();
                 item.setScannedFile(file);
                 this.updateDisabled();
+                await item.disp();
             } finally {
                 this.fireUnuseScanner(scanner);
             }
@@ -272,21 +274,32 @@ export class ScanWidget {
 
     bindUpload() {
         click(this.d.getUpload(), async event => {
-            let ok = await this.itemList.upload();
-            if (ok) {
-                let notice = new Notice("画像がアップロードされました。");
-                this.ele.parentElement.replaceChild(notice.ele, this.ele);
-                notice.autoClose(5);
-                await this.itemList.deleteScannedFiles();
-                this.fireDeleted();
+            this.prop.isUploading = true;
+            this.prop.isBeforeUpload = false;
+            this.updateDisabled();
+            try {
+                let ok = await this.itemList.upload();
+                if (ok) {
+                    let notice = new Notice("画像がアップロードされました。");
+                    this.ele.parentElement.replaceChild(notice.ele, this.ele);
+                    notice.autoClose(5);
+                    await this.itemList.deleteScannedFiles();
+                    this.fireDeleted();
+                }
+            } finally {
+                this.prop.isUploading = false;
+                this.updateDisabled();
             }
         });
     }
 
     bindCancel() {
         click(this.d.getCancel(), async event => {
-            this.ele.remove();
-            this.fireDeleted();
+            if( confirm("このスキャンをキャンセルしますか？") ){
+                await this.itemList.deleteScannedFiles();
+                this.ele.remove();
+                this.fireDeleted();
+            }
         });
     }
 
@@ -297,13 +310,16 @@ export class ScanWidget {
     updateDisabled() {
         let isScanning = this.prop.scannersInUse.includes(this.getSelectedScanner());
         let isUploading = this.prop.isUploading;
-        enable(this.d.getSelectPatient(), !isScanning && !isUploading);
-        enable(this.d.getTagSelect(), !isScanning && !isUploading);
-        enable(this.d.getDeviceList(), !isScanning && !isUploading);
-        enable(this.d.getStartScan(), !isScanning && !isUploading);
+        let isBeforeUpload = this.prop.isBeforeUpload;
+        enable(this.d.getSelectPatient(), !isScanning && !isUploading && isBeforeUpload);
+        enable(this.d.getTagSelect(), !isScanning && !isUploading && isBeforeUpload);
+        enable(this.d.getDeviceList(), !isScanning && !isUploading && isBeforeUpload);
+        enable(this.d.getRefreshDeviceList(), !isScanning && !isUploading && isBeforeUpload);
+        enable(this.d.getStartScan(), !isScanning && !isUploading && isBeforeUpload);
         enable(this.d.getUpload(), !isScanning && !isUploading && this.prop.patient &&
             !this.itemList.isEmpty());
-        enable(this.d.getCancel(), !isScanning && !isUploading);
+        enable(this.d.getCancel(), !isScanning && !isUploading && isBeforeUpload
+        );
         this.itemList.updateDisabled();
     }
 
@@ -338,12 +354,16 @@ export class ScanWidget {
             throw new Error("スキャナーが見つかりません。");
         }
         let progress = this.d.getScanProgress();
-        progress.innerText = "スキャンの準備中";
-        let file = await this.prop.printAPI.scan(deviceId, pct => {
-            progress.innerText = `${pct}%`;
-        });
-        progress.innerText = "";
-        return file;
+        try {
+            progress.innerText = "スキャンの準備中";
+            let file = await this.prop.printAPI.scan(deviceId, pct => {
+                progress.innerText = `${pct}%`;
+            });
+            progress.innerText = "";
+            return file;
+        } finally {
+            progress.innerText = "";
+        }
     }
 
 }

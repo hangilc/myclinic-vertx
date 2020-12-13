@@ -76,7 +76,7 @@ export class ItemList {
     }
 
     updateDisabled(){
-
+        this.items.forEach(item => item.updateDisabled());
     }
 
 }

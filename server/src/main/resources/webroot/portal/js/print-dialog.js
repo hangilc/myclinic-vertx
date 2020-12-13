@@ -19,12 +19,12 @@ let tmpl = `
     </div>
 `;
 
-export async function openPrintDialog(docName, setupOps, pagesOps, kind){
+export async function openPrintDialog(docName, setupOps, pagesOps, kind, printAPI){
     let ele = document.createElement("div");
     ele.innerHTML = tmpl;
     let map = parseElement(ele);
     map.doc.innerText = docName;
-    let api = new PrintAPI("http://127.0.0.1:48080");
+    let api = printAPI;
     let pref = await api.getPref(kind);
     let settings = await api.listSetting();
     for(let setting of settings){

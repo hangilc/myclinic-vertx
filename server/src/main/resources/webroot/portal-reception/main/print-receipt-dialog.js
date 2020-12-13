@@ -22,8 +22,8 @@ let previewSpec = {
 //
 // }
 
-export async function openPrintReceiptDialog(ops){
-    let dialog = new PrintDialog([], [ops], previewSpec);
+export async function openPrintReceiptDialog(ops, printAPI){
+    let dialog = new PrintDialog([], [ops], printAPI, previewSpec);
     dialog.setTitle("領収書印刷");
     await dialog.initSetting("receipt");
     return dialog.open();

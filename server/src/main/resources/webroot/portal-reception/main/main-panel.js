@@ -16,9 +16,10 @@ let tmpl = `
 `;
 
 export class MainPanel {
-    constructor(ele, rest) {
+    constructor(ele, rest, printAPI) {
         ele.innerHTML = tmpl;
         this.rest = rest;
+        this.printAPI = printAPI;
         this.map = parseElement(ele);
         this.wqueueTable = new WqueueTable();
         this.wqueueTable.ele.addEventListener("wq-cashier", async event => {
@@ -43,7 +44,7 @@ export class MainPanel {
     }
 
     async doCashier(visitId){
-        let dialog = new CashierDialog(this.rest);
+        let dialog = new CashierDialog(this.rest, this.printAPI);
         await dialog.init(visitId);
         dialog.ele.addEventListener("cashier-done", async event => await this.reloadHook());
         await dialog.open();

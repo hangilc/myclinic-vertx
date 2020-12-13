@@ -1,9 +1,0 @@
-digraph scan {
-	preparing -> scanning
-	preparing -> uploading
-	scanning -> preparing
-	uploading -> uploaded
-	uploading -> "partially-uploaded"
-	"partially-uploaded" -> uploaded
-	"partially-uploaded" -> preparing
-}

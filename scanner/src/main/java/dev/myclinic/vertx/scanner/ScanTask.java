@@ -54,64 +54,73 @@ public class ScanTask implements Runnable {
 		WiaItem wiaItem = null;
 		WiaDataTransfer wiaTransfer = null;
 		WiaDataCallback dataCallback = null;
-		try{
+		try {
 			Wia.CoInitialize();
 			deviceItem = getDeviceWiaItem(deviceId);
-        	wiaItem = findScannerFile(deviceItem);
-        	if( wiaItem == null ){
-        		throw new RuntimeException("スキャンを開始できません。");
-        	}
-    		final WiaItem scanWiaItem = wiaItem;
-            new PropertyWriter()
-            	.set(WiaConsts.WIA_IPA_FORMAT, new CLSID(WiaConsts.WiaImgFmt_BMP))
-            	.set(WiaConsts.WIA_IPA_TYMED, new LONG(WiaConsts.TYMED_FILE))
-            	.set(WiaConsts.WIA_IPS_XRES, new LONG(resolution))
-            	.set(WiaConsts.WIA_IPS_YRES, new LONG(resolution))
-            	.write(wiaItem);
-            PointerByReference pWiaDataTransfer = new PointerByReference();
-            HRESULT hr = scanWiaItem.QueryInterface(new REFIID(IWiaDataTransfer.IID_IWiaDataTransfer), pWiaDataTransfer);
-            COMUtils.checkRC(hr);
-            final WiaDataTransfer transfer = new WiaDataTransfer(pWiaDataTransfer.getValue());
-            wiaTransfer = transfer;
-            STGMEDIUM stgmedium = new STGMEDIUM();
-            stgmedium.tymed = new DWORD(WiaConsts.TYMED_FILE);
-            stgmedium.unionValue.setType(Pointer.class);
-            String fileName = savePath.toString();
-            stgmedium.unionValue.pointer = new LPOLESTR(fileName).getPointer();
-            dataCallback = WiaDataCallbackImpl.create(new WiaDataCallbackImpl.BandedDataCallbackCallback(){
-                @Override
-                public HRESULT invoke(Pointer thisPointer, LONG lMessage, LONG lStatus, LONG lPercentComplete,
-                    LONG lOffset, LONG lLength, LONG lReserved, LONG lResLength, PointerByReference pbBuffer){
-                	try{
-	                    if( canceled ){
-	                    	logger.debug("invoke returns S_FALSE");
-	                    	return WinError.S_FALSE;
-	                    }
-	                    int message = lMessage.intValue();
-	                    if( message == WiaConsts.IT_MSG_DATA || message == WiaConsts.IT_MSG_STATUS ){
-		                	int pct = lPercentComplete.intValue();
-		                	reportProgress(pct);
-	                    }
-                    	logger.debug("invoke returns S_OK");
-	                    return WinError.S_OK;
-	                } catch(Exception ex){
-	                	errorMessage = "スキャン中にエラーが発生しました(2)。" + ex;
-	                	canceled = true;
-                    	logger.debug("invoke returns S_FALSE");
-	                	return WinError.S_FALSE;
-	                }
-                };
-            });
-            hr = transfer.idtGetData(stgmedium, dataCallback);
-            logger.info("idtGetData returned {}", hr);
-            if( canceled ){
-            	try{
-            		Files.deleteIfExists(savePath);
-				} catch(IOException ex){
-            		logger.error("failed to delete file: {}", savePath, ex);
-            	}
-            }
-            COMUtils.checkRC(hr);
+			wiaItem = findScannerFile(deviceItem);
+			if (wiaItem == null) {
+				throw new RuntimeException("スキャンを開始できません。");
+			}
+			final WiaItem scanWiaItem = wiaItem;
+			new PropertyWriter()
+					.set(WiaConsts.WIA_IPA_FORMAT, new CLSID(WiaConsts.WiaImgFmt_BMP))
+					.set(WiaConsts.WIA_IPA_TYMED, new LONG(WiaConsts.TYMED_FILE))
+					.set(WiaConsts.WIA_IPS_XRES, new LONG(resolution))
+					.set(WiaConsts.WIA_IPS_YRES, new LONG(resolution))
+					.write(wiaItem);
+			PointerByReference pWiaDataTransfer = new PointerByReference();
+			HRESULT hr = scanWiaItem.QueryInterface(new REFIID(IWiaDataTransfer.IID_IWiaDataTransfer), pWiaDataTransfer);
+			COMUtils.checkRC(hr);
+			final WiaDataTransfer transfer = new WiaDataTransfer(pWiaDataTransfer.getValue());
+			wiaTransfer = transfer;
+			STGMEDIUM stgmedium = new STGMEDIUM();
+			stgmedium.tymed = new DWORD(WiaConsts.TYMED_FILE);
+			stgmedium.unionValue.setType(Pointer.class);
+			String fileName = savePath.toString();
+			stgmedium.unionValue.pointer = new LPOLESTR(fileName).getPointer();
+			dataCallback = WiaDataCallbackImpl.create(new WiaDataCallbackImpl.BandedDataCallbackCallback() {
+				@Override
+				public HRESULT invoke(Pointer thisPointer, LONG lMessage, LONG lStatus, LONG lPercentComplete,
+									  LONG lOffset, LONG lLength, LONG lReserved, LONG lResLength, PointerByReference pbBuffer) {
+					try {
+						if (canceled) {
+							logger.debug("invoke returns S_FALSE");
+							return WinError.S_FALSE;
+						}
+						int message = lMessage.intValue();
+						if (message == WiaConsts.IT_MSG_DATA || message == WiaConsts.IT_MSG_STATUS) {
+							int pct = lPercentComplete.intValue();
+							reportProgress(pct);
+						}
+						logger.debug("invoke returns S_OK");
+						return WinError.S_OK;
+					} catch (Exception ex) {
+						errorMessage = "スキャン中にエラーが発生しました(2)。" + ex;
+						canceled = true;
+						logger.debug("invoke returns S_FALSE");
+						return WinError.S_FALSE;
+					}
+				}
+
+				;
+			});
+			hr = transfer.idtGetData(stgmedium, dataCallback);
+			logger.info("idtGetData returned {}", hr);
+			if (canceled) {
+				try {
+					Files.deleteIfExists(savePath);
+				} catch (IOException ex) {
+					logger.error("failed to delete file: {}", savePath, ex);
+				}
+			}
+			COMUtils.checkRC(hr);
+		} catch(Throwable ex){
+			try {
+				Files.deleteIfExists(savePath);
+			} catch(IOException ioe){
+				ioe.printStackTrace();;
+			}
+			throw ex;
 		} finally{
 			if( dataCallback != null ){
 				dataCallback.Release();

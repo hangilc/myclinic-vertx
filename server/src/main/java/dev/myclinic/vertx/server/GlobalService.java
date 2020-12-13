@@ -24,6 +24,9 @@ public final class GlobalService {
     public final String shohousenFaxDirToken = "[shohousen-fax]";
     public final String shohousenFaxManagementDirToken = "[shohousen-fax-management]";
     public final String configDirToken = "[config]";
+    private boolean simulateSlowDownload = false;
+    private boolean simulateSlowUpload = false;
+    private boolean simulateUploadFail = false;
 
     public final Client client;
     public final ExecutorService executorService;
@@ -38,6 +41,30 @@ public final class GlobalService {
         addDirTokenFromEnv(configDirToken, "MYCLINIC_CONFIG_DIR");
         this.client = new Client(System.getenv("MYCLINIC_SERVICE"));
         this.executorService = Executors.newFixedThreadPool(6);
+    }
+
+    public void setSimulateSlowDownload(boolean value){
+        this.simulateSlowDownload = value;
+    }
+
+    public boolean getSimulateSlowDownload(){
+        return this.simulateSlowDownload;
+    }
+
+    public void setSimulateSlowUpload(boolean value){
+        this.simulateSlowUpload = value;
+    }
+
+    public boolean getSimulateSlowUpload(){
+        return this.simulateSlowUpload;
+    }
+
+    public void setSimulateUploadFail(boolean value){
+        this.simulateUploadFail = value;
+    }
+
+    public boolean getSimulateUploadFail(){
+        return this.simulateUploadFail;
     }
 
     private void addDirTokenFromEnv(String token, String envVar) {

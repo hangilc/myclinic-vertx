@@ -92,7 +92,12 @@ export class PrintAPI {
             };
             xhr.onload = event => {
                 let filename = xhr.getResponseHeader("x-saved-image");
-                resolve(filename);
+                let response = xhr.responseText;
+                if( response.includes("X") ){
+                    reject("スキャナーエラー");
+                } else {
+                    resolve(filename);
+                }
             };
             xhr.onerror = event => {
                 reject(xhr.statusText + ": " + xhr.responseText);
@@ -124,6 +129,22 @@ export class PrintAPI {
 
     async beep(){
         return await this.GET("/beep", {});
+    }
+
+    async createUploadJob(job){  // job: dev.myclinic.vertx.drawersite.UploadJob
+        return await this.POST("/upload-job", job);
+    }
+
+    async getUploadJob(job) {
+        return await this.GET("/upload-job/" + job, {});
+    }
+
+    async deleteUploadJob(jobName){
+        return await this.DELETE("/upload-job/" + jobName);
+    }
+
+    async listUploadJob(){
+        return await this.GET("/upload-job/");
     }
 
     UPLOAD(path, files, fileNameToStoreNameConv = null, progress = null,

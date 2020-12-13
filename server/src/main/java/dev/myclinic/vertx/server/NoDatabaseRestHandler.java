@@ -212,14 +212,25 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void respondFile(RoutingContext ctx, Path path){
+    private void respondFile(RoutingContext ctx, Path path, boolean simulateSlowDownload) {
+        if (simulateSlowDownload) {
+            try {
+                Thread.sleep(60000 * 3);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         String ext = getFileExtension(path.getFileName().toString());
         String mime = mimeMap.get(ext);
-        if( mime == null ){
+        if (mime == null) {
             mime = "application/octet-stream";
         }
         ctx.response().putHeader("content-type", mime);
         ctx.response().sendFile(path.toString());
+    }
+
+    private void respondFile(RoutingContext ctx, Path path) {
+        respondFile(ctx, path, false);
     }
 
     private void getHokensho(RoutingContext ctx) throws Exception {
@@ -1205,44 +1216,65 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void savePatientImage(RoutingContext ctx) {
-        try {
-            String patientIdParam = ctx.request().getParam("patient-id");
-            if (patientIdParam == null || patientIdParam.isEmpty()) {
-                throw new RuntimeException("Missing parameter: patient-id");
-            }
-            int patientId = Integer.parseInt(patientIdParam);
-            Set<FileUpload> fileUploads = ctx.fileUploads();
-            Path patientDir = GlobalService.getInstance().resolveAppPath(
-                    GlobalService.getInstance().paperScanDirToken + "/" +
-                            String.format("%d", patientId)
-            );
-            if (!Files.exists(patientDir)) {
-                Files.createDirectories(patientDir);
-            }
-            vertx.executeBlocking(promise -> {
-                try {
-                    for (FileUpload f : fileUploads) {
-                        String filename = f.fileName();
-                        String uploaded = f.uploadedFileName();
-                        Path dst = patientDir.resolve(filename);
-                        Files.move(Path.of(uploaded), dst);
-                    }
-                    promise.complete();
+    private int savePatientImageCount = 0;
 
-                } catch (Exception e) {
-                    promise.fail(e);
-                }
-            }, ar -> {
-                if (ar.succeeded()) {
-                    ctx.response().end("true");
-                } else {
-                    ctx.fail(ar.cause());
-                }
-            });
-        } catch (Exception e) {
-            ctx.fail(e);
+    private void savePatientImage(RoutingContext ctx) throws IOException {
+        boolean simulateSlow = GlobalService.getInstance().getSimulateSlowUpload();
+        boolean simulateFail = GlobalService.getInstance().getSimulateUploadFail();
+        String patientIdParam = ctx.request().getParam("patient-id");
+        if (patientIdParam == null || patientIdParam.isEmpty()) {
+            throw new RuntimeException("Missing parameter: patient-id");
         }
+        int patientId = Integer.parseInt(patientIdParam);
+        Set<FileUpload> fileUploads = ctx.fileUploads();
+        Path patientDir = GlobalService.getInstance().resolveAppPath(
+                GlobalService.getInstance().paperScanDirToken + "/" +
+                        String.format("%d", patientId)
+        );
+        if (!Files.exists(patientDir)) {
+            Files.createDirectories(patientDir);
+        }
+        GlobalService.getInstance().executorService.submit(() -> {
+            try {
+                for (FileUpload f : fileUploads) {
+                    if( simulateFail ){
+                        if( ++savePatientImageCount % 2 != 0 ){
+                            throw new RuntimeException("Intended failure");
+                        }
+                    }
+                    String filename = f.fileName();
+                    String uploaded = f.uploadedFileName();
+                    Path dst = patientDir.resolve(filename);
+                    Files.move(Path.of(uploaded), dst, StandardCopyOption.REPLACE_EXISTING);
+                    if (simulateSlow) {
+                        Thread.sleep(30000);
+                    }
+                }
+                ctx.response().end("true");
+            } catch (Exception e) {
+                ctx.fail(e);
+            }
+        });
+//            vertx.executeBlocking(promise -> {
+//                try {
+//                    for (FileUpload f : fileUploads) {
+//                        String filename = f.fileName();
+//                        String uploaded = f.uploadedFileName();
+//                        Path dst = patientDir.resolve(filename);
+//                        Files.move(Path.of(uploaded), dst);
+//                    }
+//                    promise.complete();
+//
+//                } catch (Exception e) {
+//                    promise.fail(e);
+//                }
+//            }, ar -> {
+//                if (ar.succeeded()) {
+//                    ctx.response().end("true");
+//                } else {
+//                    ctx.fail(ar.cause());
+//                }
+//            });
     }
 
     private void deletePatientImage(RoutingContext ctx) {
@@ -1276,7 +1308,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
-    private void listPatientImage(RoutingContext ctx){
+    private void listPatientImage(RoutingContext ctx) {
         try {
             String patientIdParam = ctx.request().getParam("patient-id");
             if (patientIdParam == null) {
@@ -1289,7 +1321,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             );
             Path dirPath = dirToken.resolve();
             vertx.fileSystem().readDir(dirPath.toString(), ar -> {
-                if( ar.failed() ){
+                if (ar.failed()) {
                     ctx.fail(ar.cause());
                 } else {
                     List<String> files = ar.result().stream()
@@ -1298,12 +1330,13 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     ctx.response().end(jsonEncode(files));
                 }
             });
-        } catch(Exception e){
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
 
-    private void getPatientImage(RoutingContext ctx){
+    private void getPatientImage(RoutingContext ctx) {
+        boolean simulateSlowDownload = GlobalService.getInstance().getSimulateSlowDownload();
         try {
             String patientIdParam = ctx.request().getParam("patient-id");
             if (patientIdParam == null) {
@@ -1311,7 +1344,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             }
             int patientId = Integer.parseInt(patientIdParam);
             String fileParam = ctx.request().getParam("file");
-            if( fileParam == null ){
+            if (fileParam == null) {
                 throw new RuntimeException("Missing parameter: file");
             }
             GlobalService.AppDirToken dirToken = new GlobalService.AppDirToken(
@@ -1319,29 +1352,29 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     List.of(String.format("%d", patientId))
             );
             GlobalService.AppFileToken fileToken = dirToken.toFileToken(fileParam);
-            respondFile(ctx, Path.of(fileToken.resolve().toString()));
-        } catch(Exception e){
+            respondFile(ctx, Path.of(fileToken.resolve().toString()), simulateSlowDownload);
+        } catch (Exception e) {
             ctx.fail(e);
         }
     }
 
-    private void changePatientOfImage(RoutingContext ctx) throws Exception {
+    private void changePatientOfImage(RoutingContext ctx) {
         String srcPatientIdPara = ctx.request().getParam("src-patient-id");
-        if( srcPatientIdPara == null ){
+        if (srcPatientIdPara == null) {
             throw new RuntimeException("Missing parameter: src-patient-id");
         }
         int srcPatientId = Integer.parseInt(srcPatientIdPara);
         String srcFile = ctx.request().getParam("src-file");
-        if( srcFile == null ){
+        if (srcFile == null) {
             throw new RuntimeException("Missing parameters: src-file");
         }
         String dstPatientIdPara = ctx.request().getParam("dst-patient-id");
-        if( dstPatientIdPara == null ){
+        if (dstPatientIdPara == null) {
             throw new RuntimeException("Missing parameter: dst-patient-id");
         }
         int dstPatientId = Integer.parseInt(dstPatientIdPara);
         String dstFile = ctx.request().getParam("dst-file");
-        if( dstFile == null ){
+        if (dstFile == null) {
             throw new RuntimeException("Missing parameters: dst-file");
         }
         GlobalService.AppDirToken srcDirToken = new GlobalService.AppDirToken(

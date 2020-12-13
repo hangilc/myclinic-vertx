@@ -19,9 +19,10 @@ let commandsTmpl = `
 `;
 
 export class CashierDialog extends Dialog {
-    constructor(rest) {
+    constructor(rest, printAPI) {
         super();
         this.rest = rest;
+        this.printAPI = printAPI;
         this.getBody().innerHTML = bodyTmpl;
         this.map = parseElement(this.getBody());
         this.getFooter().innerHTML = commandsTmpl;
@@ -74,7 +75,7 @@ export class CashierDialog extends Dialog {
         }
         let ops = await this.getReceiptOps();
         $(this.ele).modal("hide");
-        let printed = await openPrintReceiptDialog(ops);
+        let printed = await openPrintReceiptDialog(ops, this.printAPI);
         if (printed) {
             this.cmap.printReceipt.classList.remove("btn-primary");
             this.cmap.printReceipt.classList.add("btn-secondary");

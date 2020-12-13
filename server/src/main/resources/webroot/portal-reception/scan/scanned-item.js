@@ -113,6 +113,10 @@ export class ScannedItem {
         });
     }
 
+    async deleteScannedFile(){
+        return await this.prop.printAPI.deleteScannedFile(this.scannedFile);
+    }
+
     showSuccessIcon(show){
         this.d.getSuccessIconWrapper().style.display = show ? "inline-block" : "none";
     }

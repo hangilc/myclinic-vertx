@@ -224,6 +224,7 @@ export class ScanWidget {
             let ok = await this.itemList.upload();
             if( ok ){
                 alert("アップロードされました。");
+                await this.itemList.deleteScannedFiles();
                 this.ele.remove();
                 this.fireDeleted();
             }

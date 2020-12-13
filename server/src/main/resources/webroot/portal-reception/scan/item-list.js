@@ -22,6 +22,12 @@ export class ItemList {
         this.renameUploadNames();
     }
 
+    async deleteScannedFiles(){
+        for(let item of this.items){
+            await item.deleteScannedFile();
+        }
+    }
+
     renameUploadNames(){
         let patientIdTag = this.makePatientIdTag();
         let tag = this.prop.getTag();

@@ -3,9 +3,11 @@ import {parseElement} from "../js/parse-node.js";
 import * as paperscan from "../../js/paper-scan.js";
 import {ScannedItem} from "./scanned-item.js";
 import {ItemList} from "./item-list.js";
+import {enable} from "../../js/dom-helper.js";
+import {Notice} from "../components/notice.js";
 
 let tmpl = `
-<div class="scan-widget border border-dark rounded p-3 mb-3">
+<div class="scan-widget border border-info rounded p-3 mb-3">
     <div class="mb-2">
         <div class="h4">患者選択</div>
         <form class="form-inline mb-2 x-search-patient-form" onsubmit="return false;">
@@ -42,13 +44,13 @@ let tmpl = `
    </div>
     <div class="mb-2">
         <div class="mb-2">
-            <button class="btn btn-primary mr-2 x-start-scan">スキャン開始</button>
+            <button class="btn btn-primary mr-2 x-start-scan" disabled>スキャン開始</button>
             <span class="x-scan-progress"></span>
         </div>
         <div class="x-scanned-image-list mb-2 border border-success rounded p-2"> 
             <div class="x-scanned-items mb-2"></div>
             <div class="x-upload-commands"> 
-                <button class="btn btn-primary x-upload-button">アップロード</button>
+                <button class="btn btn-primary x-upload-button" disabled>アップロード</button>
             </div>
         </div>
     </div>
@@ -153,7 +155,8 @@ export class ScanWidget {
     constructor(prop) {
         this.prop = extendProp(prop, {
             patient: null,
-            getTag: () => this.getSelectedTag()
+            getTag: () => this.getSelectedTag(),
+            isUploading: false
         });
         this.ele = createElementFrom(tmpl);
         this.d = new ScanWidgetDomHelper(this.ele);
@@ -197,8 +200,10 @@ export class ScanWidget {
             );
             if( patient ){
                 this.prop.patient = patient;
-                show(this.d.getSearchPatientResult(), false);
+                show(this.d.getSearchPatientResultWrapper(), false);
                 this.setPatient(patient);
+                this.itemList.renameUploadNames();
+                this.updateDisabled();
             }
         })
     }
@@ -216,6 +221,7 @@ export class ScanWidget {
         click(this.d.getStartScan(), async event => {
             let file = await this.scan();
             this.itemList.addScan(file);
+            this.updateDisabled();
         });
     }
 
@@ -233,13 +239,28 @@ export class ScanWidget {
 
     bindCancel() {
         click(this.d.getCancel(), async event => {
-            this.ele.remove();
+            let notice = new Notice("アップロードされました。");
+            this.ele.parentElement.replaceChild(notice.ele, this.ele);
+            notice.autoClose(4);
+            //this.ele.remove();
             this.fireDeleted();
         });
     }
 
     focus(){
         this.d.getSearchPatientText().focus();
+    }
+
+    updateDisabled(){
+        let isScanning = this.prop.scannersInUse.includes(this.getSelectedScanner());
+        let isUploading = this.prop.isUploading;
+        enable(this.d.getSelectPatient(), !isScanning && !isUploading);
+        enable(this.d.getTagSelect(), !isScanning && !isUploading);
+        enable(this.d.getStartScan(), !isScanning && !isUploading);
+        enable(this.d.getUpload(), !isScanning && !isUploading && this.prop.patient &&
+            !this.itemList.isEmpty());
+        enable(this.d.getCancel(), !isScanning && !isUploading);
+        this.itemList.updateDisabled();
     }
 
     setPatient(patient){

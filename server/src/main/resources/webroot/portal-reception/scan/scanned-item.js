@@ -27,41 +27,41 @@ let tmpl = `
 `;
 
 class ScannedItemDom {
-    constructor(ele){
+    constructor(ele) {
         this.map = parseElement(ele);
     }
 
-    getSuccessIconWrapper(){
+    getSuccessIconWrapper() {
         return this.map.successIconWrapper;
     }
 
-    getFailureIconWrapper(){
+    getFailureIconWrapper() {
         return this.map.failureIconWrapper;
     }
 
-    getUploadFile(){
+    getUploadFile() {
         return this.map.name;
     }
 
-    getDisp(){
+    getDisp() {
         return this.map.disp;
     }
 
-    getReScan(){
+    getReScan() {
         return this.map.reScan;
     }
 
-    getDelete(){
+    getDelete() {
         return this.map.delete;
     }
 
-    getUploadingNotice(){
+    getUploadingNotice() {
         return this.map.uploadingNotice;
     }
 }
 
 export class ScannedItem {
-    constructor(prop, scannedFile, uploadName){
+    constructor(prop, scannedFile, uploadName) {
         this.prop = prop;
         this.scannedFile = scannedFile;
         this.uploadName = uploadName;
@@ -71,62 +71,60 @@ export class ScannedItem {
         this.updateUploadFileUI();
     }
 
-    getScannedFile(){
+    getScannedFile() {
         return this.scannedFile;
     }
 
-    updateUploadFileUI(){
+    updateUploadFileUI() {
         this.d.getUploadFile().innerText = this.uploadName;
     }
 
-    setUploadFile(uploadName){
+    setUploadFile(uploadName) {
         this.uploadName = uploadName;
         this.updateUploadFileUI();
     }
 
-    isUploaded(){
+    isUploaded() {
         return this.state === "success";
     }
 
-    async upload(){
-        return new Promise(async resolve => {
-            let patient = this.prop.patient;
-            if( !patient ){
-                throw new Error("患者が指定されていません。");
-            }
-            let patientId = patient.patientId;
-            if (!this.uploadName) {
-                throw new Error("アップロード・ファイル名が設定されていません。");
-            }
-            let buf = await this.prop.printAPI.getScannedImage(this.scannedFile);
-            try {
-                await this.prop.rest.savePatientImageBlob(patientId, [buf], this.uploadName);
-                this.state = "success";
-                this.updateUploadResultUI();
-                setTimeout(() => resolve(true), 0);
-            } catch (e) {
-                console.log(e);
-                this.state = "failure";
-                this.updateUploadResultUI();
-                setTimeout(() => resolve(false), 0);
-            }
-        });
+    async upload() {
+        let patient = this.prop.patient;
+        if (!patient) {
+            throw new Error("患者が指定されていません。");
+        }
+        let patientId = patient.patientId;
+        if (!this.uploadName) {
+            throw new Error("アップロード・ファイル名が設定されていません。");
+        }
+        let buf = await this.prop.printAPI.getScannedImage(this.scannedFile);
+        try {
+            await this.prop.rest.savePatientImageBlob(patientId, [buf], this.uploadName);
+            this.state = "success";
+            this.updateUploadResultUI();
+            return true;
+        } catch (e) {
+            console.log(e);
+            this.state = "failure";
+            this.updateUploadResultUI();
+            return false;
+        }
     }
 
-    async deleteScannedFile(){
+    async deleteScannedFile() {
         return await this.prop.printAPI.deleteScannedFile(this.scannedFile);
     }
 
-    showSuccessIcon(show){
+    showSuccessIcon(show) {
         this.d.getSuccessIconWrapper().style.display = show ? "inline-block" : "none";
     }
 
-    showFailureIcon(show){
+    showFailureIcon(show) {
         this.d.getFailureIconWrapper().style.display = show ? "inline-block" : "none";
     }
 
-    updateUploadResultUI(){
-        switch(this.state){
+    updateUploadResultUI() {
+        switch (this.state) {
             case "before-upload": {
                 this.showSuccessIcon(false);
                 this.showFailureIcon(false);
@@ -186,11 +184,11 @@ class ScannedItemOrig {
         this.map.delete.disabled = isScanning || isListUploading || !this.isBeforeUpload();
     }
 
-    setIsScanning(value){
+    setIsScanning(value) {
         this.isScanning = value;
     }
 
-    setIsListUploading(value){
+    setIsListUploading(value) {
         this.isListUploading = value;
     }
 
@@ -202,7 +200,7 @@ class ScannedItemOrig {
         this.map.name.innerText = this.uploadName;
     }
 
-    setStateUploading(){
+    setStateUploading() {
         this.state = "uploading";
     }
 
@@ -214,11 +212,11 @@ class ScannedItemOrig {
         this.state = "upload-failed";
     }
 
-    isBeforeUpload(){
+    isBeforeUpload() {
         return this.state === "before-upload";
     }
 
-    isUploaded(){
+    isUploaded() {
         return this.state === "uploaded";
     }
 
@@ -282,7 +280,7 @@ class ScannedItemOrig {
     }
 
     async upload(patientId) {
-        if( !(patientId > 0) ){
+        if (!(patientId > 0)) {
             throw new Error("患者が指定されていません。");
         }
         if (!this.uploadName) {

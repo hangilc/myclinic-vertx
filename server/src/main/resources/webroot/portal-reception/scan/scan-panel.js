@@ -2,6 +2,7 @@ import {createElementFrom} from "../../js/create-element-from.js";
 import {parseElement} from "../../js/parse-node.js";
 import {ScanWidget} from "./scan-widget.js";
 import {ScannedItem} from "./scanned-item.js";
+import {on} from "../../js/dom-helper.js";
 
 let tmpl = `
 <div>
@@ -20,13 +21,17 @@ let tmpl = `
 export class ScanPanel {
     constructor(rest, printAPI){
         this.prop = Object.create({
-            rest, printAPI
+            rest,
+            printAPI,
+            scannersInUse: []
         });
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.widgets = [];
         this.bindNewScan();
         this.bindWidgetDeleted();
+        this.bindUseScanner();
+        this.bindUnuseScanner();
     }
 
     async postConstruct(){
@@ -53,6 +58,23 @@ export class ScanPanel {
             this.widgets = this.widgets.filter(w => w !== widget);
         });
     }
+
+    bindUseScanner(){
+        on(this.ele, "use-scanner", event => {
+            let scanner = event.detail;
+            this.prop.scannersInUse.push(scanner);
+            this.widgets.forEach(w => w.updateDisabled());
+        });
+    }
+
+    bindUnuseScanner(){
+        on(this.ele, "unuse-scanner", event => {
+            let scanner = event.detail;
+            this.prop.scannersInUse = this.prop.scannersInUse.filter(s => s !== scanner);
+            this.widgets.forEach(w => w.updateDisabled());
+        })
+    }
+
 }
 
 export class ScanPanelOrig {

@@ -50,6 +50,10 @@ export class ItemList {
         }
     }
 
+    isEmpty(){
+        return this.items.length === 0;
+    }
+
     makePatientIdTag(){
         let patient = this.prop.patient;
         if( patient ){
@@ -69,6 +73,10 @@ export class ItemList {
             }
         }
         return true;
+    }
+
+    updateDisabled(){
+
     }
 
 }

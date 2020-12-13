@@ -1247,7 +1247,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     Path dst = patientDir.resolve(filename);
                     Files.move(Path.of(uploaded), dst, StandardCopyOption.REPLACE_EXISTING);
                     if (simulateSlow) {
-                        Thread.sleep(30000);
+                        Thread.sleep(10000);
                     }
                 }
                 ctx.response().end("true");

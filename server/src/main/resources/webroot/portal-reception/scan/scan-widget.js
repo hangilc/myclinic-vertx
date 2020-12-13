@@ -189,7 +189,7 @@ export class ScanWidget {
 
     fireDeleted() {
         this.ele.dispatchEvent(new CustomEvent("widget-deleted", {
-            bubble: true,
+            bubbles: true,
             detail: this
         }));
     }
@@ -281,10 +281,11 @@ export class ScanWidget {
                 let ok = await this.itemList.upload();
                 if (ok) {
                     let notice = new Notice("画像がアップロードされました。");
-                    this.ele.parentElement.replaceChild(notice.ele, this.ele);
+                    this.ele.parentElement.insertBefore(notice.ele, this.ele);
                     notice.autoClose(5);
-                    await this.itemList.deleteScannedFiles();
                     this.fireDeleted();
+                    this.ele.remove();
+                    await this.itemList.deleteScannedFiles();
                 }
             } finally {
                 this.prop.isUploading = false;
@@ -295,10 +296,10 @@ export class ScanWidget {
 
     bindCancel() {
         click(this.d.getCancel(), async event => {
-            if (confirm("このスキャンをキャンセルしますか？")) {
+            if (this.itemList.isEmpty() || confirm("このスキャンをキャンセルしますか？")) {
                 await this.itemList.deleteScannedFiles();
-                this.ele.remove();
                 this.fireDeleted();
+                this.ele.remove();
             }
         });
     }

@@ -34,7 +34,7 @@ export class ScanPanel {
     }
 
     async postConstruct() {
-
+        await this.addWidget();
     }
 
     async reloadHook() {
@@ -42,19 +42,17 @@ export class ScanPanel {
     }
 
     bindNewScan() {
-        this.map.newScan.addEventListener("click", async event => {
-            let widget = new ScanWidget(this.prop);
-            await widget.postConstruct();
-            this.widgets.push(widget);
-            this.map.workarea.prepend(widget.ele);
-            widget.focus();
-        });
+        this.map.newScan.addEventListener("click", async event => await this.addWidget());
     }
 
     bindWidgetDeleted() {
-        this.ele.addEventListener("widget-deleted", event => {
+        on(this.ele, "widget-deleted", async event => {
             let widget = event.detail;
             this.widgets = this.widgets.filter(w => w !== widget);
+            console.log("widgets", this.widgets);
+            if( this.widgets.length === 0 ){
+                await this.addWidget();
+            }
         });
     }
 
@@ -74,6 +72,14 @@ export class ScanPanel {
             this.prop.scannersInUse = this.prop.scannersInUse.filter(s => s !== scanner);
             this.widgets.forEach(w => w.updateDisabled());
         })
+    }
+
+    async addWidget(){
+        let widget = new ScanWidget(this.prop);
+        await widget.postConstruct();
+        this.widgets.push(widget);
+        this.map.workarea.prepend(widget.ele);
+        widget.focus();
     }
 
 }

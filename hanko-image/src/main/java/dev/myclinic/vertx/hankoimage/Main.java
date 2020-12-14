@@ -10,28 +10,29 @@ public class Main {
     public static void main(String[] args) throws Exception {
         CmdArgs cargs = CmdArgs.parse(args);
         BufferedImage srcImage = ImageIO.read(new File(cargs.inputFile));
-        System.out.printf("%d x %d\n", srcImage.getWidth(), srcImage.getHeight());
         int width = srcImage.getWidth();
         int height = srcImage.getHeight();
         BufferedImage dstImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        int shu = makeRGB(217, 55, 54);
+        int shuRGB = makeRGB(217, 55, 54);
         for(int i=0;i<height;i++){
             for(int j=0;j<width;j++){
                 int rgb = srcImage.getRGB(j, i);
                 Color c = new Color(rgb);
-                System.out.printf("%s", isShu(c.getRed(), c.getGreen(), c.getBlue()) ? "*" : " ");
+                if( isShu(c.getRed(), c.getGreen(), c.getBlue()) ){
+                    dstImage.setRGB(j, i, 0xFF000000 + shuRGB);
+                } else {
+                    dstImage.setRGB(j, i, 0x00FFFFFF);
+                }
             }
-            System.out.println();
         }
-
+        ImageIO.write(dstImage, "PNG", new File(cargs.outputFile));
     }
 
     private static int makeRGB(int r, int g, int b){
-        return (r << 8) + (g << 4) + b;
+        return (r << 16) + (g << 8) + b;
     }
 
     private static boolean isShu(int r, int g, int b){
-        int prod = r * 217 + g * 55 + b * 54;
-        return prod > 36000;
+        return r + g + b < 600;
     }
 }

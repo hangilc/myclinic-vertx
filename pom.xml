@@ -201,6 +201,7 @@
         <module>drawer-printer-win</module>
         <module>scanner</module>
         <module>drawer-site</module>
+        <module>hanko-image</module>
     </modules>
 
 </project>

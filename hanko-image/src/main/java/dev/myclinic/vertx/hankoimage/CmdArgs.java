@@ -12,7 +12,7 @@ class CmdArgs {
         List<String> arglist = new ArrayList<>();
         CmdArgs cargs = new CmdArgs();
         for(int i=0;i<args.length;i++){
-            String arg = args[i++];
+            String arg = args[i];
             switch(arg){
                 default: {
                     arglist.add(arg);

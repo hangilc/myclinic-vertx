@@ -2,6 +2,7 @@ import {Widget} from "../widget.js";
 import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
 import {click} from "../../../js/dom-helper.js";
+import {nowAsSqldatetime} from "../../../js/kanjidate.js";
 
 let tmpl = `
     <div class="mb-3 border border-secondary rounded p-2">
@@ -27,7 +28,8 @@ let tmpl = `
             </div>
         </div>
         <div class="mt-2 d-flex justify-content-end">
-            <button class="btn btn-link x-receipt-pdf">領収書PDF</button>
+            <button class="btn btn-link px-0 mr-2 x-no-pay">未収に</button>
+            <button class="btn btn-link px-0 mr-2 x-receipt-pdf">領収書PDF</button>
             <button class="btn btn-secondary x-enter">入力</button>
             <button class="btn btn-secondary x-cancel ml-2">キャンセル</button>
         </div>
@@ -62,6 +64,13 @@ export class ChargeModify {
             await rest.modifyCharge(visitId, value);
             let updated = await rest.getCharge(visitId);
             this.close(updated);
+        });
+        click(this.map.noPay, async event => {
+            if( confirm("未収扱いに変更しますか？") ){
+                let paytime = nowAsSqldatetime();
+                await rest.finishCharge(visit.visitId, 0, paytime);
+                this.close(null);
+            }
         });
         click(this.map.receiptPdf, async event => {
             let req = await createReceiptDrawerReq(rest, meisai, charge.charge, visit);

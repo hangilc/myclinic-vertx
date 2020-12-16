@@ -24,6 +24,7 @@ export class CashierDialog extends Dialog {
         bmap.detail.innerHTML = meisai.sections.map(sect => {
             return `${sect.label}：${sect.sectionTotalTen.toLocaleString()} 点`;
         }).join("\n");
+        // noinspection JSDeprecatedSymbols
         bmap.summary.innerText = `総点：${meisai.totalTen.toLocaleString()} 点、負担割：${meisai.futanWari}割`;
         bmap.value.innerHTML = `請求額：${charge.charge.toLocaleString()} 円`;
         this.getFooter().innerHTML = footerTmpl;

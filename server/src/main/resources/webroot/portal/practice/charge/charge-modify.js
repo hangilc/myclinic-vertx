@@ -27,7 +27,7 @@ let tmpl = `
             </div>
         </div>
         <div class="mt-2 d-flex justify-content-end">
-            <button class="btn btn-link">領収書PDF</button>
+            <button class="btn btn-link x-receipt-pdf">領収書PDF</button>
             <button class="btn btn-secondary x-enter">入力</button>
             <button class="btn btn-secondary x-cancel ml-2">キャンセル</button>
         </div>
@@ -36,7 +36,7 @@ let tmpl = `
 
 export class ChargeModify {
 
-    constructor(rest, meisai, charge){
+    constructor(rest, meisai, charge, visit){
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.setCharge(meisai, charge);
@@ -55,6 +55,11 @@ export class ChargeModify {
             let updated = await rest.getCharge(visitId);
             this.close(updated);
         });
+        click(this.map.receiptPdf, async event => {
+            let req = await createReceiptDrawerReq(rest, meisai, charge.charge, visit);
+            let ops = await rest.receiptDrawer(req);
+            console.log(ops);
+        });
         click(this.map.widgetClose, event => this.close(null));
         click(this.map.cancel, event => this.close(null));
     }
@@ -71,6 +76,16 @@ export class ChargeModify {
         this.ele.remove();
     }
 
+}
+
+async function createReceiptDrawerReq(rest, meisai, chargeValue, visit){
+    return {
+        meisai,
+        patient: await  rest.getPatient(visit.patientId),
+        visit,
+        charge: chargeValue,
+        clinicInfo: await rest.getClinicInfo()
+    };
 }
 
 // export class ChargeModifyOrig extends Widget {

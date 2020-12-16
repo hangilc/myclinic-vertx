@@ -78,7 +78,7 @@ export class Record extends Component {
         visitFull.drugs.forEach(drugFull => this.addDrug(drugFull));
         visitFull.shinryouList.forEach(shinryouFull => this.addShinryou(shinryouFull, false));
         visitFull.conducts.forEach(cfull => this.addConduct(cfull));
-        let charge = new Charge(this.rest, visitFull.charge);
+        let charge = new Charge(this.rest, visitFull.charge, visitFull.visit);
         this.chargeWrapperElement.get(0).append(charge.ele);
         // let compCharge = chargeFactory.create(visitFull.charge);
         // compCharge.appendTo(this.chargeWrapperElement);

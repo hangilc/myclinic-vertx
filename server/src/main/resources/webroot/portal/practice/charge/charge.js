@@ -10,11 +10,12 @@ let tmpl = `
 `;
 
 export class Charge {
-    constructor(rest, charge){
+    constructor(rest, charge, visit){
+        this.visit = visit;
         this.rest = rest;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
-        this.addDisp(charge);
+        this.addDisp(charge, visit);
     }
 
     addDisp(charge){
@@ -23,7 +24,7 @@ export class Charge {
         if( charge ){
             click(disp.ele, async event => {
                 let meisai = await this.rest.getMeisai(charge.visitId);
-                let modify = new ChargeModify(this.rest, meisai, charge);
+                let modify = new ChargeModify(this.rest, meisai, charge, this.visit);
                 on(modify.ele, "closed", event => {
                     let result = event.detail;
                     if( result ){

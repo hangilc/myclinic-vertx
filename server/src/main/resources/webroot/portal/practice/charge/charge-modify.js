@@ -27,6 +27,7 @@ let tmpl = `
             </div>
         </div>
         <div class="mt-2 d-flex justify-content-end">
+            <button class="btn btn-link">領収書PDF</button>
             <button class="btn btn-secondary x-enter">入力</button>
             <button class="btn btn-secondary x-cancel ml-2">キャンセル</button>
         </div>

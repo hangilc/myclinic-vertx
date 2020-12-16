@@ -1721,7 +1721,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
             this.drugDispFactory = new DrugDispFactory();
             this.sendFaxFactory = new SendFaxFactory();
             this.faxProgressFactory = new FaxProgressFactory();
-            this.chargeFactory = new ChargeFactory();
+            //this.chargeFactory = new ChargeFactory();
             this.currentVisitManager = currentVisitManager;
         }
 
@@ -1732,7 +1732,8 @@ export async function initLayout(pane, rest, controller, printAPI) {
             record.init(visitFull, hokenRep, this.titleFactory, this.textFactory,
                 this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
                 this.shinryouRegularDialogFactory, this.conductDispFactory,
-                this.drugDispFactory, this.sendFaxFactory, this.chargeFactory,
+                this.drugDispFactory, this.sendFaxFactory,
+                //this.chargeFactory,
                 this.currentVisitManager);
             record.onDelete(async visitId => {
                 await rest.deleteVisit(visitId);

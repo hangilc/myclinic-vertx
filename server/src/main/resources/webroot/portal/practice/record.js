@@ -2,6 +2,7 @@ import {Component} from "./component.js";
 import {shinryouSearchEnterWidgetFactory} from "./shinryou-search-enter-widget/shinryou-search-enter-widget.js";
 import {createShohousenPdfForFax} from "./funs.js";
 import {ShinryouKensaDialog} from "./shinryou-kensa-dialog.js";
+import {Charge} from "./charge/charge.js";
 
 export class Record extends Component {
     constructor(ele, map, rest) {
@@ -27,7 +28,9 @@ export class Record extends Component {
 
     init(visitFull, hokenRep, titleFactory, textFactory, hokenFactory, shinryouFactory,
          textEnterFactory, shinryouRegularDialogFactory, conductDispFactory,
-         drugDispFactory, sendFaxFactory, chargeFactory, currentVisitManager) {
+         drugDispFactory, sendFaxFactory,
+         //chargeFactory,
+         currentVisitManager) {
         this.visitFull = visitFull;
         this.textFactory = textFactory;
         this.hokenFactory = hokenFactory;
@@ -75,8 +78,10 @@ export class Record extends Component {
         visitFull.drugs.forEach(drugFull => this.addDrug(drugFull));
         visitFull.shinryouList.forEach(shinryouFull => this.addShinryou(shinryouFull, false));
         visitFull.conducts.forEach(cfull => this.addConduct(cfull));
-        let compCharge = chargeFactory.create(visitFull.charge);
-        compCharge.appendTo(this.chargeWrapperElement);
+        let charge = new Charge(this.rest, visitFull.charge);
+        this.chargeWrapperElement.get(0).append(charge.ele);
+        // let compCharge = chargeFactory.create(visitFull.charge);
+        // compCharge.appendTo(this.chargeWrapperElement);
         this.shinryouAuxMenuMap.kensa.on("click", async event => await this.doKensa());
         this.shinryouAuxMenuMap.searchEnter.on("click", event => this.doSearchEnter());
         this.shinryouAuxMenuMap.copyAll.on("click", async event => await this.doCopyAll());

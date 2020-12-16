@@ -1,5 +1,108 @@
-let html = `
+import {createElementFrom} from "../../js/create-element-from.js";
+import {parseElement} from "../../js/parse-node.js";
+import {wqueueStateCodeToRep, WqueueStateWaitCashier, sexToRep} from "../js/consts.js";
+import {calcAge, sqldateToKanji} from "../../js/kanjidate.js";
+import {click} from "../../js/dom-helper.js";
+import {CashierDialog} from "./cashier-dialog.js";
 
+let tmpl = `
+    <div class="pane">
+        <div class="row mb-2">
+            <h3 class="col-sm-2">会計</h3>
+            <div class="col-sm-10">
+                <button class="btn btn-secondary x-refresh">更新</button>
+            </div>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>状態</th>
+                    <th>#</th>
+                    <th>氏名</th>
+                    <th>よみ</th>
+                    <th>性別</th>
+                    <th>生年月日</th>
+                    <th>年齢</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody class="x-wqueue-tbody"></tbody>
+        </table>
+
+    </div>
+`;
+
+let rowTmpl = `
+    <tr>
+        <td class="x-state align-middle"></td>
+        <td class="x-patient-id align-middle"></td>
+        <td class="x-name align-middle"></td>
+        <td class="x-yomi align-middle"></td>
+        <td class="x-sex align-middle"></td>
+        <td class="x-birthday align-middle"></td>
+        <td class="x-age align-middle"></td>
+        <td class="x-manip align-middle">
+            <button class="btn btn-primary x-start-cashier">会計</button>
+        </td>
+    </tr>
+`;
+
+export class Cashier {
+    constructor(prop){
+        this.prop = prop;
+        this.ele = createElementFrom(tmpl);
+        this.map = parseElement(this.ele);
+        click(this.map.refresh, async event => await this.reload());
+    }
+
+    async postConstruct(){
+        await this.reload();
+    }
+
+    async reloadHook(){
+        await this.reload();
+    }
+
+    async reload(){
+        let wqueueList = await this.prop.rest.listWqueueFull();
+        let table = this.map.wqueueTbody;
+        table.innerHTML = "";
+        for(let wq of wqueueList){
+            table.append(await this.createRow(wq));
+        }
+    }
+
+    async createRow(wq){
+        let wqueue = wq.wqueue;
+        let patient = wq.patient;
+        let row = createElementFrom(rowTmpl);
+        let map = parseElement(row);
+        map.state.innerText = wqueueStateCodeToRep(wqueue.waitState);
+        map.patientId.innerText = wq.patient.patientId;
+        map.name.innerText = `${patient.lastName}${patient.firstName}`
+        map.yomi.innerText = `${patient.lastNameYomi}${patient.firstNameYomi}`
+        map.sex.innerText = sexToRep(patient.sex);
+        map.birthday.innerText = sqldateToKanji(patient.birthday);
+        map.age.innerText = calcAge(patient.birthday) + "才";
+        let charge = await this.prop.rest.getCharge(wq.visit.visitId);
+        if( charge ){
+            click(map.startCashier, async event => {
+                let meisai = await this.prop.rest.getMeisai(wq.visit.visitId);
+                let dialog = new CashierDialog(this.prop, wq, meisai, charge);
+                let done = await dialog.open();
+                if( done ){
+                    row.remove();
+                }
+            });
+        } else {
+            map.startCashier.classList.add("d-none");
+        }
+        return row;
+    }
+}
+
+let html = `
 <div class="row pane" id="cashier-top">
     <h3 class="col-sm-2">会計</h3>
     <div class="col-sm-10">
@@ -41,8 +144,9 @@ let html = `
                 <div class="cashier-part-charge-value"></div>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-link cashier-part-enter">会計終了</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
-                <button type="button" class="btn btn-primary cashier-part-enter">会計終了</button>
+                <button type="button" class="btn btn-primary cashier-part-no-pay">未収終了</button>
             </div>
         </div>
     </div>

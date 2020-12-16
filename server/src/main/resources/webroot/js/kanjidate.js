@@ -1,3 +1,5 @@
+import {convertJsDate} from "../portal-reception/js/kanjidate.js";
+
 const gengouList = [
     {
         name: "令和",
@@ -169,8 +171,20 @@ export function sqldatetimeToData(sqldatetime){
 }
 
 export function calcAge(birthday){
-    birthday = moment(birthday);
-    return moment().diff(birthday, "years");
+    let bd = parseSqldate(birthday);
+    let today = convertJsDate(new Date());
+    let age = today.year - bd.year;
+    if( today.month > bd.month ){
+        return age;
+    } else if( today.month < bd.month ){
+        return age - 1;
+    } else {
+        if( today.day >= bd.day ){
+            return age;
+        } else {
+            return age - 1;
+        }
+    }
 }
 
 function momentToSqldate(m){

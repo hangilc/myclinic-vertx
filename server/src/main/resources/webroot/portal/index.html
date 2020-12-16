@@ -58,7 +58,8 @@
         let {parseQueryParams} = await import ("../js/parse-query-params.js");
 
         let practice = await import("./practice/practice.js");
-        let cashier = await import("./cashier/cashier.js");
+        //let cashier = await import("./cashier/cashier.js");
+        let {Cashier} = await import("./cashier/cashier.js");
         let reception = await import("./reception/reception.js");
         let faxedShohousen = await import("./faxed-shohousen/faxed-shohousen.js");
         let houmonKango = await import("./houmon-kango/houmon-kango.js");
@@ -83,6 +84,10 @@
         window.kanjidate = kanjidate;
         window.onerror = message => alert(message);
         window.addEventListener("unhandledrejection", event => alert(event.reason));
+        let prop = {
+            rest,
+            printAPI
+        }
 
         let menu = new Menu(document.getElementById("index-pane-wrapper"));
         menu.addItem("practice", e => {
@@ -96,10 +101,11 @@
             };
         }, document.getElementById("index-practice-link"));
         menu.addItem("cashier", e => {
-            e.innerHTML = cashier.getHtml();
+            let cashier = new Cashier(prop);
+            e.append(cashier.ele);
             return {
-                postConstruct: async () => await cashier.initCashier(e),
-                reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
+                postConstruct: async () => await cashier.postConstruct(),
+                reloadHook: async () => await cashier.reloadHook()
             }
         }, document.getElementById("index-cashier-link"));
         menu.addItem("reception", e => {

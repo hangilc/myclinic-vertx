@@ -34,6 +34,13 @@ let tmpl = `
     </div>
 `;
 
+let formTmpl = `
+    <form class="d-none" method="POST" target="_blank">
+        <input type="text" name="paper" />
+        <input type="text" name="pages" />
+    </form>
+`;
+
 export class ChargeModify {
 
     constructor(rest, meisai, charge, visit){
@@ -58,7 +65,15 @@ export class ChargeModify {
         click(this.map.receiptPdf, async event => {
             let req = await createReceiptDrawerReq(rest, meisai, charge.charge, visit);
             let ops = await rest.receiptDrawer(req);
-            console.log(ops);
+            let url = rest.urlViewDrawerAsPdf();
+            let form = createElementFrom(formTmpl);
+            form.action = url;
+            form.querySelector("input[name='paper']").value = "A6_Landscape";
+            form.querySelector("input[name='pages'").value = JSON.stringify([ops]);
+            document.body.append(form);
+            form.submit();
+            form.remove();
+            this.close(null);
         });
         click(this.map.widgetClose, event => this.close(null));
         click(this.map.cancel, event => this.close(null));

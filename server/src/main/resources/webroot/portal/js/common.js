@@ -751,6 +751,10 @@ class Rest extends Client {
     async savedPatientImageToken(patientId, file) {
         return await this.topRest.savedPatientImageToken(patientId, file);
     }
+
+    urlViewDrawerAsPdf(){
+        return this.topRest.urlViewDrawerAsPdf();
+    }
 }
 
 class Integration extends Client {

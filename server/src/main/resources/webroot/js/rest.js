@@ -164,4 +164,8 @@ export class Rest extends HttpClient {
         return await this.GET("/list-todays-hotline-in-range", {after, before});
     }
 
+    urlViewDrawerAsPdf(){
+        return this.composeUrl("/view-drawer-as-pdf");
+    }
+
 }

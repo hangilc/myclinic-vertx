@@ -1807,16 +1807,15 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
     }
 
     private void viewDrawerAsPdf(RoutingContext ctx) {
-        String paperSizeParam = ctx.request().getParam("paper");
+        String paperSizeParam = ctx.request().getFormAttribute("paper");
+        String pagesParam = ctx.request().getFormAttribute("pages");
         if (paperSizeParam == null) {
             paperSizeParam = "A4";
         }
         PaperSize paperSize = resolvePaperSize(paperSizeParam);
         vertx.<Buffer>executeBlocking(promise -> {
             try {
-                List<List<Op>> pages = mapper.readValue(ctx.request().getParam("pages"),
-                        new TypeReference<>() {
-                        });
+                List<List<Op>> pages = mapper.readValue(pagesParam, new TypeReference<>(){});
                 ByteArrayOutputStream outStream = new ByteArrayOutputStream();
                 PdfPrinter printer = new PdfPrinter(paperSize);
                 printer.print(pages, outStream);
@@ -1834,6 +1833,36 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             }
         });
     }
+
+//    private void viewDrawerAsPdf(RoutingContext ctx) {
+//        String paperSizeParam = ctx.request().getParam("paper");
+//        if (paperSizeParam == null) {
+//            paperSizeParam = "A4";
+//        }
+//        PaperSize paperSize = resolvePaperSize(paperSizeParam);
+//        vertx.<Buffer>executeBlocking(promise -> {
+//            try {
+//                List<List<Op>> pages = mapper.readValue(ctx.request().getParam("pages"),
+//                        new TypeReference<>() {
+//                        });
+//                ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+//                PdfPrinter printer = new PdfPrinter(paperSize);
+//                printer.print(pages, outStream);
+//                byte[] pdfBytes = outStream.toByteArray();
+//                ctx.response().putHeader("content-type", "application/pdf");
+//                promise.complete(Buffer.buffer(pdfBytes));
+//            } catch (Exception e) {
+//                promise.fail(e);
+//            }
+//        }, ar -> {
+//            if (ar.succeeded()) {
+//                ctx.response().end(ar.result());
+//            } else {
+//                ctx.fail(ar.cause());
+//            }
+//        });
+//    }
+//
 
     private void printDrawer(RoutingContext ctx) {
         try {

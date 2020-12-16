@@ -1,4 +1,4 @@
-import {Widget} from "./widget.js";
+import {Widget} from "../widget.js";
 
 export class ChargeModify extends Widget {
     constructor(ele, map, rest){

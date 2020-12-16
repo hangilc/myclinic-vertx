@@ -1068,9 +1068,9 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {MeisaiDialog} = await import("./meisai-dialog.js");
     let {SendFax} = await import("./send-fax.js");
     let {FaxProgress} = await import("./fax-progress.js");
-    let {Charge} = await import("./charge.js");
-    let {ChargeDisp} = await import("./charge-disp.js");
-    let {ChargeModify} = await import("./charge-modify.js");
+    let {Charge} = await import("./charge/charge.js");
+    let {ChargeDisp} = await import("./charge/charge-disp.js");
+    let {ChargeModify} = await import("./charge/charge-modify.js");
     let {Nav} = await import("./nav.js");
     let {DiseaseArea} = await import("./disease-area.js");
     let {DiseaseCurrent} = await import("./disease-current.js");

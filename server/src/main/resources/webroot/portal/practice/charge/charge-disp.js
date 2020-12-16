@@ -1,4 +1,4 @@
-import {Component} from "./component.js";
+import {Component} from "../component.js";
 
 export class ChargeDisp extends Component {
     constructor(ele, map, rest) {

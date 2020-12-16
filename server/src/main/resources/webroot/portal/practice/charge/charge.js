@@ -1,4 +1,4 @@
-import {Component} from "./component.js";
+import {Component} from "../component.js";
 
 export class Charge extends Component {
     constructor(ele, map, rest) {

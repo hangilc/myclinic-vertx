@@ -1237,8 +1237,8 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         GlobalService.getInstance().executorService.submit(() -> {
             try {
                 for (FileUpload f : fileUploads) {
-                    if( simulateFail ){
-                        if( ++savePatientImageCount % 2 != 0 ){
+                    if (simulateFail) {
+                        if (++savePatientImageCount % 2 != 0) {
                             throw new RuntimeException("Intended failure");
                         }
                     }
@@ -1407,12 +1407,12 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private void savedPatientImageToken(RoutingContext ctx) throws Exception {
         String patientIdParam = ctx.request().getParam("patient-id");
-        if( patientIdParam == null ){
+        if (patientIdParam == null) {
             throw new RuntimeException("Missing parameter: patient-id");
         }
         int patientId = Integer.parseInt(patientIdParam);
         String file = ctx.request().getParam("file");
-        if( file == null ){
+        if (file == null) {
             throw new RuntimeException("Missing parameter: file");
         }
         GlobalService.AppDirToken dirToken = new GlobalService.AppDirToken(
@@ -1808,18 +1808,34 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
 
     private void viewDrawerAsPdf(RoutingContext ctx) {
         String paperSizeParam = ctx.request().getFormAttribute("paper");
-        String pagesParam = ctx.request().getFormAttribute("pages");
         if (paperSizeParam == null) {
             paperSizeParam = "A4";
         }
+        String pagesParamSrc = ctx.request().getFormAttribute("pages");
+        String pagesParam = pagesParamSrc == null ? "[]" : pagesParamSrc;
+        String stampParam = ctx.request().getFormAttribute("stamp");
         PaperSize paperSize = resolvePaperSize(paperSizeParam);
         vertx.<Buffer>executeBlocking(promise -> {
             try {
-                List<List<Op>> pages = mapper.readValue(pagesParam, new TypeReference<>(){});
+                List<List<Op>> pages = mapper.readValue(pagesParam, new TypeReference<>() {
+                });
                 ByteArrayOutputStream outStream = new ByteArrayOutputStream();
                 PdfPrinter printer = new PdfPrinter(paperSize);
                 printer.print(pages, outStream);
                 byte[] pdfBytes = outStream.toByteArray();
+                if (stampParam != null) {
+                    StampInfo stampInfo = appConfig.getStampInfo("receipt");
+                    Stamper.StamperOption sopt = new Stamper.StamperOption();
+                    sopt.scale = stampInfo.scale;
+                    sopt.xPos = stampInfo.xPos;
+                    sopt.yPos = stampInfo.yPos;
+                    sopt.stampCenterRelative = stampInfo.isImageCenterRelative;
+                    ByteArrayInputStream stampIn = new ByteArrayInputStream(pdfBytes);
+                    ByteArrayOutputStream stampOut = new ByteArrayOutputStream();
+                    Stamper stamper = new Stamper();
+                    stamper.putStampAtPage(stampIn, stampInfo.imageFile, stampOut, sopt, 1);
+                    pdfBytes = stampOut.toByteArray();
+                }
                 ctx.response().putHeader("content-type", "application/pdf");
                 promise.complete(Buffer.buffer(pdfBytes));
             } catch (Exception e) {

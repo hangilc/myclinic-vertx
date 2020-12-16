@@ -36,8 +36,9 @@ let tmpl = `
 
 let formTmpl = `
     <form class="d-none" method="POST" target="_blank">
-        <input type="text" name="paper" />
+        <input type="text" name="paper" value="A6_Landscape"/>
         <input type="text" name="pages" />
+        <input type="text" name="stamp" value="receipt"/>
     </form>
 `;
 
@@ -68,7 +69,6 @@ export class ChargeModify {
             let url = rest.urlViewDrawerAsPdf();
             let form = createElementFrom(formTmpl);
             form.action = url;
-            form.querySelector("input[name='paper']").value = "A6_Landscape";
             form.querySelector("input[name='pages'").value = JSON.stringify([ops]);
             document.body.append(form);
             form.submit();

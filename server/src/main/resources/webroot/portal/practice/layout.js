@@ -1045,7 +1045,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {PatientDisplay} = await import("./patient-display.js");
     let {wqueueStateCodeToRep} = await import("../js/consts.js");
     let DrawerSvg = await import("../../js/drawer-svg.js");
-    let {Title} = await import("./title.js");
+    let {Title} = await import("./title/title.js");
     let {SelectWqueueDialog} = await import("./select-wqueue-dialog.js");
     let {SelectRecentVisitDialog} = await import("./select-recent-visit-dialog.js");
     let {SelectTodaysVisitDialog} = await import("./select-todays-visit-dialog.js");
@@ -1086,6 +1086,8 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {UploadImageDialog} = await import("./upload-image-dialog.js");
     let {UploadProgress} = await import("./upload-progress.js");
     let {PatientImageList} = await import("../../components/patient-image-list.js");
+
+    let prop = {rest, printAPI};
 
     function postStartSession(patientId, visitId) {
         pane.dispatchEvent(new CustomEvent("start-session",
@@ -1663,55 +1665,55 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    class ChargeDispFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-charge-disp-template");
-        }
-
-        create(charge) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new ChargeDisp(ele, map, rest);
-            comp.init(charge);
-            return comp;
-        }
-    }
-
-    class ChargeModifyFactory {
-        create(meisai, charge) {
-            let html = $("template#practice-charge-modify-template").html();
-            let ele = $(html);
-            let map = parseElement(ele);
-            let comp = new ChargeModify(ele, map, rest);
-            comp.init();
-            comp.set(meisai, charge);
-            return comp;
-        }
-    }
-
-    class ChargeFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-charge-template");
-            this.chargeDispFactory = new ChargeDispFactory();
-            this.chargeModifyFactory = new ChargeModifyFactory();
-        }
-
-        create(charge) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new Charge(ele, map, rest);
-            comp.init(this.chargeDispFactory, this.chargeModifyFactory);
-            comp.set(charge);
-            return comp;
-        }
-    }
+    // class ChargeDispFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-charge-disp-template");
+    //     }
+    //
+    //     create(charge) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let comp = new ChargeDisp(ele, map, rest);
+    //         comp.init(charge);
+    //         return comp;
+    //     }
+    // }
+    //
+    // class ChargeModifyFactory {
+    //     create(meisai, charge) {
+    //         let html = $("template#practice-charge-modify-template").html();
+    //         let ele = $(html);
+    //         let map = parseElement(ele);
+    //         let comp = new ChargeModify(ele, map, rest);
+    //         comp.init();
+    //         comp.set(meisai, charge);
+    //         return comp;
+    //     }
+    // }
+    //
+    // class ChargeFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-charge-template");
+    //         this.chargeDispFactory = new ChargeDispFactory();
+    //         this.chargeModifyFactory = new ChargeModifyFactory();
+    //     }
+    //
+    //     create(charge) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let comp = new Charge(ele, map, rest);
+    //         comp.init(this.chargeDispFactory, this.chargeModifyFactory);
+    //         comp.set(charge);
+    //         return comp;
+    //     }
+    // }
 
     class RecordFactory {
         constructor() {
             this.html = getTemplateHtml("practice-record-template");
             this.wrapper = $("#practice-record-wrapper");
             this.generalWorkarea = $("#practice-general-workarea");
-            this.titleFactory = new TitleFactory();
+            //this.titleFactory = new TitleFactory();
             this.textFactory = new TextFactory();
             this.textEnterFactory = new TextEnterFactory();
             this.hokenFactory = new HokenFactory();
@@ -1728,8 +1730,10 @@ export async function initLayout(pane, rest, controller, printAPI) {
         create(visitFull, hokenRep) {
             let ele = $(this.html);
             let map = parseElement(ele);
-            let record = new Record(ele, map, rest);
-            record.init(visitFull, hokenRep, this.titleFactory, this.textFactory,
+            let record = new Record(prop, ele, map);
+            record.init(visitFull, hokenRep,
+                //this.titleFactory,
+                this.textFactory,
                 this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
                 this.shinryouRegularDialogFactory, this.conductDispFactory,
                 this.drugDispFactory, this.sendFaxFactory,

@@ -20,6 +20,7 @@ let tmpl = `
             <a href="javascript:void(0)" class="x-untemp-visit dropdown-item">暫定診察の解除</a>
             <a href="javascript:void(0)" class="x-meisai dropdown-item">診療明細</a>
             <a href="javascript:void(0)" class="x-futan-wari-override dropdown-item">負担割オーバーライド</a>
+            <a href="javascript:void(0)" class="x-add-to-no-pay-list dropdown-item">未収リストへ</a>
         </div>
     </div>
 </div>
@@ -37,6 +38,7 @@ export class Title {
         this.bindUntempVisit();
         this.bindMeisai();
         this.bindFutanWariOverride();
+        this.bindAddToNoPayList();
     }
 
     bindDelete(){
@@ -57,6 +59,10 @@ export class Title {
 
     bindFutanWariOverride(){
         click(this.map.futanWariOverride, async event => await this.doFutanWariOverride());
+    }
+
+    bindAddToNoPayList(){
+        click(this.map.addToNoPayList, event => this.doAddToNoPayList());
     }
 
     getVisitId(){
@@ -94,6 +100,15 @@ export class Title {
     doClearTempVisit(){
         this.ele.dispatchEvent(new Event("clear-temp-visit"));
         //this.trigger("clear-temp-visit");
+    }
+
+    onAddToNoPayList(cb){
+        on(this.ele, "add-to-no-pay", event => cb(event.detail));
+    }
+
+    doAddToNoPayList(){
+        this.ele.dispatchEvent(new CustomEvent("add-to-no-pay-list",
+            {bubbles: true, detail: this.getVisitId()}));
     }
 
     async doMeisai(){

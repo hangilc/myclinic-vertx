@@ -1921,7 +1921,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         try {
             byte[] bytes = ctx.getBody().getBytes();
             CalcFutanWariRequestDTO req = mapper.readValue(bytes, CalcFutanWariRequestDTO.class);
-            int futanWari = HokenUtil.calcFutanWari(req.hoken, req.rcptAge);
+            int futanWari = HokenUtil.calcFutanWari(req.hoken, req.rcptAge, req.visit);
             ctx.response().end(String.format("%d", futanWari));
         } catch (Exception e) {
             ctx.fail(e);

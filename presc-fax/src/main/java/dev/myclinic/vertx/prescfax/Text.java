@@ -57,7 +57,8 @@ public class Text {
                 t.sex = presc.patient.sex;
                 t.honnin = isHonnin(presc.hoken);
                 t.futanWari = HokenUtil.calcFutanWari(presc.hoken,
-                        calcRcptAge(presc.patient.birthday, year, month));
+                        calcRcptAge(presc.patient.birthday, year, month),
+                        presc.visit);
                 t.koufuDate = presc.visit.visitedAt.substring(0, 10);
                 t.content = presc.prescContent;
                 t.pharmacyName = g.pharmacy.name;

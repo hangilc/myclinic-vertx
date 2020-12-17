@@ -3,9 +3,11 @@ package dev.myclinic.vertx.util;
 import dev.myclinic.vertx.dto.HokenDTO;
 import dev.myclinic.vertx.dto.HokenListDTO;
 import dev.myclinic.vertx.dto.KouhiDTO;
+import dev.myclinic.vertx.dto.VisitDTO;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class HokenUtil {
 
@@ -73,7 +75,11 @@ public class HokenUtil {
                 roujinFutanWari, kouhi1FutanshaBangou, kouhi2FutanshaBangou, kouhi3FutanshaBangou);
     }
 
-    public static int calcFutanWari(HokenDTO hoken, int rcptAge) {
+    public static int calcFutanWari(HokenDTO hoken, int rcptAge, VisitDTO visit) {
+        Optional<Integer> override = VisitAttr.getFutanWari(visit);
+        if( override.isPresent() ){
+            return override.get();
+        }
         int futanWari = 10;
         if (hoken.shahokokuho != null) {
             futanWari = calcShahokokuhoFutanWariByAge(rcptAge);

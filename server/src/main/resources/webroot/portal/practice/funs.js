@@ -22,7 +22,7 @@ export async function createShohousenOps(text, reqOpts, rest) {
     req.hoken = await rest.getHoken(text.visitId);
     req.patient = await rest.getPatient(visit.patientId);
     let rcptAge = await rest.calcRcptAge(req.patient.birthday, visitDate);
-    req.futanWari = await rest.calcFutanWari(req.hoken, rcptAge);
+    req.futanWari = await rest.calcFutanWari(req.hoken, rcptAge, visit);
     req.issueDate = visitDate;
     req.drugs = text.content;
     Object.assign(req, reqOpts);

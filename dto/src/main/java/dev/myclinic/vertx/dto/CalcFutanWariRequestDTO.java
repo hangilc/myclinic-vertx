@@ -4,5 +4,6 @@ public class CalcFutanWariRequestDTO {
 
     public HokenDTO hoken;
     public int rcptAge;
+    public VisitDTO visit;
 
 }

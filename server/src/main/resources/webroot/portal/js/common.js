@@ -238,10 +238,11 @@ class Rest extends Client {
         return await this.get("/calc-rcpt-age", {"birthday": birthday, "at": at});
     }
 
-    async calcFutanWari(hoken, rcptAge) {
+    async calcFutanWari(hoken, rcptAge, visit) {
         let req = {
             hoken: hoken,
-            rcptAge: rcptAge
+            rcptAge: rcptAge,
+            visit: visit
         };
         return await this.post("/calc-futan-wari", req);
     }

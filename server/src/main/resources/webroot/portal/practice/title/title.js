@@ -2,23 +2,24 @@ import { Component } from "../component.js";
 import * as kanjidate from "../../js/kanjidate.js";
 import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
-import {on} from "../../../js/dom-helper.js";
+import {on, click} from "../../../js/dom-helper.js";
+import {VisitMeisaiDialog} from "../visit-meisai-dialog.js";
 
 let tmpl = `
-<div className="mt-2 practice-title form-inline">
-    <div className="x-text"></div>
-    <div className="dropdown ml-auto">
-        <button className="btn btn-link dropdown-toggle" type="button"
+<div class="mt-2 practice-title form-inline">
+    <div class="x-text"></div>
+    <div class="dropdown ml-auto">
+        <button class="btn btn-link dropdown-toggle" type="button"
                 data-toggle="dropdown" aria-haspopup="true"
                 aria-expanded="false">
             操作
         </button>
-        <div className="dropdown-menu x-menu_" aria-labelledby="dropdownMenuButton">
-            <a href="javascript:void(0)" className="x-delete dropdown-item">この診察を削除</a>
-            <a href="javascript:void(0)" className="x-temp-visit dropdown-item">暫定診察に設定</a>
-            <a href="javascript:void(0)" className="x-untemp-visit dropdown-item">暫定診察の解除</a>
-            <a href="javascript:void(0)" className="x-meisai dropdown-item">診療明細</a>
-            <a href="javascript:void(0)" className="x-futan-wari-override dropdown-item">負担割オーバーライド</a>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a href="javascript:void(0)" class="x-delete dropdown-item">この診察を削除</a>
+            <a href="javascript:void(0)" class="x-temp-visit dropdown-item">暫定診察に設定</a>
+            <a href="javascript:void(0)" class="x-untemp-visit dropdown-item">暫定診察の解除</a>
+            <a href="javascript:void(0)" class="x-meisai dropdown-item">診療明細</a>
+            <a href="javascript:void(0)" class="x-futan-wari-override dropdown-item">負担割オーバーライド</a>
         </div>
     </div>
 </div>
@@ -30,17 +31,32 @@ export class Title {
         this.visit = visit;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
+        this.map.text.innerText = this.rep(visit.visitedAt);
+        this.bindDelete();
+        this.bindTempVisit();
+        this.bindUntempVisit();
+        this.bindMeisai();
+        this.bindFutanWariOverride();
     }
 
-    async init(visit, visitMeisaiDialogFactory) {
-        this.visit = visit;
-        this.textElement.text(this.rep(visit.visitedAt));
-        this.visitMeisaiDialogFactory = visitMeisaiDialogFactory;
-        this.menu.delete.on("click",  event => this.doDelete());
-        this.menu.tempVisit.on("click", event => this.doTempVisit());
-        this.menu.untempVisit.on("click", event => this.doClearTempVisit());
-        this.menu.meisai.on("click", event => this.doMeisai());
-        this.menu.futanWariOverride.on("click", async event => await this.doFutanWariOverride());
+    bindDelete(){
+        click(this.map.delete, event => this.doDelete());
+    }
+
+    bindTempVisit(){
+        click(this.map.tempVisit, event => this.doTempVisit());
+    }
+
+    bindUntempVisit(){
+        click(this.map.untempVisit, event => this.doClearTempVisit());
+    }
+
+    bindMeisai(){
+        click(this.map.meisai, async event => await this.doMeisai());
+    }
+
+    bindFutanWariOverride(){
+        click(this.map.futanWariOverride, async event => await this.doFutanWariOverride());
     }
 
     getVisitId(){
@@ -61,25 +77,28 @@ export class Title {
     }
 
     onTempVisit(cb){
-        on(this.ele, "temp-visit", )
+        on(this.ele, "temp-visit", event => cb(event.detail));
         //this.on("temp-visit", (event, visitId) => cb(visitId));
     }
 
     doTempVisit(){
-        this.trigger("temp-visit", this.getVisitId());
+        this.ele.dispatchEvent(new CustomEvent("temp-visit", {detail: this.getVisitId()}));
+        //this.trigger("temp-visit", this.getVisitId());
     }
 
     onClearTempVisit(cb){
-        this.on("clear-temp-visit", event => cb());
+        on(this.ele, "clear-temp-visit", event => cb());
+        //this.on("clear-temp-visit", event => cb());
     }
 
     doClearTempVisit(){
-        this.trigger("clear-temp-visit");
+        this.ele.dispatchEvent(new Event("clear-temp-visit"));
+        //this.trigger("clear-temp-visit");
     }
 
     async doMeisai(){
-        let meisai = await this.rest.getMeisai(this.getVisitId());
-        let dialog = this.visitMeisaiDialogFactory.create(meisai);
+        let meisai = await this.prop.rest.getMeisai(this.getVisitId());
+        let dialog = new VisitMeisaiDialog(meisai);
         await dialog.open();
     }
 
@@ -109,7 +128,7 @@ export class Title {
         }
         let attr = JSON.parse(this.visit.attributes || "{}");
         attr.futanWari = futanWari;
-        await this.rest.updateVisitAttr(this.visit.visitId, JSON.stringify(attr));
+        await this.prop.rest.updateVisitAttr(this.visit.visitId, JSON.stringify(attr));
     }
 
 }

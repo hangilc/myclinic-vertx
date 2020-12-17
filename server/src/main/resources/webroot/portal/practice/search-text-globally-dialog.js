@@ -1,6 +1,6 @@
 import {SearchTextDialog} from "./search-text-dialog.js";
 import {Component} from "../js/component.js";
-import {TitleDisp} from "./title/title-disp.js";
+import {TitleDisp} from "./title-disp.js";
 import {TextDisp} from "./text-disp.js";
 import {parseElement} from "../js/parse-element.js";
 

@@ -1406,33 +1406,33 @@ export async function initLayout(pane, rest, controller, printAPI) {
 
     })();
 
-    class VisitMeisaiDialogFactory {
-        create(meisai) {
-            let html = $("template#practice-visit-meisai-dialog-template").html();
-            let ele = $(html);
-            let map = parseElement(ele);
-            let dialog = new VisitMeisaiDialog(ele, map, rest);
-            dialog.init();
-            dialog.set(meisai);
-            return dialog;
-        }
-    }
+    // class VisitMeisaiDialogFactory {
+    //     create(meisai) {
+    //         let html = $("template#practice-visit-meisai-dialog-template").html();
+    //         let ele = $(html);
+    //         let map = parseElement(ele);
+    //         let dialog = new VisitMeisaiDialog(ele, map, rest);
+    //         dialog.init();
+    //         dialog.set(meisai);
+    //         return dialog;
+    //     }
+    // }
 
-    class TitleFactory {
-        constructor() {
-            this.html = $("template#practice-title-template").html();
-            this.rest = rest;
-            this.visitMeisaiDialogFactory = new VisitMeisaiDialogFactory();
-        }
-
-        create(visit) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new Title(ele, map, rest);
-            comp.init(visit, this.visitMeisaiDialogFactory);
-            return comp;
-        }
-    }
+    // class TitleFactory {
+    //     constructor() {
+    //         this.html = $("template#practice-title-template").html();
+    //         this.rest = rest;
+    //         this.visitMeisaiDialogFactory = new VisitMeisaiDialogFactory();
+    //     }
+    //
+    //     create(visit) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let comp = new Title(ele, map, rest);
+    //         comp.init(visit, this.visitMeisaiDialogFactory);
+    //         return comp;
+    //     }
+    // }
 
     class SendFaxFactory {
         constructor() {

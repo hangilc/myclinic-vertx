@@ -107,9 +107,10 @@ public class Main {
             }
             ws.closeHandler(e -> System.out.println("closed"));
         });
+        String bind = resolveBind(cmdArgs);
         int port = cmdArgs.port;
-        server.listen(port);
-        System.out.println(String.format("server started at port %d", port));
+        server.listen(port, bind);
+        System.out.printf("server started at %s:%d\n", bind, port);
     }
 
     private static void ensureAppDir(String dirToken) throws IOException {
@@ -153,5 +154,16 @@ public class Main {
         String msg = th.getMessage();
         ctx.response().setStatusCode(statusCode).end(msg);
     };
+
+    private static String resolveBind(CmdArgs cmdArgs){
+        String bind = cmdArgs.bind;
+        if( bind == null ){
+            bind = System.getenv("MYCLINIC_BIND");
+        }
+        if( bind == null ){
+            bind = "0.0.0.0";
+        }
+        return bind;
+    }
 
 }

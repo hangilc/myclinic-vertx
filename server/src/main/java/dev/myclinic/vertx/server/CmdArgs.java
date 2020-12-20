@@ -8,6 +8,7 @@ import java.util.List;
 class CmdArgs {
 
     int port = 28080;
+    String bind = null;
     boolean isDev = false;
     boolean simulateSlowUpload = false;
     boolean simulateUploadFail = false;
@@ -24,6 +25,9 @@ class CmdArgs {
                 case "--port": {
                     cmdArgs.port = Integer.parseInt(args[++i]);
                     break;
+                }
+                case "--bind": {
+                    cmdArgs.bind = args[++i];
                 }
                 case "--dev": {
                     cmdArgs.isDev = true;

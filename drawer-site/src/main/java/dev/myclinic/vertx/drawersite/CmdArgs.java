@@ -4,10 +4,14 @@ class CmdArgs {
 
     public boolean isDev;
     public int port = 48080;
+    public String allowedOrigins = null;
 
     public static void usage(){
         System.err.println("usage: drawer-site [OPTIONS]");
-        System.err.println("  --dev       serve static files from dev directory");
+        System.err.println("  --dev                     serve static files from dev directory");
+        System.err.println("  --allowed-origins VALUE   allowed origins (comma separated)");
+        System.err.println("         If not specified, defaults to MYCLINIC_DRAWER_SITE_ALLOWED_ORIGINS env var.");
+        System.err.println("         If neither is specified, default to '*'");
     }
 
     public static CmdArgs parse(String[] args){
@@ -21,6 +25,10 @@ class CmdArgs {
                 }
                 case "--port": {
                     cmdArgs.port = Integer.parseInt(args[++i]);
+                    break;
+                }
+                case "--allowed-origins": {
+                    cmdArgs.allowedOrigins = args[++i];
                     break;
                 }
                 default: {

@@ -24,12 +24,15 @@ import java.util.*;
 public class Main {
 
     static ObjectMapper mapper = createMapper();
+    static String allowedOrigins = null;
 
     public static void main(String[] args) throws Exception {
         CmdArgs cmdArgs = CmdArgs.parse(args);
+        Main.allowedOrigins = resolveAllowedOrigins(cmdArgs);
         String bind = "127.0.0.1";
         int port = cmdArgs.port;
         Server server = new Server(bind, port, 6);
+        server.setAllowedOrigins(Main.allowedOrigins);
         System.out.printf("Drawer-site server is listening to %s:%d\n", bind, port);
         server.addContext("/ping", handler -> handler.sendText("pong"));
         server.addContext("/print/", Main::handlePrint);
@@ -694,6 +697,17 @@ public class Main {
         var map = getPrefMap();
         map.remove(key);
         savePrefMap(map);
+    }
+
+    private static String resolveAllowedOrigins(CmdArgs cmdArgs){
+        String oa = cmdArgs.allowedOrigins;
+        if( oa == null ){
+            oa = System.getenv("MYCLINIC_DRAWER_SITE_ALLOWED_ORIGINS");
+        }
+        if( oa == null ){
+            oa = "*";
+        }
+        return oa;
     }
 
 }

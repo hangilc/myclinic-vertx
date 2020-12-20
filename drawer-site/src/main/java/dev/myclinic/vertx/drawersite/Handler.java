@@ -21,11 +21,16 @@ public class Handler {
     private final HttpExchange exchange;
     private final String contextPath;
     private final Map<String, String> queryMap = new HashMap<>();
+    private String allowedOrigins;
 
     public Handler(HttpExchange exchange, String contextPath) {
         this.exchange = exchange;
         this.contextPath = contextPath;
         parseQuery(exchange.getRequestURI().getQuery());
+    }
+
+    public void setAllowedOrigins(String allowedOrigins){
+        this.allowedOrigins = allowedOrigins;
     }
 
     private void parseQuery(String query){
@@ -88,7 +93,9 @@ public class Handler {
     }
 
     public void allowCORS() {
-        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        if( allowedOrigins != null ){
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", allowedOrigins);
+        }
     }
 
     private void doError(Throwable e){

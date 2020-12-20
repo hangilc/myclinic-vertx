@@ -23,6 +23,7 @@ let itemTmpl = `
 class Item {
     constructor(visit, charge){
         this.chargeValue = this.getChargeValue(charge);
+        this.visitId = visit.visitId;
         this.ele = createElementFrom(itemTmpl);
         this.map = parseElement(this.ele);
         this.map.date.innerText = kanjidate.sqldateToKanji(visit.visitedAt.substring(0, 10));
@@ -50,6 +51,11 @@ export class NoPayList {
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.items = [];
+        this.map.receiptPdf.addEventListener("click", async event => {
+            let visitIds = this.items.map(item => item.visitId);
+            let pdf = await this.prop.rest.createReceiptPdf(visitIds);
+            console.log(pdf);
+        });
     }
 
     async add(visitId){

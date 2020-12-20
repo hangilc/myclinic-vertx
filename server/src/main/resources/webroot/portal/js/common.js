@@ -756,6 +756,10 @@ class Rest extends Client {
     urlViewDrawerAsPdf(){
         return this.topRest.urlViewDrawerAsPdf();
     }
+
+    async createReceiptPdf(visitIds){
+        return await this.topRest.createReceiptPdf(visitIds);
+    }
 }
 
 class Integration extends Client {

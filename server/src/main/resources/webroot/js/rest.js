@@ -168,4 +168,8 @@ export class Rest extends HttpClient {
         return this.composeUrl("/view-drawer-as-pdf");
     }
 
+    async createReceiptPdf(visitIds){
+        return this.POST("/create-receipt-pdf", visitIds, {});
+    }
+
 }

@@ -458,16 +458,31 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         List<Integer> visitIds = mapper.readValue(ctx.getBody().getBytes(), new TypeReference<>(){});
         GlobalService g = GlobalService.getInstance();
         Client client = g.client;
-        ClinicInfoDTO clinicInfo = client.getClinicInfo();
-        GlobalService.getInstance().executorService.submit(() -> {
+        StampInfo stampInfo = appConfig.getStampInfo("receipt");
+        Stamper.StamperOption opt = new Stamper.StamperOption();
+        opt.scale = stampInfo.scale;
+        opt.xPos = stampInfo.xPos;
+        opt.yPos = stampInfo.yPos;
+        opt.stampCenterRelative = stampInfo.isImageCenterRelative;
+        List<String> stampedFiles = new ArrayList<>();
+        GlobalService.getInstance().executorService.execute(() -> {
             try {
+                ClinicInfoDTO clinicInfo = client.getClinicInfo();
                 for(int visitId: visitIds){
                     ReceiptDrawerData data = createReceiptDrawerData(client, visitId, clinicInfo);
                     List<Op> ops = createReceiptOps(data);
                     String pdfToken = g.createTempAppFilePath(g.portalTmpDirToken, "receipt", ".pdf");
+                    String pdfFile = g.resolveAppPath(pdfToken).toString();
                     PdfPrinter pdfPrinter = new PdfPrinter("A6_Landscape");
-                    pdfPrinter.print(List.of(ops), g.resolveAppPath(pdfToken).toString());
+                    pdfPrinter.print(List.of(ops), pdfFile);
+                    String stampedToken = g.createTempAppFilePath(g.portalTmpDirToken, "receipt-stamped", ".pdf");
+                    String stampedFile = g.resolveAppPath(stampedToken).toString();
+                    Stamper stamper = new Stamper();
+                    stamper.putStampAtPage(pdfFile, stampInfo.imageFile, stampedFile, opt, 1);
+                    Files.delete(Path.of(pdfFile));
+                    stampedFiles.add(stampedFile);
                 }
+                ctx.response().end("true");
             } catch(Throwable ex){
                 ctx.fail(ex);
             }

@@ -3,11 +3,15 @@ package dev.myclinic.vertx.server;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.consts.ConductKind;
 import dev.myclinic.vertx.consts.MeisaiSection;
 import dev.myclinic.vertx.db.Backend;
 import dev.myclinic.vertx.db.Query;
 import dev.myclinic.vertx.db.TableSet;
+import dev.myclinic.vertx.drawer.Op;
+import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawerData;
+import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawerDataCreator;
 import dev.myclinic.vertx.dto.*;
 import dev.myclinic.vertx.hotlinelogevent.body.HotlineBeep;
 import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
@@ -19,6 +23,7 @@ import dev.myclinic.vertx.meisai.SectionItem;
 import dev.myclinic.vertx.util.DateTimeUtil;
 import dev.myclinic.vertx.util.HokenUtil;
 import dev.myclinic.vertx.util.RcptUtil;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -50,12 +55,12 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         public List<HotlineLogDTO> hotlineLogs;
         public List<PracticeLogDTO> practiceLogs;
 
-        public CallResult(Backend backend){
+        public CallResult(Backend backend) {
             this.hotlineLogs = backend.getHotlineLogs();
             this.practiceLogs = backend.getPracticeLogs();
         }
 
-        public CallResult(){
+        public CallResult() {
             this.hotlineLogs = new ArrayList<>();
             this.practiceLogs = new ArrayList<>();
         }
@@ -957,7 +962,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private CallResult sendHotlineBeep(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         String target = ctx.request().getParam("target");
-        if( target == null ){
+        if (target == null) {
             throw new RuntimeException("Missing param: target");
         }
         conn.commit();
@@ -2403,7 +2408,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private CallResult updateVisitAttr(RoutingContext ctx, Connection conn) throws Exception {
         String visitIdParam = ctx.request().getParam("visit-id");
         String attr = ctx.request().getParam("attr");
-        if( visitIdParam == null ){
+        if (visitIdParam == null) {
             throw new RuntimeException("Missing parameter: visit-id");
         }
         int visitId = Integer.parseInt(visitIdParam);
@@ -2417,12 +2422,12 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
 
     private CallResult listVisitIdInDateInRange(RoutingContext ctx, Connection conn) throws Exception {
         String fromDateArg = ctx.request().getParam("from");
-        if( fromDateArg == null ){
+        if (fromDateArg == null) {
             throw new RuntimeException("Missing parameter: from");
         }
         LocalDate fromDate = LocalDate.parse(fromDateArg);
         String uptoDateArg = ctx.request().getParam("upto");
-        if( uptoDateArg == null ){
+        if (uptoDateArg == null) {
             throw new RuntimeException("Missing parameter: upto");
         }
         LocalDate uptoDate = LocalDate.parse(uptoDateArg);
@@ -2437,10 +2442,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private CallResult getByoumeiMaster(RoutingContext ctx, Connection conn) throws Exception {
         String shoubyoumeicodeParam = ctx.request().getParam("shoubyoumeicode");
         String atParam = ctx.request().getParam("at");
-        if( shoubyoumeicodeParam == null ){
+        if (shoubyoumeicodeParam == null) {
             throw new RuntimeException("Missing param: shoubyoumeicode.");
         }
-        if( atParam == null ){
+        if (atParam == null) {
             throw new RuntimeException("Missing param: at.");
         }
         int shoubyoumeicode = Integer.parseInt(shoubyoumeicodeParam);
@@ -2456,10 +2461,10 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private CallResult getShuushokugoMaster(RoutingContext ctx, Connection conn) throws Exception {
         String shuushokugocodeParam = ctx.request().getParam("shuushokugocode");
         String atParam = ctx.request().getParam("at");
-        if( shuushokugocodeParam == null ){
+        if (shuushokugocodeParam == null) {
             throw new RuntimeException("Missing param: shuushokugocode.");
         }
-        if( atParam == null ){
+        if (atParam == null) {
             throw new RuntimeException("Missing param: at.");
         }
         int shuushokugocode = Integer.parseInt(shuushokugocodeParam);
@@ -2474,7 +2479,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
 
     private CallResult getMostRecentVisitOfPatient(RoutingContext ctx, Connection conn) throws Exception {
         String patientIdParam = ctx.request().getParam("patient-id");
-        if( patientIdParam == null ){
+        if (patientIdParam == null) {
             throw new RuntimeException("Missing parameter: patient-id.");
         }
         int patientId = Integer.parseInt(patientIdParam);
@@ -2488,11 +2493,12 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
 
     private CallResult batchGetPatient(RoutingContext ctx, Connection conn) throws Exception {
         List<Integer> patientIds = this.mapper.readValue(ctx.getBody().getBytes(),
-                new TypeReference<>(){});
+                new TypeReference<>() {
+                });
         List<PatientDTO> result = new ArrayList<>();
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        for(int patientId: patientIds){
+        for (int patientId : patientIds) {
             PatientDTO patient = backend.getPatient(patientId);
             result.add(patient);
         }
@@ -2585,7 +2591,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
                 req.conducts.add(createKotsuenTeiryouReq(visitId, at));
             } else {
                 ShinryouMasterDTO master = resolveShinryouMasterByName(backend, name, at);
-                if( master == null ){
+                if (master == null) {
                     throw new RuntimeException("Cannot find master for: " + name);
                 }
                 req.shinryouList.add(createShinryouReq(visitId, master.shinryoucode, at));
@@ -2806,25 +2812,16 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         }
         meisaiDTO.totalTen = meisai.totalTen();
         PatientDTO patientDTO = backend.getPatient(visit.patientId);
-        Integer futanWari = null;
-        if( visit.attributes != null ){
-            VisitAttrDTO attr = mapper.readValue(visit.attributes, VisitAttrDTO.class);
-            futanWari = attr.futanWari;
-        }
-        if( futanWari == null ){
-            if (patientDTO.birthday != null) {
-                HokenDTO hokenDTO = backend.getHokenForVisit(visit);
-                HokenUtil.fillHokenRep(hokenDTO);
-                meisaiDTO.hoken = hokenDTO;
-                LocalDate birthdayDate = DateTimeUtil.parseSqlDate(patientDTO.birthday);
-                int rcptAge = HokenUtil.calcRcptAge(birthdayDate.getYear(), birthdayDate.getMonth().getValue(),
-                        birthdayDate.getDayOfMonth(), at.getYear(), at.getMonth().getValue());
-                meisaiDTO.futanWari = HokenUtil.calcFutanWari(hokenDTO, rcptAge);
-            } else {
-                meisaiDTO.futanWari = 10;
-            }
+        if (patientDTO.birthday != null) {
+            HokenDTO hokenDTO = backend.getHokenForVisit(visit);
+            HokenUtil.fillHokenRep(hokenDTO);
+            meisaiDTO.hoken = hokenDTO;
+            LocalDate birthdayDate = DateTimeUtil.parseSqlDate(patientDTO.birthday);
+            int rcptAge = HokenUtil.calcRcptAge(birthdayDate.getYear(), birthdayDate.getMonth().getValue(),
+                    birthdayDate.getDayOfMonth(), at.getYear(), at.getMonth().getValue());
+            meisaiDTO.futanWari = HokenUtil.calcFutanWari(hokenDTO, rcptAge, visit);
         } else {
-            meisaiDTO.futanWari = futanWari;
+            meisaiDTO.futanWari = 10;
         }
         meisaiDTO.charge = RcptUtil.calcCharge(meisaiDTO.totalTen, meisaiDTO.futanWari);
         return meisaiDTO;
@@ -2959,7 +2956,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private ShinryouMasterDTO resolveShinryouMasterByName(Backend backend, String name, LocalDate at)
             throws Exception {
         Integer code = masterMap.tryResolve(MasterKind.Shinryou, name, at).orElse(null);
-        if( code != null ){
+        if (code != null) {
             return backend.getShinryouMaster(code, at);
         } else {
             return backend.findShinryouMasterByName(name, at);
@@ -3027,9 +3024,9 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
                 conn = ds.getConnection();
                 conn.setAutoCommit(false);
                 CallResult cr = f.call(routingContext, conn);
-                if( cr.hotlineLogs.size() > 0 ){
+                if (cr.hotlineLogs.size() > 0) {
                     EventBus bus = vertx.eventBus();
-                    for(HotlineLogDTO log: cr.hotlineLogs){
+                    for (HotlineLogDTO log : cr.hotlineLogs) {
                         String msg = mapper.writeValueAsString(log);
                         bus.send("hotline-streamer", msg);
                     }

@@ -6,6 +6,7 @@ import com.itextpdf.text.Image;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.appconfig.types.StampInfo;
 import dev.myclinic.vertx.client2.Client;
+import dev.myclinic.vertx.db.Backend;
 import dev.myclinic.vertx.drawer.*;
 import dev.myclinic.vertx.drawer.form.Form;
 import dev.myclinic.vertx.drawer.form.Page;
@@ -26,6 +27,7 @@ import dev.myclinic.vertx.drawerprinterwin.AuxSetting;
 import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
 import dev.myclinic.vertx.dto.*;
 import dev.myclinic.vertx.mastermap.MasterMap;
+import dev.myclinic.vertx.pdf.Concatenator;
 import dev.myclinic.vertx.pdf.Stamper;
 import dev.myclinic.vertx.romaji.Romaji;
 import dev.myclinic.vertx.shohousendrawer.ShohousenData;
@@ -342,6 +344,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("delete-patient-image", this::deletePatientImage);
         noDatabaseFuncMap.put("list-patient-image", this::listPatientImage);
         noDatabaseFuncMap.put("get-patient-image", this::getPatientImage);
+        noDatabaseFuncMap.put("show-file-token", this::showFileToken);
         noDatabaseFuncMap.put("change-patient-of-image", this::changePatientOfImage);
         noDatabaseFuncMap.put("saved-patient-image-token", this::savedPatientImageToken);
         noDatabaseFuncMap.put("view-drawer", this::viewDrawer);
@@ -352,6 +355,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("render-medcert", this::renderMedCert);
         noDatabaseFuncMap.put("create-paper-scan-path", this::createPaperScanPath);
         noDatabaseFuncMap.put("receipt-drawer", this::receiptDrawer);
+        noDatabaseFuncMap.put("create-receipt-pdf", this::createReceiptPdf);
         noDatabaseFuncMap.put("list-print-setting", this::listPrintSetting);
         noDatabaseFuncMap.put("batch-resolve-hoken-rep", this::batchResolveHokenRep);
     }
@@ -433,6 +437,64 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         } catch (Exception e) {
             ctx.fail(e);
         }
+    }
+
+    private ReceiptDrawerData createReceiptDrawerData(Client client, int visitId, ClinicInfoDTO clinicInfo) {
+        VisitDTO visit = client.getVisit(visitId);
+        ChargeDTO charge = client.getCharge(visitId);
+        return ReceiptDrawerDataCreator.create(
+                client.getVisitMeisai(visitId),
+                client.getPatient(visit.patientId),
+                visit,
+                charge == null ? 0 : charge.charge,
+                clinicInfo
+        );
+    }
+
+    private List<Op> createReceiptOps(ReceiptDrawerData data) {
+        ReceiptDrawer drawer = new ReceiptDrawer(data);
+        return drawer.getOps();
+    }
+
+    private void createReceiptPdf(RoutingContext ctx) throws Exception {
+        List<Integer> visitIds = mapper.readValue(ctx.getBody().getBytes(), new TypeReference<>(){});
+        GlobalService g = GlobalService.getInstance();
+        Client client = g.client;
+        StampInfo stampInfo = appConfig.getStampInfo("receipt");
+        Stamper.StamperOption opt = new Stamper.StamperOption();
+        opt.scale = stampInfo.scale;
+        opt.xPos = stampInfo.xPos;
+        opt.yPos = stampInfo.yPos;
+        opt.stampCenterRelative = stampInfo.isImageCenterRelative;
+        GlobalService.getInstance().executorService.execute(() -> {
+            try {
+                List<String> stampedFiles = new ArrayList<>();
+                ClinicInfoDTO clinicInfo = client.getClinicInfo();
+                for(int visitId: visitIds){
+                    ReceiptDrawerData data = createReceiptDrawerData(client, visitId, clinicInfo);
+                    List<Op> ops = createReceiptOps(data);
+                    String pdfToken = g.createTempAppFilePath(g.portalTmpDirToken, "receipt", ".pdf");
+                    String pdfFile = g.resolveAppPath(pdfToken).toString();
+                    PdfPrinter pdfPrinter = new PdfPrinter("A6_Landscape");
+                    pdfPrinter.print(List.of(ops), pdfFile);
+                    String stampedToken = g.createTempAppFilePath(g.portalTmpDirToken, "receipt-stamped", ".pdf");
+                    String stampedFile = g.resolveAppPath(stampedToken).toString();
+                    Stamper stamper = new Stamper();
+                    stamper.putStampAtPage(pdfFile, stampInfo.imageFile, stampedFile, opt, 1);
+                    Files.delete(Path.of(pdfFile));
+                    stampedFiles.add(stampedFile);
+                }
+                String outToken = g.createTempAppFilePath(g.portalTmpDirToken, "receipt", ".pdf");
+                String outFile = g.resolveAppPath(outToken).toString();
+                Concatenator.concatenate(stampedFiles, outFile);
+                for(String src: stampedFiles){
+                    Files.delete(Path.of(src));
+                }
+                ctx.response().end(jsonEncode(outToken));
+            } catch(Throwable ex){
+                ctx.fail(ex);
+            }
+        });
     }
 
     private void createPaperScanPath(RoutingContext ctx) {
@@ -1358,6 +1420,19 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         }
     }
 
+    private void showFileToken(RoutingContext ctx) {
+        String fileToken = ctx.request().getParam("file");
+        if( fileToken == null ){
+            throw new RuntimeException("Missing parameter: file");
+        }
+        try {
+            Path path = GlobalService.getInstance().resolveAppPath(fileToken);
+            respondFile(ctx, path, false);
+        } catch (Exception e) {
+            ctx.fail(e);
+        }
+    }
+
     private void changePatientOfImage(RoutingContext ctx) {
         String srcPatientIdPara = ctx.request().getParam("src-patient-id");
         if (srcPatientIdPara == null) {
@@ -1921,7 +1996,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         try {
             byte[] bytes = ctx.getBody().getBytes();
             CalcFutanWariRequestDTO req = mapper.readValue(bytes, CalcFutanWariRequestDTO.class);
-            int futanWari = HokenUtil.calcFutanWari(req.hoken, req.rcptAge);
+            int futanWari = HokenUtil.calcFutanWari(req.hoken, req.rcptAge, req.visit);
             ctx.response().end(String.format("%d", futanWari));
         } catch (Exception e) {
             ctx.fail(e);

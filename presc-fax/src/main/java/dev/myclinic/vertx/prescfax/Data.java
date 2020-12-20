@@ -40,7 +40,8 @@ public class Data {
                 '}';
     }
 
-    public static Data create(Client client, LocalDate from, LocalDate upto) throws IOException, InterruptedException {
+    public static Data create(Client client, LocalDate from, LocalDate upto)
+            throws IOException, InterruptedException {
         List<Presc> prescList = Presc.listPresc(client, from, upto);
         Map<String, List<Presc>> groupMap = new HashMap<>();
         for(Presc presc: prescList){

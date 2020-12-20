@@ -3,10 +3,12 @@ import {shinryouSearchEnterWidgetFactory} from "./shinryou-search-enter-widget/s
 import {createShohousenPdfForFax} from "./funs.js";
 import {ShinryouKensaDialog} from "./shinryou-kensa-dialog.js";
 import {Charge} from "./charge/charge.js";
+import {Title} from "./title/title.js";
 
 export class Record extends Component {
-    constructor(ele, map, rest) {
-        super(ele, map, rest);
+    constructor(prop, ele, map) {
+        super(ele, map, prop.rest);
+        this.prop = prop;
         this.ele.data("component", this);
         this.titleElement = map.title;
         this.leftCommandWrapperElement = map.left.commandWrapper;
@@ -26,7 +28,9 @@ export class Record extends Component {
         this.chargeWrapperElement = map.right.chargeWrapper;
     }
 
-    init(visitFull, hokenRep, titleFactory, textFactory, hokenFactory, shinryouFactory,
+    init(visitFull, hokenRep,
+         //titleFactory,
+         textFactory, hokenFactory, shinryouFactory,
          textEnterFactory, shinryouRegularDialogFactory, conductDispFactory,
          drugDispFactory, sendFaxFactory,
          //chargeFactory,
@@ -35,7 +39,9 @@ export class Record extends Component {
         this.textFactory = textFactory;
         this.hokenFactory = hokenFactory;
         this.shinryouFactory = shinryouFactory;
-        this.titleComponent = titleFactory.create(visitFull.visit).appendTo(this.titleElement);
+        this.titleComponent = new Title(this.prop, visitFull.visit);
+        this.titleElement.get(0).append(this.titleComponent.ele);
+        //this.titleComponent = titleFactory.create(visitFull.visit).appendTo(this.titleElement);
         this.conductDispFactory = conductDispFactory;
         this.drugDispFactory = drugDispFactory;
         this.sendFaxFactory = sendFaxFactory;

@@ -1045,7 +1045,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {PatientDisplay} = await import("./patient-display.js");
     let {wqueueStateCodeToRep} = await import("../js/consts.js");
     let DrawerSvg = await import("../../js/drawer-svg.js");
-    let {Title} = await import("./title.js");
+    let {Title} = await import("./title/title.js");
     let {SelectWqueueDialog} = await import("./select-wqueue-dialog.js");
     let {SelectRecentVisitDialog} = await import("./select-recent-visit-dialog.js");
     let {SelectTodaysVisitDialog} = await import("./select-todays-visit-dialog.js");
@@ -1068,9 +1068,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {MeisaiDialog} = await import("./meisai-dialog.js");
     let {SendFax} = await import("./send-fax.js");
     let {FaxProgress} = await import("./fax-progress.js");
-    let {Charge} = await import("./charge/charge.js");
-    let {ChargeDisp} = await import("./charge/charge-disp.js");
-    let {ChargeModify} = await import("./charge/charge-modify.js");
     let {Nav} = await import("./nav.js");
     let {DiseaseArea} = await import("./disease-area.js");
     let {DiseaseCurrent} = await import("./disease-current.js");
@@ -1081,11 +1078,13 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {SearchTextForPatientDialog} = await import("./search-text-for-patient-dialog.js");
     let {SearchTextGloballyDialog} = await import("./search-text-globally-dialog.js");
     let {PatientSearchDialog} = await import("./patient-search-dialog.js");
-    let {VisitMeisaiDialog} = await import("./visit-meisai-dialog.js");
     let {RegisteredDrugDialog} = await import("./registered-drug-dialog/registered-drug-dialog.js")
     let {UploadImageDialog} = await import("./upload-image-dialog.js");
     let {UploadProgress} = await import("./upload-progress.js");
     let {PatientImageList} = await import("../../components/patient-image-list.js");
+    let {NoPayList} = await import("./no-pay-list.js");
+
+    let prop = {rest, printAPI};
 
     function postStartSession(patientId, visitId) {
         pane.dispatchEvent(new CustomEvent("start-session",
@@ -1117,12 +1116,9 @@ export async function initLayout(pane, rest, controller, printAPI) {
         pane.addEventListener("temp-visit-id-changed", event => f(event.detail));
     }
 
-    //let practiceState = new PracticeState(rest);
-
     class CurrentVisitManager {
         resolveCopyTarget() {
             return controller.getVisitId() || controller.getTempVisitId();
-            //return practiceState.getVisitId() || practiceState.getTempVisitId();
         }
 
         getCurrentVisitId(){
@@ -1143,6 +1139,17 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
         return html;
     }
+
+    let noPayList = null;
+
+    pane.addEventListener("add-to-no-pay-list", async event => {
+        let visitId = event.detail;
+        if( noPayList == null ){
+            noPayList = new NoPayList(prop);
+            document.getElementById("practice-general-workarea").append(noPayList.ele);
+        }
+        await noPayList.add(visitId);
+    });
 
     class PatientSearchDialogFactory {
         create() {
@@ -1404,33 +1411,33 @@ export async function initLayout(pane, rest, controller, printAPI) {
 
     })();
 
-    class VisitMeisaiDialogFactory {
-        create(meisai) {
-            let html = $("template#practice-visit-meisai-dialog-template").html();
-            let ele = $(html);
-            let map = parseElement(ele);
-            let dialog = new VisitMeisaiDialog(ele, map, rest);
-            dialog.init();
-            dialog.set(meisai);
-            return dialog;
-        }
-    }
+    // class VisitMeisaiDialogFactory {
+    //     create(meisai) {
+    //         let html = $("template#practice-visit-meisai-dialog-template").html();
+    //         let ele = $(html);
+    //         let map = parseElement(ele);
+    //         let dialog = new VisitMeisaiDialog(ele, map, rest);
+    //         dialog.init();
+    //         dialog.set(meisai);
+    //         return dialog;
+    //     }
+    // }
 
-    class TitleFactory {
-        constructor() {
-            this.html = $("template#practice-title-template").html();
-            this.rest = rest;
-            this.visitMeisaiDialogFactory = new VisitMeisaiDialogFactory();
-        }
-
-        create(visit) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new Title(ele, map, rest);
-            comp.init(visit, this.visitMeisaiDialogFactory);
-            return comp;
-        }
-    }
+    // class TitleFactory {
+    //     constructor() {
+    //         this.html = $("template#practice-title-template").html();
+    //         this.rest = rest;
+    //         this.visitMeisaiDialogFactory = new VisitMeisaiDialogFactory();
+    //     }
+    //
+    //     create(visit) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let comp = new Title(ele, map, rest);
+    //         comp.init(visit, this.visitMeisaiDialogFactory);
+    //         return comp;
+    //     }
+    // }
 
     class SendFaxFactory {
         constructor() {
@@ -1663,55 +1670,55 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    class ChargeDispFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-charge-disp-template");
-        }
-
-        create(charge) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new ChargeDisp(ele, map, rest);
-            comp.init(charge);
-            return comp;
-        }
-    }
-
-    class ChargeModifyFactory {
-        create(meisai, charge) {
-            let html = $("template#practice-charge-modify-template").html();
-            let ele = $(html);
-            let map = parseElement(ele);
-            let comp = new ChargeModify(ele, map, rest);
-            comp.init();
-            comp.set(meisai, charge);
-            return comp;
-        }
-    }
-
-    class ChargeFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-charge-template");
-            this.chargeDispFactory = new ChargeDispFactory();
-            this.chargeModifyFactory = new ChargeModifyFactory();
-        }
-
-        create(charge) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new Charge(ele, map, rest);
-            comp.init(this.chargeDispFactory, this.chargeModifyFactory);
-            comp.set(charge);
-            return comp;
-        }
-    }
+    // class ChargeDispFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-charge-disp-template");
+    //     }
+    //
+    //     create(charge) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let comp = new ChargeDisp(ele, map, rest);
+    //         comp.init(charge);
+    //         return comp;
+    //     }
+    // }
+    //
+    // class ChargeModifyFactory {
+    //     create(meisai, charge) {
+    //         let html = $("template#practice-charge-modify-template").html();
+    //         let ele = $(html);
+    //         let map = parseElement(ele);
+    //         let comp = new ChargeModify(ele, map, rest);
+    //         comp.init();
+    //         comp.set(meisai, charge);
+    //         return comp;
+    //     }
+    // }
+    //
+    // class ChargeFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-charge-template");
+    //         this.chargeDispFactory = new ChargeDispFactory();
+    //         this.chargeModifyFactory = new ChargeModifyFactory();
+    //     }
+    //
+    //     create(charge) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let comp = new Charge(ele, map, rest);
+    //         comp.init(this.chargeDispFactory, this.chargeModifyFactory);
+    //         comp.set(charge);
+    //         return comp;
+    //     }
+    // }
 
     class RecordFactory {
         constructor() {
             this.html = getTemplateHtml("practice-record-template");
             this.wrapper = $("#practice-record-wrapper");
             this.generalWorkarea = $("#practice-general-workarea");
-            this.titleFactory = new TitleFactory();
+            //this.titleFactory = new TitleFactory();
             this.textFactory = new TextFactory();
             this.textEnterFactory = new TextEnterFactory();
             this.hokenFactory = new HokenFactory();
@@ -1728,8 +1735,10 @@ export async function initLayout(pane, rest, controller, printAPI) {
         create(visitFull, hokenRep) {
             let ele = $(this.html);
             let map = parseElement(ele);
-            let record = new Record(ele, map, rest);
-            record.init(visitFull, hokenRep, this.titleFactory, this.textFactory,
+            let record = new Record(prop, ele, map);
+            record.init(visitFull, hokenRep,
+                //this.titleFactory,
+                this.textFactory,
                 this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
                 this.shinryouRegularDialogFactory, this.conductDispFactory,
                 this.drugDispFactory, this.sendFaxFactory,

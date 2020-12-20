@@ -168,4 +168,12 @@ export class Rest extends HttpClient {
         return this.composeUrl("/view-drawer-as-pdf");
     }
 
+    urlShowFileToken(fileToken){
+        return this.composeUrl("/show-file-token", {"file": fileToken});
+    }
+
+    async createReceiptPdf(visitIds){
+        return this.POST("/create-receipt-pdf", visitIds, {});
+    }
+
 }

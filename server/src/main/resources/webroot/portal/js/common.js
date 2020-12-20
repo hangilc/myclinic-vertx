@@ -757,6 +757,10 @@ class Rest extends Client {
         return this.topRest.urlViewDrawerAsPdf();
     }
 
+    urlShowFileToken(fileToken){
+        return this.topRest.urlShowFileToken(fileToken);
+    }
+
     async createReceiptPdf(visitIds){
         return await this.topRest.createReceiptPdf(visitIds);
     }

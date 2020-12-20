@@ -1,18 +1,6 @@
 import {createElementFrom} from "../../js/create-element-from.js";
 import {parseElement} from "../../js/parse-node.js";
 
-let tmpl = `
-    <div class="mb-2 border rounded p-2">
-        <div class="h5">未収リスト</div>
-        <div class="x-list"></div>
-        <div class="x-sum"></div>
-        <div class="x-commands">
-            <button class="btn btn-primary btn-sm x-receipt-pdf">領収書PDF</button>
-        </div>
-        <div class="x-receipt-workarea"></div>
-    </div>
-`;
-
 let itemTmpl = `
     <div>
         <span class="x-date"></span>
@@ -45,6 +33,42 @@ class Item {
 
 }
 
+let managementTmpl = `
+    <div>
+        <a href="javascript:void(0)" class="x-disp">表示</a>
+        <a href="javascript:void(0)" class="x-delete">削除</a>
+    </div>
+`;
+
+class PdfMangement {
+    constructor(prop, pdfToken){
+        this.pdfToken = pdfToken;
+        this.ele = createElementFrom(managementTmpl);
+        this.map = parseElement(this.ele);
+        this.map.disp.addEventListener("click", event => {
+            let url = prop.rest.urlShowFileToken(pdfToken);
+            window.open(url, "_blank");
+        });
+        this.map.delete.addEventListener("click", async event => {
+            await prop.rest.deleteFile(pdfToken);
+            this.ele.remove();
+        });
+    }
+}
+
+let tmpl = `
+    <div class="mb-2 border rounded p-2">
+        <div class="h5">未収リスト</div>
+        <div class="x-list"></div>
+        <div class="x-sum"></div>
+        <div class="x-commands">
+            <button class="btn btn-primary btn-sm x-receipt-pdf">領収書PDF</button>
+            <a href="javascript:void(0)" class="x-close">閉じる</a>
+        </div>
+        <div class="x-receipt-workarea"></div>
+    </div>
+`;
+
 export class NoPayList {
     constructor(prop){
         this.prop = prop;
@@ -53,9 +77,12 @@ export class NoPayList {
         this.items = [];
         this.map.receiptPdf.addEventListener("click", async event => {
             let visitIds = this.items.map(item => item.visitId);
-            let pdf = await this.prop.rest.createReceiptPdf(visitIds);
-            console.log(pdf);
+            let pdfToken = await this.prop.rest.createReceiptPdf(visitIds);
+            let mgmt = new PdfMangement(prop, pdfToken);
+            this.map.receiptWorkarea.innerHTML = "";
+            this.map.receiptWorkarea.append(mgmt.ele);
         });
+        this.map.close.addEventListener("click", event => this.ele.remove());
     }
 
     async add(visitId){

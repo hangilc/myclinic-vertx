@@ -344,6 +344,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("delete-patient-image", this::deletePatientImage);
         noDatabaseFuncMap.put("list-patient-image", this::listPatientImage);
         noDatabaseFuncMap.put("get-patient-image", this::getPatientImage);
+        noDatabaseFuncMap.put("show-file-token", this::showFileToken);
         noDatabaseFuncMap.put("change-patient-of-image", this::changePatientOfImage);
         noDatabaseFuncMap.put("saved-patient-image-token", this::savedPatientImageToken);
         noDatabaseFuncMap.put("view-drawer", this::viewDrawer);
@@ -1414,6 +1415,19 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             );
             GlobalService.AppFileToken fileToken = dirToken.toFileToken(fileParam);
             respondFile(ctx, Path.of(fileToken.resolve().toString()), simulateSlowDownload);
+        } catch (Exception e) {
+            ctx.fail(e);
+        }
+    }
+
+    private void showFileToken(RoutingContext ctx) {
+        String fileToken = ctx.request().getParam("file");
+        if( fileToken == null ){
+            throw new RuntimeException("Missing parameter: file");
+        }
+        try {
+            Path path = GlobalService.getInstance().resolveAppPath(fileToken);
+            respondFile(ctx, path, false);
         } catch (Exception e) {
             ctx.fail(e);
         }

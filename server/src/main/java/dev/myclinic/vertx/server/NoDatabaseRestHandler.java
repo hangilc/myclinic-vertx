@@ -6,6 +6,7 @@ import com.itextpdf.text.Image;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.appconfig.types.StampInfo;
 import dev.myclinic.vertx.client2.Client;
+import dev.myclinic.vertx.db.Backend;
 import dev.myclinic.vertx.drawer.*;
 import dev.myclinic.vertx.drawer.form.Form;
 import dev.myclinic.vertx.drawer.form.Page;
@@ -352,6 +353,7 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("render-medcert", this::renderMedCert);
         noDatabaseFuncMap.put("create-paper-scan-path", this::createPaperScanPath);
         noDatabaseFuncMap.put("receipt-drawer", this::receiptDrawer);
+        noDatabaseFuncMap.put("create-receipt-pdf", this::createReceiptPdf);
         noDatabaseFuncMap.put("list-print-setting", this::listPrintSetting);
         noDatabaseFuncMap.put("batch-resolve-hoken-rep", this::batchResolveHokenRep);
     }
@@ -433,6 +435,43 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         } catch (Exception e) {
             ctx.fail(e);
         }
+    }
+
+    private ReceiptDrawerData createReceiptDrawerData(Client client, int visitId, ClinicInfoDTO clinicInfo) {
+        VisitDTO visit = client.getVisit(visitId);
+        ChargeDTO charge = client.getCharge(visitId);
+        return ReceiptDrawerDataCreator.create(
+                client.getVisitMeisai(visitId),
+                client.getPatient(visit.patientId),
+                visit,
+                charge == null ? 0 : charge.charge,
+                clinicInfo
+        );
+    }
+
+    private List<Op> createReceiptOps(ReceiptDrawerData data) {
+        ReceiptDrawer drawer = new ReceiptDrawer(data);
+        return drawer.getOps();
+    }
+
+    private void createReceiptPdf(RoutingContext ctx) throws Exception {
+        List<Integer> visitIds = mapper.readValue(ctx.getBody().getBytes(), new TypeReference<>(){});
+        GlobalService g = GlobalService.getInstance();
+        Client client = g.client;
+        ClinicInfoDTO clinicInfo = client.getClinicInfo();
+        GlobalService.getInstance().executorService.submit(() -> {
+            try {
+                for(int visitId: visitIds){
+                    ReceiptDrawerData data = createReceiptDrawerData(client, visitId, clinicInfo);
+                    List<Op> ops = createReceiptOps(data);
+                    String pdfToken = g.createTempAppFilePath(g.portalTmpDirToken, "receipt", ".pdf");
+                    PdfPrinter pdfPrinter = new PdfPrinter("A6_Landscape");
+                    pdfPrinter.print(List.of(ops), g.resolveAppPath(pdfToken).toString());
+                }
+            } catch(Throwable ex){
+                ctx.fail(ex);
+            }
+        });
     }
 
     private void createPaperScanPath(RoutingContext ctx) {

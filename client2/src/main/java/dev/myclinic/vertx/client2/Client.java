@@ -129,6 +129,18 @@ public class Client {
                 param("from", from), param("upto", upto));
     }
 
+    // Charge ////////////////////////////////////////////////////////////////////////////////////
+
+    public ChargeDTO getCharge(int visitId){
+        return get(ChargeDTO.class, "/get-charge", param("visit-id", visitId));
+    }
+
+    // Meisai ////////////////////////////////////////////////////////////////////////////////////
+
+    public MeisaiDTO getVisitMeisai(int visitId){
+        return get(MeisaiDTO.class, "/get-visit-meisai", param("visit-id", visitId));
+    }
+
     // Text //////////////////////////////////////////////////////////////////////////////////////
 
     public List<TextDTO> listText(int visitId) {

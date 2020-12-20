@@ -27,6 +27,7 @@ import dev.myclinic.vertx.drawerprinterwin.AuxSetting;
 import dev.myclinic.vertx.drawerprinterwin.DrawerPrinter;
 import dev.myclinic.vertx.dto.*;
 import dev.myclinic.vertx.mastermap.MasterMap;
+import dev.myclinic.vertx.pdf.Concatenator;
 import dev.myclinic.vertx.pdf.Stamper;
 import dev.myclinic.vertx.romaji.Romaji;
 import dev.myclinic.vertx.shohousendrawer.ShohousenData;
@@ -464,9 +465,9 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         opt.xPos = stampInfo.xPos;
         opt.yPos = stampInfo.yPos;
         opt.stampCenterRelative = stampInfo.isImageCenterRelative;
-        List<String> stampedFiles = new ArrayList<>();
         GlobalService.getInstance().executorService.execute(() -> {
             try {
+                List<String> stampedFiles = new ArrayList<>();
                 ClinicInfoDTO clinicInfo = client.getClinicInfo();
                 for(int visitId: visitIds){
                     ReceiptDrawerData data = createReceiptDrawerData(client, visitId, clinicInfo);
@@ -482,7 +483,13 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
                     Files.delete(Path.of(pdfFile));
                     stampedFiles.add(stampedFile);
                 }
-                ctx.response().end("true");
+                String outToken = g.createTempAppFilePath(g.portalTmpDirToken, "receipt", ".pdf");
+                String outFile = g.resolveAppPath(outToken).toString();
+                Concatenator.concatenate(stampedFiles, outFile);
+                for(String src: stampedFiles){
+                    Files.delete(Path.of(src));
+                }
+                ctx.response().end(jsonEncode(outToken));
             } catch(Throwable ex){
                 ctx.fail(ex);
             }

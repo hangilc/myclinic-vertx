@@ -1146,6 +1146,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
         let visitId = event.detail;
         if( noPayList == null ){
             noPayList = new NoPayList(prop);
+            noPayList.ele.addEventListener("closed", event => noPayList = null);
             document.getElementById("practice-general-workarea").append(noPayList.ele);
         }
         await noPayList.add(visitId);

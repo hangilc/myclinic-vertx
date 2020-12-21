@@ -82,7 +82,10 @@ export class NoPayList {
             this.map.receiptWorkarea.innerHTML = "";
             this.map.receiptWorkarea.append(mgmt.ele);
         });
-        this.map.close.addEventListener("click", event => this.ele.remove());
+        this.map.close.addEventListener("click", event => {
+            this.ele.dispatchEvent(new Event("closed"));
+            this.ele.remove();
+        });
     }
 
     async add(visitId){

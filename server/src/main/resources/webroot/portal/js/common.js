@@ -764,6 +764,10 @@ class Rest extends Client {
     async createReceiptPdf(visitIds){
         return await this.topRest.createReceiptPdf(visitIds);
     }
+
+    async batchEnterPayment(payments){
+        return await this.topRest.batchEnterPayment(payments);
+    }
 }
 
 class Integration extends Client {

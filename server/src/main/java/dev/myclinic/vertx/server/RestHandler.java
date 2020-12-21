@@ -659,6 +659,18 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return new CallResult(backend);
     }
 
+    private CallResult batchEnterPayment(RoutingContext ctx, Connection conn) throws Exception {
+        List<PaymentDTO> payments = mapper.readValue(ctx.getBody().getBytes(), new TypeReference<>(){});
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        for(var payment: payments){
+            backend.enterPayment(payment);
+        }
+        conn.commit();
+        ctx.response().end("true");
+        return new CallResult(backend);
+    }
+
     private CallResult listVisitIdVisitedAtByPatientAndIyakuhincode(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
@@ -2262,6 +2274,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("delete-disease", this::deleteDisease);
         funcMap.put("list-all-pharma-drug-names", this::listAllPharmaDrugNames);
         funcMap.put("list-payment", this::listPayment);
+        funcMap.put("batch-enter-payment", this::batchEnterPayment);
         funcMap.put("list-visit-id-visited-at-by-patient-and-iyakuhincode", this::listVisitIdVisitedAtByPatientAndIyakuhincode);
         funcMap.put("batch-delete-shinryou", this::batchDeleteShinryou);
         funcMap.put("list-current-disease-full", this::listCurrentDiseaseFull);

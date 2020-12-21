@@ -176,4 +176,8 @@ export class Rest extends HttpClient {
         return this.POST("/create-receipt-pdf", visitIds, {});
     }
 
+    async batchEnterPayment(payments){
+        return this.POST("/batch-enter-payment", payments);
+    }
+
 }

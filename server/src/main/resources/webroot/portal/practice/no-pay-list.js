@@ -1,5 +1,6 @@
 import {createElementFrom} from "../../js/create-element-from.js";
 import {parseElement} from "../../js/parse-node.js";
+import * as kanjidate from "../../js/kanjidate.js";
 
 let itemTmpl = `
     <div>
@@ -10,7 +11,9 @@ let itemTmpl = `
 
 class Item {
     constructor(visit, charge){
-        this.chargeValue = this.getChargeValue(charge);
+        this.visit = visit;
+        this.charge = charge;
+        this.chargeValue = this.getChargeValue();
         this.visitId = visit.visitId;
         this.ele = createElementFrom(itemTmpl);
         this.map = parseElement(this.ele);
@@ -18,7 +21,8 @@ class Item {
         this.map.charge.innerText = this.chargeRep(charge);
     }
 
-    getChargeValue(charge){
+    getChargeValue(){
+        let charge = this.charge;
         return charge ? charge.charge : 0;
     }
 
@@ -63,6 +67,7 @@ let tmpl = `
         <div class="x-sum"></div>
         <div class="x-commands">
             <button class="btn btn-primary btn-sm x-receipt-pdf">領収書PDF</button>
+            <button class="btn btn-secondary btn-sm x-batch-payment">会計</button>
             <a href="javascript:void(0)" class="x-close">閉じる</a>
         </div>
         <div class="x-receipt-workarea"></div>
@@ -82,6 +87,16 @@ export class NoPayList {
             this.map.receiptWorkarea.innerHTML = "";
             this.map.receiptWorkarea.append(mgmt.ele);
         });
+        this.map.batchPayment.addEventListener("click", async event => {
+            let paytime = kanjidate.nowAsSqldatetime();
+            let payments = this.items.map(item => ({
+                visitId: item.visit.visitId,
+                amount: item.getChargeValue(),
+                paytime
+            }));
+            await prop.rest.batchEnterPayment(payments);
+            alert("会計を完了しました。");
+        });
         this.map.close.addEventListener("click", event => {
             this.ele.dispatchEvent(new Event("closed"));
             this.ele.remove();
@@ -90,11 +105,23 @@ export class NoPayList {
 
     async add(visitId){
         let visit = await this.prop.rest.getVisit(visitId);
+        if( !this.confirmSamePatient(visit.patientId) ){
+            alert("別の患者の会計です。");
+            return;
+        }
         let charge = await this.prop.rest.getCharge(visitId);
         let item = new Item(visit, charge);
         this.items.push(item);
         this.map.list.append(item.ele);
         this.updateSum();
+    }
+
+    confirmSamePatient(patientId){
+        if( this.items.length > 0 ){
+            return this.items[0].patientId === patientId;
+        } else {
+            return true;
+        }
     }
 
     updateSum(){
@@ -104,4 +131,5 @@ export class NoPayList {
         }
         this.map.sum.innerText = `合計 ${sum.toLocaleString()}円`;
     }
+
 }

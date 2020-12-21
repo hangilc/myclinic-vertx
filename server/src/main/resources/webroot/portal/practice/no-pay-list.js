@@ -118,7 +118,7 @@ export class NoPayList {
 
     confirmSamePatient(patientId){
         if( this.items.length > 0 ){
-            return this.items[0].patientId === patientId;
+            return this.items[0].visit.patientId === patientId;
         } else {
             return true;
         }

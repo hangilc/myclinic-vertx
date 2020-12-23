@@ -27,11 +27,12 @@ let tmpl = `
                 </div>
             </div>
         </div>
-        <div class="mt-2 d-flex justify-content-end">
+        <div class="mb-2 x-paytime"></div>
+        <div class="mt-2 d-flex flex-wrap justify-content-end">
             <button class="btn btn-link px-0 mr-2 x-no-pay">未収に</button>
             <button class="btn btn-link px-0 mr-2 x-receipt-pdf">領収書PDF</button>
-            <button class="btn btn-secondary x-enter">入力</button>
-            <button class="btn btn-secondary x-cancel ml-2">キャンセル</button>
+            <button class="btn btn-secondary mr-2 x-enter">入力</button>
+            <button class="btn btn-secondary x-cancel">キャンセル</button>
         </div>
     </div>
 `;
@@ -46,12 +47,15 @@ let formTmpl = `
 
 export class ChargeModify {
 
-    constructor(rest, meisai, charge, visit){
+    constructor(rest, meisai, charge, visit, payment){
         this.visit = visit;
         this.charge = charge;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.setCharge(meisai, charge);
+        if( payment ){
+            this.map.paytime.innerText = kanjidate.sqldatetimeToKanji(payment.paytime);
+        }
         click(this.map.enter, async event => {
             let value = parseInt(this.map.charge.value);
             if( isNaN(value) ){

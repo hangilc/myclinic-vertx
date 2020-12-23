@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -3070,7 +3071,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
             } else {
                 LocalDate visitDate = DateTimeUtil.parseSqlDateTime(visit.visitedAt).toLocalDate();
                 LocalDate payDate = DateTimeUtil.parseSqlDateTime(payment.paytime).toLocalDate();
-                return visitDate.equals(payDate);
+                LocalDate visitDate2 = visitDate.plus(1, ChronoUnit.DAYS);
+                return visitDate.equals(payDate) || visitDate2.equals(payDate);
             }
         } else {
             return false;

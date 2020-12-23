@@ -6,6 +6,7 @@ let tmpl = `
     <div>
         <span class="x-charge-value"></span>
         <span class="x-payment-state"></span>
+        <span class="text-danger x-no-pay-0410"></span>
     </div>
 `;
 
@@ -25,6 +26,9 @@ export class ChargeDisp{
         this.ele.addEventListener("update-payment", event => {
             this.updatePaymentState(event.detail)
         });
+        this.ele.addEventListener("update-0410-no-pay", event => {
+            this.update0410NoPay(event.detail)
+        });
     }
 
     updatePaymentState(payment){
@@ -43,6 +47,10 @@ export class ChargeDisp{
                 }
             }
         }
+    }
+
+    update0410NoPay(){
+        this.map.noPay0410.innerText = "遠隔未収候補";
     }
 
     setPaymentState(text, color){

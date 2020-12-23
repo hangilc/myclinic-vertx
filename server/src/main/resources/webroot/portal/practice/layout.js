@@ -46,7 +46,6 @@ let html = `
         <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>
         <a href="javascript:void(0)" class="x-upload-image ml-2">画像保存</a>
         <a href="javascript:void(0)" class="x-list-image ml-2">画像一覧</a>
-        <a href="javascript:void(0)" class="x-list-0410-no-pay ml-2">遠隔未収</a>
     </div>
     
     <div id="practice-patient-manip-workarea"></div>
@@ -1084,7 +1083,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {UploadProgress} = await import("./upload-progress.js");
     let {PatientImageList} = await import("../../components/patient-image-list.js");
     let {NoPayList} = await import("./no-pay-list.js");
-    let {NoPay0410Dialog} = await import("./no-pay-0410-dialog.js");
 
     let prop = {rest, printAPI};
 
@@ -1415,16 +1413,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
                 await w.init(patientId);
                 let wrapper = document.getElementById("practice-patient-manip-workarea");
                 wrapper.prepend(w.ele);
-            }
-        });
-
-        map.list0410NoPay.on("click", async event => {
-            let patientId = controller.getPatientId();
-            if( patientId > 0 ){
-                let visitIds = await rest.list0410NoPay(patientId);
-                let visits = await rest.batchGetVisit(visitIds);
-                let dialog = new NoPay0410Dialog(prop, visits);
-                await dialog.open();
             }
         });
 
@@ -2033,14 +2021,39 @@ export async function initLayout(pane, rest, controller, printAPI) {
         let map = await rest.batchGetLastPayment(visitIds);
         let wrapper = document.getElementById("practice-record-wrapper");
         for(let visitId of Object.keys(map)){
-            wrapper.querySelector(`.record-${visitId}`).dispatchEvent(
-                new CustomEvent("update-payment", {detail: map[visitId]}))
+            let e = wrapper.querySelector(`.record-${visitId}`);
+            if( e ) {
+                e.dispatchEvent(new CustomEvent("update-payment", {detail: map[visitId]}));
+            }
+        }
+    }
+
+    let noPay0410cache = {
+        patientId: 0,
+        visitIds: []
+    };
+
+    async function batchUpdate0410NoPay(){
+        let patientId = controller.getPatientId();
+        let cache = noPay0410cache;
+        if( patientId > 0 && cache.patientId !== patientId ){
+            cache.patientId = patientId;
+            cache.visitIds = await rest.list0410NoPay(patientId);
+        }
+        let wrapper = document.getElementById("practice-record-wrapper");
+        for(let visitId of cache.visitIds){
+            let e = wrapper.querySelector(`.record-${visitId}`);
+            if( e ) {
+                e.dispatchEvent(new Event("update-0410-no-pay"));
+            }
         }
     }
 
     addRecordsChangedListener((records, page, totalPages) => {
         setRecords(records);
-        batchUpdatePaymentState(records.map(visitFull => visitFull.visit.visitId));
+        let visitIds = records.map(visitFull => visitFull.visit.visitId);
+        batchUpdatePaymentState(visitIds);
+        batchUpdate0410NoPay();
         setNavs(page, totalPages);
     });
 

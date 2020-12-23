@@ -769,6 +769,10 @@ class Rest extends Client {
         return await this.topRest.batchEnterPayment(payments);
     }
 
+    async getLastPayment(visitId){
+        return this.topRest.getLastPayment(visitId);
+    }
+
     async batchGetLastPayment(visitIds){
         return await this.topRest.batchGetLastPayment(visitIds);
     }

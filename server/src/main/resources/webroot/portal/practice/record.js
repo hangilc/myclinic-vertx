@@ -30,6 +30,9 @@ export class Record extends Component {
             let payment = event.detail;
             this.updatePaymentState(payment);
         });
+        this.ele.get(0).addEventListener("update-0410-no-pay", event => {
+            this.update0410NoPay();
+        });
     }
 
     init(visitFull, hokenRep,
@@ -100,6 +103,10 @@ export class Record extends Component {
 
     updatePaymentState(payment){
         this.chargeComponent.updatePaymentState(payment);
+    }
+
+    update0410NoPay(){
+        this.chargeComponent.update0410NoPay();
     }
 
     getVisitId(){

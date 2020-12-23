@@ -24,7 +24,8 @@ export class Charge {
         if( charge ){
             click(disp.ele, async event => {
                 let meisai = await this.rest.getMeisai(charge.visitId);
-                let modify = new ChargeModify(this.rest, meisai, charge, this.visit);
+                let payment = await this.rest.getLastPayment(this.visit.visitId);
+                let modify = new ChargeModify(this.rest, meisai, charge, this.visit, payment);
                 on(modify.ele, "closed", event => {
                     let result = event.detail;
                     if( result ){
@@ -51,6 +52,13 @@ export class Charge {
         let chargeEle = this.ele.querySelector(".charge-disp");
         if( chargeEle ) {
             chargeEle.dispatchEvent(new CustomEvent("update-payment", {detail: payment}));
+        }
+    }
+
+    update0410NoPay(){
+        let chargeEle = this.ele.querySelector(".charge-disp");
+        if( chargeEle ) {
+            chargeEle.dispatchEvent(new Event("update-0410-no-pay"));
         }
     }
 }

@@ -173,23 +173,28 @@ export class Rest extends HttpClient {
     }
 
     async createReceiptPdf(visitIds){
-        return this.POST("/create-receipt-pdf", visitIds, {});
+        return await this.POST("/create-receipt-pdf", visitIds, {});
     }
 
     async batchEnterPayment(payments){
-        return this.POST("/batch-enter-payment", payments);
+        return await this.POST("/batch-enter-payment", payments);
+    }
+
+    async getLastPayment(visitId){
+        let map = await this.batchGetLastPayment([visitId]);
+        return map[visitId];
     }
 
     async batchGetLastPayment(visitIds){
-        return this.POST("/batch-get-last-payment", visitIds, {});
+        return await this.POST("/batch-get-last-payment", visitIds, {});
     }
 
     async list0410NoPay(patientId){
-        return this.GET("/list-0410-no-pay", {"patient-id": patientId});
+        return await this.GET("/list-0410-no-pay", {"patient-id": patientId});
     }
 
     async batchGetVisit(visitIds){
-        return this.POST("/batch-get-visit", visitIds, {});
+        return await this.POST("/batch-get-visit", visitIds, {});
     }
 
 }

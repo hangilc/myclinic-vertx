@@ -1152,6 +1152,11 @@ export async function initLayout(pane, rest, controller, printAPI) {
         await noPayList.add(visitId);
     });
 
+    pane.addEventListener("payment-updated", async event => {
+        let visitIds = event.detail;
+        await batchUpdatePaymentState(visitIds);
+    });
+
     class PatientSearchDialogFactory {
         create() {
             let html = $("template#practice-patient-search-dialog-template").html();

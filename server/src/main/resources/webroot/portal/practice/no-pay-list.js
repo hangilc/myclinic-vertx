@@ -95,6 +95,10 @@ export class NoPayList {
                 paytime
             }));
             await prop.rest.batchEnterPayment(payments);
+            this.ele.dispatchEvent(new CustomEvent("payment-updated", {
+                bubbles: true,
+                detail: this.items.map(item => item.visit.visitId)
+            }));
             alert("会計を完了しました。");
         });
         this.map.close.addEventListener("click", event => {

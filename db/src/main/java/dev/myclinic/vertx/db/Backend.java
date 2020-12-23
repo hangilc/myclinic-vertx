@@ -226,6 +226,14 @@ public class Backend {
         practiceLogger.logVisitDeleted(visit);
     }
 
+    public List<VisitDTO> batchGetVisit(List<Integer> visitIds){
+        List<VisitDTO> result = new ArrayList<>();
+        for(int visitId: visitIds){
+            result.add(getVisit(visitId));
+        }
+        return result;
+    }
+
     public List<VisitPatientDTO> listRecentVisitWithPatient(int page, int itemsPerPage) {
         String sql = "select v.*, p.* from Visit v, Patient p where v.patientId = p.patientId " +
                 " order by v.visitId desc limit ? offset ? ";
@@ -578,6 +586,12 @@ public class Backend {
         String sql = "select visitId from visit where date(visitedAt) >= ? and " +
                 " date(visitedAt) <= ? order by visitId ";
         return getQuery().query(xlate(sql, ts.visitTable), intProjector, fromDate, uptoDate);
+    }
+
+    public List<Integer> listVisitIdForPatientInDateInRange(int patientId, LocalDate fromDate, LocalDate uptoDate){
+        String sql = "select visitId from visit where patientId = ? and date(visitedAt) >= ? and " +
+                " date(visitedAt) <= ? order by visitId ";
+        return getQuery().query(xlate(sql, ts.visitTable), intProjector, patientId, fromDate, uptoDate);
     }
 
     // Charge /////////////////////////////////////////////////////////////////////////////

@@ -184,4 +184,12 @@ export class Rest extends HttpClient {
         return this.POST("/batch-get-last-payment", visitIds, {});
     }
 
+    async list0410NoPay(patientId){
+        return this.GET("/list-0410-no-pay", {"patient-id": patientId});
+    }
+
+    async batchGetVisit(visitIds){
+        return this.POST("/batch-get-visit", visitIds, {});
+    }
+
 }

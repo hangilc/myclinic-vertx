@@ -68,7 +68,8 @@ export class ChargeModify {
             this.close(updated);
         });
         click(this.map.noPay, async event => {
-            if( confirm("未収扱いに変更しますか？") ){
+            let shiftKey = event.shiftKey;
+            if( shiftKey || confirm("未収扱いに変更しますか？") ){
                 let paytime = nowAsSqldatetime();
                 await rest.finishCharge(visit.visitId, 0, paytime);
                 this.close(this.charge);

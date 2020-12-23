@@ -772,6 +772,14 @@ class Rest extends Client {
     async batchGetLastPayment(visitIds){
         return await this.topRest.batchGetLastPayment(visitIds);
     }
+
+    async list0410NoPay(patientId){
+        return await this.topRest.list0410NoPay(patientId);
+    }
+
+    async batchGetVisit(visitIds){
+        return await this.topRest.batchGetVisit(visitIds);
+    }
 }
 
 class Integration extends Client {

@@ -46,6 +46,7 @@ let html = `
         <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>
         <a href="javascript:void(0)" class="x-upload-image ml-2">画像保存</a>
         <a href="javascript:void(0)" class="x-list-image ml-2">画像一覧</a>
+        <a href="javascript:void(0)" class="x-list-0410-no-pay ml-2">遠隔未収</a>
     </div>
     
     <div id="practice-patient-manip-workarea"></div>
@@ -1083,6 +1084,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {UploadProgress} = await import("./upload-progress.js");
     let {PatientImageList} = await import("../../components/patient-image-list.js");
     let {NoPayList} = await import("./no-pay-list.js");
+    let {NoPay0410Dialog} = await import("./no-pay-0410-dialog.js");
 
     let prop = {rest, printAPI};
 
@@ -1416,35 +1418,17 @@ export async function initLayout(pane, rest, controller, printAPI) {
             }
         });
 
+        map.list0410NoPay.on("click", async event => {
+            let patientId = controller.getPatientId();
+            if( patientId > 0 ){
+                let visitIds = await rest.list0410NoPay(patientId);
+                let visits = await rest.batchGetVisit(visitIds);
+                let dialog = new NoPay0410Dialog(prop, visits);
+                await dialog.open();
+            }
+        });
+
     })();
-
-    // class VisitMeisaiDialogFactory {
-    //     create(meisai) {
-    //         let html = $("template#practice-visit-meisai-dialog-template").html();
-    //         let ele = $(html);
-    //         let map = parseElement(ele);
-    //         let dialog = new VisitMeisaiDialog(ele, map, rest);
-    //         dialog.init();
-    //         dialog.set(meisai);
-    //         return dialog;
-    //     }
-    // }
-
-    // class TitleFactory {
-    //     constructor() {
-    //         this.html = $("template#practice-title-template").html();
-    //         this.rest = rest;
-    //         this.visitMeisaiDialogFactory = new VisitMeisaiDialogFactory();
-    //     }
-    //
-    //     create(visit) {
-    //         let ele = $(this.html);
-    //         let map = parseElement(ele);
-    //         let comp = new Title(ele, map, rest);
-    //         comp.init(visit, this.visitMeisaiDialogFactory);
-    //         return comp;
-    //     }
-    // }
 
     class SendFaxFactory {
         constructor() {

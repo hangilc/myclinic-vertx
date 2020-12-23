@@ -3,15 +3,11 @@ package dev.myclinic.vertx.server;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.consts.ConductKind;
 import dev.myclinic.vertx.consts.MeisaiSection;
 import dev.myclinic.vertx.db.Backend;
 import dev.myclinic.vertx.db.Query;
 import dev.myclinic.vertx.db.TableSet;
-import dev.myclinic.vertx.drawer.Op;
-import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawerData;
-import dev.myclinic.vertx.drawerform.receipt.ReceiptDrawerDataCreator;
 import dev.myclinic.vertx.dto.*;
 import dev.myclinic.vertx.hotlinelogevent.body.HotlineBeep;
 import dev.myclinic.vertx.houkatsukensa.HoukatsuKensa;
@@ -23,7 +19,7 @@ import dev.myclinic.vertx.meisai.SectionItem;
 import dev.myclinic.vertx.util.DateTimeUtil;
 import dev.myclinic.vertx.util.HokenUtil;
 import dev.myclinic.vertx.util.RcptUtil;
-import io.vertx.core.Future;
+import dev.myclinic.vertx.util.kanjidate.KanjiDate;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -38,6 +34,8 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
@@ -107,6 +105,16 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
+    }
+
+    private CallResult batchGetVisit(RoutingContext ctx, Connection conn) throws Exception {
+        List<Integer> visitIds = mapper.readValue(ctx.getBody().getBytes(), new TypeReference<>(){});
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        List<VisitDTO> _value = backend.batchGetVisit(visitIds);
+        conn.commit();
+        ctx.response().end(jsonEncode(_value));
         return new CallResult(backend);
     }
 
@@ -660,10 +668,11 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     }
 
     private CallResult batchEnterPayment(RoutingContext ctx, Connection conn) throws Exception {
-        List<PaymentDTO> payments = mapper.readValue(ctx.getBody().getBytes(), new TypeReference<>(){});
+        List<PaymentDTO> payments = mapper.readValue(ctx.getBody().getBytes(), new TypeReference<>() {
+        });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        for(var payment: payments){
+        for (var payment : payments) {
             backend.enterPayment(payment);
         }
         conn.commit();
@@ -672,7 +681,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     }
 
     private CallResult batchGetLastPayment(RoutingContext ctx, Connection conn) throws Exception {
-        List<Integer> visitIds = mapper.readValue(ctx.getBody().getBytes(), new TypeReference<>(){});
+        List<Integer> visitIds = mapper.readValue(ctx.getBody().getBytes(), new TypeReference<>() {
+        });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         Map<Integer, PaymentDTO> result = backend.batchGetLastPayment(visitIds);
@@ -2240,6 +2250,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     {
         funcMap.put("search-byoumei-master", this::searchByoumeiMaster);
         funcMap.put("list-visit-by-patient-having-hoken", this::listVisitByPatientHavingHoken);
+        funcMap.put("batch-get-visit", this::batchGetVisit);
         funcMap.put("list-visit-id-in-date-in-range", this::listVisitIdInDateInRange);
         funcMap.put("list-recently-registered-patients", this::listRecentlyRegisteredPatients);
         funcMap.put("list-todays-hotline-in-range", this::listTodaysHotlineInRange);
@@ -2427,6 +2438,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("resolve-kizai-master", this::resolveKizaiMaster);
         funcMap.put("resolve-shinryou-master-by-name", this::resolveShinryouMasterByName);
         funcMap.put("enter-xp", this::enterXp);
+        funcMap.put("list-0410-no-pay", this::list0410NoPay);
     }
 
     private CallResult updateVisitAttr(RoutingContext ctx, Connection conn) throws Exception {
@@ -3031,6 +3043,58 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
+    }
+
+    private static final Pattern text0410Pattern = Pattern.compile("\\n@0410対応");
+
+    private boolean is0410(String content){
+        Matcher m = text0410Pattern.matcher(content);
+        return m.find();
+    }
+
+    private boolean is0410NoPay(Backend backend, int visitId){
+        VisitDTO visit = backend.getVisit(visitId);
+        List<TextDTO> texts = backend.listText(visitId);
+        boolean found = false;
+        for(TextDTO text: texts){
+            if( is0410(text.content) ){
+                found = true;
+                break;
+            }
+        }
+        if( found ){
+            PaymentDTO payment = backend.findLastPayment(visitId);
+            if( payment == null ){
+                return true;
+            } else {
+                LocalDate visitDate = DateTimeUtil.parseSqlDateTime(visit.visitedAt).toLocalDate();
+                LocalDate payDate = DateTimeUtil.parseSqlDateTime(payment.paytime).toLocalDate();
+                return visitDate.equals(payDate);
+            }
+        } else {
+            return false;
+        }
+    }
+
+    private CallResult list0410NoPay(RoutingContext ctx, Connection conn) throws Exception {
+        String patientIdParam = ctx.request().getParam("patient-id");
+        int patientId = Integer.parseInt(patientIdParam);
+        String fromParam = "2020-03-26";
+        String uptoParam = "2020-12-16";
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        List<Integer> visitIds = backend.listVisitIdForPatientInDateInRange(patientId,
+                LocalDate.parse(fromParam),
+                LocalDate.parse(uptoParam));
+        List<Integer> result = new ArrayList<>();
+        for(int visitId: visitIds){
+            if( is0410NoPay(backend, visitId) ){
+                result.add(visitId);
+            }
+        }
+        conn.commit();
+        ctx.response().end(jsonEncode(result));
         return new CallResult(backend);
     }
 

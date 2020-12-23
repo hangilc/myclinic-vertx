@@ -29,6 +29,7 @@ export class Charge {
                     let result = event.detail;
                     if( result ){
                         this.addDisp(result);
+                        this.firePaymentUpdated();
                     } else {
                         this.ele.append(disp.ele);
                     }
@@ -37,6 +38,13 @@ export class Charge {
                 this.ele.append(modify.ele);
             });
         }
+    }
+
+    firePaymentUpdated(){
+        this.ele.dispatchEvent(new CustomEvent("payment-updated", {
+            bubbles: true,
+            detail: [this.visit.visitId]
+        }))
     }
 
     updatePaymentState(payment){

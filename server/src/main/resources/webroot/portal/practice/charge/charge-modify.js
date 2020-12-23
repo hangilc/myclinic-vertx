@@ -47,6 +47,8 @@ let formTmpl = `
 export class ChargeModify {
 
     constructor(rest, meisai, charge, visit){
+        this.visit = visit;
+        this.charge = charge;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.setCharge(meisai, charge);
@@ -69,7 +71,7 @@ export class ChargeModify {
             if( confirm("未収扱いに変更しますか？") ){
                 let paytime = nowAsSqldatetime();
                 await rest.finishCharge(visit.visitId, 0, paytime);
-                this.close(null);
+                this.close(this.charge);
             }
         });
         click(this.map.receiptPdf, async event => {

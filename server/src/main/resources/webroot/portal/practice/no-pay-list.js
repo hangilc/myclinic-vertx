@@ -88,6 +88,9 @@ export class NoPayList {
             this.map.receiptWorkarea.append(mgmt.ele);
         });
         this.map.batchPayment.addEventListener("click", async event => {
+            if( !confirm("会計扱いにしますか？") ){
+                return;
+            }
             let paytime = kanjidate.nowAsSqldatetime();
             let payments = this.items.map(item => ({
                 visitId: item.visit.visitId,
@@ -99,7 +102,6 @@ export class NoPayList {
                 bubbles: true,
                 detail: this.items.map(item => item.visit.visitId)
             }));
-            alert("会計を完了しました。");
         });
         this.map.close.addEventListener("click", event => {
             this.ele.dispatchEvent(new Event("closed"));

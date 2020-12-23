@@ -1154,6 +1154,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
 
     pane.addEventListener("payment-updated", async event => {
         let visitIds = event.detail;
+        console.log("payment-updated", visitIds);
         await batchUpdatePaymentState(visitIds);
     });
 

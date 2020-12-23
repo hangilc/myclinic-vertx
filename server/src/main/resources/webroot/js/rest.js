@@ -180,4 +180,8 @@ export class Rest extends HttpClient {
         return this.POST("/batch-enter-payment", payments);
     }
 
+    async batchGetLastPayment(visitIds){
+        return this.POST("/batch-get-last-payment", visitIds, {});
+    }
+
 }

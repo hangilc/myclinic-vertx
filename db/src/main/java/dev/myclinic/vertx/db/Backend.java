@@ -700,6 +700,22 @@ public class Backend {
                 count);
     }
 
+    public PaymentDTO findLastPayment(int visitId){
+        String sql = "select * from Payment where visitId = ? order by paytime desc limit 1";
+        return getQuery().get(xlate(sql, ts.paymentTable), ts.paymentTable, visitId);
+    }
+
+    public Map<Integer, PaymentDTO> batchGetLastPayment(List<Integer> visitIds){
+        Map<Integer, PaymentDTO> map = new HashMap<>();
+        for(int visitId: visitIds){
+            PaymentDTO payment = findLastPayment(visitId);
+            if( payment != null ){
+                map.put(visitId, payment);
+            }
+        }
+        return map;
+    }
+
     // Wqueue /////////////////////////////////////////////////////////////////////////////
 
     void enterWqueue(WqueueDTO wqueue) {

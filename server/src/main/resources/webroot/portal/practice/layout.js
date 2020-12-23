@@ -2039,8 +2039,18 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
+    async function batchUpdatePaymentState(visitIds){
+        let map = await rest.batchGetLastPayment(visitIds);
+        let wrapper = document.getElementById("practice-record-wrapper");
+        for(let visitId of Object.keys(map)){
+            wrapper.querySelector(`.record-${visitId}`).dispatchEvent(
+                new CustomEvent("update-payment", {detail: map[visitId]}))
+        }
+    }
+
     addRecordsChangedListener((records, page, totalPages) => {
         setRecords(records);
+        batchUpdatePaymentState(records.map(visitFull => visitFull.visit.visitId));
         setNavs(page, totalPages);
     });
 

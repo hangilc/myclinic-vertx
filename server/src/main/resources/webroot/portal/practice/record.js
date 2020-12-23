@@ -26,6 +26,10 @@ export class Record extends Component {
         this.conductMenuElement = map.right.conductMenu;
         this.conductWrapperElement = map.right.conductWrapper;
         this.chargeWrapperElement = map.right.chargeWrapper;
+        this.ele.get(0).addEventListener("update-payment", event => {
+            let payment = event.detail;
+            this.updatePaymentState(payment);
+        });
     }
 
     init(visitFull, hokenRep,
@@ -35,6 +39,7 @@ export class Record extends Component {
          drugDispFactory, sendFaxFactory,
          //chargeFactory,
          currentVisitManager) {
+        this.ele.get(0).classList.add(`record-${visitFull.visit.visitId}`);
         this.visitFull = visitFull;
         this.textFactory = textFactory;
         this.hokenFactory = hokenFactory;
@@ -84,13 +89,17 @@ export class Record extends Component {
         visitFull.drugs.forEach(drugFull => this.addDrug(drugFull));
         visitFull.shinryouList.forEach(shinryouFull => this.addShinryou(shinryouFull, false));
         visitFull.conducts.forEach(cfull => this.addConduct(cfull));
-        let charge = new Charge(this.rest, visitFull.charge, visitFull.visit);
+        let charge = this.chargeComponent = new Charge(this.rest, visitFull.charge, visitFull.visit);
         this.chargeWrapperElement.get(0).append(charge.ele);
         // let compCharge = chargeFactory.create(visitFull.charge);
         // compCharge.appendTo(this.chargeWrapperElement);
         this.shinryouAuxMenuMap.kensa.on("click", async event => await this.doKensa());
         this.shinryouAuxMenuMap.searchEnter.on("click", event => this.doSearchEnter());
         this.shinryouAuxMenuMap.copyAll.on("click", async event => await this.doCopyAll());
+    }
+
+    updatePaymentState(payment){
+        this.chargeComponent.updatePaymentState(payment);
     }
 
     getVisitId(){

@@ -768,6 +768,10 @@ class Rest extends Client {
     async batchEnterPayment(payments){
         return await this.topRest.batchEnterPayment(payments);
     }
+
+    async batchGetLastPayment(visitIds){
+        return await this.topRest.batchGetLastPayment(visitIds);
+    }
 }
 
 class Integration extends Client {

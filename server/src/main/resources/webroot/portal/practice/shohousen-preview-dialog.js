@@ -6,6 +6,10 @@ export class ShohousenPreviewDialog extends DrawerPreviewDialog {
         this.setTitle("処方箋");
     }
 
+    async setPrintAPI(printAPI){
+        await super.setPrintAPI(printAPI, "shohousen");
+    }
+
 }
 
 // import {Dialog} from "../../js/dialog2.js";

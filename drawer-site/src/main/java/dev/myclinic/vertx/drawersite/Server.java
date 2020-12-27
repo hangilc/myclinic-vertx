@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -44,7 +45,7 @@ public class Server {
             try {
                 handler = new Handler(exchange, path);
                 String allowedOrigin = null;
-                if( exchange.getRequestHeaders().containsKey("Origin") ){
+                if( !isSameOrigin(exchange) ){
                     String origin = exchange.getRequestHeaders().getFirst("Origin");
                     for(String ori: allowedOrigins){
                         System.out.printf("allowed: %s, origin: %s\n", ori, origin);
@@ -74,7 +75,7 @@ public class Server {
     private boolean isSameOrigin(HttpExchange exchange){
         String host = getHeader(exchange, "Host");
         String origin = getHeader(exchange, "Origin");
-        exchange.getProtocol();
+        return origin == null || origin.equals("http://" + host);
     }
 
     private String getHeader(HttpExchange exchange, String key){

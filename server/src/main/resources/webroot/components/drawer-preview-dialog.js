@@ -45,13 +45,32 @@ export class DrawerPreviewDialog extends Dialog {
         fmap.close.addEventListener("click", event => this.close(false));
     }
 
-    async setPrintAPI(printAPI){
+    async setPrintAPI(printAPI, prefKey){
         this.printAPI = printAPI;
+        this.prefKey = prefKey;
         this.fmap.print.classList.remove("d-none");
+        let settings = await this.printAPI.listSetting();
+        let prefSetting = null;
+        if( prefKey ){
+            prefSetting = await this.printAPI.getPref(prefKey);
+        }
+        for (let setting of settings) {
+            let opt = document.createElement("option");
+            opt.innerText = setting;
+            this.fmap.settingSelect.appendChild(opt);
+        }
+        this.fmap.settingSelect.value = prefSetting || "--manual--";
     }
 
     async doPrint(){
-        await this.printAPI.print([], [this.currentOps], null);
+        let setting = this.fmap.settingSelect.value;
+        if( setting === "--manual--" ){
+            setting = null;
+        }
+        await this.printAPI.print([], [this.currentOps], setting);
+        if( this.prefKey ){
+            await this.printAPI.setPref(this.prefKey, setting);
+        }
         this.close(true);
     }
 

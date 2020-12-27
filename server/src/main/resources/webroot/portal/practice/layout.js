@@ -1612,7 +1612,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
         create(ops) {
             let ele = $(this.html);
             let map = parseElement(ele);
-            let dialog = new ShohousenPreviewDialog(ele, map, rest, printAPI);
+            let dialog = new ShohousenPreviewDialog(prop);
             dialog.init(ops, this.drawerSvgModule);
             return dialog;
         }

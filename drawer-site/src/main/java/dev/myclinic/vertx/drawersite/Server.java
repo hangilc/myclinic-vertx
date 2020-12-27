@@ -1,5 +1,7 @@
 package dev.myclinic.vertx.drawersite;
 
+import com.sun.net.httpserver.Headers;
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
@@ -67,6 +69,21 @@ public class Server {
                 }
             }
         });
+    }
+
+    private boolean isSameOrigin(HttpExchange exchange){
+        String host = getHeader(exchange, "Host");
+        String origin = getHeader(exchange, "Origin");
+        exchange.getProtocol();
+    }
+
+    private String getHeader(HttpExchange exchange, String key){
+        Headers headers = exchange.getRequestHeaders();
+        if( headers.containsKey(key) ){
+            return headers.getFirst(key);
+        } else {
+            return null;
+        }
     }
 
 }

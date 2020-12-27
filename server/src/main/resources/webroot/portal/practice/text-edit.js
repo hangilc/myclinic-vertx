@@ -7,10 +7,12 @@ import {
     shohousenTextContentDataToDisp,
     shohousenTextContentDispToData
 } from "./funs.js";
+import {ShohousenPreviewDialog} from "./shohousen-preview-dialog.js";
 
 export class TextEdit extends Component {
-    constructor(ele, map, rest) {
+    constructor(ele, map, rest, printAPI) {
         super(ele, map, rest);
+        this.printAPI = printAPI;
         this.textareaElement = map.textarea;
         this.enterElement = map.enter;
         this.cancelElement = map.cancel;
@@ -25,10 +27,12 @@ export class TextEdit extends Component {
         this.copyElement = map.copy;
     }
 
-    init(text, currentVisitManager, shohousenPreviewDialogFactory) {
+    init(text, currentVisitManager
+         //, shohousenPreviewDialogFactory
+        ) {
         this.text = text;
         this.currentVisitManager = currentVisitManager;
-        this.shohousenPreviewFactory = shohousenPreviewDialogFactory;
+        //this.shohousenPreviewFactory = shohousenPreviewDialogFactory;
         this.textareaElement.val(shohousenTextContentDataToDisp(text.content));
         this.enterElement.on("click", event => this.doEnter());
         this.cancelElement.on("click", event => this.ele.trigger("cancel"));
@@ -57,7 +61,9 @@ export class TextEdit extends Component {
         content = shohousenTextContentDispToData(content);
         let tmpText = Object.assign({}, this.text, {content: content});
         let ops = await createShohousenOps(tmpText, {}, this.rest);
-        let dialog = this.shohousenPreviewFactory.create(ops);
+        //let dialog = this.shohousenPreviewFactory.create(ops);
+        let dialog = new ShohousenPreviewDialog(ops);
+        await dialog.setPrintAPI(this.printAPI);
         await dialog.open();
     }
 
@@ -72,7 +78,9 @@ export class TextEdit extends Component {
 
     async doShohousen() {
         let ops = await createShohousenOps(this.text, {}, this.rest);
-        let dialog = this.shohousenPreviewFactory.create(ops);
+        //let dialog = this.shohousenPreviewFactory.create(ops);
+        let dialog = new ShohousenPreviewDialog(ops);
+        await dialog.setPrintAPI(this.printAPI);
         await dialog.open();
         this.ele.trigger("cancel");
     }

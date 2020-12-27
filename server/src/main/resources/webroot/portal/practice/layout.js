@@ -1612,7 +1612,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
         create(ops) {
             let ele = $(this.html);
             let map = parseElement(ele);
-            let dialog = new ShohousenPreviewDialog(prop);
+            let dialog = new ShohousenPreviewDialog(opt);
             dialog.init(ops, this.drawerSvgModule);
             return dialog;
         }
@@ -1623,14 +1623,16 @@ export async function initLayout(pane, rest, controller, printAPI) {
             this.html = getTemplateHtml("practice-edit-text-template");
             this.rest = rest;
             this.currentVisitManager = currentVisitManager;
-            this.shohousenPreviewDialogFactory = new ShohousenPreviewDialogFactory();
+            //this.shohousenPreviewDialogFactory = new ShohousenPreviewDialogFactory();
         }
 
         create(text) {
             let ele = $(this.html);
             let map = parseElement(ele);
-            let comp = new TextEdit(ele, map, this.rest);
-            comp.init(text, this.currentVisitManager, this.shohousenPreviewDialogFactory);
+            let comp = new TextEdit(ele, map, this.rest, prop.printAPI);
+            comp.init(text, this.currentVisitManager
+                //, this.shohousenPreviewDialogFactory
+            );
             return comp;
         }
     }

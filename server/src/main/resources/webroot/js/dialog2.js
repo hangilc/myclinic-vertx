@@ -4,7 +4,7 @@ import {parseElement} from "./parse-node.js";
 let tmpl = `
     <div class="modal-dialog-content">
         <div class="d-flex title-wrapper justify-content-between">
-            <h3 class="d-inline-block">タイトル</h3>
+            <h3 class="d-inline-block x-title">タイトル</h3>
             <a href="javascript:void(0)" style="font-size: 1.2rem" class="align-item-center x-close-link">&times;</a>
         </div>
         <div class="x-body"></div>
@@ -17,6 +17,10 @@ export class Dialog {
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.map.closeLink.addEventListener("click", event => this.close(undefined));
+    }
+
+    setTitle(title){
+        this.map.title.innerText = title;
     }
 
     getBody(){

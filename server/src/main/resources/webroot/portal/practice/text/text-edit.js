@@ -1,13 +1,13 @@
-import {Component} from "./component.js";
-import {formatPresc} from "../js/format-presc.js";
-import {RegisteredDrugDialog} from "./registered-drug-dialog/registered-drug-dialog.js";
+import {Component} from "../component.js";
+import {formatPresc} from "../../js/format-presc.js";
+import {RegisteredDrugDialog} from "../registered-drug-dialog/registered-drug-dialog.js";
 import {
     createShohousenOps,
     createShohousenPdfForFax,
     shohousenTextContentDataToDisp,
     shohousenTextContentDispToData
-} from "./funs.js";
-import {ShohousenPreviewDialog} from "./shohousen-preview-dialog.js";
+} from "../funs.js";
+import {ShohousenPreviewDialog} from "../shohousen-preview-dialog.js";
 
 export class TextEdit extends Component {
     constructor(ele, map, rest, printAPI) {

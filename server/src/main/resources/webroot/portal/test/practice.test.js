@@ -1,5 +1,5 @@
-import {TextDisp} from "../practice/text-disp.js";
-import {TextEdit} from "../practice/text-edit.js";
+import {TextDisp} from "../practice/text/text-disp.js";
+import {TextEdit} from "../practice/text/text-edit.js";
 import {parseElement} from "../js/parse-element.js";
 
 let textEditTemplate = `

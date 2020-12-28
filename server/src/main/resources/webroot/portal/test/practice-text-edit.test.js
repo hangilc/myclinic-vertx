@@ -1,4 +1,4 @@
-import * as te from "../practice/text-edit.js";
+import * as te from "../practice/text/text-edit.js";
 
 describe("text-edit", function(){
 

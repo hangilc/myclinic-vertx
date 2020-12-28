@@ -4,8 +4,65 @@ import {createShohousenPdfForFax} from "./funs.js";
 import {ShinryouKensaDialog} from "./shinryou-kensa-dialog.js";
 import {Charge} from "./charge/charge.js";
 import {Title} from "./title/title.js";
+import {createElementFrom} from "../../js/create-element-from.js";
+import {parseElement} from "../../js/parse-node.js";
+import {Text} from "./text/text.js";
 
-export class Record extends Component {
+let tmpl = `
+    <div class="practice-record">
+        <div class="x-title"></div>
+        <div class="row">
+            <div class="col-sm-6 rp-1">
+                <div class="x-text-wrapper"></div>
+                <div class="x-command-wrapper record-left-commands mt-2">
+                    <a href="javascript:void(0)" class="x-enter-text">［文章入力］</a>
+                    <a href="javascript:void(0)" class="x-send-shohousen-fax">処方箋FAX</a>
+                </div>
+            </div>
+            <div class="col-sm-6 lp-1">
+                <div class="x-hoken-wrapper"></div>
+                <div class="x-drug-mark d-none">Rp）</div>
+                <div class="x-drug-wrapper"></div>
+                <div class="form-inline">
+                    <a href="javascript:void(0)" class="x-shinryou-menu">［診療行為］</a>
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-link dropdown-toggle"
+                                data-toggle="dropdown">その他
+                        </button>
+                        <div class="dropdown-menu x-shinryou-aux-menu_">
+                            <a href="javascript:void(0)" class="x-kensa dropdown-item">検査</a>
+                            <a href="javascript:void(0)" class="x-search-enter dropdown-item">検索入力</a>
+                            <a href="javascript:void(0)" class="x-copy-all dropdown-item">全部コピー</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="x-shinryou-widget-workarea"></div>
+                <div class="x-shinryou-wrapper"></div>
+                <a href="javascript:void(0)" class="x-conduct-menu">［処置］</a>
+                <div class="x-conduct-wrapper"></div>
+                <div class="x-charge-wrapper"></div>
+            </div>
+        </div>
+    </div>
+`;
+
+export class Record {
+    constructor(prop, visitFull){
+        this.prop = prop;
+        this.visitFull = visitFull;
+        this.ele = createElementFrom(tmpl);
+        this.map = parseElement(this.ele);
+        let title = new Title(prop, visitFull.visit);
+        this.map.title.append(title.ele);
+        visitFull.texts.forEach(text => {
+            let textComponent = new Text(this.prop, text);
+            this.map.textWrapper.append(textComponent.ele);
+        });
+    }
+}
+
+
+class RecordOrig extends Component {
     constructor(prop, ele, map) {
         super(ele, map, prop.rest);
         this.prop = prop;

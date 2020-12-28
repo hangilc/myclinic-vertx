@@ -42,44 +42,6 @@ let html = `
     </div>
 </div>
 
-<template id="practice-record-template">
-    <div class="practice-record">
-        <div class="x-title"></div>
-        <div class="row">
-            <div class="x-left_ col-sm-6 rp-1">
-                <div class="x-text-wrapper"></div>
-                <div class="x-command-wrapper record-left-commands mt-2">
-                    <a href="javascript:void(0)" class="x-enter-text">［文章入力］</a>
-                    <a href="javascript:void(0)" class="x-send-shohousen-fax">処方箋FAX</a>
-                </div>
-            </div>
-            <div class="x-right_ col-sm-6 lp-1">
-                <div class="x-hoken-wrapper"></div>
-                <div class="x-drug-mark d-none">Rp）</div>
-                <div class="x-drug-wrapper"></div>
-                <div class="form-inline">
-                    <a href="javascript:void(0)" class="x-shinryou-menu">［診療行為］</a>
-                    <div class="dropdown">
-                        <button type="button" class="btn btn-link dropdown-toggle"
-                                data-toggle="dropdown">その他
-                        </button>
-                        <div class="dropdown-menu x-shinryou-aux-menu_">
-                            <a href="javascript:void(0)" class="x-kensa dropdown-item">検査</a>
-                            <a href="javascript:void(0)" class="x-search-enter dropdown-item">検索入力</a>
-                            <a href="javascript:void(0)" class="x-copy-all dropdown-item">全部コピー</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="x-shinryou-widget-workarea"></div>
-                <div class="x-shinryou-wrapper"></div>
-                <a href="javascript:void(0)" class="x-conduct-menu">［処置］</a>
-                <div class="x-conduct-wrapper"></div>
-                <div class="x-charge-wrapper"></div>
-            </div>
-        </div>
-    </div>
-</template>
-
 <template id="practice-patient-search-dialog-template">
     <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
         <div class="modal-dialog" role="document">
@@ -556,13 +518,13 @@ let html = `
     </template>
 </template>
 
-<template id="practice-text-template">
-    <div class="my-1 record-text"></div>
-</template>
+<!--<template id="practice-text-template">-->
+<!--    <div class="my-1 record-text"></div>-->
+<!--</template>-->
 
-<template id="practice-text-disp-template">
-    <div class="my-1"></div>
-</template>
+<!--<template id="practice-text-disp-template">-->
+<!--    <div class="my-1"></div>-->
+<!--</template>-->
 
 <template id="practice-enter-text-template">
     <div class="mt-2">
@@ -1030,10 +992,10 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {ShinryouDisp} = await import("./shinryou-disp.js");
     let {Shinryou} = await import("./shinryou.js");
     let {ShinryouEdit} = await import("./shinryou-edit.js");
-    let {Text} = await import("./text.js");
-    let {TextDisp} = await import("./text-disp.js");
-    let {TextEnter} = await import("./text-enter.js");
-    let {TextEdit} = await import("./text-edit.js");
+    let {Text} = await import("./text/text.js");
+    let {TextDisp} = await import("./text/text-disp.js");
+    let {TextEnter} = await import("./text/text-enter.js");
+    let {TextEdit} = await import("./text/text-edit.js");
     let {Record} = await import("./record.js");
     let {Hoken} = await import("./hoken.js");
     let {HokenDisp} = await import("./hoken-disp.js");
@@ -1683,7 +1645,13 @@ export async function initLayout(pane, rest, controller, printAPI) {
     }
 
     document.getElementById("practice-record-wrapper").addEventListener("record-page-loaded", async event => {
-        console.log(event.detail);
+        let recordPage = event.detail;
+        let wrapper = event.target;
+        wrapper.innerHTML = "";
+        for(let visitFull of recordPage.visits){
+            let record = new Record(prop, visitFull);
+            wrapper.append(record.ele);
+        }
     });
 
     class RecordFactory {

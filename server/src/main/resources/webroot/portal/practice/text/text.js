@@ -1,6 +1,21 @@
-import {Component} from "./component.js";
+import {Component} from "../component.js";
+import {createElementFrom} from "../../../js/create-element-from.js";
+import {TextDisp} from "./text-disp.js";
 
-export class Text extends Component {
+let tmpl = `
+    <div class="my-1 record-text"></div>
+`;
+
+export class Text {
+    constructor(prop, text){
+        this.prop = prop;
+        this.ele = createElementFrom(tmpl);
+        let disp = new TextDisp(text);
+        this.ele.appendChild(disp.ele);
+    }
+}
+
+class TextOrig extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
     }

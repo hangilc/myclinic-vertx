@@ -17,6 +17,9 @@ export class PatientManip {
         ele.innerHTML = tmpl;
         let map = parseElement(this.ele);
         map.cashier.addEventListener("click", async event => await this.doCashier());
+        map.end.addEventListener("click", event => this.ele.dispatchEvent(
+            new CustomEvent("end-session", {bubbles: true})
+        ));
     }
 
     async doCashier(){
@@ -33,4 +36,5 @@ export class PatientManip {
             await controller.endSession();
         }
     }
+
 }

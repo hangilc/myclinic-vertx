@@ -1,3 +1,6 @@
+import {show, hide} from "../../js/dom-helper.js";
+import {PatientManip} from "./patient-manip.js";
+
 let html = `
 <div class="pane practice">
     <div class="row" id="practice-top">
@@ -24,19 +27,11 @@ let html = `
                 </div>
             </div>
             <div id="practice-patient-info" class="session-listener mx-2 my-2"></div>
-            <div id="practice-patient-manip" class="d-none mx-2 mb-2 form-inline">
-<!--                <button class="x-cashier btn btn-secondary">会計</button>-->
-<!--                <button class="x-end  ml-2 btn btn-secondary">患者終了</button>-->
-<!--                <a href="javascript:void(0)" class="x-register-current  ml-2">診察登録</a>-->
-<!--                <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>-->
-<!--                <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>-->
-<!--                <a href="javascript:void(0)" class="x-upload-image ml-2">画像保存</a>-->
-<!--                <a href="javascript:void(0)" class="x-list-image ml-2">画像一覧</a>-->
-            </div>
+            <div id="practice-patient-manip" class="session-listener d-none mx-2 mb-2 form-inline"></div>
             <div id="practice-patient-manip-workarea"></div>
-            <div id="practice-nav-upper"></div>
-            <div id="practice-record-wrapper"></div>
-            <div id="practice-nav-lower"></div>
+            <div class="practice-nav record-page-listener d-none mt-2"></div>
+            <div id="practice-record-wrapper" class="record-page-listener"></div>
+            <div class="practice-nav record-page-listener d-none mt-2"></div>
         </div>
         <div class="col-xl-3">
             <div id="practice-right-bar">
@@ -1080,6 +1075,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
         prop.tempVisitId = 0;
         pane.querySelectorAll(".session-listener").forEach(e =>
             e.dispatchEvent(new Event("session-started")));
+        pane.dispatchEvent(new CustomEvent("load-record-page", {detail: 0}));
     });
 
     pane.addEventListener("end-session", async event => {
@@ -1098,6 +1094,14 @@ export async function initLayout(pane, rest, controller, printAPI) {
     pane.addEventListener("change-temp-visit-id", event => {
         let visitId = event.detail;
         console.log("change-temp-visit-id");
+    });
+
+    pane.addEventListener("load-record-page", async event => {
+        let page = event.detail;
+        let recordPage = await prop.rest.listVisit(prop.patient.patientId, page);
+        pane.querySelectorAll(".record-page-listener").forEach(e => e.dispatchEvent(
+            new CustomEvent("record-page-loaded", {detail: recordPage})
+        ));
     });
 
     // function postStartSession(patientId, visitId) {
@@ -1353,6 +1357,16 @@ export async function initLayout(pane, rest, controller, printAPI) {
     //     document.getElementById("practice-patient-manip-workarea").innerHTML = "";
     // });
 
+    new PatientManip(prop, document.getElementById("practice-patient-manip"));
+
+    document.getElementById("practice-patient-manip").addEventListener("session-started", event => {
+        show(event.target);
+    });
+
+    document.getElementById("practice-patient-manip").addEventListener("session-ended", event => {
+        hide(event.target);
+    });
+
     (function () {
         let ele = $("#practice-patient-manip");
         let map = parseElement(ele);
@@ -1432,7 +1446,8 @@ export async function initLayout(pane, rest, controller, printAPI) {
             }
         });
 
-    })();
+    })
+    // ();
 
     class SendFaxFactory {
         constructor() {
@@ -1666,6 +1681,10 @@ export async function initLayout(pane, rest, controller, printAPI) {
             return comp;
         }
     }
+
+    document.getElementById("practice-record-wrapper").addEventListener("record-page-loaded", async event => {
+        console.log(event.detail);
+    });
 
     class RecordFactory {
         constructor() {
@@ -1961,33 +1980,19 @@ export async function initLayout(pane, rest, controller, printAPI) {
 
     }
 
-    let navs = (function () {
-        let navFactory = new NavFactory();
-        return [
-            navFactory.create().appendTo($("#practice-nav-upper")),
-            navFactory.create().appendTo($("#practice-nav-lower"))
-        ];
-    })();
-
-    function setNavs(page, total) {
-        navs.forEach(nav => {
-            nav.set(page, total);
-            if (total > 1) {
-                nav.show();
+    document.querySelectorAll(".practice-nav").forEach(e => {
+        let nav = new Nav(e);
+        e.addEventListener("record-page-loaded", event => {
+            let page = event.detail;
+            if( page.totalPages <= 1 ){
+                hide(e);
             } else {
-                nav.hide();
+                nav.adaptToPage(page.page, page.totalPages);
+                show(e);
             }
-        })
-    }
-
-    function setNavsPatientId(patientId) {
-        navs.forEach(nav => nav.setPatientId(patientId));
-    }
-
-    // addPatientChangedListener(patient => {
-    //     let patientId = patient ? patient.patientId : 0;
-    //     setNavsPatientId(patientId);
-    // })
+        });
+        e.addEventListener("session-ended", event => hide(e));
+    });
 
     function setRecords(visitFulls) {
         let recordWrapperElement = $("#practice-record-wrapper");

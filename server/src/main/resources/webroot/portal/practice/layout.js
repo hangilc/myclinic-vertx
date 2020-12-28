@@ -1081,53 +1081,85 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {PatientImageList} = await import("../../components/patient-image-list.js");
     let {NoPayList} = await import("./no-pay-list.js");
 
-    let prop = {rest, printAPI};
+    let prop = {
+        rest,
+        printAPI,
+        patient: null,
+        currentVisitId: 0,
+        tempVisitId: 0
+    };
 
-    function postStartSession(patientId, visitId) {
-        pane.dispatchEvent(new CustomEvent("start-session",
-            {bubbles: true, detail: {patientId, visitId}}));
-    }
+    pane.addEventListener("start-session", async event => {
+        let patientId = event.detail.patientId;
+        let visitId = event.detail.visitId;
+        prop.patient = await prop.rest.getPatient(patientId);
+        prop.currentVisitId = visitId;
+        prop.tempVisitId = 0;
+        console.log("start-session", prop);
+    });
 
-    function postChangeVisitId(visitId) {
-        pane.dispatchEvent(new CustomEvent("change-visit-id", {bubles: true, detail: visitId}));
-    }
+    pane.addEventListener("end-session", async event => {
+        prop.patient = null;
+        prop.currentVisitId = 0;
+        prop.tempVisitId = 0;
+        console.log("end-session", prop);
+    });
 
-    function postChangeTempVisitId(visitId) {
-        pane.dispatchEvent(new CustomEvent("change-temp-visit-id", {bubles: true, detail: visitId}));
-    }
+    pane.addEventListener("change-current-visit-id", event => {
+        let visitId = event.detail;
+        console.log("change-current-visit-id");
+    });
 
-    function addPatientChangedListener(f) {
-        pane.addEventListener("patient-changed", event => f(event.detail));
-    }
+    pane.addEventListener("change-temp-visit-id", event => {
+        let visitId = event.detail;
+        console.log("change-temp-visit-id");
+    });
 
-    function addRecordsChangedListener(f) {
-        pane.addEventListener("records-changed", event =>
-            f(event.detail.records, event.detail.page, event.detail.totalPages));
-    }
-
-    function addVisitIdChangedListener(f) {
-        pane.addEventListener("visit-id-changed", event => f(event.detail));
-    }
-
-    function addTempVisitIdChangedListener(f) {
-        pane.addEventListener("temp-visit-id-changed", event => f(event.detail));
-    }
-
-    class CurrentVisitManager {
-        resolveCopyTarget() {
-            return controller.getVisitId() || controller.getTempVisitId();
-        }
-
-        getCurrentVisitId(){
-            return controller.getVisitId();
-        }
-
-        getTempVisitId(){
-            return controller.getTempVisitId();
-        }
-    }
-
-    let currentVisitManager = new CurrentVisitManager();
+    // function postStartSession(patientId, visitId) {
+    //     pane.dispatchEvent(new CustomEvent("start-session",
+    //         {bubbles: true, detail: {patientId, visitId}}));
+    // }
+    //
+    // function postChangeVisitId(visitId) {
+    //     pane.dispatchEvent(new CustomEvent("change-visit-id", {bubles: true, detail: visitId}));
+    // }
+    //
+    // function postChangeTempVisitId(visitId) {
+    //     pane.dispatchEvent(new CustomEvent("change-temp-visit-id", {bubles: true, detail: visitId}));
+    // }
+    //
+    // function addPatientChangedListener(f) {
+    //     pane.addEventListener("patient-changed", event => f(event.detail));
+    // }
+    //
+    // function addRecordsChangedListener(f) {
+    //     pane.addEventListener("records-changed", event =>
+    //         f(event.detail.records, event.detail.page, event.detail.totalPages));
+    // }
+    //
+    // function addVisitIdChangedListener(f) {
+    //     pane.addEventListener("visit-id-changed", event => f(event.detail));
+    // }
+    //
+    // function addTempVisitIdChangedListener(f) {
+    //     pane.addEventListener("temp-visit-id-changed", event => f(event.detail));
+    // }
+    //
+    // class CurrentVisitManager {
+    //     resolveCopyTarget() {
+    //         return controller.getVisitId() || controller.getTempVisitId();
+    //     }
+    //
+    //     getCurrentVisitId(){
+    //         return controller.getVisitId();
+    //     }
+    //
+    //     getTempVisitId(){
+    //         return controller.getTempVisitId();
+    //     }
+    // }
+    //
+    // let currentVisitManager = new CurrentVisitManager();
 
     function getTemplateHtml(templateId) {
         let html = $("template#" + templateId).html();
@@ -1141,7 +1173,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
 
     pane.addEventListener("add-to-no-pay-list", async event => {
         let visitId = event.detail;
-        if( noPayList == null ){
+        if (noPayList == null) {
             noPayList = new NoPayList(prop);
             noPayList.ele.addEventListener("closed", event => noPayList = null);
             document.getElementById("practice-general-workarea").append(noPayList.ele);
@@ -1297,9 +1329,9 @@ export async function initLayout(pane, rest, controller, printAPI) {
         return new PatientInfo(ele, map);
     })();
 
-    addPatientChangedListener(patient => {
-        patientInfo.setPatient(patient);
-    })
+    // addPatientChangedListener(patient => {
+    //     patientInfo.setPatient(patient);
+    // })
 
     class MeisaiDialogFactory {
         constructor() {
@@ -1330,9 +1362,9 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    addPatientChangedListener(patient => {
-        document.getElementById("practice-patient-manip-workarea").innerHTML = "";
-    });
+    // addPatientChangedListener(patient => {
+    //     document.getElementById("practice-patient-manip-workarea").innerHTML = "";
+    // });
 
     (function () {
         let ele = $("#practice-patient-manip");
@@ -1340,13 +1372,13 @@ export async function initLayout(pane, rest, controller, printAPI) {
         let meisaiDialogFactory = new MeisaiDialogFactory();
         let searchTextForPatientDialogFactory = new SearchTextForPatientDialogFactory();
 
-        addPatientChangedListener(patient => {
-            if (!patient) {
-                ele.addClass("d-none");
-            } else {
-                ele.removeClass("d-none");
-            }
-        })
+        // addPatientChangedListener(patient => {
+        //     if (!patient) {
+        //         ele.addClass("d-none");
+        //     } else {
+        //         ele.removeClass("d-none");
+        //     }
+        // })
 
         map.cashier.on("click", async event => {
             let visitId = controller.getVisitId();
@@ -1395,7 +1427,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
             if (patientId > 0) {
                 let dialog = new UploadImageDialog(patientId);
                 let uploaders = await dialog.open();
-                if( uploaders ){
+                if (uploaders) {
                     console.log("uploaders", uploaders);
                     let reporter = new UploadProgress(uploaders);
                     document.getElementById("practice-general-workarea").append(reporter.ele);
@@ -1405,7 +1437,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
 
         map.listImage.on("click", async event => {
             let patientId = controller.getPatientId();
-            if( patientId > 0 ){
+            if (patientId > 0) {
                 let w = new PatientImageList(rest, true);
                 await w.init(patientId);
                 let wrapper = document.getElementById("practice-patient-manip-workarea");
@@ -1600,26 +1632,26 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    class ShohousenPreviewDialogFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-shohousen-preview-dialog-template");
-            this.drawerSvgModule = DrawerSvg;
-        }
-
-        create(ops) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let dialog = new ShohousenPreviewDialog(opt);
-            dialog.init(ops, this.drawerSvgModule);
-            return dialog;
-        }
-    }
+    // class ShohousenPreviewDialogFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-shohousen-preview-dialog-template");
+    //         this.drawerSvgModule = DrawerSvg;
+    //     }
+    //
+    //     create(ops) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let dialog = new ShohousenPreviewDialog(opt);
+    //         dialog.init(ops, this.drawerSvgModule);
+    //         return dialog;
+    //     }
+    // }
 
     class TextEditFactory {
         constructor() {
             this.html = getTemplateHtml("practice-edit-text-template");
             this.rest = rest;
-            this.currentVisitManager = currentVisitManager;
+            //this.currentVisitManager = currentVisitManager;
             //this.shohousenPreviewDialogFactory = new ShohousenPreviewDialogFactory();
         }
 
@@ -1648,49 +1680,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    // class ChargeDispFactory {
-    //     constructor() {
-    //         this.html = getTemplateHtml("practice-charge-disp-template");
-    //     }
-    //
-    //     create(charge) {
-    //         let ele = $(this.html);
-    //         let map = parseElement(ele);
-    //         let comp = new ChargeDisp(ele, map, rest);
-    //         comp.init(charge);
-    //         return comp;
-    //     }
-    // }
-    //
-    // class ChargeModifyFactory {
-    //     create(meisai, charge) {
-    //         let html = $("template#practice-charge-modify-template").html();
-    //         let ele = $(html);
-    //         let map = parseElement(ele);
-    //         let comp = new ChargeModify(ele, map, rest);
-    //         comp.init();
-    //         comp.set(meisai, charge);
-    //         return comp;
-    //     }
-    // }
-    //
-    // class ChargeFactory {
-    //     constructor() {
-    //         this.html = getTemplateHtml("practice-charge-template");
-    //         this.chargeDispFactory = new ChargeDispFactory();
-    //         this.chargeModifyFactory = new ChargeModifyFactory();
-    //     }
-    //
-    //     create(charge) {
-    //         let ele = $(this.html);
-    //         let map = parseElement(ele);
-    //         let comp = new Charge(ele, map, rest);
-    //         comp.init(this.chargeDispFactory, this.chargeModifyFactory);
-    //         comp.set(charge);
-    //         return comp;
-    //     }
-    // }
-
     class RecordFactory {
         constructor() {
             this.html = getTemplateHtml("practice-record-template");
@@ -1707,7 +1696,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
             this.sendFaxFactory = new SendFaxFactory();
             this.faxProgressFactory = new FaxProgressFactory();
             //this.chargeFactory = new ChargeFactory();
-            this.currentVisitManager = currentVisitManager;
+            //this.currentVisitManager = currentVisitManager;
         }
 
         create(visitFull, hokenRep) {
@@ -1752,28 +1741,16 @@ export async function initLayout(pane, rest, controller, printAPI) {
         let map = parseElement($("#practice-select-patient-menu"));
         let patientSearchDialogFactory = new PatientSearchDialogFactory();
 
-        // async function clearState() {
-        //     let patientId = practiceState.getPatientId();
-        //     let visitId = practiceState.getVisitId();
-        //     if (patientId > 0 && visitId === 0) {
-        //         practiceState.endPatient();
-        //     } else if (patientId > 0 && visitId > 0) {
-        //         await practiceState.suspendExam(visitId);
-        //     } else {
-        //         practiceState.setTempVisitId(0);
+        // async function cancelSession(){
+        //     let patientId = controller.getPatientId();
+        //     if( patientId > 0 ){
+        //         let visitId = controller.getVisitId();
+        //         if( visitId > 0 ){
+        //             await rest.suspendExam(visitId);
+        //         }
+        //         await controller.endSession();
         //     }
         // }
-
-        async function cancelSession(){
-            let patientId = controller.getPatientId();
-            if( patientId > 0 ){
-                let visitId = controller.getVisitId();
-                if( visitId > 0 ){
-                    await rest.suspendExam(visitId);
-                }
-                await controller.endSession();
-            }
-        }
 
         map.wqueue.on("click", async event => {
             let result = await selectWqueueDialog.open();
@@ -1781,9 +1758,13 @@ export async function initLayout(pane, rest, controller, printAPI) {
                 let wqueueFull = result.data;
                 let visitId = wqueueFull.visit.visitId;
                 let patientId = wqueueFull.patient.patientId;
-                await cancelSession();
+                pane.dispatchEvent(new Event("end-session"));
                 await rest.startExam(visitId);
-                await postStartSession(patientId, visitId);
+                pane.dispatchEvent(new CustomEvent("start-session", {
+                    detail: {
+                        patientId, visitId
+                    }
+                }));
             }
         });
 
@@ -1792,14 +1773,23 @@ export async function initLayout(pane, rest, controller, printAPI) {
             let result = await dialog.open();
             if (result && result.mode === "enter") {
                 let patientId = result.patient.patientId;
-                await cancelSession();
-                await controller.startSession(patientId, 0);
+                pane.dispatchEvent(new Event("end-session"));
+                pane.dispatchEvent(new CustomEvent("start-session", {
+                    detail: {
+                        patientId,
+                        visitId: 0
+                    }
+                }));
             } else if (result && result.mode === "register-enter") {
                 let visitId = result.visitId;
                 let patientId = result.patient.patientId;
+                pane.dispatchEvent(new Event("end-session"));
                 await rest.startExam(visitId);
-                await cancelSession();
-                await controller.startSession(patientId, visitId);
+                pane.dispatchEvent(new CustomEvent("start-session", {
+                    detail: {
+                        patientId, visitId
+                    }
+                }));
             }
         });
 
@@ -1807,8 +1797,14 @@ export async function initLayout(pane, rest, controller, printAPI) {
             let result = await selectRecentVisitDialog.open();
             if (result.mode === "selected") {
                 let patientId = result.data.patient.patientId;
-                await cancelSession();
-                await controller.startSession(patientId, 0);
+                pane.dispatchEvent(new Event("end-session"));
+                pane.dispatchEvent(new CustomEvent("start-session", {
+                    detail: {
+                        patientId,
+                        visitId: 0
+                    }
+                }));
+
             }
         });
 
@@ -1816,8 +1812,14 @@ export async function initLayout(pane, rest, controller, printAPI) {
             let result = await selectTodaysVisitDialog.open();
             if (result.mode === "selected") {
                 let patientId = result.data.patient.patientId;
-                await cancelSession();
-                await controller.startSession(patientId, 0);
+                pane.dispatchEvent(new Event("end-session"));
+                pane.dispatchEvent(new CustomEvent("start-session", {
+                    detail: {
+                        patientId,
+                        visitId: 0
+                    }
+                }));
+
             }
         });
 
@@ -1825,8 +1827,14 @@ export async function initLayout(pane, rest, controller, printAPI) {
             let result = await selectPreviousVisitDialog.open();
             if (result.mode === "selected") {
                 let patientId = result.data.patient.patientId;
-                await cancelSession();
-                await controller.startSession(patientId, 0);
+                pane.dispatchEvent(new Event("end-session"));
+                pane.dispatchEvent(new CustomEvent("start-session", {
+                    detail: {
+                        patientId,
+                        visitId: 0
+                    }
+                }));
+
             }
         });
     })();
@@ -1937,17 +1945,17 @@ export async function initLayout(pane, rest, controller, printAPI) {
         return comp;
     })();
 
-    addPatientChangedListener(async patient => {
-        if (!patient) {
-            diseaseArea.set(0, null);
-        } else {
-            let patientId = patient.patientId;
-            let cur = await rest.listCurrentDisease(patientId);
-            diseaseArea.set(patientId, cur);
-            diseaseArea.current();
-        }
-
-    });
+    // addPatientChangedListener(async patient => {
+    //     if (!patient) {
+    //         diseaseArea.set(0, null);
+    //     } else {
+    //         let patientId = patient.patientId;
+    //         let cur = await rest.listCurrentDisease(patientId);
+    //         diseaseArea.set(patientId, cur);
+    //         diseaseArea.current();
+    //     }
+    //
+    // });
 
     let recordFactory = new RecordFactory();
 
@@ -1989,10 +1997,10 @@ export async function initLayout(pane, rest, controller, printAPI) {
         navs.forEach(nav => nav.setPatientId(patientId));
     }
 
-    addPatientChangedListener(patient => {
-        let patientId = patient ? patient.patientId : 0;
-        setNavsPatientId(patientId);
-    })
+    // addPatientChangedListener(patient => {
+    //     let patientId = patient ? patient.patientId : 0;
+    //     setNavsPatientId(patientId);
+    // })
 
     function setRecords(visitFulls) {
         let recordWrapperElement = $("#practice-record-wrapper");
@@ -2016,12 +2024,12 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    async function batchUpdatePaymentState(visitIds){
+    async function batchUpdatePaymentState(visitIds) {
         let map = await rest.batchGetLastPayment(visitIds);
         let wrapper = document.getElementById("practice-record-wrapper");
-        for(let visitId of Object.keys(map)){
+        for (let visitId of Object.keys(map)) {
             let e = wrapper.querySelector(`.record-${visitId}`);
-            if( e ) {
+            if (e) {
                 e.dispatchEvent(new CustomEvent("update-payment", {detail: map[visitId]}));
             }
         }
@@ -2032,29 +2040,29 @@ export async function initLayout(pane, rest, controller, printAPI) {
         visitIds: []
     };
 
-    async function batchUpdate0410NoPay(){
+    async function batchUpdate0410NoPay() {
         let patientId = controller.getPatientId();
         let cache = noPay0410cache;
-        if( patientId > 0 && cache.patientId !== patientId ){
+        if (patientId > 0 && cache.patientId !== patientId) {
             cache.patientId = patientId;
             cache.visitIds = await rest.list0410NoPay(patientId);
         }
         let wrapper = document.getElementById("practice-record-wrapper");
-        for(let visitId of cache.visitIds){
+        for (let visitId of cache.visitIds) {
             let e = wrapper.querySelector(`.record-${visitId}`);
-            if( e ) {
+            if (e) {
                 e.dispatchEvent(new Event("update-0410-no-pay"));
             }
         }
     }
 
-    addRecordsChangedListener((records, page, totalPages) => {
-        setRecords(records);
-        let visitIds = records.map(visitFull => visitFull.visit.visitId);
-        batchUpdatePaymentState(visitIds);
-        batchUpdate0410NoPay();
-        setNavs(page, totalPages);
-    });
+    // addRecordsChangedListener((records, page, totalPages) => {
+    //     setRecords(records);
+    //     let visitIds = records.map(visitFull => visitFull.visit.visitId);
+    //     batchUpdatePaymentState(visitIds);
+    //     batchUpdate0410NoPay();
+    //     setNavs(page, totalPages);
+    // });
 
     function forEachRecord(f) {
         let xs = $(".practice-record");
@@ -2079,14 +2087,14 @@ export async function initLayout(pane, rest, controller, printAPI) {
         return null;
     }
 
-    addTempVisitIdChangedListener(tempVisitId => {
-        forEachRecord(record => {
-            if (record.getVisitId() === tempVisitId) {
-                record.markAsTemp();
-            } else {
-                record.clearMark();
-            }
-        });
-    });
+    // addTempVisitIdChangedListener(tempVisitId => {
+    //     forEachRecord(record => {
+    //         if (record.getVisitId() === tempVisitId) {
+    //             record.markAsTemp();
+    //         } else {
+    //             record.clearMark();
+    //         }
+    //     });
+    // });
 
 }

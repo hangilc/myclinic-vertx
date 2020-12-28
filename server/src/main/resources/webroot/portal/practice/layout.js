@@ -1,67 +1,64 @@
 let html = `
 <div class="pane practice">
     <div class="row" id="practice-top">
-        <h3 class="col-xl-2">診察</h3>
-        <div class="col-xl-10 form-inline">
-            <div class="dropdown" id="practice-select-patient-menu">
-                <button class="btn btn-secondary dropdown-toggle" type="button"
-                        data-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false">
-                    患者選択
-                </button>
-                <div class="dropdown-menu x-menu" aria-labelledby="dropdownMenuButton">
-                    <a href="javascript:void(0)" class="x-wqueue dropdown-item mx-2">受付患者選択</a>
-                    <a href="javascript:void(0)" class="x-search dropdown-item mx-2">患者検索</a>
-                    <a href="javascript:void(0)" class="x-recent dropdown-item mx-2">最近の診察</a>
-                    <a href="javascript:void(0)" class="x-today dropdown-item mx-2">本日の診察</a>
-                    <a href="javascript:void(0)" class="x-prev dropdown-item mx-2">以前の診察</a>
+        <div class="col-xl-9">
+            <div class="row">
+                <h3 class="col-xl-2">診察</h3>
+                <div class="col-xl-10 form-inline">
+                    <div class="dropdown" id="practice-select-patient-menu">
+                        <button class="btn btn-secondary dropdown-toggle" type="button"
+                                data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                            患者選択
+                        </button>
+                        <div class="dropdown-menu x-menu" aria-labelledby="dropdownMenuButton">
+                            <a href="javascript:void(0)" class="x-wqueue dropdown-item mx-2">受付患者選択</a>
+                            <a href="javascript:void(0)" class="x-search dropdown-item mx-2">患者検索</a>
+                            <a href="javascript:void(0)" class="x-recent dropdown-item mx-2">最近の診察</a>
+                            <a href="javascript:void(0)" class="x-today dropdown-item mx-2">本日の診察</a>
+                            <a href="javascript:void(0)" class="x-prev dropdown-item mx-2">以前の診察</a>
+                        </div>
+                    </div>
+                    <a href="javascript:void(0)" class="ml-2" id="practice-registered-drug-link">登録薬剤</a>
+                    <a href="javascript:void(0)" class="ml-2" id="practice-search-text-globally">全文検索</a>
                 </div>
             </div>
-            <a href="javascript:void(0)" class="ml-2" id="practice-registered-drug-link">登録薬剤</a>
-            <a href="javascript:void(0)" class="ml-2" id="practice-search-text-globally">全文検索</a>
+            <div id="practice-patient-info" class="d-none mx-2 my-2">
+                [<span class="x-patient-id"></span>]
+                <span class="x-last-name"></span><span class="x-first-name"></span>
+                (<span class="x-last-name-yomi"></span><span class="x-first-name-yomi"></span>)
+                <span class="x-birthday"></span>生
+                (<span class="x-age"></span>才)
+                <span class="x-sex"></span>性
+                <a href="javascript:void(0)" class="x-detail-link">詳細</a>
+                <div class="x-detail d-none row">
+                    <div class="col-sm-3">住所</div>
+                    <div class="x-address col-sm-9"></div>
+                    <div class="col-sm-3">電話番号</div>
+                    <div class="x-phone col-sm-9"></div>
+                </div>
+            </div>
+            <div id="practice-patient-manip" class="d-none mx-2 mb-2 form-inline">
+                <button class="x-cashier btn btn-secondary">会計</button>
+                <button class="x-end  ml-2 btn btn-secondary">患者終了</button>
+                <a href="javascript:void(0)" class="x-register-current  ml-2">診察登録</a>
+                <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>
+                <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>
+                <a href="javascript:void(0)" class="x-upload-image ml-2">画像保存</a>
+                <a href="javascript:void(0)" class="x-list-image ml-2">画像一覧</a>
+            </div>
+            <div id="practice-patient-manip-workarea"></div>
+            <div id="practice-nav-upper"></div>
+            <div id="practice-record-wrapper"></div>
+            <div id="practice-nav-lower"></div>
+        </div>
+        <div class="col-xl-3">
+            <div id="practice-right-bar">
+                <div id="practice-disease-wrapper" class="mb-3"></div>
+                <div id="practice-general-workarea"></div>
+            </div>
         </div>
     </div>
-
-    <div id="practice-patient-info" class="d-none mx-2 my-2">
-        [<span class="x-patient-id"></span>]
-        <span class="x-last-name"></span><span class="x-first-name"></span>
-        (<span class="x-last-name-yomi"></span><span class="x-first-name-yomi"></span>)
-        <span class="x-birthday"></span>生
-        (<span class="x-age"></span>才)
-        <span class="x-sex"></span>性
-        <a href="javascript:void(0)" class="x-detail-link">詳細</a>
-        <div class="x-detail d-none row">
-            <div class="col-sm-3">住所</div>
-            <div class="x-address col-sm-9"></div>
-            <div class="col-sm-3">電話番号</div>
-            <div class="x-phone col-sm-9"></div>
-        </div>
-    </div>
-
-    <div id="practice-patient-manip" class="d-none mx-2 mb-2 form-inline">
-        <button class="x-cashier btn btn-secondary">会計</button>
-        <button class="x-end  ml-2 btn btn-secondary">患者終了</button>
-        <a href="javascript:void(0)" class="x-register-current  ml-2">診察登録</a>
-        <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>
-        <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>
-        <a href="javascript:void(0)" class="x-upload-image ml-2">画像保存</a>
-        <a href="javascript:void(0)" class="x-list-image ml-2">画像一覧</a>
-    </div>
-    
-    <div id="practice-patient-manip-workarea"></div>
-
-    <div id="practice-nav-upper"></div>
-
-    <div class="row">
-        <div id="practice-record-wrapper" class="col-xl-9"></div>
-        <div id="practice-right-bar" class="col-xl-3">
-            <div id="practice-disease-wrapper" class="mb-3"></div>
-            <div id="practice-general-workarea"></div>
-        </div>
-    </div>
-
-    <div id="practice-nav-lower"></div>
-
 </div>
 
 <template id="practice-record-template">

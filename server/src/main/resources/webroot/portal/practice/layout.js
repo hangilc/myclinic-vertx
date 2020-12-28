@@ -23,29 +23,15 @@ let html = `
                     <a href="javascript:void(0)" class="ml-2" id="practice-search-text-globally">全文検索</a>
                 </div>
             </div>
-            <div id="practice-patient-info" class="d-none mx-2 my-2">
-                [<span class="x-patient-id"></span>]
-                <span class="x-last-name"></span><span class="x-first-name"></span>
-                (<span class="x-last-name-yomi"></span><span class="x-first-name-yomi"></span>)
-                <span class="x-birthday"></span>生
-                (<span class="x-age"></span>才)
-                <span class="x-sex"></span>性
-                <a href="javascript:void(0)" class="x-detail-link">詳細</a>
-                <div class="x-detail d-none row">
-                    <div class="col-sm-3">住所</div>
-                    <div class="x-address col-sm-9"></div>
-                    <div class="col-sm-3">電話番号</div>
-                    <div class="x-phone col-sm-9"></div>
-                </div>
-            </div>
+            <div id="practice-patient-info" class="session-listener mx-2 my-2"></div>
             <div id="practice-patient-manip" class="d-none mx-2 mb-2 form-inline">
-                <button class="x-cashier btn btn-secondary">会計</button>
-                <button class="x-end  ml-2 btn btn-secondary">患者終了</button>
-                <a href="javascript:void(0)" class="x-register-current  ml-2">診察登録</a>
-                <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>
-                <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>
-                <a href="javascript:void(0)" class="x-upload-image ml-2">画像保存</a>
-                <a href="javascript:void(0)" class="x-list-image ml-2">画像一覧</a>
+<!--                <button class="x-cashier btn btn-secondary">会計</button>-->
+<!--                <button class="x-end  ml-2 btn btn-secondary">患者終了</button>-->
+<!--                <a href="javascript:void(0)" class="x-register-current  ml-2">診察登録</a>-->
+<!--                <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>-->
+<!--                <a href="javascript:void(0)" class="x-refer ml-2">紹介状作成</a>-->
+<!--                <a href="javascript:void(0)" class="x-upload-image ml-2">画像保存</a>-->
+<!--                <a href="javascript:void(0)" class="x-list-image ml-2">画像一覧</a>-->
             </div>
             <div id="practice-patient-manip-workarea"></div>
             <div id="practice-nav-upper"></div>
@@ -1041,8 +1027,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {parseElement} = await import("./parse-element.js");
     let {PatientDisplay} = await import("./patient-display.js");
     let {wqueueStateCodeToRep} = await import("../js/consts.js");
-    let DrawerSvg = await import("../../js/drawer-svg.js");
-    let {Title} = await import("./title/title.js");
     let {SelectWqueueDialog} = await import("./select-wqueue-dialog.js");
     let {SelectRecentVisitDialog} = await import("./select-recent-visit-dialog.js");
     let {SelectTodaysVisitDialog} = await import("./select-todays-visit-dialog.js");
@@ -1059,7 +1043,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {Hoken} = await import("./hoken.js");
     let {HokenDisp} = await import("./hoken-disp.js");
     let {HokenSelectDialog} = await import("./hoken-select-dialog.js");
-    let {ShohousenPreviewDialog} = await import("./shohousen-preview-dialog.js");
     let {ConductDisp} = await import("./conduct-disp.js");
     let {DrugDisp} = await import("./drug-disp.js");
     let {MeisaiDialog} = await import("./meisai-dialog.js");
@@ -1095,14 +1078,16 @@ export async function initLayout(pane, rest, controller, printAPI) {
         prop.patient = await prop.rest.getPatient(patientId);
         prop.currentVisitId = visitId;
         prop.tempVisitId = 0;
-        console.log("start-session", prop);
+        pane.querySelectorAll(".session-listener").forEach(e =>
+            e.dispatchEvent(new Event("session-started")));
     });
 
     pane.addEventListener("end-session", async event => {
         prop.patient = null;
         prop.currentVisitId = 0;
         prop.tempVisitId = 0;
-        console.log("end-session", prop);
+        pane.querySelectorAll(".session-listener").forEach(e =>
+            e.dispatchEvent(new Event("session-ended")));
     });
 
     pane.addEventListener("change-current-visit-id", event => {
@@ -1323,15 +1308,17 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    let patientInfo = (function () {
-        let ele = $("#practice-patient-info");
-        let map = parseElement(ele);
-        return new PatientInfo(ele, map);
-    })();
+    document.getElementById("practice-patient-info").addEventListener("session-started", event => {
+        let patient = prop.patient;
+        let disp = new PatientDisplay(patient);
+        let e = event.target;
+        e.innerHTML = "";
+        e.append(disp.ele);
+    });
 
-    // addPatientChangedListener(patient => {
-    //     patientInfo.setPatient(patient);
-    // })
+    document.getElementById("practice-patient-info").addEventListener("session-ended", event => {
+        event.target.innerHTML = "";
+    });
 
     class MeisaiDialogFactory {
         constructor() {

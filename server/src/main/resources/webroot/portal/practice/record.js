@@ -7,6 +7,7 @@ import {Title} from "./title/title.js";
 import {createElementFrom} from "../../js/create-element-from.js";
 import {parseElement} from "../../js/parse-node.js";
 import {Text} from "./text/text.js";
+import {TextEnter} from "./text/text-enter.js";
 
 let tmpl = `
     <div class="practice-record temp-visit-listener" data-visit-id="0">
@@ -56,6 +57,7 @@ export class Record {
         let title = new Title(prop, visitFull.visit);
         this.map.title.append(title.ele);
         visitFull.texts.forEach(text => this.addText(text));
+        this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.ele.addEventListener("temp-visit-changed", event => {
             if( this.prop.tempVisitId === this.getVisitId() ){
                 this.ele.classList.add("temp-visit");
@@ -73,6 +75,16 @@ export class Record {
     addText(text){
         let textComponent = new Text(this.prop, text);
         this.map.textWrapper.append(textComponent.ele);
+    }
+
+    doEnterText(){
+        let edit = new TextEnter(this.prop, this.getVisitId());
+        edit.ele.addEventListener("entered", event => {
+            edit.ele.remove();
+            this.addText(event.detail);
+        });
+        edit.ele.addEventListener("cancel", event => edit.ele.remove());
+        this.map.textWrapper.append(edit.ele);
     }
 }
 

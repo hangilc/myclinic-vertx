@@ -468,26 +468,6 @@ let html = `
     </div>
 </template>
 
-<template id="practice-title-template">
-    <div class="mt-2 practice-title form-inline">
-        <div class="x-text"></div>
-        <div class="dropdown ml-auto">
-            <button class="btn btn-link dropdown-toggle" type="button"
-                    data-toggle="dropdown" aria-haspopup="true"
-                    aria-expanded="false">
-                操作
-            </button>
-            <div class="dropdown-menu x-menu_" aria-labelledby="dropdownMenuButton">
-                <a href="javascript:void(0)" class="x-delete dropdown-item">この診察を削除</a>
-                <a href="javascript:void(0)" class="x-temp-visit dropdown-item">暫定診察に設定</a>
-                <a href="javascript:void(0)" class="x-untemp-visit dropdown-item">暫定診察の解除</a>
-                <a href="javascript:void(0)" class="x-meisai dropdown-item">診療明細</a>
-                <a href="javascript:void(0)" class="x-futan-wari-override dropdown-item">負担割オーバーライド</a>
-            </div>
-        </div>
-    </div>
-</template>
-
 <template id="practice-hoken-template">
     <div></div>
 </template>
@@ -518,66 +498,12 @@ let html = `
     </template>
 </template>
 
-<!--<template id="practice-text-template">-->
-<!--    <div class="my-1 record-text"></div>-->
-<!--</template>-->
-
-<!--<template id="practice-text-disp-template">-->
-<!--    <div class="my-1"></div>-->
-<!--</template>-->
-
 <template id="practice-enter-text-template">
     <div class="mt-2">
         <textarea class="form-control x-textarea" rows="6"></textarea>
         <div class="form-inline mt-2">
             <a href="javascript:void(0)" class="x-enter">入力</a>
             <a href="javascript:void(0)" class="x-cancel ml-2">キャンセル</a>
-        </div>
-    </div>
-</template>
-
-<template id="practice-edit-text-template">
-    <div class="mt-2">
-        <textarea class="form-control x-textarea" rows="6"></textarea>
-        <div class="form-inline mt-2">
-            <a href="javascript:void(0)" class="x-enter">入力</a>
-            <a href="javascript:void(0)" class="x-cancel ml-2">キャンセル</a>
-            <a href="javascript:void(0)" class="x-copy-memo d-none ml-2">引継ぎコピー</a>
-            <a href="javascript:void(0)" class="x-delete ml-2">削除</a>
-            <div class="dropbox x-shohousen-menu d-none">
-                <button type="button" class="btn btn-link dropdown-toggle"
-                        data-toggle="dropdown">処方箋</button>
-                <div class="dropdown-menu">
-                    <a href="javascript:void(0)" class="x-shohousen dropdown-item">処方箋発行</a>
-                    <a href="javascript:void(0)" class="x-shohousen-fax dropdown-item">処方箋FAX</a>
-                    <a href="javascript:void(0)" class="x-registered-presc dropdown-item">登録薬剤</a>
-                    <a href="javascript:void(0)" class="x-format-presc dropdown-item">処方箋整形</a>
-                    <a href="javascript:void(0)" class="x-preview-current dropdown-item">編集中表示</a>
-                </div>
-            </div>
-            <a href="javascript:void(0)" class="x-copy ml-2">コピー</a>
-        </div>
-    </div>
-</template>
-
-<template id="practice-shohousen-preview-dialog-template">
-    <div class="modal" tabindex="-1" role="dialog" data-backdrop="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">処方箋</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="x-disp" style="width:148mm;height:210mm"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary x-print">印刷</button>
-                    <button type="button" class="btn btn-secondary x-close">閉じる</button>
-                </div>
-            </div>
         </div>
     </div>
 </template>
@@ -716,16 +642,6 @@ let html = `
             <button class="btn btn-secondary x-enter">入力</button>
             <button class="btn btn-secondary x-cancel ml-2">キャンセル</button>
         </div>
-    </div>
-</template>
-
-<template id="practice-nav-template">
-    <div class="d-none mt-2">
-        <a href="javascript:void(0)" class="x-first">最初</a>
-        <a href="javascript:void(0)" class="x-prev ml-1">前へ</a>
-        <a href="javascript:void(0)" class="x-next ml-1">次へ</a>
-        <a href="javascript:void(0)" class="x-last ml-1 mr-1">最後</a>
-        [<span class="x-page"></span>/<span class="x-total"></span>]
     </div>
 </template>
 
@@ -1103,52 +1019,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     });
 
-    // function postStartSession(patientId, visitId) {
-    //     pane.dispatchEvent(new CustomEvent("start-session",
-    //         {bubbles: true, detail: {patientId, visitId}}));
-    // }
-    //
-    // function postChangeVisitId(visitId) {
-    //     pane.dispatchEvent(new CustomEvent("change-visit-id", {bubles: true, detail: visitId}));
-    // }
-    //
-    // function postChangeTempVisitId(visitId) {
-    //     pane.dispatchEvent(new CustomEvent("change-temp-visit-id", {bubles: true, detail: visitId}));
-    // }
-    //
-    // function addPatientChangedListener(f) {
-    //     pane.addEventListener("patient-changed", event => f(event.detail));
-    // }
-    //
-    // function addRecordsChangedListener(f) {
-    //     pane.addEventListener("records-changed", event =>
-    //         f(event.detail.records, event.detail.page, event.detail.totalPages));
-    // }
-    //
-    // function addVisitIdChangedListener(f) {
-    //     pane.addEventListener("visit-id-changed", event => f(event.detail));
-    // }
-    //
-    // function addTempVisitIdChangedListener(f) {
-    //     pane.addEventListener("temp-visit-id-changed", event => f(event.detail));
-    // }
-    //
-    // class CurrentVisitManager {
-    //     resolveCopyTarget() {
-    //         return controller.getVisitId() || controller.getTempVisitId();
-    //     }
-    //
-    //     getCurrentVisitId(){
-    //         return controller.getVisitId();
-    //     }
-    //
-    //     getTempVisitId(){
-    //         return controller.getTempVisitId();
-    //     }
-    // }
-    //
-    // let currentVisitManager = new CurrentVisitManager();
-
     function getTemplateHtml(templateId) {
         let html = $("template#" + templateId).html();
         if (!html) {
@@ -1352,10 +1222,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    // addPatientChangedListener(patient => {
-    //     document.getElementById("practice-patient-manip-workarea").innerHTML = "";
-    // });
-
     new PatientManip(prop, document.getElementById("practice-patient-manip"));
 
     document.getElementById("practice-patient-manip").addEventListener("session-started", event => {
@@ -1477,21 +1343,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    class TextDispFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-text-disp-template");
-        }
-
-        create(text) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new TextDisp(ele, map, rest);
-            comp.init();
-            comp.set(text);
-            return comp;
-        }
-    }
-
     class TextEnterFactory {
         constructor() {
             this.html = getTemplateHtml("practice-enter-text-template");
@@ -1506,35 +1357,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    class TextFactory {
-        constructor() {
-            this.html = $("template#practice-text-template").html();
-            this.rest = rest;
-            this.classToken = "practice-text";
-            this.textDispFactory = new TextDispFactory();
-            this.textEditFactory = new TextEditFactory();
-        }
-
-        create(text) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new Text(ele, map, this.rest);
-            comp.init(text, this.textDispFactory, this.textEditFactory,
-                this.classToken);
-            return comp;
-        }
-
-        listTextComponents(wrapperElement) {
-            let xs = wrapperElement.find("." + this.classToken);
-            let components = [];
-            for (let i = 0; i < xs.length; i++) {
-                components.push(xs.slice(i, i + 1).data("component"));
-            }
-            return components;
-        }
-    }
-
-    class HokenSelectDialogFactory {
+     class HokenSelectDialogFactory {
         create(hokenEx, visitId, current) {
             let html = $("template#practice-hoken-select-dialog-template").html();
             let ele = $(html);
@@ -1633,40 +1456,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    // class ShohousenPreviewDialogFactory {
-    //     constructor() {
-    //         this.html = getTemplateHtml("practice-shohousen-preview-dialog-template");
-    //         this.drawerSvgModule = DrawerSvg;
-    //     }
-    //
-    //     create(ops) {
-    //         let ele = $(this.html);
-    //         let map = parseElement(ele);
-    //         let dialog = new ShohousenPreviewDialog(opt);
-    //         dialog.init(ops, this.drawerSvgModule);
-    //         return dialog;
-    //     }
-    // }
-
-    class TextEditFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-edit-text-template");
-            this.rest = rest;
-            //this.currentVisitManager = currentVisitManager;
-            //this.shohousenPreviewDialogFactory = new ShohousenPreviewDialogFactory();
-        }
-
-        create(text) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new TextEdit(ele, map, this.rest, prop.printAPI);
-            comp.init(text, this.currentVisitManager
-                //, this.shohousenPreviewDialogFactory
-            );
-            return comp;
-        }
-    }
-
     class ConductDispFactory {
         constructor() {
             this.html = getTemplateHtml("practice-conduct-disp-template");
@@ -1698,63 +1487,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     document.getElementById("practice-record-wrapper").addEventListener("session-ended", event => {
         event.target.innerHTML = "";
     });
-
-    // class RecordFactory {
-    //     constructor() {
-    //         this.html = getTemplateHtml("practice-record-template");
-    //         this.wrapper = $("#practice-record-wrapper");
-    //         this.generalWorkarea = $("#practice-general-workarea");
-    //         //this.titleFactory = new TitleFactory();
-    //         this.textFactory = new TextFactory();
-    //         this.textEnterFactory = new TextEnterFactory();
-    //         this.hokenFactory = new HokenFactory();
-    //         this.shinryouFactory = new ShinryouFactory();
-    //         this.shinryouRegularDialogFactory = new ShinryouRegularDialogFactory();
-    //         this.conductDispFactory = new ConductDispFactory();
-    //         this.drugDispFactory = new DrugDispFactory();
-    //         this.sendFaxFactory = new SendFaxFactory();
-    //         this.faxProgressFactory = new FaxProgressFactory();
-    //         //this.chargeFactory = new ChargeFactory();
-    //         //this.currentVisitManager = currentVisitManager;
-    //     }
-    //
-    //     create(visitFull, hokenRep) {
-    //         let ele = $(this.html);
-    //         let map = parseElement(ele);
-    //         let record = new Record(prop, ele, map);
-    //         record.init(visitFull, hokenRep,
-    //             //this.titleFactory,
-    //             this.textFactory,
-    //             this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
-    //             this.shinryouRegularDialogFactory, this.conductDispFactory,
-    //             this.drugDispFactory, this.sendFaxFactory,
-    //             //this.chargeFactory,
-    //             this.currentVisitManager);
-    //         record.onDelete(async visitId => {
-    //             await rest.deleteVisit(visitId);
-    //             record.remove();
-    //             postChangeVisitId(0);
-    //         });
-    //         record.onTempVisit(visitId => postChangeTempVisitId(visitId));
-    //         record.onClearTempVisit(() => postChangeTempVisitId(0));
-    //         record.onFaxSent(async (event, data) => {
-    //             let patient = await rest.getPatient(visitFull.visit.patientId);
-    //             let compProgress = this.faxProgressFactory.create(patient, data.faxNumber,
-    //                 data.pdfFile, data.faxSid);
-    //             compProgress.appendTo(this.generalWorkarea);
-    //             compProgress.start();
-    //         });
-    //         record.onShinryouCopied((targetVisitId, shinryouFulls) => {
-    //             let targetRec = findRecord(targetVisitId);
-    //             if (targetRec) {
-    //                 for (let shinryouFull of shinryouFulls) {
-    //                     targetRec.addShinryou(shinryouFull);
-    //                 }
-    //             }
-    //         });
-    //         return record;
-    //     }
-    // }
 
     (function () {
         let map = parseElement($("#practice-select-patient-menu"));
@@ -2007,27 +1739,27 @@ export async function initLayout(pane, rest, controller, printAPI) {
         e.addEventListener("session-ended", event => hide(e));
     });
 
-    function setRecords(visitFulls) {
-        let recordWrapperElement = $("#practice-record-wrapper");
-        recordWrapperElement.html("");
-        let currentVisitId = controller.getVisitId();
-        let tempVisitId = controller.getTempVisitId();
-        for (let visitFull of visitFulls) {
-            let record = recordFactory.create(visitFull, visitFull.hoken.rep);
-            if (visitFull.visit.visitId === currentVisitId) {
-                record.markAsCurrent();
-            } else if (visitFull.visit.visitId === tempVisitId) {
-                record.markAsTemp();
-            }
-            record.onTextCopied((event, copiedText) => {
-                let targetRec = findRecord(copiedText.visitId);
-                if (targetRec) {
-                    targetRec.addText(copiedText);
-                }
-            });
-            record.appendTo(recordWrapperElement);
-        }
-    }
+    // function setRecords(visitFulls) {
+    //     let recordWrapperElement = $("#practice-record-wrapper");
+    //     recordWrapperElement.html("");
+    //     let currentVisitId = controller.getVisitId();
+    //     let tempVisitId = controller.getTempVisitId();
+    //     for (let visitFull of visitFulls) {
+    //         let record = recordFactory.create(visitFull, visitFull.hoken.rep);
+    //         if (visitFull.visit.visitId === currentVisitId) {
+    //             record.markAsCurrent();
+    //         } else if (visitFull.visit.visitId === tempVisitId) {
+    //             record.markAsTemp();
+    //         }
+    //         record.onTextCopied((event, copiedText) => {
+    //             let targetRec = findRecord(copiedText.visitId);
+    //             if (targetRec) {
+    //                 targetRec.addText(copiedText);
+    //             }
+    //         });
+    //         record.appendTo(recordWrapperElement);
+    //     }
+    // }
 
     async function batchUpdatePaymentState(visitIds) {
         let map = await rest.batchGetLastPayment(visitIds);
@@ -2061,14 +1793,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    // addRecordsChangedListener((records, page, totalPages) => {
-    //     setRecords(records);
-    //     let visitIds = records.map(visitFull => visitFull.visit.visitId);
-    //     batchUpdatePaymentState(visitIds);
-    //     batchUpdate0410NoPay();
-    //     setNavs(page, totalPages);
-    // });
-
     function forEachRecord(f) {
         let xs = $(".practice-record");
         let len = xs.length;
@@ -2091,15 +1815,5 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
         return null;
     }
-
-    // addTempVisitIdChangedListener(tempVisitId => {
-    //     forEachRecord(record => {
-    //         if (record.getVisitId() === tempVisitId) {
-    //             record.markAsTemp();
-    //         } else {
-    //             record.clearMark();
-    //         }
-    //     });
-    // });
 
 }

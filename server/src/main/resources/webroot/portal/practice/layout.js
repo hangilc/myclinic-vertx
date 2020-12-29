@@ -29,9 +29,9 @@ let html = `
             <div id="practice-patient-info" class="session-listener mx-2 my-2"></div>
             <div id="practice-patient-manip" class="session-listener d-none mx-2 mb-2 form-inline"></div>
             <div id="practice-patient-manip-workarea"></div>
-            <div class="practice-nav record-page-listener d-none mt-2"></div>
-            <div id="practice-record-wrapper" class="record-page-listener"></div>
-            <div class="practice-nav record-page-listener d-none mt-2"></div>
+            <div class="practice-nav record-page-listener session-listener d-none mt-2"></div>
+            <div id="practice-record-wrapper" class="record-page-listener session-listener"></div>
+            <div class="practice-nav record-page-listener session-listener d-none mt-2"></div>
         </div>
         <div class="col-xl-3">
             <div id="practice-right-bar">
@@ -1026,7 +1026,14 @@ export async function initLayout(pane, rest, controller, printAPI) {
         printAPI,
         patient: null,
         currentVisitId: 0,
-        tempVisitId: 0
+        tempVisitId: 0,
+        getTargetVisitId(){
+            if( this.currentVisitId > 0 ){
+                return this.currentVisitId;
+            } else {
+                return this.tempVisitId;
+            }
+        }
     };
 
     pane.addEventListener("start-session", async event => {
@@ -1064,6 +1071,28 @@ export async function initLayout(pane, rest, controller, printAPI) {
         pane.querySelectorAll(".record-page-listener").forEach(e => e.dispatchEvent(
             new CustomEvent("record-page-loaded", {detail: recordPage})
         ));
+    });
+
+    pane.addEventListener("set-temp-visit", event => {
+        let visitId = event.detail;
+        if( prop.currentVisitId !== 0 ){
+            alert("現在診察中なので、暫定診察を設定できません。");
+            return;
+        }
+        let save = prop.tempVisitId;
+        prop.tempVisitId = visitId;
+        pane.querySelectorAll(".temp-visit-listener").forEach(e => {
+            e.dispatchEvent(new Event("temp-visit-changed"));
+        });
+    });
+
+    pane.addEventListener("text-copied", event => {
+        let newText = event.detail;
+        let visitId = newText.visitId;
+        let e = getRecordElementByVisitId(visitId);
+        if( e ){
+            e.dispatchEvent(new CustomEvent("text-entered", {detail: newText}));
+        }
     });
 
     // function postStartSession(patientId, visitId) {
@@ -1213,66 +1242,66 @@ export async function initLayout(pane, rest, controller, printAPI) {
         });
     })();
 
-    class ShinryouRegularDialogFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-shinryou-regular-dialog-template");
-        }
+    // class ShinryouRegularDialogFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-shinryou-regular-dialog-template");
+    //     }
+    //
+    //     create(visitId) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let dialog = new ShinryouRegularDialog(ele, map, rest);
+    //         dialog.init(visitId);
+    //         return dialog;
+    //     }
+    // }
 
-        create(visitId) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let dialog = new ShinryouRegularDialog(ele, map, rest);
-            dialog.init(visitId);
-            return dialog;
-        }
-    }
-
-    class PatientInfo {
-        constructor(ele, map) {
-            this.ele = ele;
-            this.map = map;
-            this.detail = map.detail;
-            map.detailLink.on("click", event => this.toggleDetail());
-            this.display = new PatientDisplay(map);
-        }
-
-        setPatient(patient) {
-            this.display.setPatient(patient);
-            if (patient) {
-                this.ele.removeClass("d-none");
-            } else {
-                this.ele.addClass("d-none");
-            }
-        }
-
-        clear() {
-            this.display.clear();
-        }
-
-        show() {
-            this.ele.removeClass("d-none");
-        }
-
-        hide() {
-            this.ele.addClass("d-none");
-        }
-
-        showDetail() {
-            this.detail.removeClass("d-none");
-        }
-
-        hideDetail() {
-            this.detail.addClass("d-none");
-        }
-
-        toggleDetail() {
-            if (this.detail.hasClass("d-none")) {
-                this.showDetail();
-            } else {
-                this.hideDetail();
-            }
-        }
-    }
+    // class PatientInfo {
+    //     constructor(ele, map) {
+    //         this.ele = ele;
+    //         this.map = map;
+    //         this.detail = map.detail;
+    //         map.detailLink.on("click", event => this.toggleDetail());
+    //         this.display = new PatientDisplay(map);
+    //     }
+    //
+    //     setPatient(patient) {
+    //         this.display.setPatient(patient);
+    //         if (patient) {
+    //             this.ele.removeClass("d-none");
+    //         } else {
+    //             this.ele.addClass("d-none");
+    //         }
+    //     }
+    //
+    //     clear() {
+    //         this.display.clear();
+    //     }
+    //
+    //     show() {
+    //         this.ele.removeClass("d-none");
+    //     }
+    //
+    //     hide() {
+    //         this.ele.addClass("d-none");
+    //     }
+    //
+    //     showDetail() {
+    //         this.detail.removeClass("d-none");
+    //     }
+    //
+    //     hideDetail() {
+    //         this.detail.addClass("d-none");
+    //     }
+    //
+    //     toggleDetail() {
+    //         if (this.detail.hasClass("d-none")) {
+    //             this.showDetail();
+    //         } else {
+    //             this.hideDetail();
+    //         }
+    //     }
+    // }
 
     document.getElementById("practice-patient-info").addEventListener("session-started", event => {
         let patient = prop.patient;
@@ -1644,6 +1673,10 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
+    function getRecordElementByVisitId(visitId){
+        return pane.querySelector(`.practice-record[data-visit-id='${visitId}']`);
+    }
+
     document.getElementById("practice-record-wrapper").addEventListener("record-page-loaded", async event => {
         let recordPage = event.detail;
         let wrapper = event.target;
@@ -1654,62 +1687,66 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     });
 
-    class RecordFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-record-template");
-            this.wrapper = $("#practice-record-wrapper");
-            this.generalWorkarea = $("#practice-general-workarea");
-            //this.titleFactory = new TitleFactory();
-            this.textFactory = new TextFactory();
-            this.textEnterFactory = new TextEnterFactory();
-            this.hokenFactory = new HokenFactory();
-            this.shinryouFactory = new ShinryouFactory();
-            this.shinryouRegularDialogFactory = new ShinryouRegularDialogFactory();
-            this.conductDispFactory = new ConductDispFactory();
-            this.drugDispFactory = new DrugDispFactory();
-            this.sendFaxFactory = new SendFaxFactory();
-            this.faxProgressFactory = new FaxProgressFactory();
-            //this.chargeFactory = new ChargeFactory();
-            //this.currentVisitManager = currentVisitManager;
-        }
+    document.getElementById("practice-record-wrapper").addEventListener("session-ended", event => {
+        event.target.innerHTML = "";
+    });
 
-        create(visitFull, hokenRep) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let record = new Record(prop, ele, map);
-            record.init(visitFull, hokenRep,
-                //this.titleFactory,
-                this.textFactory,
-                this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
-                this.shinryouRegularDialogFactory, this.conductDispFactory,
-                this.drugDispFactory, this.sendFaxFactory,
-                //this.chargeFactory,
-                this.currentVisitManager);
-            record.onDelete(async visitId => {
-                await rest.deleteVisit(visitId);
-                record.remove();
-                postChangeVisitId(0);
-            });
-            record.onTempVisit(visitId => postChangeTempVisitId(visitId));
-            record.onClearTempVisit(() => postChangeTempVisitId(0));
-            record.onFaxSent(async (event, data) => {
-                let patient = await rest.getPatient(visitFull.visit.patientId);
-                let compProgress = this.faxProgressFactory.create(patient, data.faxNumber,
-                    data.pdfFile, data.faxSid);
-                compProgress.appendTo(this.generalWorkarea);
-                compProgress.start();
-            });
-            record.onShinryouCopied((targetVisitId, shinryouFulls) => {
-                let targetRec = findRecord(targetVisitId);
-                if (targetRec) {
-                    for (let shinryouFull of shinryouFulls) {
-                        targetRec.addShinryou(shinryouFull);
-                    }
-                }
-            });
-            return record;
-        }
-    }
+    // class RecordFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-record-template");
+    //         this.wrapper = $("#practice-record-wrapper");
+    //         this.generalWorkarea = $("#practice-general-workarea");
+    //         //this.titleFactory = new TitleFactory();
+    //         this.textFactory = new TextFactory();
+    //         this.textEnterFactory = new TextEnterFactory();
+    //         this.hokenFactory = new HokenFactory();
+    //         this.shinryouFactory = new ShinryouFactory();
+    //         this.shinryouRegularDialogFactory = new ShinryouRegularDialogFactory();
+    //         this.conductDispFactory = new ConductDispFactory();
+    //         this.drugDispFactory = new DrugDispFactory();
+    //         this.sendFaxFactory = new SendFaxFactory();
+    //         this.faxProgressFactory = new FaxProgressFactory();
+    //         //this.chargeFactory = new ChargeFactory();
+    //         //this.currentVisitManager = currentVisitManager;
+    //     }
+    //
+    //     create(visitFull, hokenRep) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let record = new Record(prop, ele, map);
+    //         record.init(visitFull, hokenRep,
+    //             //this.titleFactory,
+    //             this.textFactory,
+    //             this.hokenFactory, this.shinryouFactory, this.textEnterFactory,
+    //             this.shinryouRegularDialogFactory, this.conductDispFactory,
+    //             this.drugDispFactory, this.sendFaxFactory,
+    //             //this.chargeFactory,
+    //             this.currentVisitManager);
+    //         record.onDelete(async visitId => {
+    //             await rest.deleteVisit(visitId);
+    //             record.remove();
+    //             postChangeVisitId(0);
+    //         });
+    //         record.onTempVisit(visitId => postChangeTempVisitId(visitId));
+    //         record.onClearTempVisit(() => postChangeTempVisitId(0));
+    //         record.onFaxSent(async (event, data) => {
+    //             let patient = await rest.getPatient(visitFull.visit.patientId);
+    //             let compProgress = this.faxProgressFactory.create(patient, data.faxNumber,
+    //                 data.pdfFile, data.faxSid);
+    //             compProgress.appendTo(this.generalWorkarea);
+    //             compProgress.start();
+    //         });
+    //         record.onShinryouCopied((targetVisitId, shinryouFulls) => {
+    //             let targetRec = findRecord(targetVisitId);
+    //             if (targetRec) {
+    //                 for (let shinryouFull of shinryouFulls) {
+    //                     targetRec.addShinryou(shinryouFull);
+    //                 }
+    //             }
+    //         });
+    //         return record;
+    //     }
+    // }
 
     (function () {
         let map = parseElement($("#practice-select-patient-menu"));
@@ -1891,33 +1928,33 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let diseaseExamples = await rest.listDiseaseExample();
     initDiseaseExamples(diseaseExamples);
 
-    class DiseaseAreaFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-disease-area-template");
-            this.diseaseCurrentFactory = new DiseaseCurrentFactory();
-            this.diseaseAddFactory = new DiseaseAddFactory();
-            this.diseaseEndFactory = new DiseaseEndFactory();
-            this.diseaseEditFactory = new DiseaseEditFactory();
-            this.diseaseModifyFactory = new DiseaseModifyFactory();
-            this.diseaseExamples = diseaseExamples;
-        }
+    // class DiseaseAreaFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-disease-area-template");
+    //         this.diseaseCurrentFactory = new DiseaseCurrentFactory();
+    //         this.diseaseAddFactory = new DiseaseAddFactory();
+    //         this.diseaseEndFactory = new DiseaseEndFactory();
+    //         this.diseaseEditFactory = new DiseaseEditFactory();
+    //         this.diseaseModifyFactory = new DiseaseModifyFactory();
+    //         this.diseaseExamples = diseaseExamples;
+    //     }
+    //
+    //     create() {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let comp = new DiseaseArea(ele, map, rest);
+    //         comp.init(this.diseaseCurrentFactory, this.diseaseAddFactory, this.diseaseEndFactory,
+    //             this.diseaseEditFactory, this.diseaseModifyFactory, this.diseaseExamples);
+    //         return comp;
+    //     }
+    // }
 
-        create() {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new DiseaseArea(ele, map, rest);
-            comp.init(this.diseaseCurrentFactory, this.diseaseAddFactory, this.diseaseEndFactory,
-                this.diseaseEditFactory, this.diseaseModifyFactory, this.diseaseExamples);
-            return comp;
-        }
-    }
-
-    let diseaseArea = (function () {
-        let diseaseAreaFactory = new DiseaseAreaFactory();
-        let comp = diseaseAreaFactory.create();
-        comp.appendTo($("#practice-disease-wrapper"));
-        return comp;
-    })();
+    // let diseaseArea = (function () {
+    //     let diseaseAreaFactory = new DiseaseAreaFactory();
+    //     let comp = diseaseAreaFactory.create();
+    //     comp.appendTo($("#practice-disease-wrapper"));
+    //     return comp;
+    // })();
 
     // addPatientChangedListener(async patient => {
     //     if (!patient) {
@@ -1931,22 +1968,22 @@ export async function initLayout(pane, rest, controller, printAPI) {
     //
     // });
 
-    let recordFactory = new RecordFactory();
+    // let recordFactory = new RecordFactory();
 
-    class NavFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-nav-template");
-        }
-
-        create() {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new Nav(ele, map, rest);
-            comp.init();
-            return comp;
-        }
-
-    }
+    // class NavFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-nav-template");
+    //     }
+    //
+    //     create() {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let comp = new Nav(ele, map, rest);
+    //         comp.init();
+    //         return comp;
+    //     }
+    //
+    // }
 
     document.querySelectorAll(".practice-nav").forEach(e => {
         let nav = new Nav(e);

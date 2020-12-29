@@ -9,7 +9,7 @@ import {parseElement} from "../../js/parse-node.js";
 import {Text} from "./text/text.js";
 
 let tmpl = `
-    <div class="practice-record">
+    <div class="practice-record temp-visit-listener" data-visit-id="0">
         <div class="x-title"></div>
         <div class="row">
             <div class="col-sm-6 rp-1">
@@ -52,12 +52,27 @@ export class Record {
         this.visitFull = visitFull;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
+        this.ele.dataset.visitId = visitFull.visit.visitId;
         let title = new Title(prop, visitFull.visit);
         this.map.title.append(title.ele);
-        visitFull.texts.forEach(text => {
-            let textComponent = new Text(this.prop, text);
-            this.map.textWrapper.append(textComponent.ele);
+        visitFull.texts.forEach(text => this.addText(text));
+        this.ele.addEventListener("temp-visit-changed", event => {
+            if( this.prop.tempVisitId === this.getVisitId() ){
+                this.ele.classList.add("temp-visit");
+            } else {
+                this.ele.classList.remove("temp-visit");
+            }
         });
+        this.ele.addEventListener("text-entered", event => this.addText(event.detail));
+    }
+
+    getVisitId(){
+        return this.visitFull.visit.visitId;
+    }
+
+    addText(text){
+        let textComponent = new Text(this.prop, text);
+        this.map.textWrapper.append(textComponent.ele);
     }
 }
 

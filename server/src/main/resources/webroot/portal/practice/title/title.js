@@ -6,7 +6,7 @@ import {on, click} from "../../../js/dom-helper.js";
 import {VisitMeisaiDialog} from "../visit-meisai-dialog.js";
 
 let tmpl = `
-<div class="mt-2 practice-title form-inline">
+<div class="practice-title mt-2 form-inline">
     <div class="x-text"></div>
     <div class="dropdown ml-auto">
         <button class="btn btn-link dropdown-toggle" type="button"
@@ -82,24 +82,22 @@ export class Title {
         //this.trigger("delete", this.getVisitId());
     }
 
-    onTempVisit(cb){
-        on(this.ele, "temp-visit", event => cb(event.detail));
-        //this.on("temp-visit", (event, visitId) => cb(visitId));
-    }
+    // onTempVisit(cb){
+    //     on(this.ele, "temp-visit", event => cb(event.detail));
+    //     //this.on("temp-visit", (event, visitId) => cb(visitId));
+    // }
 
     doTempVisit(){
-        this.ele.dispatchEvent(new CustomEvent("temp-visit", {detail: this.getVisitId()}));
-        //this.trigger("temp-visit", this.getVisitId());
+        this.ele.dispatchEvent(new CustomEvent("set-temp-visit", {bubbles: true, detail: this.getVisitId()}));
     }
 
-    onClearTempVisit(cb){
-        on(this.ele, "clear-temp-visit", event => cb());
-        //this.on("clear-temp-visit", event => cb());
-    }
+    // onClearTempVisit(cb){
+    //     on(this.ele, "clear-temp-visit", event => cb());
+    //     //this.on("clear-temp-visit", event => cb());
+    // }
 
     doClearTempVisit(){
-        this.ele.dispatchEvent(new Event("clear-temp-visit"));
-        //this.trigger("clear-temp-visit");
+        this.ele.dispatchEvent(new CustomEvent("clear-temp-visit", {bubbles: true}));
     }
 
     onAddToNoPayList(cb){

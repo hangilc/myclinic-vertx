@@ -10,6 +10,7 @@ import {
 import {ShohousenPreviewDialog} from "../shohousen-preview-dialog.js";
 import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
+import {show, hide} from "../../../js/dom-helper.js";
 
 let tmpl = `
     <div class="mt-2">
@@ -45,6 +46,10 @@ export class TextEdit {
         this.map.enter.addEventListener("click", async event => await this.doEnter());
         this.map.cancel.addEventListener("click", event => this.ele.dispatchEvent(new Event("cancel")));
         this.map.delete.addEventListener("click", async event => await this.doDelete());
+        if (hasMemo(text.content)) {
+            this.map.copyMemo.addEventListener("click", async event => await this.doCopyMemo());
+            show(this.map.copyMemo);
+        }
     }
 
     initFocus(){
@@ -67,6 +72,33 @@ export class TextEdit {
             let textId = this.text.textId;
             await this.prop.rest.deleteText(textId);
             this.ele.dispatchEvent(new Event("deleted"));
+        }
+    }
+
+    async doCopyMemo() {
+        let targetVisitId = this.prop.getTargetVisitId();
+        if (targetVisitId === 0) {
+            alert("コピー先が設定されていません。");
+            return;
+        }
+        if (targetVisitId === this.text.visitId) {
+            alert("同じ診療記録にはコピーできません。");
+            return;
+        }
+        let memo = extractMemo(this.text.content);
+        if (memo) {
+            let t = {
+                textId: 0,
+                visitId: targetVisitId,
+                content: memo
+            }
+            let textId = await this.prop.rest.enterText(t);
+            let copied = await this.prop.rest.getText(textId);
+            this.ele.dispatchEvent(new CustomEvent("text-copied", {
+                bubbles: true,
+                detail: copied
+            }));
+            this.ele.dispatchEvent(new Event("cancel"));
         }
     }
 

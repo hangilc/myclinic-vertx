@@ -9,6 +9,7 @@ import {parseElement} from "../../js/parse-node.js";
 import {Text} from "./text/text.js";
 import {TextEnter} from "./text/text-enter.js";
 import {SendFax} from "./send-fax.js";
+import {Hoken} from "./hoken/hoken.js";
 
 let tmpl = `
     <div class="practice-record temp-visit-listener" data-visit-id="0">
@@ -60,6 +61,10 @@ export class Record {
         let title = new Title(prop, visitFull.visit);
         this.map.title.append(title.ele);
         visitFull.texts.forEach(text => this.addText(text));
+        let hoken = new Hoken(this.prop.rest, this.visitFull.visit.patientId,
+            this.visitFull.visit.visitedAt.substring(0, 10), this.visitFull.visit.visitId,
+            this.visitFull.hoken);
+        this.map.hokenWrapper.append(hoken.ele);
         this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());
         this.ele.addEventListener("temp-visit-changed", event => {

@@ -1,13 +1,21 @@
 import {Component} from "../component.js";
 import {createElementFrom} from "../../../js/create-element-from.js";
+import {HokenDisp} from "./hoken-disp.js";
 
 let tmpl = `
     <div></div>
 `;
 
 export class Hoken {
-    constructor(){
+    constructor(rest, patientId, date, visitId, hoken){
         this.ele = createElementFrom(tmpl);
+        this.setDisp(hoken.rep);
+    }
+
+    setDisp(hokenRep){
+        let disp = new HokenDisp(hokenRep);
+        this.ele.innerHTML = "";
+        this.ele.append(disp.ele);
     }
 }
 

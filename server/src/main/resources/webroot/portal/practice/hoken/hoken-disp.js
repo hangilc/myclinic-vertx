@@ -1,17 +1,8 @@
 
 export class HokenDisp {
-    constructor(ele, map, rest){
-        super(ele, map, rest);
-    }
-
-    init(){
-        super.init();
-        return this;
-    }
-
-    set(hokenRep){
-        super.set();
-        this.ele.text(hokenRep);
-        return this;
+    constructor(hokenRep){
+        this.ele = document.createElement("div");
+        this.ele.innerText = hokenRep;
+        this.ele.addEventListener("click", event => this.ele.dispatchEvent(new Event("edit")));
     }
 }

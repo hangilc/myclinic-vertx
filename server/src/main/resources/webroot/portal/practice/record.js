@@ -8,6 +8,7 @@ import {createElementFrom} from "../../js/create-element-from.js";
 import {parseElement} from "../../js/parse-node.js";
 import {Text} from "./text/text.js";
 import {TextEnter} from "./text/text-enter.js";
+import {SendFax} from "./send-fax.js";
 
 let tmpl = `
     <div class="practice-record temp-visit-listener" data-visit-id="0">
@@ -47,8 +48,10 @@ let tmpl = `
     </div>
 `;
 
+let pharmaTextRegex = /(.+)にファックス（(\+\d+)）で送付/;
+
 export class Record {
-    constructor(prop, visitFull){
+    constructor(prop, visitFull) {
         this.prop = prop;
         this.visitFull = visitFull;
         this.ele = createElementFrom(tmpl);
@@ -58,8 +61,9 @@ export class Record {
         this.map.title.append(title.ele);
         visitFull.texts.forEach(text => this.addText(text));
         this.map.enterText.addEventListener("click", event => this.doEnterText());
+        this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());
         this.ele.addEventListener("temp-visit-changed", event => {
-            if( this.prop.tempVisitId === this.getVisitId() ){
+            if (this.prop.tempVisitId === this.getVisitId()) {
                 this.ele.classList.add("temp-visit");
             } else {
                 this.ele.classList.remove("temp-visit");
@@ -68,16 +72,16 @@ export class Record {
         this.ele.addEventListener("text-entered", event => this.addText(event.detail));
     }
 
-    getVisitId(){
+    getVisitId() {
         return this.visitFull.visit.visitId;
     }
 
-    addText(text){
+    addText(text) {
         let textComponent = new Text(this.prop, text);
         this.map.textWrapper.append(textComponent.ele);
     }
 
-    doEnterText(){
+    doEnterText() {
         let edit = new TextEnter(this.prop, this.getVisitId());
         edit.ele.addEventListener("entered", event => {
             edit.ele.remove();
@@ -86,6 +90,65 @@ export class Record {
         edit.ele.addEventListener("cancel", event => edit.ele.remove());
         this.map.textWrapper.append(edit.ele);
     }
+
+    async doSendShohousenFax() {
+        let shohousenText;
+        let pharmaName;
+        let faxNumber;
+        let texts = await this.prop.rest.listText(this.getVisitId());
+        for (let text of texts) {
+            let content = text.content;
+            if (content.startsWith("院外処方")) {
+                if (shohousenText) {
+                    alert("処方箋が複数あります。");
+                    return;
+                }
+                shohousenText = text;
+            } else {
+                let matches = pharmaTextRegex.exec(content);
+                if (matches) {
+                    if (pharmaName || faxNumber) {
+                        alert("送付先薬局が複数あります。");
+                        return;
+                    }
+                    pharmaName = matches[1];
+                    faxNumber = matches[2];
+                }
+            }
+        }
+        if (!shohousenText) {
+            alert("処方箋の入力を見つけられません。");
+            return;
+        }
+        if (!(pharmaName && faxNumber)) {
+            alert("送付先薬局が設定されていません。");
+        }
+        let textId = shohousenText.textId;
+        let date = this.visitFull.visit.visitedAt.substring(0, 10);
+        let pdfFilePath = await this.prop.rest.probeShohousenFaxImage(textId, date);
+        if (!pdfFilePath) {
+            if (!confirm("送信用の処方箋イメージを作成しますか？")) {
+                return;
+            }
+            pdfFilePath = await createShohousenPdfForFax(shohousenText, this.prop.rest);
+        }
+        let sendFax = new SendFax(this.prop.rest, pdfFilePath, faxNumber);
+        sendFax.ele.addEventListener("sent", event => {
+            let faxSid = event.detail;
+            this.ele.dispatchEvent(new CustomEvent("fax-sent", {
+                bubbles: true,
+                detail: {
+                    textId: textId,
+                    faxNumber: faxNumber,
+                    pdfFile: pdfFilePath,
+                    faxSid: faxSid
+                }
+            }));
+            sendFax.ele.remove();
+        });
+        this.map.commandWrapper.parentElement.insertBefore(sendFax.ele, this.map.commandWrapper);
+    }
+
 }
 
 
@@ -154,7 +217,7 @@ class RecordOrig extends Component {
         this.sendShohousenFaxElement.on("click", event => this.doSendShohousenFax());
         this.createHokenComponent(visitFull.hoken, hokenRep).appendTo(this.hokenWrapperElement);
         this.shinryouMenuElement.on("click", async event => {
-            if( !this.confirmEdit("診療行為を入力しますか？") ){
+            if (!this.confirmEdit("診療行為を入力しますか？")) {
                 return;
             }
             let result = await shinryouRegularDialogFactory.create(visitFull.visit.visitId).open();
@@ -185,23 +248,23 @@ class RecordOrig extends Component {
         this.shinryouAuxMenuMap.copyAll.on("click", async event => await this.doCopyAll());
     }
 
-    updatePaymentState(payment){
+    updatePaymentState(payment) {
         this.chargeComponent.updatePaymentState(payment);
     }
 
-    update0410NoPay(){
+    update0410NoPay() {
         this.chargeComponent.update0410NoPay();
     }
 
-    getVisitId(){
+    getVisitId() {
         return this.visitFull.visit.visitId;
     }
 
-    getVisitedAt(){
+    getVisitedAt() {
         return this.visitFull.visit.visitedAt;
     }
 
-    createHokenComponent(hoken, hokenRep){
+    createHokenComponent(hoken, hokenRep) {
         let visit = this.visitFull.visit;
         let hokenComp = this.hokenFactory.create(visit.patientId, visit.visitedAt.substring(0, 10),
             visit.visitId, hoken, hokenRep);
@@ -211,46 +274,46 @@ class RecordOrig extends Component {
         return hokenComp;
     }
 
-    onShinryouCopied(cb){
+    onShinryouCopied(cb) {
         this.on("shinryou-copied", (event, targetVisitId, shinryouList) => cb(targetVisitId, shinryouList));
     }
 
-    confirmEdit(msg){
+    confirmEdit(msg) {
         let visitId = this.getVisitId();
-        if( visitId === this.currentVisitManager.getCurrentVisitId() ){
+        if (visitId === this.currentVisitManager.getCurrentVisitId()) {
             return true;
         }
-        if( visitId === this.currentVisitManager.getTempVisitId() ){
+        if (visitId === this.currentVisitManager.getTempVisitId()) {
             return true;
         }
         return confirm("現在診察中でありませんが、" + msg);
     }
 
-    async doKensa(){
-        if( !this.confirmEdit("検査を入力しますか？") ){
+    async doKensa() {
+        if (!this.confirmEdit("検査を入力しますか？")) {
             return;
         }
         let dialog = new ShinryouKensaDialog(this.getVisitId(), this.rest);
         dialog.setTitle("検査入力");
         let result = await dialog.open();
-        if( result ){
-            for(let shinryouId of result.shinryouIds){
+        if (result) {
+            for (let shinryouId of result.shinryouIds) {
                 let s = await this.rest.getShinryouFull(shinryouId);
                 this.addShinryou(s, true);
             }
-            for(let drugId of result.drugIds){
+            for (let drugId of result.drugIds) {
                 let d = await this.rest.getDrugFull(drugId);
                 this.addDrug(d);
             }
-            for(let conductId of result.conductIds){
+            for (let conductId of result.conductIds) {
                 let c = await this.rest.getConductFull(conductId);
                 this.addConduct(c);
             }
         }
     }
 
-    doSearchEnter(){
-        if( !this.confirmEdit("診療行為を入力しますか？") ){
+    doSearchEnter() {
+        if (!this.confirmEdit("診療行為を入力しますか？")) {
             return;
         }
         let widget = shinryouSearchEnterWidgetFactory.create(this.getVisitId(), this.getVisitedAt(), this.rest);
@@ -259,9 +322,9 @@ class RecordOrig extends Component {
         widget.focus();
     }
 
-    async doCopyAll(){
+    async doCopyAll() {
         let targetVisitId = this.currentVisitManager.resolveCopyTarget();
-        if( targetVisitId === 0 ){
+        if (targetVisitId === 0) {
             alert("ｺﾋﾟｰ先を見つけられません。");
             return;
         }
@@ -271,37 +334,37 @@ class RecordOrig extends Component {
         this.trigger("shinryou-copied", [targetVisitId, shinryouFulls]);
     }
 
-    getPharmaTextRegex(){
+    getPharmaTextRegex() {
         return /(.+)にファックス（(\+\d+)）で送付/;
     }
 
-    async doSendShohousenFax(){
+    async doSendShohousenFax() {
         let shohousenText;
         let pharmaName;
         let faxNumber;
         let textComponents = this.textFactory.listTextComponents(this.textWrapperElement);
         let pharmaRegex = this.getPharmaTextRegex();
-        for(let textComp of textComponents){
+        for (let textComp of textComponents) {
             let content = textComp.getText().content;
-            if( content.startsWith("院外処方") ){
+            if (content.startsWith("院外処方")) {
                 shohousenText = textComp;
                 continue;
             }
             let matches = pharmaRegex.exec(content);
-            if( matches ){
+            if (matches) {
                 pharmaName = matches[1];
                 faxNumber = matches[2];
             }
         }
-        if( !shohousenText ){
+        if (!shohousenText) {
             alert("処方箋の入力を見つけられません。");
             return;
         }
         let textId = shohousenText.getText().textId;
         let date = this.visitFull.visit.visitedAt.substring(0, 10);
         let pdfFilePath = await this.rest.probeShohousenFaxImage(textId, date);
-        if( !pdfFilePath ){
-            if( !confirm("送信用の処方箋イメージを作成しますか？") ){
+        if (!pdfFilePath) {
+            if (!confirm("送信用の処方箋イメージを作成しますか？")) {
                 return;
             }
             pdfFilePath = await createShohousenPdfForFax(shohousenText.getText(), this.rest);
@@ -318,7 +381,7 @@ class RecordOrig extends Component {
         compSendFax.putBefore(this.leftCommandWrapperElement);
     }
 
-    onFaxSent(cb){
+    onFaxSent(cb) {
         this.on("fax-sent", (event, data) => cb(event, data));
     }
 
@@ -367,7 +430,7 @@ class RecordOrig extends Component {
         }
     }
 
-    createTextComponent(text){
+    createTextComponent(text) {
         let compText = this.textFactory.create(text);
         compText.onUpdated((event, updatedText) => {
             let compUpdated = this.createTextComponent(updatedText);
@@ -383,7 +446,7 @@ class RecordOrig extends Component {
         compText.appendTo(this.textWrapperElement);
     }
 
-    onTextCopied(cb){
+    onTextCopied(cb) {
         this.on("text-copied", (event, copiedText) => cb(event, copiedText));
     }
 

@@ -577,35 +577,21 @@ let html = `
     </div>
 </template>
 
-<template id="practice-send-fax-template">
-    <div class="border founded mb-3 p-2">
-        <div class="mt-2">
-            <span class="x-pdf-file"></span>
-            <a href="javascript:void(0)" class="x-view">プレビュー</a>
-        </div>
-        <div class="x-fax-number"></div>
-        <div class="mt-4">
-            <button class="btn btn-secondary x-send">送信</button>
-            <a href="javascript:void(0)" class="x-cancel ml-2">キャンセル</a>
-        </div>
-    </div>
-</template>
-
-<template id="practice-fax-progress-template">
-    <div class="border founded mb-3 p-2">
-        <div class="x-title"></div>
-        <div class="mt-2">
-            <span class="x-pdf-file"></span>
-            <a href="javascript:void(0)" class="x-view">表示</a>
-        </div>
-        <div class="x-fax-number"></div>
-        <div class="x-message mt-4"></div>
-        <div class="mt-4">
-            <button class="btn btn-secondary x-re-send">再送信</button>
-            <a href="javascript:void(0)" class="x-close ml-2">閉じる</a>
-        </div>
-    </div>
-</template>
+<!--<template id="practice-fax-progress-template">-->
+<!--    <div class="border founded mb-3 p-2">-->
+<!--        <div class="x-title"></div>-->
+<!--        <div class="mt-2">-->
+<!--            <span class="x-pdf-file"></span>-->
+<!--            <a href="javascript:void(0)" class="x-view">表示</a>-->
+<!--        </div>-->
+<!--        <div class="x-fax-number"></div>-->
+<!--        <div class="x-message mt-4"></div>-->
+<!--        <div class="mt-4">-->
+<!--            <button class="btn btn-secondary x-re-send">再送信</button>-->
+<!--            <a href="javascript:void(0)" class="x-close ml-2">閉じる</a>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</template>-->
 
 <template id="practice-charge-template">
     <div class="mt-2"></div>
@@ -1018,6 +1004,23 @@ export async function initLayout(pane, rest, controller, printAPI) {
             e.dispatchEvent(new CustomEvent("text-entered", {detail: newText}));
         }
     });
+
+    pane.addEventListener("fax-sent", async event => {
+        let textId = event.detail.textId;
+        let faxNumber = event.detail.faxNumber;
+        let pdfFile = event.detail.pdfFile;
+        let faxSid = event.detail.faxSid;
+        let text = await prop.rest.getText(textId);
+        let visit = await prop.rest.getVisit(text.visitId);
+        let patient = await prop.rest.getPatient(visit.patientId);
+        let title = `${patient.lastName}${patient.firstName} FAX`;
+        let progress = new FaxProgress(prop.rest, title, faxNumber, pdfFile, faxSid);
+        let wrapper = document.getElementById("practice-general-workarea");
+        wrapper.append(progress.ele);
+        progress.start();
+    });
+
+
 
     function getTemplateHtml(templateId) {
         let html = $("template#" + templateId).html();

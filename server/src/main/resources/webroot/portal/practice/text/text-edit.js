@@ -46,6 +46,7 @@ export class TextEdit {
         this.map.enter.addEventListener("click", async event => await this.doEnter());
         this.map.cancel.addEventListener("click", event => this.ele.dispatchEvent(new Event("cancel")));
         this.map.delete.addEventListener("click", async event => await this.doDelete());
+        this.map.copy.addEventListener("click", async event => await this.doCopy());
         if (hasMemo(text.content)) {
             this.map.copyMemo.addEventListener("click", async event => await this.doCopyMemo());
             show(this.map.copyMemo);
@@ -73,6 +74,28 @@ export class TextEdit {
             await this.prop.rest.deleteText(textId);
             this.ele.dispatchEvent(new Event("deleted"));
         }
+    }
+
+    async doCopy() {
+        let targetVisitId = this.prop.getTargetVisitId();
+        if (targetVisitId === 0) {
+            alert("コピー先が設定されていません。");
+            return;
+        }
+        if (targetVisitId === this.text.visitId) {
+            alert("同じ診療記録にはコピーできません。");
+            return;
+        }
+        let t = Object.assign({}, this.text);
+        t.textId = 0;
+        t.visitId = targetVisitId;
+        let textId = await this.prop.rest.enterText(t);
+        let copied = await this.prop.rest.getText(textId);
+        this.ele.dispatchEvent(new CustomEvent("text-copied", {
+            bubbles: true,
+            detail: copied
+        }));
+        this.ele.dispatchEvent(new Event("cancel"));
     }
 
     async doCopyMemo() {

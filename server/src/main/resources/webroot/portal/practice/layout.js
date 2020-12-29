@@ -1079,8 +1079,16 @@ export async function initLayout(pane, rest, controller, printAPI) {
             alert("現在診察中なので、暫定診察を設定できません。");
             return;
         }
-        let save = prop.tempVisitId;
         prop.tempVisitId = visitId;
+        pane.querySelectorAll(".temp-visit-listener").forEach(e => {
+            e.dispatchEvent(new Event("temp-visit-changed"));
+        });
+    });
+
+    pane.addEventListener("clear-temp-visit", event => {
+        let visitId = event.detail;
+        let save = prop.tempVisitId;
+        prop.tempVisitId = 0;
         pane.querySelectorAll(".temp-visit-listener").forEach(e => {
             e.dispatchEvent(new Event("temp-visit-changed"));
         });

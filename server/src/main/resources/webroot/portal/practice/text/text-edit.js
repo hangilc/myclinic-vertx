@@ -26,7 +26,6 @@ let tmpl = `
                 <div class="dropdown-menu">
                     <a href="javascript:void(0)" class="x-shohousen dropdown-item">処方箋発行</a>
                     <a href="javascript:void(0)" class="x-shohousen-fax dropdown-item">処方箋FAX</a>
-                    <a href="javascript:void(0)" class="x-registered-presc dropdown-item">登録薬剤</a>
                     <a href="javascript:void(0)" class="x-format-presc dropdown-item">処方箋整形</a>
                     <a href="javascript:void(0)" class="x-preview-current dropdown-item">編集中表示</a>
                 </div>
@@ -42,7 +41,7 @@ export class TextEdit {
         this.text = text;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
-        this.map.textarea.value = text.content;
+        this.map.textarea.value = shohousenTextContentDataToDisp(text.content);
         this.map.enter.addEventListener("click", async event => await this.doEnter());
         this.map.cancel.addEventListener("click", event => this.ele.dispatchEvent(new Event("cancel")));
         this.map.delete.addEventListener("click", async event => await this.doDelete());
@@ -51,6 +50,13 @@ export class TextEdit {
             this.map.copyMemo.addEventListener("click", async event => await this.doCopyMemo());
             show(this.map.copyMemo);
         }
+        if( isShohousen(text.content) ){
+            this.map.shohousen.addEventListener("click", async event => await this.doShohousen());
+            this.map.shohousenFax.addEventListener("click", async event => await this.doShohousenFax());
+            this.map.formatPresc.addEventListener("click", async event => await this.doFormatPresc());
+            this.map.previewCurrent.addEventListener("click", async event => await this.doPreviewCurrent());
+            show(this.map.shohousenMenu);
+        }
     }
 
     initFocus(){
@@ -58,10 +64,7 @@ export class TextEdit {
     }
 
     async doEnter(){
-        let content = this.map.textarea.value.trim();
-        if( content.startsWith("院外処方") ){
-            content = shohousenTextContentDispToData(content);
-        }
+        let content = shohousenTextContentDispToData(this.map.textarea.value.trim());
         let text = Object.assign({}, this.text, {content: content});
         await this.prop.rest.updateText(text);
         let updatedText = await this.prop.rest.getText(text.textId);
@@ -123,6 +126,40 @@ export class TextEdit {
             }));
             this.ele.dispatchEvent(new Event("cancel"));
         }
+    }
+
+    async doShohousen() {
+        let ops = await createShohousenOps(this.text, {}, this.prop.rest);
+        let dialog = new ShohousenPreviewDialog(ops);
+        await dialog.setPrintAPI(this.prop.printAPI);
+        await dialog.open();
+        this.ele.dispatchEvent(new Event("cancel"));
+    }
+
+    async doShohousenFax() {
+        if (confirm("この処方箋をPDFとして保存しますか？")) {
+            await createShohousenPdfForFax(this.text, this.prop.rest);
+            this.ele.dispatchEvent(new Event("cancel"));
+        }
+    }
+
+    async doFormatPresc() {
+        let src = this.map.textarea.value;
+        src = src.replace(/\s*$/, "");
+        src = shohousenTextContentDispToData(src);
+        let dst = formatPresc(src);
+        dst = shohousenTextContentDataToDisp(dst);
+        this.map.textarea.value = dst;
+    }
+
+    async doPreviewCurrent() {
+        let content = this.map.textarea.value;
+        content = shohousenTextContentDispToData(content);
+        let tmpText = Object.assign({}, this.text, {content: content});
+        let ops = await createShohousenOps(tmpText, {}, this.prop.rest);
+        let dialog = new ShohousenPreviewDialog(ops);
+        await dialog.setPrintAPI(this.prop.printAPI);
+        await dialog.open();
     }
 
 }
@@ -309,6 +346,11 @@ function extractMemo(content) {
     return memo.join("\n");
 }
 
-export function hasMemo(content) {
+function hasMemo(content) {
     return content && (content.startsWith("●") || content.startsWith("★"));
 }
+
+function isShohousen(content){
+    return content.startsWith("院外処方");
+}
+

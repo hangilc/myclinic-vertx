@@ -13,5 +13,6 @@ export class TextDisp  {
             content = content.replace(/　/g, " "); // replace zenkaku space to ascii space
         }
         this.ele.innerHTML = content.replace(/\r\n|\n|\r/g, "<br/>\n");
+        this.ele.addEventListener("click", event => this.ele.dispatchEvent(new Event("start-edit")));
     }
 }

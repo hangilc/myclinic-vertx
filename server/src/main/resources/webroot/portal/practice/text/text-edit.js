@@ -8,8 +8,71 @@ import {
     shohousenTextContentDispToData
 } from "../funs.js";
 import {ShohousenPreviewDialog} from "../shohousen-preview-dialog.js";
+import {createElementFrom} from "../../../js/create-element-from.js";
+import {parseElement} from "../../../js/parse-node.js";
 
-export class TextEdit extends Component {
+let tmpl = `
+    <div class="mt-2">
+        <textarea class="form-control x-textarea" rows="6"></textarea>
+        <div class="form-inline mt-2">
+            <a href="javascript:void(0)" class="x-enter">入力</a>
+            <a href="javascript:void(0)" class="x-cancel ml-2">キャンセル</a>
+            <a href="javascript:void(0)" class="x-copy-memo d-none ml-2">引継ぎコピー</a>
+            <a href="javascript:void(0)" class="x-delete ml-2">削除</a>
+            <div class="dropbox x-shohousen-menu d-none">
+                <button type="button" class="btn btn-link dropdown-toggle"
+                        data-toggle="dropdown">処方箋</button>
+                <div class="dropdown-menu">
+                    <a href="javascript:void(0)" class="x-shohousen dropdown-item">処方箋発行</a>
+                    <a href="javascript:void(0)" class="x-shohousen-fax dropdown-item">処方箋FAX</a>
+                    <a href="javascript:void(0)" class="x-registered-presc dropdown-item">登録薬剤</a>
+                    <a href="javascript:void(0)" class="x-format-presc dropdown-item">処方箋整形</a>
+                    <a href="javascript:void(0)" class="x-preview-current dropdown-item">編集中表示</a>
+                </div>
+            </div>
+            <a href="javascript:void(0)" class="x-copy ml-2">コピー</a>
+        </div>
+    </div>
+`;
+
+export class TextEdit {
+    constructor(prop, text){
+        this.prop = prop;
+        this.text = text;
+        this.ele = createElementFrom(tmpl);
+        this.map = parseElement(this.ele);
+        this.map.textarea.value = text.content;
+        this.map.enter.addEventListener("click", async event => await this.doEnter());
+        this.map.cancel.addEventListener("click", event => this.ele.dispatchEvent(new Event("cancel")));
+        this.map.delete.addEventListener("click", async event => await this.doDelete());
+    }
+
+    initFocus(){
+        this.map.textarea.focus();
+    }
+
+    async doEnter(){
+        let content = this.map.textarea.value.trim();
+        if( content.startsWith("院外処方") ){
+            content = shohousenTextContentDispToData(content);
+        }
+        let text = Object.assign({}, this.text, {content: content});
+        await this.prop.rest.updateText(text);
+        let updatedText = await this.prop.rest.getText(text.textId);
+        this.ele.dispatchEvent(new CustomEvent("updated", {detail: updatedText}));
+    }
+
+    async doDelete() {
+        if (confirm("本当にこの文章を削除していいですか？")) {
+            let textId = this.text.textId;
+            await this.prop.rest.deleteText(textId);
+            this.ele.dispatchEvent(new Event("deleted"));
+        }
+    }
+
+}
+
+class TextEditOrig extends Component {
     constructor(ele, map, rest, printAPI) {
         super(ele, map, rest);
         this.printAPI = printAPI;

@@ -1,6 +1,7 @@
 import {Component} from "../component.js";
 import {createElementFrom} from "../../../js/create-element-from.js";
 import {TextDisp} from "./text-disp.js";
+import {TextEdit} from "./text-edit.js";
 
 let tmpl = `
     <div class="my-1 record-text"></div>
@@ -10,8 +11,34 @@ export class Text {
     constructor(prop, text){
         this.prop = prop;
         this.ele = createElementFrom(tmpl);
+        this.setDisp(text);
+    }
+
+    setDisp(text){
         let disp = new TextDisp(text);
-        this.ele.appendChild(disp.ele);
+        this.ele.innerHTML = "";
+        disp.ele.addEventListener("start-edit", event => {
+            event.stopPropagation();
+            let edit = new TextEdit(this.prop, text);
+            edit.ele.addEventListener("cancel", event => {
+                event.stopPropagation();
+                this.ele.innerHTML = "";
+                this.ele.append(disp.ele);
+            });
+            edit.ele.addEventListener("updated", event => {
+                event.stopPropagation();
+                let newText = event.detail;
+                this.setDisp(newText);
+            });
+            edit.ele.addEventListener("deleted", event => {
+                event.stopPropagation();
+                this.ele.remove();
+            });
+            this.ele.innerHTML = "";
+            this.ele.append(edit.ele);
+            edit.initFocus();
+        });
+        this.ele.append(disp.ele);
     }
 }
 

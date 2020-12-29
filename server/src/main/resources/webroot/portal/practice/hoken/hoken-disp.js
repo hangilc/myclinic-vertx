@@ -1,6 +1,5 @@
-import {Component} from "./component.js";
 
-export class HokenDisp extends Component {
+export class HokenDisp {
     constructor(ele, map, rest){
         super(ele, map, rest);
     }

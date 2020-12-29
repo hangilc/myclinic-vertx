@@ -1,5 +1,5 @@
-import {Dialog} from "./dialog.js";
-import {parseElement} from "../js/parse-element.js";
+import {Dialog} from "../dialog.js";
+import {parseElement} from "../../js/parse-element.js";
 
 export class HokenSelectDialog extends Dialog {
     constructor(ele, map, rest){

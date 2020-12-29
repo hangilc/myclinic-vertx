@@ -1,6 +1,17 @@
-import {Component} from "./component.js";
+import {Component} from "../component.js";
+import {createElementFrom} from "../../../js/create-element-from.js";
 
-export class Hoken extends Component {
+let tmpl = `
+    <div></div>
+`;
+
+export class Hoken {
+    constructor(){
+        this.ele = createElementFrom(tmpl);
+    }
+}
+
+class HokenOrig extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
     }

@@ -468,10 +468,6 @@ let html = `
     </div>
 </template>
 
-<template id="practice-hoken-template">
-    <div></div>
-</template>
-
 <template id="practice-hoken-select-dialog-template">
     <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
         <div class="modal-dialog modal-lg" role="document">
@@ -496,16 +492,6 @@ let html = `
             <div class="form-check-label x-label"></div>
         </div>
     </template>
-</template>
-
-<template id="practice-enter-text-template">
-    <div class="mt-2">
-        <textarea class="form-control x-textarea" rows="6"></textarea>
-        <div class="form-inline mt-2">
-            <a href="javascript:void(0)" class="x-enter">入力</a>
-            <a href="javascript:void(0)" class="x-cancel ml-2">キャンセル</a>
-        </div>
-    </div>
 </template>
 
 <template id="practice-shinryou-template">
@@ -576,22 +562,6 @@ let html = `
         </div>
     </div>
 </template>
-
-<!--<template id="practice-fax-progress-template">-->
-<!--    <div class="border founded mb-3 p-2">-->
-<!--        <div class="x-title"></div>-->
-<!--        <div class="mt-2">-->
-<!--            <span class="x-pdf-file"></span>-->
-<!--            <a href="javascript:void(0)" class="x-view">表示</a>-->
-<!--        </div>-->
-<!--        <div class="x-fax-number"></div>-->
-<!--        <div class="x-message mt-4"></div>-->
-<!--        <div class="mt-4">-->
-<!--            <button class="btn btn-secondary x-re-send">再送信</button>-->
-<!--            <a href="javascript:void(0)" class="x-close ml-2">閉じる</a>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--</template>-->
 
 <template id="practice-charge-template">
     <div class="mt-2"></div>
@@ -899,9 +869,9 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {TextEnter} = await import("./text/text-enter.js");
     let {TextEdit} = await import("./text/text-edit.js");
     let {Record} = await import("./record.js");
-    let {Hoken} = await import("./hoken.js");
-    let {HokenDisp} = await import("./hoken-disp.js");
-    let {HokenSelectDialog} = await import("./hoken-select-dialog.js");
+    let {Hoken} = await import("./hoken/hoken.js");
+    let {HokenDisp} = await import("./hoken/hoken-disp.js");
+    let {HokenSelectDialog} = await import("./hoken/hoken-select-dialog.js");
     let {ConductDisp} = await import("./conduct-disp.js");
     let {DrugDisp} = await import("./drug-disp.js");
     let {MeisaiDialog} = await import("./meisai-dialog.js");

@@ -54,17 +54,17 @@ let pharmaTextRegex = /(.+)にファックス（(\+\d+)）で送付/;
 export class Record {
     constructor(prop, visitFull) {
         this.prop = prop;
-        this.visitFull = visitFull;
+        let visit = visitFull.visit;
+        this.visitId = visit.visitId;
+        this.patientId = visit.patientId;
+        this.visitedAt = visit.visitedAt;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.ele.dataset.visitId = visitFull.visit.visitId;
         let title = new Title(prop, visitFull.visit);
         this.map.title.append(title.ele);
         visitFull.texts.forEach(text => this.addText(text));
-        let hoken = new Hoken(this.prop.rest, this.visitFull.visit.patientId,
-            this.visitFull.visit.visitedAt.substring(0, 10), this.visitFull.visit.visitId,
-            this.visitFull.hoken);
-        this.map.hokenWrapper.append(hoken.ele);
+        this.setHoken(visitFull.hoken);
         this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());
         this.ele.addEventListener("temp-visit-changed", event => {
@@ -78,7 +78,7 @@ export class Record {
     }
 
     getVisitId() {
-        return this.visitFull.visit.visitId;
+        return this.visitId;
     }
 
     addText(text) {
@@ -129,7 +129,7 @@ export class Record {
             alert("送付先薬局が設定されていません。");
         }
         let textId = shohousenText.textId;
-        let date = this.visitFull.visit.visitedAt.substring(0, 10);
+        let date = this.visitedAt.substring(0, 10);
         let pdfFilePath = await this.prop.rest.probeShohousenFaxImage(textId, date);
         if (!pdfFilePath) {
             if (!confirm("送信用の処方箋イメージを作成しますか？")) {
@@ -152,6 +152,20 @@ export class Record {
             sendFax.ele.remove();
         });
         this.map.commandWrapper.parentElement.insertBefore(sendFax.ele, this.map.commandWrapper);
+    }
+
+    setHoken(hoken){
+        let c = new Hoken(this.prop.rest, this.patientId, this.visitedAt.substring(0, 10), hoken);
+        this.map.hokenWrapper.innerHTML = "";
+        this.map.hokenWrapper.append(c.ele);
+        c.ele.addEventListener("enter", async event => {
+            event.stopPropagation();
+            let visit = await this.prop.rest.getVisit(this.getVisitId());
+            Object.assign(visit, event.detail);
+            await this.prop.rest.updateHoken(visit);
+            let updatedHoken = await this.prop.rest.getHoken(this.visitId);
+            this.setHoken(updatedHoken);
+        });
     }
 
 }

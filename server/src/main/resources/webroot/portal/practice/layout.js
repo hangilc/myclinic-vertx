@@ -468,31 +468,31 @@ let html = `
     </div>
 </template>
 
-<template id="practice-hoken-select-dialog-template">
-    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">保険選択</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body x-body"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary x-enter">入力</button>
-                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <template class="x-item-template">
-        <div class="form-check form-check">
-            <input type="checkbox" class="form-check-input x-input">
-            <div class="form-check-label x-label"></div>
-        </div>
-    </template>
-</template>
+<!--<template id="practice-hoken-select-dialog-template">-->
+<!--    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">-->
+<!--        <div class="modal-dialog modal-lg" role="document">-->
+<!--            <div class="modal-content">-->
+<!--                <div class="modal-header">-->
+<!--                    <h5 class="modal-title">保険選択</h5>-->
+<!--                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
+<!--                        <span aria-hidden="true">&times;</span>-->
+<!--                    </button>-->
+<!--                </div>-->
+<!--                <div class="modal-body x-body"></div>-->
+<!--                <div class="modal-footer">-->
+<!--                    <button type="button" class="btn btn-secondary x-enter">入力</button>-->
+<!--                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--    <template class="x-item-template">-->
+<!--        <div class="form-check form-check">-->
+<!--            <input type="checkbox" class="form-check-input x-input">-->
+<!--            <div class="form-check-label x-label"></div>-->
+<!--        </div>-->
+<!--    </template>-->
+<!--</template>-->
 
 <template id="practice-shinryou-template">
     <div class="practice-shinryou"></div>

@@ -1,7 +1,118 @@
-import {Dialog} from "../dialog.js";
-import {parseElement} from "../../js/parse-element.js";
+import {Dialog as Dialog1} from "../dialog.js";
+import {Dialog} from "../../../js/dialog2.js";
+import {parseElement} from "../../../js/parse-node.js";
+import {createElementFrom} from "../../../js/create-element-from.js";
+
+let footerTmpl = `
+    <button type="button" class="btn btn-primary x-enter">入力</button>
+    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
+`;
 
 export class HokenSelectDialog extends Dialog {
+    constructor(availableHoken, current){
+        super();
+        this.items = [];
+        this.setTitle("保険選択");
+        this.addItems(availableHoken, current);
+        this.getFooter().innerHTML = footerTmpl;
+        let fmap = parseElement(this.getFooter());
+        fmap.enter.addEventListener("click", async event => await this.doEnter());
+        fmap.cancel.addEventListener("click", event => this.close(null));
+    }
+
+    doEnter() {
+        this.close(this.getSelected());
+    }
+
+    addItems(hokenEx, current){
+        let wrapper = this.getBody();
+        if( hokenEx.shahokokuho ){
+            let shahokokuho = hokenEx.shahokokuho;
+            let checked = current.shahokokuho && current.shahokokuho.shahokokuhoId === shahokokuho.shahokokuhoId;
+            let item = new Item(shahokokuho.hokenRep, checked, obj => obj.shahokokuhoId = shahokokuho.shahokokuhoId);
+            this.items.push(item);
+            wrapper.append(item.ele);
+        }
+        if( hokenEx.koukikourei ){
+            let koukikourei = hokenEx.koukikourei;
+            let checked = current.koukikourei && current.koukikourei.koukikoureiId === koukikourei.koukikoureiId;
+            let item = new Item(koukikourei.hokenRep, checked, obj => obj.koukikoureiId = koukikourei.koukikoureiId);
+            this.items.push(item);
+            wrapper.append(item.ele);
+        }
+        if( hokenEx.roujin ){
+            let roujin = hokenEx.roujin;
+            let checked = current.roujin && current.roujin.roujinId === roujin.roujinId;
+            let item = new Item(roujin.hokenRep, checked, obj => obj.roujinId = roujin.roujinId);
+            this.items.push(item);
+            wrapper.append(item.ele);
+        }
+        let currentKouhiIds = [current.kouhi1, current.kouhi2, current.kouhi3].filter(kouhi => kouhi != null)
+            .map(kouhi => kouhi.kouhiId);
+        for(let kouhi of [hokenEx.kouhi1, hokenEx.kouhi2, hokenEx.kouhi3]){
+            if( kouhi ){
+                let checked = currentKouhiIds.includes(kouhi.kouhiId);
+                let item = new Item(kouhi.hokenRep, checked, obj => {
+                    if( !obj.kouhi1Id ){
+                        obj.kouhi1Id = kouhi.kouhiId;
+                    } else if( !obj.kouhi2Id ){
+                        obj.kouhi2Id = kouhi.kouhiId;
+                    } else if( !obj.kouhi3Id ){
+                        obj.kouhi3Id = kouhi.kouhiId;
+                    }
+                });
+                this.items.push(item);
+                wrapper.append(item.ele);
+            }
+        }
+    }
+
+    getSelected(){
+        let obj = {
+            shahokokuhoId: 0,
+            koukikoureiId: 0,
+            roujinId: 0,
+            kouhi1Id: 0,
+            kouhi2Id: 0,
+            kouhi3Id: 0
+        };
+        this.items.forEach(item => {
+            if( item.isChecked() ){
+                item.assignTo(obj);
+            }
+        })
+        return obj;
+    }
+}
+
+let itemTmpl = `
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input x-input">
+        <div class="form-check-label x-label"></div>
+    </div>
+`;
+
+class Item {
+    constructor(label, checked, assign){
+        this.assign = assign;
+        this.ele = createElementFrom(itemTmpl);
+        let map = this.map = parseElement(this.ele);
+        map.label.innerText = label;
+        if( checked ){
+            map.input.checked = true;
+        }
+    }
+
+    isChecked(){
+        return this.map.input.checked;
+    }
+
+    assignTo(obj){
+        this.assign(obj);
+    }
+}
+
+class HokenSelectDialogOrig extends Dialog1 {
     constructor(ele, map, rest){
         super(ele, map, rest);
         this.bodyElement = map.body;

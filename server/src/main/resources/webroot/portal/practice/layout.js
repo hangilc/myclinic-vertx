@@ -683,6 +683,16 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     });
 
+    pane.addEventListener("shinryou-copied", event => {
+        console.log("shinryou-copied", event.detail);
+        let visitId = event.detail.visitId;
+        let shinryouFulls = event.detail.shinryouList;
+        let e = getRecordElementByVisitId(visitId);
+        if( e ){
+            e.dispatchEvent(new CustomEvent("shinryou-entered", {detail: shinryouFulls}));
+        }
+    });
+
     pane.addEventListener("fax-sent", async event => {
         let textId = event.detail.textId;
         let faxNumber = event.detail.faxNumber;

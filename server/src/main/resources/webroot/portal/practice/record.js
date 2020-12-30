@@ -73,6 +73,9 @@ export class Record {
             }
         });
         this.ele.addEventListener("text-entered", event => this.addText(event.detail));
+        this.ele.addEventListener("shinryou-entered", event => {
+            event.detail.forEach(shinryouFull => this.addShinryou(shinryouFull, true));
+        });
         this.ele.addEventListener("batch-entered", async event => {
             event.stopPropagation();
             await this.batchEnter(event.detail);

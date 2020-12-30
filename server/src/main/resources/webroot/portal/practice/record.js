@@ -86,6 +86,16 @@ export class Record {
             event.stopPropagation();
             this.addShinryou(event.detail, true);
         });
+        this.ele.addEventListener("shinryou-deleted", event => {
+            event.stopPropagation();
+            let shinryouIds = event.detail;
+            shinryouIds.forEach(shinryouId => {
+                let e = findShinryouElement(this.map.shinryouWrapper, shinryouId);
+                if( e ){
+                    e.remove();
+                }
+            });
+        });
     }
 
     getVisitId() {
@@ -204,7 +214,7 @@ export class Record {
     }
 
     addShinryou(shinryouFull, reorder=true){
-        let shinryou = new Shinryou(shinryouFull);
+        let shinryou = new Shinryou(this.prop, shinryouFull, this.getVisitId());
         if( reorder ){
             let shinryoucode = +shinryouFull.master.shinryoucode;
             let list = this.map.shinryouWrapper.querySelectorAll(".practice-shinryou");
@@ -227,6 +237,10 @@ export class Record {
         console.log("conduct", conductFull);
     }
 
+}
+
+function findShinryouElement(wrapper, shinryouId){
+    return wrapper.querySelector(`.practice-shinryou[data-shinryou-id='${shinryouId}']`);
 }
 
 

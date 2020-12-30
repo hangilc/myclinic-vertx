@@ -1,5 +1,7 @@
 import {Component} from "../component.js";
 import {createElementFrom} from "../../../js/create-element-from.js";
+import {parseElement} from "../../../js/parse-node.js";
+import {click} from "../../../js/dom-helper.js";
 
 let tmpl = `
     <div class="border border-secondary rounded p-2 my-2">
@@ -14,11 +16,45 @@ let tmpl = `
 `;
 
 export class ShinryouEdit {
-    constructor(rest, shinryouId){
+    constructor(rest, shinryouId, label, tekiyou){
         this.rest = rest;
         this.shinryouId = shinryouId;
+        this.tekiyou = tekiyou;
         this.ele = createElementFrom(tmpl);
+        let map = this.map = parseElement(this.ele);
+        map.label.innerText = label;
+        this.updateTekiyouUI();
+        click(map.delete, async event => await this.doDelete());
+        click(map.close, event => this.ele.dispatchEvent(new Event("close")));
+        click(map.editTekiyou, async event => await this.doEditTekiyou());
     }
+
+    updateTekiyouUI(){
+        if( this.tekiyou ){
+            this.map.tekiyou.innerText = `摘要：${this.tekiyou}`;
+        } else {
+            this.map.tekiyou.innerText = "";
+        }
+    }
+
+    async doDelete(){
+        if( !confirm("この診療行為を削除していいですか？") ){
+            return;
+        }
+        await this.rest.deleteShinryou(this.shinryouId);
+        this.ele.dispatchEvent(new CustomEvent("shinryou-deleted", {bubbles: true, detail: [this.shinryouId]}));
+    }
+
+    async doEditTekiyou(){
+        let value = prompt("摘要の編集", this.tekiyou);
+        if( value !== null ){
+            await this.rest.setShinryouTekiyou(this.shinryouId, value);
+            this.tekiyou = value;
+            this.updateTekiyouUI();
+            this.ele.dispatchEvent(new CustomEvent("tekiyou-modified", {detail: value}));
+        }
+    }
+
 }
 
 class ShinryouEditOrig extends Component {

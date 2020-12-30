@@ -1,11 +1,29 @@
 import {Component} from "../component.js";
 import {click} from "../../../js/dom-helper.js";
+import {parseElement} from "../../../js/parse-node.js";
+import {createElementFrom} from "../../../js/create-element-from.js";
+
+let tmpl = `
+    <div>
+        <span class="x-label"></span><span class="x-tekiyou"></span>
+    </div>
+`;
 
 export class ShinryouDisp {
-    constructor(label){
-        this.ele = document.createElement("div");
-        this.ele.innerText = label;
+    constructor(label, tekiyou){
+        this.ele = createElementFrom(tmpl);
+        this.map = parseElement(this.ele);
+        this.map.label.innerText = label;
+        this.updateTekiyou(tekiyou);
         click(this.ele, event => this.ele.dispatchEvent(new Event("edit")));
+    }
+
+    updateTekiyou(tekiyou){
+        if( tekiyou ){
+            this.map.tekiyou.innerText = `［${tekiyou}］`;
+        } else {
+            this.map.tekiyou.innerText = "";
+        }
     }
 }
 

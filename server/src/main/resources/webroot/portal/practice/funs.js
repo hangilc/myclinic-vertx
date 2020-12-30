@@ -43,3 +43,4 @@ export async function createShohousenPdfForFax(text, rest){
     await rest.deleteFile(tmpPath);
     return savePath;
 }
+

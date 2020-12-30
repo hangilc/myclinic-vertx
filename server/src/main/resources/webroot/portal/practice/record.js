@@ -55,6 +55,7 @@ let pharmaTextRegex = /(.+)にファックス（(\+\d+)）で送付/;
 export class Record {
     constructor(prop, visitFull) {
         this.prop = prop;
+        this.rest = prop.rest;
         let visit = visitFull.visit;
         this.visitId = visit.visitId;
         this.patientId = visit.patientId;
@@ -172,8 +173,34 @@ export class Record {
 
     async doRegularShinryou(){
         let dialog = new ShinryouRegularDialog();
-        let result = await dialog.open();
-        console.log(result);
+        let names = await dialog.open();
+        if( names ){
+            let result = await this.rest.batchEnterShinryouByNames(names, this.getVisitId());
+            if (result.shinryouIds.length > 0) {
+                let shinryouFullList = await this.rest.listShinryouFullByIds(result.shinryouIds);
+                shinryouFullList.forEach(sf => this.addShinryou(sf, true));
+            }
+            if (result.drugIds.length > 0) {
+                let drugFullList = await this.rest.listDrugFullByIds(result.drugIds);
+                drugFullList.forEach(drugFull => this.addDrug(drugFull));
+            }
+            if (result.conductIds.length > 0) {
+                let conductFullList = await this.rest.listConductFullByIds(result.conductIds);
+                conductFullList.forEach(conductFull => this.addConduct(conductFull));
+            }
+        }
+    }
+
+    addShinryou(shinryouFull, reorder=true){
+        console.log("shinryou", shinryouFull);
+    }
+
+    addDrug(drugFull){
+        console.log("drug", drugFull);
+    }
+
+    addConduct(conductFull){
+        console.log("conduct", conductFull);
     }
 
 }

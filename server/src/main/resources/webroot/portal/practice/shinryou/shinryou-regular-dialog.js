@@ -6,9 +6,9 @@ import {gensymId} from "../../../js/gensym-id.js";
 
 let bodyTmpl = `
     <div class="row">
-        <div class="col-sm-6 x-left">LEFT</div>
-        <div class="col-sm-6 x-right">RIGHT</div>
-        <div class="col-sm-12 form-inline x-bottom">BOTTOM</div>
+        <div class="col-sm-6 x-left"></div>
+        <div class="col-sm-6 x-right"></div>
+        <div class="col-sm-12 form-inline justify-content-center x-bottom"></div>
     </div>
 `;
 
@@ -22,6 +22,15 @@ let leftNames = [
     "生化Ⅱ判断料", "免疫検査判断料", "微生物検査判断料", "静脈採血"
 ];
 
+let rightNames = [
+    "尿一般", "便潜血", "処方箋料", "特定疾患処方管理加算２（処方箋料）", "一般名処方加算２（処方箋料）",
+    "一般名処方加算１（処方箋料）", "処方料", "処方料７", "特定疾患処方"
+];
+
+let bottomNames = [
+    "心電図", "骨塩定量"
+];
+
 export class ShinryouRegularDialog extends Dialog {
     constructor() {
         super();
@@ -31,6 +40,7 @@ export class ShinryouRegularDialog extends Dialog {
         this.addItems()
         this.getFooter().innerHTML = footerTmpl;
         let fmap = parseElement(this.getFooter());
+        fmap.enter.addEventListener("click", event => this.doEnter());
         fmap.cancel.addEventListener("click", event => this.close(null));
     }
 
@@ -39,12 +49,31 @@ export class ShinryouRegularDialog extends Dialog {
             let check = createCheck(name);
             this.bmap.left.append(check);
         });
+        rightNames.forEach(name => {
+            let check = createCheck(name);
+            this.bmap.right.append(check);
+        });
+        bottomNames.forEach(name => {
+            let check = createCheck(name);
+            this.bmap.bottom.append(check);
+        });
         gensymId(this.getBody());
+    }
+
+    doEnter(){
+        this.close(this.getSelected());
+    }
+
+    getSelected(){
+        let selected = [];
+        let wrapper = this.getBody();
+        wrapper.querySelectorAll("input:checked").forEach(e => selected.push(e.value));
+        return selected;
     }
 }
 
 let checkTmpl = `
-    <div class="form-check">
+    <div class="form-check mr-2">
         <input type="checkbox" class="form-check-input" />
         <label class="form-check-label"></label>
     </div>

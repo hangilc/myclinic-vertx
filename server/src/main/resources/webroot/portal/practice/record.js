@@ -1,7 +1,7 @@
 import {Component} from "./component.js";
 import {shinryouSearchEnterWidgetFactory} from "./shinryou-search-enter-widget/shinryou-search-enter-widget.js";
 import {createShohousenPdfForFax} from "./funs.js";
-import {ShinryouKensaDialog} from "./shinryou-kensa-dialog.js";
+import {ShinryouKensaDialog} from "./shinryou/shinryou-kensa-dialog.js";
 import {Charge} from "./charge/charge.js";
 import {Title} from "./title/title.js";
 import {createElementFrom} from "../../js/create-element-from.js";
@@ -10,6 +10,7 @@ import {Text} from "./text/text.js";
 import {TextEnter} from "./text/text-enter.js";
 import {SendFax} from "./send-fax.js";
 import {Hoken} from "./hoken/hoken.js";
+import {ShinryouRegularDialog} from "./shinryou/shinryou-regular-dialog.js";
 
 let tmpl = `
     <div class="practice-record temp-visit-listener" data-visit-id="0">
@@ -67,6 +68,7 @@ export class Record {
         this.setHoken(visitFull.hoken);
         this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());
+        this.map.shinryouMenu.addEventListener("click", async event => await this.doRegularShinryou());
         this.ele.addEventListener("temp-visit-changed", event => {
             if (this.prop.tempVisitId === this.getVisitId()) {
                 this.ele.classList.add("temp-visit");
@@ -166,6 +168,12 @@ export class Record {
             let updatedHoken = await this.prop.rest.getHoken(this.visitId);
             this.setHoken(updatedHoken);
         });
+    }
+
+    async doRegularShinryou(){
+        let dialog = new ShinryouRegularDialog();
+        let result = await dialog.open();
+        console.log(result);
     }
 
 }

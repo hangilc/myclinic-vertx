@@ -1,7 +1,7 @@
-import {Dialog} from "../../js/dialog.js";
-import {createElementFrom} from "../../js/create-element-from.js";
-import {parseElement} from "../../js/parse-node.js";
-import {gensymId} from "../../js/gensym-id.js";
+import {Dialog} from "../../../js/dialog.js";
+import {createElementFrom} from "../../../js/create-element-from.js";
+import {parseElement} from "../../../js/parse-node.js";
+import {gensymId} from "../../../js/gensym-id.js";
 
 let tmpl = `
 <form class="row x-items-wrapper" onsubmit="return false;">

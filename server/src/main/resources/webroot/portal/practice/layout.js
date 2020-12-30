@@ -468,32 +468,6 @@ let html = `
     </div>
 </template>
 
-<!--<template id="practice-hoken-select-dialog-template">-->
-<!--    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">-->
-<!--        <div class="modal-dialog modal-lg" role="document">-->
-<!--            <div class="modal-content">-->
-<!--                <div class="modal-header">-->
-<!--                    <h5 class="modal-title">保険選択</h5>-->
-<!--                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
-<!--                        <span aria-hidden="true">&times;</span>-->
-<!--                    </button>-->
-<!--                </div>-->
-<!--                <div class="modal-body x-body"></div>-->
-<!--                <div class="modal-footer">-->
-<!--                    <button type="button" class="btn btn-secondary x-enter">入力</button>-->
-<!--                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--    <template class="x-item-template">-->
-<!--        <div class="form-check form-check">-->
-<!--            <input type="checkbox" class="form-check-input x-input">-->
-<!--            <div class="form-check-label x-label"></div>-->
-<!--        </div>-->
-<!--    </template>-->
-<!--</template>-->
-
 <template id="practice-shinryou-template">
     <div class="practice-shinryou"></div>
 </template>
@@ -860,7 +834,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {SelectRecentVisitDialog} = await import("./select-recent-visit-dialog.js");
     let {SelectTodaysVisitDialog} = await import("./select-todays-visit-dialog.js");
     let {SelectPreviousVisitDialog} = await import("./select-prev-visit-dialog.js");
-    let {ShinryouRegularDialog} = await import("./shinryou-regular-dialog.js");
+    let {ShinryouRegularDialog} = await import("./shinryou/shinryou-regular-dialog.js");
     let {ShinryouDisp} = await import("./shinryou-disp.js");
     let {Shinryou} = await import("./shinryou.js");
     let {ShinryouEdit} = await import("./shinryou-edit.js");
@@ -1711,28 +1685,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
         });
         e.addEventListener("session-ended", event => hide(e));
     });
-
-    // function setRecords(visitFulls) {
-    //     let recordWrapperElement = $("#practice-record-wrapper");
-    //     recordWrapperElement.html("");
-    //     let currentVisitId = controller.getVisitId();
-    //     let tempVisitId = controller.getTempVisitId();
-    //     for (let visitFull of visitFulls) {
-    //         let record = recordFactory.create(visitFull, visitFull.hoken.rep);
-    //         if (visitFull.visit.visitId === currentVisitId) {
-    //             record.markAsCurrent();
-    //         } else if (visitFull.visit.visitId === tempVisitId) {
-    //             record.markAsTemp();
-    //         }
-    //         record.onTextCopied((event, copiedText) => {
-    //             let targetRec = findRecord(copiedText.visitId);
-    //             if (targetRec) {
-    //                 targetRec.addText(copiedText);
-    //             }
-    //         });
-    //         record.appendTo(recordWrapperElement);
-    //     }
-    // }
 
     async function batchUpdatePaymentState(visitIds) {
         let map = await rest.batchGetLastPayment(visitIds);

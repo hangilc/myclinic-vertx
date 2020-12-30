@@ -61,7 +61,7 @@ export class Record {
         visitFull.texts.forEach(text => this.addText(text));
         this.setHoken(visitFull.hoken);
         replaceNode(this.map.shinryouAuxMenuPlaceholder,
-            (new ShinryouAuxMenu(this.prop, this.visitId, this.map.shinryouWidgetWorkarea)).ele);
+            (new ShinryouAuxMenu(this.prop, this.visitId, this.visitedAt, this.map.shinryouWidgetWorkarea)).ele);
         this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());
         this.map.shinryouMenu.addEventListener("click", async event => await this.doRegularShinryou());
@@ -76,6 +76,10 @@ export class Record {
         this.ele.addEventListener("batch-entered", async event => {
             event.stopPropagation();
             await this.batchEnter(event.detail);
+        });
+        this.ele.addEventListener("shinryou-entered", event => {
+            event.stopPropagation();
+            this.addShinryou(event.detail, true);
         });
     }
 

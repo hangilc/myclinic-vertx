@@ -18,10 +18,11 @@ let tmpl = `
 `;
 
 export class ShinryouAuxMenu {
-    constructor(prop, visitId, workarea){
+    constructor(prop, visitId, visitedAt, workarea){
         this.prop = prop;
         this.rest = prop.rest;
         this.visitId = visitId;
+        this.visitedAt = visitedAt;
         this.workarea = workarea;
         this.ele = createElementFrom(tmpl);
         let map = parseElement(this.ele);
@@ -43,13 +44,9 @@ export class ShinryouAuxMenu {
         if( !this.prop.confirmManip(this.visitId, "診療行為を入力しますか") ){
             return;
         }
-        let widget = new ShinryouSearchEnterWidget();
+        let widget = new ShinryouSearchEnterWidget(this.rest, this.visitId, this.visitedAt);
         this.workarea.prepend(widget.ele);
-
-        // let widget = shinryouSearchEnterWidgetFactory.create(this.getVisitId(), this.getVisitedAt(), this.rest);
-        // widget.onEntered(entered => this.addShinryou(entered));
-        // widget.prependTo(this.shinryouWidgetWorkareaElement);
-        // widget.focus();
+        widget.initFocus();
     }
 
     async doCopyAll() {

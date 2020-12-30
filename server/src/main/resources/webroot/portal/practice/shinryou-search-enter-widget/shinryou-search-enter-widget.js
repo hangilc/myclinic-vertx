@@ -1,6 +1,7 @@
 import {WidgetBase} from "../widget-base.js";
 import {parseElement} from "../../js/parse-element.js";
 import {ShinryouSearch} from "./shinryou-search.js";
+import {Widget} from "../widget2.js";
 
 let commandsTemplate = `
     <div class="mt-2 d-flex justify-content-end x-ele">
@@ -9,7 +10,14 @@ let commandsTemplate = `
     </div>
 `;
 
-class ShinryouSearchEnterWidget extends WidgetBase {
+export class ShinryouSearchEnterWidget extends Widget {
+    constructor() {
+        super();
+        this.setTitle("診療行為検索・入力");
+    }
+}
+
+class ShinryouSearchEnterWidgetOrig extends WidgetBase {
     constructor(rest){
         super(rest);
         this.shinryouSearch = new ShinryouSearch(rest);
@@ -69,5 +77,5 @@ class ShinryouSearchEnterWidgetFactory {
     }
 }
 
-export let shinryouSearchEnterWidgetFactory = new ShinryouSearchEnterWidgetFactory();
+// export let shinryouSearchEnterWidgetFactory = new ShinryouSearchEnterWidgetFactory();
 

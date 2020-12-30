@@ -2,6 +2,7 @@ import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
 import {click} from "../../../js/dom-helper.js";
 import {ShinryouKensaDialog} from "./shinryou-kensa-dialog.js";
+import {ShinryouSearchEnterWidget} from "../shinryou-search-enter-widget/shinryou-search-enter-widget.js";
 
 let tmpl = `
     <div class="dropdown">
@@ -17,9 +18,11 @@ let tmpl = `
 `;
 
 export class ShinryouAuxMenu {
-    constructor(visitId, rest){
+    constructor(prop, visitId, workarea){
+        this.prop = prop;
+        this.rest = prop.rest;
         this.visitId = visitId;
-        this.rest = rest;
+        this.workarea = workarea;
         this.ele = createElementFrom(tmpl);
         let map = parseElement(this.ele);
         click(map.kensa, async event => await this.doKensa());
@@ -28,13 +31,25 @@ export class ShinryouAuxMenu {
     }
 
     async doKensa(){
+        if( !this.prop.confirmManip(this.visitId, "検査を入力しますか") ){
+            return;
+        }
         let dialog = new ShinryouKensaDialog(this.visitId, this.rest);
         let result = await dialog.open();
         this.ele.dispatchEvent(new CustomEvent("batch-entered", {bubbles: true, detail: result}));
     }
 
     async doSearchEnter() {
-        return Promise.resolve(undefined);
+        if( !this.prop.confirmManip(this.visitId, "診療行為を入力しますか") ){
+            return;
+        }
+        let widget = new ShinryouSearchEnterWidget();
+        this.workarea.prepend(widget.ele);
+
+        // let widget = shinryouSearchEnterWidgetFactory.create(this.getVisitId(), this.getVisitedAt(), this.rest);
+        // widget.onEntered(entered => this.addShinryou(entered));
+        // widget.prependTo(this.shinryouWidgetWorkareaElement);
+        // widget.focus();
     }
 
     async doCopyAll() {

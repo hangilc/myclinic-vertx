@@ -600,6 +600,19 @@ export async function initLayout(pane, rest, controller, printAPI) {
             } else {
                 return this.tempVisitId;
             }
+        },
+        isCurrentOrTempVisitId(visitId){
+            return visitId !== 0 && (this.currentVisitId === visitId || this.tempVisitId === visitId);
+        },
+        confirmManip(visitId, question){
+            if( visitId === 0 ){
+                throw new Error("invalid VisitId");
+            }
+            if( this.isCurrentOrTempVisitId(visitId) ){
+                return true;
+            } else {
+                return confirm(`現在診察中でありませんが、${question}？`);
+            }
         }
     };
 

@@ -1,5 +1,5 @@
 import {Component} from "./component.js";
-import {shinryouSearchEnterWidgetFactory} from "./shinryou-search-enter-widget/shinryou-search-enter-widget.js";
+//import {shinryouSearchEnterWidgetFactory} from "./shinryou-search-enter-widget/shinryou-search-enter-widget.js";
 import {createShohousenPdfForFax} from "./funs.js";
 import {ShinryouKensaDialog} from "./shinryou/shinryou-kensa-dialog.js";
 import {Charge} from "./charge/charge.js";
@@ -61,7 +61,7 @@ export class Record {
         visitFull.texts.forEach(text => this.addText(text));
         this.setHoken(visitFull.hoken);
         replaceNode(this.map.shinryouAuxMenuPlaceholder,
-            (new ShinryouAuxMenu(this.visitId, this.rest)).ele);
+            (new ShinryouAuxMenu(this.prop, this.visitId, this.map.shinryouWidgetWorkarea)).ele);
         this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());
         this.map.shinryouMenu.addEventListener("click", async event => await this.doRegularShinryou());

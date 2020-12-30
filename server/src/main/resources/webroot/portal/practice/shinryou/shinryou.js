@@ -11,7 +11,12 @@ export class Shinryou {
         this.ele = createElementFrom(tmpl);
         this.ele.dataset.shinryoucode = shinryouFull.master.shinryoucode;
         let disp = new ShinryouDisp(shinryouFull.master.name);
+        disp.ele.addEventListener("edit", event => this.doEdit());
         this.ele.append(disp.ele);
+    }
+
+    doEdit(){
+
     }
 }
 

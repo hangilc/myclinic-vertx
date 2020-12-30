@@ -1,6 +1,27 @@
 import {Component} from "../component.js";
+import {createElementFrom} from "../../../js/create-element-from.js";
 
-export class ShinryouEdit extends Component {
+let tmpl = `
+    <div class="border border-secondary rounded p-2 my-2">
+        <div>名称：<span class="x-label"></span></div>
+        <div class="x-tekiyou"></div>
+        <div class="mt-2">
+            <button class="btn btn-secondary x-delete">削除</button>
+            <button class="btn btn-secondary x-close">閉じる</button>
+            <button class="btn btn-link x-edit-tekiyou">適用編集</button>
+        </div>
+    </div>
+`;
+
+export class ShinryouEdit {
+    constructor(rest, shinryouId){
+        this.rest = rest;
+        this.shinryouId = shinryouId;
+        this.ele = createElementFrom(tmpl);
+    }
+}
+
+class ShinryouEditOrig extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
         this.labelElement = map.label;

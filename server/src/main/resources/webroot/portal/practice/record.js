@@ -13,6 +13,7 @@ import {Hoken} from "./hoken/hoken.js";
 import {ShinryouRegularDialog} from "./shinryou/shinryou-regular-dialog.js";
 import {replaceNode} from "../../js/dom-helper.js";
 import {ShinryouAuxMenu} from "./shinryou/shinryou-aux-menu.js";
+import {Shinryou} from "./shinryou/shinryou.js";
 
 let tmpl = `
     <div class="practice-record temp-visit-listener" data-visit-id="0">
@@ -62,6 +63,7 @@ export class Record {
         this.setHoken(visitFull.hoken);
         replaceNode(this.map.shinryouAuxMenuPlaceholder,
             (new ShinryouAuxMenu(this.prop, this.visitId, this.visitedAt, this.map.shinryouWidgetWorkarea)).ele);
+        visitFull.shinryouList.forEach(shinryouFull => this.addShinryou(shinryouFull, false));
         this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());
         this.map.shinryouMenu.addEventListener("click", async event => await this.doRegularShinryou());
@@ -202,7 +204,19 @@ export class Record {
     }
 
     addShinryou(shinryouFull, reorder=true){
-        console.log("shinryou", shinryouFull);
+        let shinryou = new Shinryou(shinryouFull);
+        if( reorder ){
+            let shinryoucode = +shinryouFull.master.shinryoucode;
+            let list = this.map.shinryouWrapper.querySelectorAll(".practice-shinryou");
+            for(let node of list){
+                let code = +node.dataset.shinryoucode;
+                if( shinryoucode < code ){
+
+                }
+            }
+        } else {
+            this.map.shinryouWrapper.append(shinryou.ele);
+        }
     }
 
     addDrug(drugFull){

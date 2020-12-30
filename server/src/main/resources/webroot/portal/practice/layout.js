@@ -189,14 +189,6 @@ let html = `
     </div>
 </template>
 
-<template id="practice-shinryou-template">
-    <div class="practice-shinryou"></div>
-</template>
-
-<template id="practice-shinryou-disp-template">
-    <div></div>
-</template>
-
 <template id="practice-shinryou-edit-template">
     <div class="border border-secondary rounded p-2 my-2">
         <div>名称：<span class="x-label"></span></div>
@@ -556,9 +548,9 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {SelectTodaysVisitDialog} = await import("./select-todays-visit-dialog.js");
     let {SelectPreviousVisitDialog} = await import("./select-prev-visit-dialog.js");
     let {ShinryouRegularDialog} = await import("./shinryou/shinryou-regular-dialog.js");
-    let {ShinryouDisp} = await import("./shinryou-disp.js");
-    let {Shinryou} = await import("./shinryou.js");
-    let {ShinryouEdit} = await import("./shinryou-edit.js");
+    let {ShinryouDisp} = await import("./shinryou/shinryou-disp.js");
+    let {Shinryou} = await import("./shinryou/shinryou.js");
+    let {ShinryouEdit} = await import("./shinryou/shinryou-edit.js");
     let {Text} = await import("./text/text.js");
     let {TextDisp} = await import("./text/text-disp.js");
     let {TextEnter} = await import("./text/text-enter.js");

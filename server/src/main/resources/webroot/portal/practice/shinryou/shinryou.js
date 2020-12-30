@@ -1,6 +1,21 @@
-import {Component} from "./component.js";
+import {Component} from "../component.js";
+import {createElementFrom} from "../../../js/create-element-from.js";
+import {ShinryouDisp} from "./shinryou-disp.js";
 
-export class Shinryou extends Component {
+let tmpl = `
+    <div class="practice-shinryou" data-shinryoucode="0"></div>
+`;
+
+export class Shinryou {
+    constructor(shinryouFull){
+        this.ele = createElementFrom(tmpl);
+        this.ele.dataset.shinryoucode = shinryouFull.master.shinryoucode;
+        let disp = new ShinryouDisp(shinryouFull.master.name);
+        this.ele.append(disp.ele);
+    }
+}
+
+class ShinryouOrig extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
         this.ele.data("component", this);

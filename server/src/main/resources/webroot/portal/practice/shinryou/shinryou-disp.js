@@ -1,6 +1,17 @@
-import {Component} from "./component.js";
+import {Component} from "../component.js";
+import {click} from "../../../js/dom-helper.js";
 
-export class ShinryouDisp extends Component {
+export class ShinryouDisp {
+    constructor(label){
+        this.ele = document.createElement("div");
+        this.ele.innerText = label;
+        click(this.ele, event => this.ele.dispatchEvent(new Event("edit")));
+    }
+}
+
+
+
+class ShinryouDispOrig extends Component {
     constructor(ele, map, rest) {
         super(ele, map, rest);
     }

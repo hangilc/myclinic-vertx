@@ -1,4 +1,4 @@
-import {Component} from "./component.js";
+import {Component} from "../component.js";
 
 export class ShinryouEdit extends Component {
     constructor(ele, map, rest) {

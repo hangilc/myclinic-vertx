@@ -12,6 +12,7 @@ let tmpl = `
         <div class="dropdown-menu x-shinryou-aux-menu">
             <a href="javascript:void(0)" class="x-kensa dropdown-item">検査</a>
             <a href="javascript:void(0)" class="x-search-enter dropdown-item">検索入力</a>
+            <a href="javascript:void(0)" class="x-delete-duplicates dropdown-item">重複削除</a>
             <a href="javascript:void(0)" class="x-copy-all dropdown-item">全部コピー</a>
         </div>
     </div>
@@ -28,6 +29,7 @@ export class ShinryouAuxMenu {
         let map = parseElement(this.ele);
         click(map.kensa, async event => await this.doKensa());
         click(map.searchEnter, async event => await this.doSearchEnter());
+        click(map.deleteDuplicates, async event => await this.doDeleteDuplicates());
         click(map.copyAll, async event => await this.doCopyAll());
     }
 
@@ -67,5 +69,10 @@ export class ShinryouAuxMenu {
             shinryouList: shinryouFulls
         }
         this.ele.dispatchEvent(new CustomEvent("shinryou-copied", {bubbles: true, detail: detail}));
+    }
+
+    async doDeleteDuplicates() {
+        let shinryouIds = await this.rest.deleteDuplicateShinryou(this.visitId);
+        this.ele.dispatchEvent(new CustomEvent("shinryou-deleted", {bubbles: true, detail: shinryouIds}));
     }
 }

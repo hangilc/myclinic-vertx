@@ -784,6 +784,10 @@ class Rest extends Client {
     async batchGetVisit(visitIds){
         return await this.topRest.batchGetVisit(visitIds);
     }
+
+    async deleteDuplicateShinryou(visitId){
+        return await this.topRest.deleteDuplicateShinryou(visitId);
+    }
 }
 
 class Integration extends Client {

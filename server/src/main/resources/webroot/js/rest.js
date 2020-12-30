@@ -197,4 +197,8 @@ export class Rest extends HttpClient {
         return await this.POST("/batch-get-visit", visitIds, {});
     }
 
+    async deleteDuplicateShinryou(visitId){
+        return await this.GET("/delete-duplicate-shinryou", {"visit-id": visitId});
+    }
+
 }

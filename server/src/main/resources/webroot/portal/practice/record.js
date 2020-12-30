@@ -211,12 +211,12 @@ export class Record {
             for(let node of list){
                 let code = +node.dataset.shinryoucode;
                 if( shinryoucode < code ){
-
+                    node.parentNode.insertBefore(shinryou.ele, node);
+                    return;
                 }
             }
-        } else {
-            this.map.shinryouWrapper.append(shinryou.ele);
         }
+        this.map.shinryouWrapper.append(shinryou.ele);
     }
 
     addDrug(drugFull){

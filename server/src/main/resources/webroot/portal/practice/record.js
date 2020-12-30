@@ -14,6 +14,7 @@ import {ShinryouRegularDialog} from "./shinryou/shinryou-regular-dialog.js";
 import {replaceNode} from "../../js/dom-helper.js";
 import {ShinryouAuxMenu} from "./shinryou/shinryou-aux-menu.js";
 import {Shinryou} from "./shinryou/shinryou.js";
+import {DrugDisp} from "./drug-disp.js";
 
 let tmpl = `
     <div class="practice-record temp-visit-listener" data-visit-id="0">
@@ -54,6 +55,7 @@ export class Record {
         this.visitId = visit.visitId;
         this.patientId = visit.patientId;
         this.visitedAt = visit.visitedAt;
+        this.drugIndex = 1;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.ele.dataset.visitId = visitFull.visit.visitId;
@@ -64,6 +66,7 @@ export class Record {
         replaceNode(this.map.shinryouAuxMenuPlaceholder,
             (new ShinryouAuxMenu(this.prop, this.visitId, this.visitedAt, this.map.shinryouWidgetWorkarea)).ele);
         visitFull.shinryouList.forEach(shinryouFull => this.addShinryou(shinryouFull, false));
+        visitFull.drugs.forEach(drugFull => this.addDrug(drugFull));
         this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());
         this.map.shinryouMenu.addEventListener("click", async event => await this.doRegularShinryou());
@@ -230,7 +233,9 @@ export class Record {
     }
 
     addDrug(drugFull){
-        console.log("drug", drugFull);
+        let index = this.drugIndex++;
+        let d = new DrugDisp(drugFull, index);
+        this.map.drugWrapper.append(d.ele);
     }
 
     addConduct(conductFull){

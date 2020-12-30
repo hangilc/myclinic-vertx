@@ -189,18 +189,6 @@ let html = `
     </div>
 </template>
 
-<template id="practice-shinryou-edit-template">
-    <div class="border border-secondary rounded p-2 my-2">
-        <div>名称：<span class="x-label"></span></div>
-        <div class="x-tekiyou"></div>
-        <div class="mt-2">
-            <button class="btn btn-secondary x-delete">削除</button>
-            <button class="btn btn-secondary x-close">閉じる</button>
-            <button class="btn btn-link x-edit-tekiyou">適用編集</button>
-        </div>
-    </div>
-</template>
-
 <template id="practice-conduct-disp-template">
     <div>
         <div class="x-kind"></div>

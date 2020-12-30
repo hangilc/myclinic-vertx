@@ -35,3 +35,6 @@ export function submit(e, handler){
     on(e, "submit", handler);
 }
 
+export function replaceNode(oldNode, newNode){
+    oldNode.parentNode.replaceChild(newNode, oldNode);
+}

@@ -11,6 +11,8 @@ import {TextEnter} from "./text/text-enter.js";
 import {SendFax} from "./send-fax.js";
 import {Hoken} from "./hoken/hoken.js";
 import {ShinryouRegularDialog} from "./shinryou/shinryou-regular-dialog.js";
+import {replaceNode} from "../../js/dom-helper.js";
+import {ShinryouAuxMenu} from "./shinryou/shinryou-aux-menu.js";
 
 let tmpl = `
     <div class="practice-record temp-visit-listener" data-visit-id="0">
@@ -29,16 +31,7 @@ let tmpl = `
                 <div class="x-drug-wrapper"></div>
                 <div class="form-inline">
                     <a href="javascript:void(0)" class="x-shinryou-menu">［診療行為］</a>
-                    <div class="dropdown">
-                        <button type="button" class="btn btn-link dropdown-toggle"
-                                data-toggle="dropdown">その他
-                        </button>
-                        <div class="dropdown-menu x-shinryou-aux-menu_">
-                            <a href="javascript:void(0)" class="x-kensa dropdown-item">検査</a>
-                            <a href="javascript:void(0)" class="x-search-enter dropdown-item">検索入力</a>
-                            <a href="javascript:void(0)" class="x-copy-all dropdown-item">全部コピー</a>
-                        </div>
-                    </div>
+                    <div class="x-shinryou-aux-menu-placeholder"></div>
                 </div>
                 <div class="x-shinryou-widget-workarea"></div>
                 <div class="x-shinryou-wrapper"></div>
@@ -67,6 +60,8 @@ export class Record {
         this.map.title.append(title.ele);
         visitFull.texts.forEach(text => this.addText(text));
         this.setHoken(visitFull.hoken);
+        replaceNode(this.map.shinryouAuxMenuPlaceholder,
+            (new ShinryouAuxMenu(this.visitId, this.rest)).ele);
         this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());
         this.map.shinryouMenu.addEventListener("click", async event => await this.doRegularShinryou());
@@ -78,6 +73,10 @@ export class Record {
             }
         });
         this.ele.addEventListener("text-entered", event => this.addText(event.detail));
+        this.ele.addEventListener("batch-entered", async event => {
+            event.stopPropagation();
+            await this.batchEnter(event.detail);
+        });
     }
 
     getVisitId() {
@@ -171,23 +170,27 @@ export class Record {
         });
     }
 
+    async batchEnter(result){
+        if (result.shinryouIds.length > 0) {
+            let shinryouFullList = await this.rest.listShinryouFullByIds(result.shinryouIds);
+            shinryouFullList.forEach(sf => this.addShinryou(sf, true));
+        }
+        if (result.drugIds.length > 0) {
+            let drugFullList = await this.rest.listDrugFullByIds(result.drugIds);
+            drugFullList.forEach(drugFull => this.addDrug(drugFull));
+        }
+        if (result.conductIds.length > 0) {
+            let conductFullList = await this.rest.listConductFullByIds(result.conductIds);
+            conductFullList.forEach(conductFull => this.addConduct(conductFull));
+        }
+    }
+
     async doRegularShinryou(){
         let dialog = new ShinryouRegularDialog();
         let names = await dialog.open();
         if( names ){
             let result = await this.rest.batchEnterShinryouByNames(names, this.getVisitId());
-            if (result.shinryouIds.length > 0) {
-                let shinryouFullList = await this.rest.listShinryouFullByIds(result.shinryouIds);
-                shinryouFullList.forEach(sf => this.addShinryou(sf, true));
-            }
-            if (result.drugIds.length > 0) {
-                let drugFullList = await this.rest.listDrugFullByIds(result.drugIds);
-                drugFullList.forEach(drugFull => this.addDrug(drugFull));
-            }
-            if (result.conductIds.length > 0) {
-                let conductFullList = await this.rest.listConductFullByIds(result.conductIds);
-                conductFullList.forEach(conductFull => this.addConduct(conductFull));
-            }
+            await this.batchEnter(result);
         }
     }
 

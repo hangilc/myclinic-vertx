@@ -81,6 +81,9 @@ export class Record {
         this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());
         this.map.shinryouMenu.addEventListener("click", async event => await this.doRegularShinryou());
+        if( this.prop.currentVisitId === this.visitId ){
+            this.ele.classList.add("current-visit");
+        }
         this.ele.addEventListener("temp-visit-changed", event => {
             if (this.prop.tempVisitId === this.getVisitId()) {
                 this.ele.classList.add("temp-visit");

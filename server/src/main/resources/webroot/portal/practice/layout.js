@@ -531,6 +531,12 @@ export async function initLayout(pane, rest, controller, printAPI) {
             } else {
                 return confirm(`現在診察中でありませんが、${question}？`);
             }
+        },
+        startSession(patientId, visitId){
+            pane.dispatchEvent(new CustomEvent("start-session", {detail: {patientId, visitId}}))
+        },
+        endSession(){
+            pane.dispatchEvent(new Event("end-session"));
         }
     };
 

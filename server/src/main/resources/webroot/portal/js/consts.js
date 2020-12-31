@@ -80,12 +80,12 @@ export function wqueueStateCodeToRep(code) {
     return WqueueStateRep[code];
 }
 
-export function sexToRep(sex) {
+export function sexToRep(sex, suffix="") {
     switch (sex) {
         case "M":
-            return "男";
+            return "男" + suffix;
         case "F":
-            return "女";
+            return "女" + suffix;
         default:
             return sex;
     }

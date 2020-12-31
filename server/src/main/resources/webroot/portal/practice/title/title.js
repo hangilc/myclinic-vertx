@@ -82,26 +82,12 @@ export class Title {
         //this.trigger("delete", this.getVisitId());
     }
 
-    // onTempVisit(cb){
-    //     on(this.ele, "temp-visit", event => cb(event.detail));
-    //     //this.on("temp-visit", (event, visitId) => cb(visitId));
-    // }
-
     doTempVisit(){
         this.ele.dispatchEvent(new CustomEvent("set-temp-visit", {bubbles: true, detail: this.getVisitId()}));
     }
 
-    // onClearTempVisit(cb){
-    //     on(this.ele, "clear-temp-visit", event => cb());
-    //     //this.on("clear-temp-visit", event => cb());
-    // }
-
     doClearTempVisit(){
         this.ele.dispatchEvent(new CustomEvent("clear-temp-visit", {bubbles: true}));
-    }
-
-    onAddToNoPayList(cb){
-        on(this.ele, "add-to-no-pay", event => cb(event.detail));
     }
 
     doAddToNoPayList(){

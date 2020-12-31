@@ -1,6 +1,8 @@
 import {Dialog} from "../../../js/dialog2.js";
 import {parseElement} from "../../../js/parse-node.js";
-import {click, submit} from "../../../js/dom-helper.js";
+import {click, submit, on} from "../../../js/dom-helper.js";
+import * as kanjidate from "../../../js/kanjidate.js";
+import {sexToRep} from "../../js/consts.js";
 
 let bodyTmpl = `
     <div class="row">
@@ -55,12 +57,16 @@ export class SearchDialog extends Dialog {
         super();
         this.prop = prop;
         this.rest = prop.rest;
+        this.patient = null;
         this.setTitle("患者検索");
         this.getBody().innerHTML = bodyTmpl;
         let bmap = this.bmap = parseElement(this.getBody());
         submit(bmap.form, async event => await this.doSearch());
+        on(bmap.select, "change", event => this.doSelect());
         this.getFooter().innerHTML = footerTmpl;
         let fmap = parseElement(this.getFooter());
+        click(fmap.registerEnter, async event => await this.doRegisterEnter());
+        click(fmap.enter, event => this.doEnter());
         click(fmap.cancel, event => this.close());
     }
 
@@ -87,5 +93,51 @@ export class SearchDialog extends Dialog {
             opt.data = patient;
             select.append(opt);
         });
+    }
+
+    doSelect(){
+        let opt = this.bmap.select.querySelector("option:checked");
+        console.log("opt", opt);
+        if( opt ){
+            let patient = opt.data;
+            this.setPatient(patient);
+        }
+    }
+
+    setPatient(patient){
+        this.patient = patient;
+        let map = this.bmap;
+        map.patientId.innerText = patient.patientId;
+        map.lastName.innerText = patient.lastName;
+        map.firstName.innerText = patient.firstName;
+        map.lastNameYomi.innerText = patient.lastNameYomi;
+        map.firstNameYomi.innerText = patient.firstNameYomi;
+        map.birthday.innerText = kanjidate.sqldateToKanji(patient.birthday);
+        map.sex.innerText = sexToRep(patient.sex, "性");
+        map.address.innerText = patient.address;
+        map.phone.innerText = patient.phone;
+    }
+
+    async doRegisterEnter(){
+        let patient = this.patient;
+        if( !patient ){
+            alert("患者が選択されていません。");
+            return;
+        }
+        let visitId = await this.rest.startVisit(patient.patientId);
+        this.prop.endSession();
+        this.prop.startSession(patient.patientId, visitId);
+        this.close();
+    }
+
+    doEnter(){
+        let patient = this.patient;
+        if( !patient ){
+            alert("患者が選択されていません。");
+            return;
+        }
+        this.prop.endSession();
+        this.prop.startSession(patient.patientId, 0);
+        this.close();
     }
 }

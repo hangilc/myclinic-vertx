@@ -4,6 +4,7 @@ import {click} from "../../../js/dom-helper.js";
 import {SearchDialog} from "./search-dialog.js";
 import {WqueueDialog} from "./wqueue-dialog.js";
 import {RecentDialog} from "./recent-dialog.js";
+import {PatientListWidget} from "./patient-list-widget.js";
 
 let tmpl = `
     <div class="dropdown">
@@ -23,9 +24,10 @@ let tmpl = `
 `;
 
 export class PatientSelectorMenu {
-    constructor(prop) {
+    constructor(prop, workarea) {
         this.prop = prop;
         this.rest = prop.rest;
+        this.workarea = workarea;
         this.ele = createElementFrom(tmpl);
         let map = parseElement(this.ele);
         click(map.wqueue, async event => await this.doWqueue());
@@ -53,7 +55,10 @@ export class PatientSelectorMenu {
     }
 
     async doToday() {
-        return Promise.resolve(undefined);
+        let vps = await this.rest.listTodaysVisits();
+        let patients = vps.map(vps => vps.patient);
+        let widget = new PatientListWidget(this.prop, "本日の受診患者", patients);
+        this.workarea.append(widget.ele);
     }
 
     async doPrev() {

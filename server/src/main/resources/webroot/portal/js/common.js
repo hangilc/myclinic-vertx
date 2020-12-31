@@ -547,10 +547,6 @@ class Rest extends Client {
         return await this.get("/list-shujii-patient");
     }
 
-    async batchGetPatient(patientIds) {
-        return await this.post("/batch-get-patient", patientIds);
-    }
-
     async getShujiiMasterText(patient) {
         return await this.post("/get-shujii-master-text", patient);
     }
@@ -560,12 +556,6 @@ class Rest extends Client {
             params: {name: patientName, "patient-id": patientId}
         });
     }
-
-    // async compileShujiiDrawer(shujiiData, setting) {
-    //     return await this.post("/compile-shujii-drawer", shujiiData, {
-    //         params: {setting}
-    //     });
-    // }
 
     async compileShujiiDrawer(shujiiData) {
         return await this.post("/compile-shujii-drawer", shujiiData);
@@ -803,6 +793,10 @@ class Rest extends Client {
 
     async searchIyakuhinMaster(text, at){
         return await this.topRest.searchIyakuhinMaster(text, at);
+    }
+
+    async batchGetPatient(patientIds){
+        return await this.topRest.batchGetPatient(patientIds);
     }
 }
 

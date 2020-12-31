@@ -9,20 +9,6 @@ let html = `
                 <h3 class="col-xl-2">診察</h3>
                 <div class="col-xl-10 form-inline">
                     <div id="patient-selector-menu-placeholder"></div>
-<!--                    <div class="dropdown" id="practice-select-patient-menu">-->
-<!--                        <button class="btn btn-secondary dropdown-toggle" type="button"-->
-<!--                                data-toggle="dropdown" aria-haspopup="true"-->
-<!--                                aria-expanded="false">-->
-<!--                            患者選択-->
-<!--                        </button>-->
-<!--                        <div class="dropdown-menu x-menu" aria-labelledby="dropdownMenuButton">-->
-<!--                            <a href="javascript:void(0)" class="x-wqueue dropdown-item mx-2">受付患者選択</a>-->
-<!--                            <a href="javascript:void(0)" class="x-search dropdown-item mx-2">患者検索</a>-->
-<!--                            <a href="javascript:void(0)" class="x-recent dropdown-item mx-2">最近の診察</a>-->
-<!--                            <a href="javascript:void(0)" class="x-today dropdown-item mx-2">本日の診察</a>-->
-<!--                            <a href="javascript:void(0)" class="x-prev dropdown-item mx-2">以前の診察</a>-->
-<!--                        </div>-->
-<!--                    </div>-->
                     <a href="javascript:void(0)" class="ml-2" id="practice-registered-drug-link">登録薬剤</a>
                     <a href="javascript:void(0)" class="ml-2" id="practice-search-text-globally">全文検索</a>
                 </div>
@@ -411,18 +397,11 @@ export function getHtml() {
 export async function initLayout(pane, rest, controller, printAPI) {
     let {parseElement} = await import("./parse-element.js");
     let {PatientDisplay} = await import("./patient-display.js");
-    let {wqueueStateCodeToRep} = await import("../js/consts.js");
-    let {SelectRecentVisitDialog} = await import("./select-recent-visit-dialog.js");
     let {SelectTodaysVisitDialog} = await import("./select-todays-visit-dialog.js");
     let {SelectPreviousVisitDialog} = await import("./select-prev-visit-dialog.js");
-    let {ShinryouRegularDialog} = await import("./shinryou/shinryou-regular-dialog.js");
     let {ShinryouDisp} = await import("./shinryou/shinryou-disp.js");
     let {Shinryou} = await import("./shinryou/shinryou.js");
     let {ShinryouEdit} = await import("./shinryou/shinryou-edit.js");
-    let {Text} = await import("./text/text.js");
-    let {TextDisp} = await import("./text/text-disp.js");
-    let {TextEnter} = await import("./text/text-enter.js");
-    let {TextEdit} = await import("./text/text-edit.js");
     let {Record} = await import("./record.js");
     let {Hoken} = await import("./hoken/hoken.js");
     let {HokenDisp} = await import("./hoken/hoken-disp.js");
@@ -433,7 +412,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {SendFax} = await import("./send-fax.js");
     let {FaxProgress} = await import("./fax-progress.js");
     let {Nav} = await import("./nav.js");
-    let {DiseaseArea} = await import("./disease-area.js");
     let {DiseaseCurrent} = await import("./disease-current.js");
     let {DiseaseAdd, initDiseaseExamples} = await import("./disease-add.js");
     let {DiseaseEnd} = await import("./disease-end.js");
@@ -475,7 +453,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
                 return confirm(`現在診察中でありませんが、${question}？`);
             }
         },
-        startSession(patientId, visitId){
+        startSession(patientId, visitId=0){
             pane.dispatchEvent(new CustomEvent("start-session", {detail: {patientId, visitId}}))
         },
         endSession(){
@@ -582,7 +560,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
     });
 
     replaceNode(document.getElementById("patient-selector-menu-placeholder"),
-        (new PatientSelectorMenu(prop)).ele);
+        (new PatientSelectorMenu(prop, document.getElementById("practice-general-workarea"))).ele);
 
     function getTemplateHtml(templateId) {
         let html = $("template#" + templateId).html();
@@ -629,14 +607,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     //     return dialog;
     // })();
     //
-    let selectRecentVisitDialog = (function () {
-        let html = getTemplateHtml("practice-select-recent-visit-dialog-template");
-        let ele = $(html);
-        let map = parseElement(ele);
-        let dialog = new SelectRecentVisitDialog(ele, map, rest);
-        dialog.init();
-        return dialog;
-    })();
 
     let selectTodaysVisitDialog = (function () {
         let html = getTemplateHtml("practice-select-todays-visit-dialog-template");
@@ -846,19 +816,19 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    class TextEnterFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-enter-text-template");
-        }
-
-        create(visitId) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new TextEnter(ele, map, rest);
-            comp.init(visitId);
-            return comp;
-        }
-    }
+    // class TextEnterFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-enter-text-template");
+    //     }
+    //
+    //     create(visitId) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let comp = new TextEnter(ele, map, rest);
+    //         comp.init(visitId);
+    //         return comp;
+    //     }
+    // }
 
      class HokenSelectDialogFactory {
         create(hokenEx, visitId, current) {

@@ -217,4 +217,8 @@ export class Rest extends HttpClient {
         return await this.GET("/search-iyakuhin-master-by-name", {text, at});
     }
 
+    async batchGetPatient(patients){
+        return await this.POST("/batch-get-patient", patients, {});
+    }
+
 }

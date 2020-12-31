@@ -8,20 +8,21 @@ let html = `
             <div class="row">
                 <h3 class="col-xl-2">診察</h3>
                 <div class="col-xl-10 form-inline">
-                    <div class="dropdown" id="practice-select-patient-menu">
-                        <button class="btn btn-secondary dropdown-toggle" type="button"
-                                data-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false">
-                            患者選択
-                        </button>
-                        <div class="dropdown-menu x-menu" aria-labelledby="dropdownMenuButton">
-                            <a href="javascript:void(0)" class="x-wqueue dropdown-item mx-2">受付患者選択</a>
-                            <a href="javascript:void(0)" class="x-search dropdown-item mx-2">患者検索</a>
-                            <a href="javascript:void(0)" class="x-recent dropdown-item mx-2">最近の診察</a>
-                            <a href="javascript:void(0)" class="x-today dropdown-item mx-2">本日の診察</a>
-                            <a href="javascript:void(0)" class="x-prev dropdown-item mx-2">以前の診察</a>
-                        </div>
-                    </div>
+                    <div id="patient-selector-menu-placeholder"></div>
+<!--                    <div class="dropdown" id="practice-select-patient-menu">-->
+<!--                        <button class="btn btn-secondary dropdown-toggle" type="button"-->
+<!--                                data-toggle="dropdown" aria-haspopup="true"-->
+<!--                                aria-expanded="false">-->
+<!--                            患者選択-->
+<!--                        </button>-->
+<!--                        <div class="dropdown-menu x-menu" aria-labelledby="dropdownMenuButton">-->
+<!--                            <a href="javascript:void(0)" class="x-wqueue dropdown-item mx-2">受付患者選択</a>-->
+<!--                            <a href="javascript:void(0)" class="x-search dropdown-item mx-2">患者検索</a>-->
+<!--                            <a href="javascript:void(0)" class="x-recent dropdown-item mx-2">最近の診察</a>-->
+<!--                            <a href="javascript:void(0)" class="x-today dropdown-item mx-2">本日の診察</a>-->
+<!--                            <a href="javascript:void(0)" class="x-prev dropdown-item mx-2">以前の診察</a>-->
+<!--                        </div>-->
+<!--                    </div>-->
                     <a href="javascript:void(0)" class="ml-2" id="practice-registered-drug-link">登録薬剤</a>
                     <a href="javascript:void(0)" class="ml-2" id="practice-search-text-globally">全文検索</a>
                 </div>
@@ -220,44 +221,6 @@ let html = `
                     <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
                 </div>
             </div>
-        </div>
-    </div>
-</template>
-
-<template id="practice-charge-template">
-    <div class="mt-2"></div>
-</template>
-
-<template id="practice-charge-disp-template">
-    <div></div>
-</template>
-
-<template id="practice-charge-modify-template">
-    <div class="mb-3 border border-secondary rounded p-2">
-        <div class="d-flex p-2 mb-2" style="background-color: #ccc;">
-            <div class="font-weight-bold flex-grow-1">請求額の変更</div>
-            <div><span class="font-weight-bold x-widget-close"
-                       style="cursor: pointer;">&times;</span></div>
-        </div>
-        <div>
-            <div class="row">
-                <div class="col-sm-5 d-flex justify-content-end">診療報酬総点</div>
-                <div class="col-sm-7"><span class="x-total-ten mr-1"></span>点</div>
-                <div class="col-sm-5 d-flex justify-content-end">負担割</div>
-                <div class="col-sm-7"><span class="x-futan-wari mr-1"></span>割</div>
-                <div class="col-sm-5 d-flex justify-content-end">現在の請求額</div>
-                <div class="col-sm-7"><span class="x-current-charge mr-1"></span>円</div>
-            </div>
-            <div class="form-group row">
-                <div class="col-sm-5 col-form-label d-flex justify-content-end">変更後請求額</div>
-                <div class="col-sm-7 form-inline">
-                    <input type="text" class="form-control x-charge mr-1" size="6"/>円
-                </div>
-            </div>
-        </div>
-        <div class="mt-2 d-flex justify-content-end">
-            <button class="btn btn-secondary x-enter">入力</button>
-            <button class="btn btn-secondary x-cancel ml-2">キャンセル</button>
         </div>
     </div>
 </template>
@@ -494,19 +457,6 @@ let html = `
     </template>
 </template>
 
-<template id="practice-widget-example-template">
-    <div class="mb-3 border border-secondary rounded p-3">
-        <div class="d-flex p-2 mb-2" style="background-color: #ccc;">
-            <div class="font-weight-bold flex-grow-1"></div>
-            <div><span class="font-weight-bold x-widget-close"
-                       style="cursor: pointer;">&times;</span></div>
-        </div>
-        <div></div>
-        <div class="mt-2 d-flex justify-content-end">
-            <button type="button" class="x-close btn btn-secondary ml-2">閉じる</button>
-        </div>
-    </div>
-</template>
 `;
 
 export function getHtml() {
@@ -553,6 +503,8 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {UploadProgress} = await import("./upload-progress.js");
     let {PatientImageList} = await import("../../components/patient-image-list.js");
     let {NoPayList} = await import("./no-pay-list.js");
+    let {PatientSelectorMenu} = await import("./patient-selector/patient-selector-menu.js");
+    let {replaceNode} = await import("../../js/dom-helper.js");
 
     let prop = {
         rest,
@@ -674,7 +626,8 @@ export async function initLayout(pane, rest, controller, printAPI) {
         progress.start();
     });
 
-
+    replaceNode(document.getElementById("patient-selector-menu-placeholder"),
+        (new PatientSelectorMenu(prop)).ele);
 
     function getTemplateHtml(templateId) {
         let html = $("template#" + templateId).html();
@@ -1183,7 +1136,8 @@ export async function initLayout(pane, rest, controller, printAPI) {
 
             }
         });
-    })();
+    })
+    //();
 
     class DiseaseCurrentFactory {
         constructor() {

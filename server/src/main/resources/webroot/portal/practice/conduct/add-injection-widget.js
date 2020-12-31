@@ -39,7 +39,7 @@ let bodyTmpl = `
     </div>
     <form class="form-inline mb-2 x-search" onsubmit="return false;">
         <input type="text" class="form-control mr-2 x-search-text"/>
-        <button type="submit" class="btn btn-light">検索</button>
+        <button type="submit" class="btn btn-light border">検索</button>
     </form>
     <select class="form-control x-search-result" size="6"></select>
 `;

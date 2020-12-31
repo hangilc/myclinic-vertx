@@ -35,7 +35,7 @@ export class Dialog {
         this.ele.dispatchEvent(new CustomEvent("close-dialog", {detail: resultValue}));
     }
 
-    open(){
+    open(onReady){
         let backdrop = document.createElement("div");
         backdrop.classList.add("modal-dialog-backdrop");
         document.body.append(backdrop);
@@ -47,6 +47,9 @@ export class Dialog {
                 resolve(retVal);
             });
             document.body.append(this.ele);
+            if( onReady ){
+                onReady();
+            }
         });
     }
 

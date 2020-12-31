@@ -39,7 +39,6 @@ let tmpl = `
                 </div>
                 <div class="x-shinryou-widget-workarea"></div>
                 <div class="x-shinryou-wrapper"></div>
-<!--                <a href="javascript:void(0)" class="x-conduct-menu">［処置］</a>-->
                 <div class="x-conduct-menu-placeholder"></div>
                 <div class="x-conduct-workarea"></div>
                 <div class="x-conduct-wrapper"></div>
@@ -76,6 +75,9 @@ export class Record {
             (new ConductMenu(this.prop, this.map.conductWorkarea, this.map.conductWrapper, this.visitId,
                 visitDate)).ele);
         visitFull.conducts.forEach(conductFull => this.addConduct(conductFull));
+        this.map.chargeWrapper.append(
+            (new Charge(this.rest, visitFull.charge, visitFull.visit)).ele
+        );
         this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());
         this.map.shinryouMenu.addEventListener("click", async event => await this.doRegularShinryou());

@@ -15,6 +15,7 @@ import {replaceNode} from "../../js/dom-helper.js";
 import {ShinryouAuxMenu} from "./shinryou/shinryou-aux-menu.js";
 import {Shinryou} from "./shinryou/shinryou.js";
 import {DrugDisp} from "./drug-disp.js";
+import {Conduct} from "./conduct/conduct.js";
 
 let tmpl = `
     <div class="practice-record temp-visit-listener" data-visit-id="0">
@@ -39,6 +40,7 @@ let tmpl = `
                 <div class="x-shinryou-wrapper"></div>
                 <a href="javascript:void(0)" class="x-conduct-menu">［処置］</a>
                 <div class="x-conduct-wrapper"></div>
+                <div class="x-conduct-workarea"></div>
                 <div class="x-charge-wrapper"></div>
             </div>
         </div>
@@ -67,6 +69,7 @@ export class Record {
             (new ShinryouAuxMenu(this.prop, this.visitId, this.visitedAt, this.map.shinryouWidgetWorkarea)).ele);
         visitFull.shinryouList.forEach(shinryouFull => this.addShinryou(shinryouFull, false));
         visitFull.drugs.forEach(drugFull => this.addDrug(drugFull));
+        visitFull.conducts.forEach(conductFull => this.addConduct(conductFull));
         this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());
         this.map.shinryouMenu.addEventListener("click", async event => await this.doRegularShinryou());
@@ -240,6 +243,8 @@ export class Record {
 
     addConduct(conductFull){
         console.log("conduct", conductFull);
+        let c = new Conduct(conductFull);
+        this.map.conductWrapper.append(c.ele);
     }
 
 }

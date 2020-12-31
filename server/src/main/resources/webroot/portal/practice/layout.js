@@ -199,10 +199,6 @@ let html = `
     </div>
 </template>
 
-<template id="practice-drug-disp-template">
-    <div><span class="x-index"></span>）<span class="x-rep"></span></div>
-</template>
-
 <template id="practice-meisai-dialog-template">
     <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
         <div class="modal-dialog" role="document">
@@ -547,7 +543,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {Hoken} = await import("./hoken/hoken.js");
     let {HokenDisp} = await import("./hoken/hoken-disp.js");
     let {HokenSelectDialog} = await import("./hoken/hoken-select-dialog.js");
-    let {ConductDisp} = await import("./conduct-disp.js");
+    let {ConductDisp} = await import("./conduct/conduct-disp.js");
     let {DrugDisp} = await import("./drug-disp.js");
     let {MeisaiDialog} = await import("./meisai-dialog.js");
     let {SendFax} = await import("./send-fax.js");

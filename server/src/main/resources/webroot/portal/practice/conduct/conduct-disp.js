@@ -17,7 +17,7 @@ export class ConductDisp {
     constructor(conductFull){
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
-        this.map.kind.innerText = consts.conductKindToKanji(conductFull.conduct.kind);
+        this.map.kind.innerText = "＜" + consts.conductKindToKanji(conductFull.conduct.kind) + "＞";
         this.map.gazouLabel.innerText = getGazouLabel(conductFull);
         conductFull.conductShinryouList.forEach(cs => {
             let e = document.createElement("div");

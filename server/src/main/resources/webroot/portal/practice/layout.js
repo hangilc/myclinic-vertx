@@ -189,16 +189,6 @@ let html = `
     </div>
 </template>
 
-<template id="practice-conduct-disp-template">
-    <div>
-        <div class="x-kind"></div>
-        <div class="x-gazou-label"></div>
-        <div class="x-shinryou"></div>
-        <div class="x-drug"></div>
-        <div class="x-kizai"></div>
-    </div>
-</template>
-
 <template id="practice-meisai-dialog-template">
     <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
         <div class="modal-dialog" role="document">

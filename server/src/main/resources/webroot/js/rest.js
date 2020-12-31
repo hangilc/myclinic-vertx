@@ -201,4 +201,8 @@ export class Rest extends HttpClient {
         return await this.GET("/delete-duplicate-shinryou", {"visit-id": visitId});
     }
 
+    async enterXp(visitId, label, film){
+        return await this.GET("/enter-xp", {"visit-id": visitId, label, film});
+    }
+
 }

@@ -16,6 +16,7 @@ import {ShinryouAuxMenu} from "./shinryou/shinryou-aux-menu.js";
 import {Shinryou} from "./shinryou/shinryou.js";
 import {DrugDisp} from "./drug-disp.js";
 import {Conduct} from "./conduct/conduct.js";
+import {ConductMenu} from "./conduct/conduct-menu.js";
 
 let tmpl = `
     <div class="practice-record temp-visit-listener" data-visit-id="0">
@@ -38,9 +39,10 @@ let tmpl = `
                 </div>
                 <div class="x-shinryou-widget-workarea"></div>
                 <div class="x-shinryou-wrapper"></div>
-                <a href="javascript:void(0)" class="x-conduct-menu">［処置］</a>
-                <div class="x-conduct-wrapper"></div>
+<!--                <a href="javascript:void(0)" class="x-conduct-menu">［処置］</a>-->
+                <div class="x-conduct-menu-placeholder"></div>
                 <div class="x-conduct-workarea"></div>
+                <div class="x-conduct-wrapper"></div>
                 <div class="x-charge-wrapper"></div>
             </div>
         </div>
@@ -69,6 +71,8 @@ export class Record {
             (new ShinryouAuxMenu(this.prop, this.visitId, this.visitedAt, this.map.shinryouWidgetWorkarea)).ele);
         visitFull.shinryouList.forEach(shinryouFull => this.addShinryou(shinryouFull, false));
         visitFull.drugs.forEach(drugFull => this.addDrug(drugFull));
+        replaceNode(this.map.conductMenuPlaceholder,
+            (new ConductMenu(this.prop, this.map.conductWorkarea, this.map.conductWrapper, this.visitId)).ele);
         visitFull.conducts.forEach(conductFull => this.addConduct(conductFull));
         this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());

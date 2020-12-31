@@ -3014,7 +3014,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return new CallResult(backend);
     }
 
-    private int enterXp(Backend backend, int visitId, String label, String film) throws Exception {
+    private BatchEnterResultDTO enterXp(Backend backend, int visitId, String label, String film) throws Exception {
         BatchEnterRequestDTO req = BatchEnterRequestDTO.create();
         ConductEnterRequestDTO creq = ConductEnterRequestDTO.create(visitId,
                 ConductKind.Gazou.getCode(), label);
@@ -3024,12 +3024,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         creq.shinryouList.add(createConductShinryouReq("単純撮影診断", at));
         creq.kizaiList.add(createConductKizaiReq(film, 1, at));
         req.conducts.add(creq);
-        BatchEnterResultDTO result = backend.batchEnter(req);
-        if (result.conductIds.size() == 1 && result.shinryouIds.size() == 0 && result.drugIds.size() == 0) {
-            return result.conductIds.get(0);
-        } else {
-            throw new RuntimeException("処置（X線写真）を入力できませんでした。");
-        }
+        return backend.batchEnter(req);
     }
 
     private CallResult enterXp(RoutingContext ctx, Connection conn) throws Exception {
@@ -3040,7 +3035,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         String film = params.get("film");
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        int _value = enterXp(backend, visitId, label, film);
+        var _value = enterXp(backend, visitId, label, film);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);

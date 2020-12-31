@@ -788,6 +788,10 @@ class Rest extends Client {
     async deleteDuplicateShinryou(visitId){
         return await this.topRest.deleteDuplicateShinryou(visitId);
     }
+
+    async enterXp(visitId, label, film){
+        return await this.topRest.enterXp(visitId, label, film);
+    }
 }
 
 class Integration extends Client {

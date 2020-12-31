@@ -412,7 +412,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {parseElement} = await import("./parse-element.js");
     let {PatientDisplay} = await import("./patient-display.js");
     let {wqueueStateCodeToRep} = await import("../js/consts.js");
-    let {SelectWqueueDialog} = await import("./select-wqueue-dialog.js");
     let {SelectRecentVisitDialog} = await import("./select-recent-visit-dialog.js");
     let {SelectTodaysVisitDialog} = await import("./select-todays-visit-dialog.js");
     let {SelectPreviousVisitDialog} = await import("./select-prev-visit-dialog.js");
@@ -621,15 +620,15 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    let selectWqueueDialog = (function () {
-        let html = getTemplateHtml("practice-select-wqueue-dialog-template");
-        let ele = $(html);
-        let map = parseElement(ele);
-        let dialog = new SelectWqueueDialog(ele, map, rest);
-        dialog.init(state => wqueueStateCodeToRep(state));
-        return dialog;
-    })();
-
+    // let selectWqueueDialog = (function () {
+    //     let html = getTemplateHtml("practice-select-wqueue-dialog-template");
+    //     let ele = $(html);
+    //     let map = parseElement(ele);
+    //     let dialog = new SelectWqueueDialog(ele, map, rest);
+    //     dialog.init(state => wqueueStateCodeToRep(state));
+    //     return dialog;
+    // })();
+    //
     let selectRecentVisitDialog = (function () {
         let html = getTemplateHtml("practice-select-recent-visit-dialog-template");
         let ele = $(html);

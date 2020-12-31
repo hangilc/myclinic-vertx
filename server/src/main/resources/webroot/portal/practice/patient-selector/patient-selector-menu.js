@@ -3,6 +3,7 @@ import {parseElement} from "../../../js/parse-node.js";
 import {click} from "../../../js/dom-helper.js";
 import {SearchDialog} from "./search-dialog.js";
 import {WqueueDialog} from "./wqueue-dialog.js";
+import {RecentDialog} from "./recent-dialog.js";
 
 let tmpl = `
     <div class="dropdown">
@@ -46,7 +47,9 @@ export class PatientSelectorMenu {
     }
 
     async doRecent() {
-        return Promise.resolve(undefined);
+        let dialog = new RecentDialog(this.prop);
+        await dialog.init();
+        await dialog.open();
     }
 
     async doToday() {

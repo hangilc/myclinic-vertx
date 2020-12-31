@@ -792,6 +792,10 @@ class Rest extends Client {
     async enterXp(visitId, label, film){
         return await this.topRest.enterXp(visitId, label, film);
     }
+
+    async deleteConduct(conductId){
+        return await this.topRest.deleteConduct(conductId);
+    }
 }
 
 class Integration extends Client {

@@ -246,8 +246,7 @@ export class Record {
     }
 
     addConduct(conductFull){
-        console.log("conduct", conductFull);
-        let c = new Conduct(conductFull);
+        let c = new Conduct(this.prop, conductFull);
         this.map.conductWrapper.append(c.ele);
     }
 

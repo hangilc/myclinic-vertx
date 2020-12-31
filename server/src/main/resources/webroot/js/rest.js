@@ -205,6 +205,10 @@ export class Rest extends HttpClient {
         return await this.GET("/enter-xp", {"visit-id": visitId, label, film});
     }
 
+    async enterInjection(visitId, kind, iyakuhincode, amount){
+        return await this.GET("/enter-inject", {"visit-id": visitId, kind, iyakuhincode, amount});
+    }
+
     async deleteConduct(conductId){
         return await this.GET("/delete-conduct", {"conduct-id": conductId});
     }

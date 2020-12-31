@@ -2687,7 +2687,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return new CallResult(backend);
     }
 
-    public int enterInject(Backend backend, int visitId, int kind, int iyakuhincode, double amount)
+    public BatchEnterResultDTO enterInject(Backend backend, int visitId, int kind, int iyakuhincode, double amount)
             throws Exception {
         BatchEnterRequestDTO req = BatchEnterRequestDTO.create();
         ConductEnterRequestDTO creq = ConductEnterRequestDTO.create(visitId, kind, null);
@@ -2703,12 +2703,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         }
         creq.drugs.add(createConductDrugReq(iyakuhincode, amount, at));
         req.conducts.add(creq);
-        BatchEnterResultDTO result = backend.batchEnter(req);
-        if (result.conductIds.size() == 1 && result.shinryouIds.size() == 0 && result.drugIds.size() == 0) {
-            return result.conductIds.get(0);
-        } else {
-            throw new RuntimeException("注射を入力できませんでした。");
-        }
+        return backend.batchEnter(req);
     }
 
     private CallResult enterInject(RoutingContext ctx, Connection conn) throws Exception {
@@ -2720,7 +2715,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         double amount = Double.parseDouble(params.get("amount"));
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        int _value = enterInject(backend, visitId, kind, iyakuhincode, amount);
+        var _value = enterInject(backend, visitId, kind, iyakuhincode, amount);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);

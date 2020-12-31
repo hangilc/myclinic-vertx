@@ -793,6 +793,10 @@ class Rest extends Client {
         return await this.topRest.enterXp(visitId, label, film);
     }
 
+    async enterInjection(visitId, kind, iyakuhincode, amount){
+        return await this.topRest.enterInjection(visitId, kind, iyakuhincode, amount);
+    }
+
     async deleteConduct(conductId){
         return await this.topRest.deleteConduct(conductId);
     }

@@ -15,7 +15,7 @@ let bodyTmpl = `
             <div class="d-flex align-items-center justify-content-end" style="height: 100%">用量：</div>
         </div>
         <div class="col-8 form-inline">
-                <input type="text" class="form-control mr-1" size="4em"/>   
+                <input type="text" class="form-control mr-1 x-amount" size="4em"/>   
                 <span class="x-unit"></span>  
         </div>
     </div>
@@ -56,6 +56,7 @@ export class AddInjectionWidget extends Widget {
         gensymId(this.getBody());
         let map = this.map = parseElement(this.getBody());
         submit(map.search, async event => await this.doSearch());
+        click(map.enter, async event => await this.doEnter());
         click(map.cancel, event => this.close());
         map.searchResult.addEventListener("change", event => this.doSelectionChange());
     }
@@ -96,5 +97,25 @@ export class AddInjectionWidget extends Widget {
         this.master = master;
         this.map.name.innerText = master.name;
         this.map.unit.innerText = master.unit;
+    }
+
+    getSelectedKind(){
+        return +this.map.kind.querySelector("input:checked").value;
+    }
+
+    async doEnter(){
+        let kind = this.getSelectedKind();
+        if( !this.master ){
+            alert("薬剤が選択されていません。");
+            return;
+        }
+        let amount = +this.map.amount.value.trim();
+        if( isNaN(amount) || !(amount > 0) ){
+            alert("用量の入力が不適切です。");
+            return;
+        }
+        let result = await this.rest.enterInjection(this.visitId, kind, this.master.iyakuhincode, amount);
+        this.ele.dispatchEvent(new CustomEvent("batch-entered", {bubbles:true, detail: result}));
+        this.ele.remove();
     }
 }

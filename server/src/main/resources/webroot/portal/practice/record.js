@@ -63,6 +63,7 @@ export class Record {
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.ele.dataset.visitId = visitFull.visit.visitId;
+        let visitDate = visit.visitedAt.substring(0, 10);
         let title = new Title(prop, visitFull.visit);
         this.map.title.append(title.ele);
         visitFull.texts.forEach(text => this.addText(text));
@@ -72,7 +73,8 @@ export class Record {
         visitFull.shinryouList.forEach(shinryouFull => this.addShinryou(shinryouFull, false));
         visitFull.drugs.forEach(drugFull => this.addDrug(drugFull));
         replaceNode(this.map.conductMenuPlaceholder,
-            (new ConductMenu(this.prop, this.map.conductWorkarea, this.map.conductWrapper, this.visitId)).ele);
+            (new ConductMenu(this.prop, this.map.conductWorkarea, this.map.conductWrapper, this.visitId,
+                visitDate)).ele);
         visitFull.conducts.forEach(conductFull => this.addConduct(conductFull));
         this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());

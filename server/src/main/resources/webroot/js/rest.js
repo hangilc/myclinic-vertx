@@ -209,4 +209,8 @@ export class Rest extends HttpClient {
         return await this.GET("/delete-conduct", {"conduct-id": conductId});
     }
 
+    async searchIyakuhinMaster(text, at){
+        return await this.GET("/search-iyakuhin-master-by-name", {text, at});
+    }
+
 }

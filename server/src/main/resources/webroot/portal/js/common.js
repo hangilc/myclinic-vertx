@@ -796,6 +796,10 @@ class Rest extends Client {
     async deleteConduct(conductId){
         return await this.topRest.deleteConduct(conductId);
     }
+
+    async searchIyakuhinMaster(text, at){
+        return await this.topRest.searchIyakuhinMaster(text, at);
+    }
 }
 
 class Integration extends Client {

@@ -2,6 +2,7 @@ import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
 import {click} from "../../../js/dom-helper.js";
 import {AddXpWidget} from "./add-xp-widget.js";
+import {AddInjectionWidget} from "./add-injection-widget.js";
 
 let tmpl = `
     <div class="dropdown">
@@ -17,11 +18,12 @@ let tmpl = `
 `;
 
 export class ConductMenu {
-    constructor(prop, workarea, wrapper, visitId){
+    constructor(prop, workarea, wrapper, visitId, visitDate){
         this.prop = prop;
         this.workarea = workarea;
         this.wrapper = wrapper;
         this.visitId = visitId;
+        this.visitDate = visitDate;
         this.ele = createElementFrom(tmpl);
         let map = parseElement(this.ele);
         click(map.addXp, event => this.doXp());
@@ -38,7 +40,12 @@ export class ConductMenu {
     }
 
     doInjection() {
-
+        if( !this.prop.confirmManip(this.visitId, "注射Ｘ線検査を追加しますか") ){
+            return;
+        }
+        let w = new AddInjectionWidget(this.prop.rest, this.visitId, this.visitDate);
+        this.workarea.prepend(w.ele);
+        w.initFocus();
     }
 
     doCopyAll() {

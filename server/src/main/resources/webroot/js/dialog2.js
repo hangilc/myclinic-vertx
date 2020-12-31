@@ -13,10 +13,16 @@ let tmpl = `
 `;
 
 export class Dialog {
-    constructor() {
+    constructor(opt=null) {
+        if( opt === null ){
+            opt = {};
+        }
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.map.closeLink.addEventListener("click", event => this.close(undefined));
+        if( opt.width ){
+            this.ele.style.width = opt.width;
+        }
     }
 
     setTitle(title){

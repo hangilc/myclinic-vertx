@@ -3,6 +3,7 @@ import {parseElement} from "../../../js/parse-node.js";
 import {click, submit, on} from "../../../js/dom-helper.js";
 import * as kanjidate from "../../../js/kanjidate.js";
 import {sexToRep} from "../../js/consts.js";
+import {PatientDisp} from "./patient-disp.js";
 
 let bodyTmpl = `
     <div class="row">
@@ -12,37 +13,10 @@ let bodyTmpl = `
                     <input class="form-control x-input"/>
                     <button type="submit" class="form-control ml-2">検索</button>
                 </form>
-                <select class="form-control mt-2 form-control x-select" size="7"></select>
+                <select class="form-control mt-2 x-select" size="7"></select>
             </div>
         </div>
-        <div class="col-6">
-            <div class="card mt-2">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-sm-4">患者番号</div>
-                        <div class="col-sm-8 x-patient-id"></div>
-                        <div class="col-sm-4">氏名</div>
-                        <div class="col-sm-8">
-                            <span class="x-last-name"></span><span
-                                class="x-first-name ml-2"></span>
-                        </div>
-                        <div class="col-sm-4">よみ</div>
-                        <div class="col-sm-8 x-yomi">
-                            <span class="x-last-name-yomi"></span><span
-                                class="x-first-name-yomi ml-2"></span>
-                        </div>
-                        <div class="col-sm-4">生年月日</div>
-                        <div class="col-sm-8 x-birthday"></div>
-                        <div class="col-sm-4">性別</div>
-                        <div class="col-sm-8 x-sex"></div>
-                        <div class="col-sm-4">住所</div>
-                        <div class="col-sm-8 x-address"></div>
-                        <div class="col-sm-4">電話</div>
-                        <div class="col-sm-8 x-phone"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div class="col-6 x-disp"></div>
     </div>
 `;
 
@@ -61,6 +35,8 @@ export class SearchDialog extends Dialog {
         this.setTitle("患者検索");
         this.getBody().innerHTML = bodyTmpl;
         let bmap = this.bmap = parseElement(this.getBody());
+        this.disp = new PatientDisp();
+        bmap.disp.append(this.disp.ele);
         submit(bmap.form, async event => await this.doSearch());
         on(bmap.select, "change", event => this.doSelect());
         this.getFooter().innerHTML = footerTmpl;
@@ -97,7 +73,6 @@ export class SearchDialog extends Dialog {
 
     doSelect(){
         let opt = this.bmap.select.querySelector("option:checked");
-        console.log("opt", opt);
         if( opt ){
             let patient = opt.data;
             this.setPatient(patient);
@@ -105,17 +80,8 @@ export class SearchDialog extends Dialog {
     }
 
     setPatient(patient){
+        this.disp.setPatient(patient);
         this.patient = patient;
-        let map = this.bmap;
-        map.patientId.innerText = patient.patientId;
-        map.lastName.innerText = patient.lastName;
-        map.firstName.innerText = patient.firstName;
-        map.lastNameYomi.innerText = patient.lastNameYomi;
-        map.firstNameYomi.innerText = patient.firstNameYomi;
-        map.birthday.innerText = kanjidate.sqldateToKanji(patient.birthday);
-        map.sex.innerText = sexToRep(patient.sex, "性");
-        map.address.innerText = patient.address;
-        map.phone.innerText = patient.phone;
     }
 
     async doRegisterEnter(){

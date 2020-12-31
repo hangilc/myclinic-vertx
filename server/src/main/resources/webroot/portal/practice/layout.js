@@ -43,61 +43,6 @@ let html = `
     </div>
 </div>
 
-<template id="practice-patient-search-dialog-template">
-    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">患者選択</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="x-search_">
-                        <form class="form-inline x-form">
-                            <input class="form-control x-input"/>
-                            <button type="submit" class="form-control ml-2">検索</button>
-                        </form>
-                        <select class="form-control mt-2 form-control x-select" size="5"></select>
-                    </div>
-                    <div class="card mt-2">
-                        <div class="card-body">
-                            <div class="row x-disp_">
-                                <div class="col-sm-3">患者番号</div>
-                                <div class="col-sm-9 x-patient-id"></div>
-                                <div class="col-sm-3">氏名</div>
-                                <div class="col-sm-9">
-                                    <span class="x-last-name"></span><span
-                                        class="x-first-name ml-2"></span>
-                                </div>
-                                <div class="col-sm-3">よみ</div>
-                                <div class="col-sm-9 x-yomi">
-                                    <span class="x-last-name-yomi"></span><span
-                                        class="x-first-name-yomi ml-2"></span>
-                                </div>
-                                <div class="col-sm-3">生年月日</div>
-                                <div class="col-sm-9 x-birthday"></div>
-                                <div class="col-sm-3">性別</div>
-                                <div class="col-sm-9 x-sex"></div>
-                                <div class="col-sm-3">住所</div>
-                                <div class="col-sm-9 x-address"></div>
-                                <div class="col-sm-3">電話</div>
-                                <div class="col-sm-9 x-phone"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary x-register-enter">受付・診察</button>
-                    <button type="button" class="btn btn-primary x-enter">選択</button>
-                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
-
 <template id="practice-select-wqueue-dialog-template">
     <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
         <div class="modal-dialog" role="document">
@@ -497,7 +442,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {DiseaseModify} = await import("./disease-modify.js");
     let {SearchTextForPatientDialog} = await import("./search-text-for-patient-dialog.js");
     let {SearchTextGloballyDialog} = await import("./search-text-globally-dialog.js");
-    let {PatientSearchDialog} = await import("./patient-search-dialog.js");
     let {RegisteredDrugDialog} = await import("./registered-drug-dialog/registered-drug-dialog.js")
     let {UploadImageDialog} = await import("./upload-image-dialog.js");
     let {UploadProgress} = await import("./upload-progress.js");
@@ -543,6 +487,9 @@ export async function initLayout(pane, rest, controller, printAPI) {
     pane.addEventListener("start-session", async event => {
         let patientId = event.detail.patientId;
         let visitId = event.detail.visitId;
+        if( visitId > 0 ){
+            await rest.startExam(visitId);
+        }
         prop.patient = await prop.rest.getPatient(patientId);
         prop.currentVisitId = visitId;
         prop.tempVisitId = 0;
@@ -552,6 +499,9 @@ export async function initLayout(pane, rest, controller, printAPI) {
     });
 
     pane.addEventListener("end-session", async event => {
+        if( prop.currentVisitId > 0 ){
+            await rest.suspendExam(prop.currentVisitId);
+        }
         prop.patient = null;
         prop.currentVisitId = 0;
         prop.tempVisitId = 0;

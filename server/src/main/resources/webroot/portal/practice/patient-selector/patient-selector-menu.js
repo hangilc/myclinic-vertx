@@ -2,6 +2,7 @@ import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
 import {click} from "../../../js/dom-helper.js";
 import {SearchDialog} from "./search-dialog.js";
+import {WqueueDialog} from "./wqueue-dialog.js";
 
 let tmpl = `
     <div class="dropdown">
@@ -23,6 +24,7 @@ let tmpl = `
 export class PatientSelectorMenu {
     constructor(prop) {
         this.prop = prop;
+        this.rest = prop.rest;
         this.ele = createElementFrom(tmpl);
         let map = parseElement(this.ele);
         click(map.wqueue, async event => await this.doWqueue());
@@ -33,7 +35,9 @@ export class PatientSelectorMenu {
     }
 
     async doWqueue() {
-        return Promise.resolve(undefined);
+        let wqueue = await this.rest.listWqueueFullForExam();
+        let dialog = new WqueueDialog(this.prop, wqueue);
+        await dialog.open();
     }
 
     async doSearch() {

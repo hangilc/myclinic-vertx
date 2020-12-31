@@ -29,72 +29,6 @@ let html = `
     </div>
 </div>
 
-<template id="practice-select-wqueue-dialog-template">
-    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">受付患者選択</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <select class="form-control mt-2 form-control x-select" size="5"></select>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary x-enter">選択</button>
-                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
-
-<template id="practice-select-recent-visit-dialog-template">
-    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">最近の診察</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <select class="form-control mt-2 form-control x-select" size="5"></select>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary x-enter">選択</button>
-                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
-
-<template id="practice-select-todays-visit-dialog-template">
-    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">本日の診察</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <select class="form-control mt-2 form-control x-select" size="5"></select>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary x-enter">選択</button>
-                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
-
 <template id="practice-select-visit-at-dialog-template">
     <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
         <div class="modal-dialog" role="document">
@@ -397,7 +331,6 @@ export function getHtml() {
 export async function initLayout(pane, rest, controller, printAPI) {
     let {parseElement} = await import("./parse-element.js");
     let {PatientDisplay} = await import("./patient-display.js");
-    let {SelectTodaysVisitDialog} = await import("./select-todays-visit-dialog.js");
     let {SelectPreviousVisitDialog} = await import("./select-prev-visit-dialog.js");
     let {ShinryouDisp} = await import("./shinryou/shinryou-disp.js");
     let {Shinryou} = await import("./shinryou/shinryou.js");
@@ -607,15 +540,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     //     return dialog;
     // })();
     //
-
-    let selectTodaysVisitDialog = (function () {
-        let html = getTemplateHtml("practice-select-todays-visit-dialog-template");
-        let ele = $(html);
-        let map = parseElement(ele);
-        let dialog = new SelectTodaysVisitDialog(ele, map, rest);
-        dialog.init();
-        return dialog;
-    })();
 
     let selectPreviousVisitDialog = (function () {
         let html = getTemplateHtml("practice-select-visit-at-dialog-template");

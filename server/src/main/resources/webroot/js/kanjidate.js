@@ -110,7 +110,11 @@ export function sqldateToKanji(sqldate, opts){
         month = month.padStart(2, "0");
         day = day.padStart(2, "0");
     }
-    return `${gengou}${nen}年${month}月${day}日`;
+    let youbiStr = "";
+    if( opts.youbi ){
+        youbiStr = `（${data.youbi}）`;
+    }
+    return `${gengou}${nen}年${month}月${day}日${youbiStr}`;
 }
 
 export function sqldatetimeToKanji(sqldatetime, opts){
@@ -190,16 +194,6 @@ export function calcAge(birthday){
 function momentToSqldate(m){
     return m.format("YYYY-MM-DD");
 }
-
-// export function advanceDays(sqldate, days){
-//     let m = moment(sqldate);
-//     return momentToSqldate(m.add(days, "days"));
-// }
-
-// export function advanceMonths(sqldate, months){
-//     let m = moment(sqldate);
-//     return momentToSqldate(m.add(months, "months"));
-// }
 
 export function toEndOfMonth(sqldate) {
     let m = moment(sqldate).date(1);

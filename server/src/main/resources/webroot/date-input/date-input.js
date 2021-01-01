@@ -85,6 +85,9 @@ export class DateInput {
 
     doDayClick(event){
         let n = 1;
+        if( event.ctrlKey ){
+            n = 7;
+        }
         if( event.shiftKey ){
             n = -n;
         }

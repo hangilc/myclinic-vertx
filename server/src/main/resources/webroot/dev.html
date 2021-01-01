@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dev</title>
+    <link rel="stylesheet" href="vendor/bootstrap.min.css">
+    <script src="vendor/jquery.min.js"></script>
+    <script src="vendor/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+    <div id="workarea"></div>
+    <button class="btn btn-secondary" id="get-date">Get</button>
+    <script type="module">
+        import {DateInput} from "./date-input/date-input.js";
+        import * as kanjidate from "./js/kanjidate.js";
+
+        let dateInput = new DateInput({small:true});
+        dateInput.set(kanjidate.todayAsSqldate());
+        dateInput.setGengouList(kanjidate.recentGengouList);
+        dateInput.setGengou("平成");
+        document.getElementById("workarea").append(dateInput.ele);
+        document.getElementById("get-date").addEventListener("click", event => console.log(dateInput.get()));
+    </script>
+</body>
+</html>

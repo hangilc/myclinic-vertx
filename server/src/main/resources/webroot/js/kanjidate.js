@@ -227,3 +227,12 @@ export function getTimestamp(){
     let second = padZero2(data.second);
     return `${year}${month}${day}${hour}${minute}${second}`;
 }
+
+export function isValidDate(year, month, day){
+    let d = new Date(year, month - 1, day);
+    return d.getFullYear() === year && d.getMonth() === (month - 1) && d.getDate() === day;
+}
+
+export let fullGengouList = gengouList.map(g => g.name);
+export let recentGengouList = [fullGengouList[0], fullGengouList[1]];
+export let currentGengou = fullGengouList[0];

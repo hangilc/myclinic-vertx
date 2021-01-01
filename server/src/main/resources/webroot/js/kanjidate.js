@@ -191,15 +191,15 @@ function momentToSqldate(m){
     return m.format("YYYY-MM-DD");
 }
 
-export function advanceDays(sqldate, days){
-    let m = moment(sqldate);
-    return momentToSqldate(m.add(days, "days"));
-}
+// export function advanceDays(sqldate, days){
+//     let m = moment(sqldate);
+//     return momentToSqldate(m.add(days, "days"));
+// }
 
-export function advanceMonths(sqldate, months){
-    let m = moment(sqldate);
-    return momentToSqldate(m.add(months, "months"));
-}
+// export function advanceMonths(sqldate, months){
+//     let m = moment(sqldate);
+//     return momentToSqldate(m.add(months, "months"));
+// }
 
 export function toEndOfMonth(sqldate) {
     let m = moment(sqldate).date(1);
@@ -236,3 +236,25 @@ export function isValidDate(year, month, day){
 export let fullGengouList = gengouList.map(g => g.name);
 export let recentGengouList = [fullGengouList[0], fullGengouList[1]];
 export let currentGengou = fullGengouList[0];
+
+export function jsdateToSqldate(jsdate){
+    return toSqldate(jsdate.getFullYear(), jsdate.getMonth() + 1, jsdate.getDate());
+}
+
+export function advanceDays(sqldate, n=1){
+    let {year, month, day} = parseSqldate(sqldate);
+    let d = new Date(year, month - 1, day + n);
+    return jsdateToSqldate(d);
+}
+
+export function advanceMonths(sqldate, n=1){
+    let {year, month, day} = parseSqldate(sqldate);
+    let d = new Date(year, month - 1 + n, day);
+    return jsdateToSqldate(d);
+}
+
+export function advanceYears(sqldate, n=1){
+    let {year, month, day} = parseSqldate(sqldate);
+    let d = new Date(year + n, month - 1, day);
+    return jsdateToSqldate(d);
+}

@@ -1,6 +1,7 @@
 import {createElementFrom} from "../js/create-element-from.js";
 import {parseElement} from "../js/parse-node.js";
 import * as funs from "./date-input-funs.js";
+import {click} from "../js/dom-helper.js";
 
 let tmpl = `
     <div class="form-inline">
@@ -31,6 +32,7 @@ export class DateInput {
             [this.map.gengou, this.map.nen, this.map.month, this.map.day]
                 .forEach(e => e.classList.add("form-control-sm"));
         }
+        this.enableLabelClick();
     }
 
     set(sqldate){
@@ -54,5 +56,38 @@ export class DateInput {
 
     setGengou(gengou){
         funs.setGengou(this.map, gengou);
+    }
+
+    enableLabelClick(){
+        this.map.nenLabel.style.cursor = "pointer";
+        click(this.map.nenLabel, event => this.doNenClick(event));
+        this.map.monthLabel.style.cursor = "pointer";
+        click(this.map.monthLabel, event => this.doMonthClick(event));
+        this.map.dayLabel.style.cursor = "pointer";
+        click(this.map.dayLabel, event => this.doDayClick(event));
+    }
+
+    doNenClick(event){
+        let n = 1;
+        if( event.shiftKey ){
+            n = -n;
+        }
+        funs.advanceYears(this.map, n);
+    }
+
+    doMonthClick(event){
+        let n = 1;
+        if( event.shiftKey ){
+            n = -n;
+        }
+        funs.advanceMonths(this.map, n);
+    }
+
+    doDayClick(event){
+        let n = 1;
+        if( event.shiftKey ){
+            n = -n;
+        }
+        funs.advanceDays(this.map, n);
     }
 }

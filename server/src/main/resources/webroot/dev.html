@@ -14,6 +14,7 @@
         import {DateInput} from "./date-input/date-input.js";
         import * as kanjidate from "./js/kanjidate.js";
 
+        window.kanjidate = kanjidate;
         let dateInput = new DateInput({small:true});
         dateInput.set(kanjidate.todayAsSqldate());
         dateInput.setGengouList(kanjidate.recentGengouList);

@@ -23,7 +23,7 @@ export function clear(map){
 export function getDate(map, allowEmpty=false){
     if( isEmpty(map) ){
         if( allowEmpty ){
-            return success(this.emptyValue);
+            return success(null);
         } else {
             return error("入力されていません。");
         }
@@ -95,6 +95,39 @@ function getDayInput(map){
 
 function setDayInput(map, value){
     map.day.value = value;
+}
+
+export function advanceDays(map, n){
+    let optDate = getDate(map);
+    if( optDate.isSuccess() ){
+        let date = optDate.getValue();
+        let advanced = kanjidate.advanceDays(date, n);
+        setDate(map, advanced);
+    } else {
+        alert(optDate.getMessage());
+    }
+}
+
+export function advanceMonths(map, n){
+    let optDate = getDate(map);
+    if( optDate.isSuccess() ){
+        let date = optDate.getValue();
+        let advanced = kanjidate.advanceMonths(date, n);
+        setDate(map, advanced);
+    } else {
+        alert(optDate.getMessage());
+    }
+}
+
+export function advanceYears(map, n){
+    let optDate = getDate(map);
+    if( optDate.isSuccess() ){
+        let date = optDate.getValue();
+        let advanced = kanjidate.advanceYears(date, n);
+        setDate(map, advanced);
+    } else {
+        alert(optDate.getMessage());
+    }
 }
 
 

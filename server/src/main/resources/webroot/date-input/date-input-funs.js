@@ -3,11 +3,21 @@ import {success, failure} from "../js/result.js";
 import {error} from "../portal-reception/js/opt-result.js";
 
 export function setDate(map, sqldate){
+    if( !sqldate ){
+        clear(map);
+        return;
+    }
     let data = kanjidate.sqldatetimeToData(sqldate);
     setGengou(map, data.gengou.name);
     setNenInput(map, data.nen);
     setMonthInput(map, data.month);
     setDayInput(map, data.day);
+}
+
+export function clear(map){
+    setNenInput(map, "");
+    setMonthInput(map, "");
+    setDayInput(map, "");
 }
 
 export function getDate(map, allowEmpty=false){

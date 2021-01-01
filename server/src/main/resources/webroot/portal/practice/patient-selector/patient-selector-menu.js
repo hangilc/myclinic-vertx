@@ -5,6 +5,8 @@ import {SearchDialog} from "./search-dialog.js";
 import {WqueueDialog} from "./wqueue-dialog.js";
 import {RecentDialog} from "./recent-dialog.js";
 import {PatientListWidget} from "./patient-list-widget.js";
+import {ByDateWidget} from "./by-date-widget.js";
+import * as kanjidate from "../../../js/kanjidate.js";
 
 let tmpl = `
     <div class="dropdown">
@@ -17,8 +19,7 @@ let tmpl = `
             <a href="javascript:void(0)" class="x-wqueue dropdown-item mx-2">受付患者選択</a>
             <a href="javascript:void(0)" class="x-search dropdown-item mx-2">患者検索</a>
             <a href="javascript:void(0)" class="x-recent dropdown-item mx-2">最近の診察</a>
-            <a href="javascript:void(0)" class="x-today dropdown-item mx-2">本日の診察</a>
-            <a href="javascript:void(0)" class="x-prev dropdown-item mx-2">以前の診察</a>
+            <a href="javascript:void(0)" class="x-by-date dropdown-item mx-2">日付別</a>
         </div>
     </div>
 `;
@@ -33,8 +34,7 @@ export class PatientSelectorMenu {
         click(map.wqueue, async event => await this.doWqueue());
         click(map.search, async event => await this.doSearch());
         click(map.recent, async event => await this.doRecent());
-        click(map.today, async event => await this.doToday());
-        click(map.prev, async event => await this.doPrev());
+        click(map.byDate, async event => await this.doByDate());
     }
 
     async doWqueue() {
@@ -54,14 +54,9 @@ export class PatientSelectorMenu {
         await dialog.open();
     }
 
-    async doToday() {
-        let vps = await this.rest.listTodaysVisits();
-        let patients = vps.map(vps => vps.patient);
-        let widget = new PatientListWidget(this.prop, "本日の受診患者", patients);
+    async doByDate() {
+        let widget = new ByDateWidget(this.prop);
+        await widget.setDate(kanjidate.todayAsSqldate());
         this.workarea.append(widget.ele);
-    }
-
-    async doPrev() {
-        return Promise.resolve(undefined);
     }
 }

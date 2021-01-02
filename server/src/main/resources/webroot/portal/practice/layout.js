@@ -294,6 +294,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
         currentVisitId: 0,
         tempVisitId: 0,
         page: 0,   // current page of visit records
+        pane,
         getTargetVisitId(){
             if( this.currentVisitId > 0 ){
                 return this.currentVisitId;

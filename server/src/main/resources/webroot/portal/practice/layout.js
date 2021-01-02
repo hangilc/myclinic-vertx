@@ -528,7 +528,8 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     }
 
-    new PatientManip(prop, document.getElementById("practice-patient-manip"));
+    new PatientManip(prop, document.getElementById("practice-patient-manip"),
+        document.getElementById("practice-general-workarea"));
 
     document.getElementById("practice-patient-manip").addEventListener("session-started", event => {
         show(event.target);

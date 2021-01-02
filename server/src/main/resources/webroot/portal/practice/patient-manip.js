@@ -2,6 +2,8 @@ import {parseElement} from "../../js/parse-node.js";
 import {MeisaiDialog} from "./meisai-dialog.js";
 import {click} from "../../js/dom-helper.js";
 import {SearchTextForPatientDialog} from "./search-text-for-patient-dialog.js";
+import {UploadImageDialog} from "./upload-image-dialog.js";
+import {UploadProgress} from "./upload-progress.js";
 
 let tmpl = `
     <button class="x-cashier btn btn-secondary">会計</button>
@@ -13,11 +15,12 @@ let tmpl = `
 `;
 
 export class PatientManip {
-    constructor(prop, ele) {
+    constructor(prop, ele, generalWorkarea) {
         this.prop = prop;
         this.rest = prop.rest;
         this.ele = ele;
         ele.innerHTML = tmpl;
+        this.generalWorkarea = generalWorkarea;
         let map = parseElement(this.ele);
         click(map.cashier, async event => await this.doCashier());
         click(map.end, event => this.ele.dispatchEvent(
@@ -66,7 +69,20 @@ export class PatientManip {
     }
 
     async doUploadImage() {
-        return Promise.resolve(undefined);
+        const patient = this.prop.patient;
+        if( !patient ){
+            alert("Patient not selected");
+            return;
+        }
+        const patientId = patient.patientId;
+        if (patientId > 0) {
+            let dialog = new UploadImageDialog(patientId);
+            let uploaders = await dialog.open();
+            if (uploaders) {
+                let reporter = new UploadProgress(uploaders);
+                this.generalWorkarea.append(reporter.ele);
+            }
+        }
     }
 
     async doListImage() {

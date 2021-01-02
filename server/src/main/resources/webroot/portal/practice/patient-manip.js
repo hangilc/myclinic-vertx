@@ -1,4 +1,5 @@
 import {parseElement} from "../../js/parse-node.js";
+import {MeisaiDialog} from "./meisai-dialog.js";
 
 let tmpl = `
     <button class="x-cashier btn btn-secondary">会計</button>
@@ -13,6 +14,7 @@ let tmpl = `
 export class PatientManip {
     constructor(prop, ele) {
         this.prop = prop;
+        this.rest = prop.rest;
         this.ele = ele;
         ele.innerHTML = tmpl;
         let map = parseElement(this.ele);
@@ -29,11 +31,11 @@ export class PatientManip {
             return;
         }
         let meisai = await this.prop.rest.getMeisai(visitId);
-        let dialog = meisaiDialogFactory.create(meisai);
+        let dialog = new MeisaiDialog(meisai);
         let result = await dialog.open();
         if (result) {
-            await rest.endExam(visitId, meisai.charge);
-            await controller.endSession();
+            await rest.endExam(visitId, result.charge);
+            this.prop.endSession();
         }
     }
 

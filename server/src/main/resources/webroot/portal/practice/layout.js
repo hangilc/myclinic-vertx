@@ -29,40 +29,6 @@ let html = `
     </div>
 </div>
 
-<template id="practice-meisai-dialog-template">
-    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">会計</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="x-detail_">
-                        <pre class="x-items"></pre>
-                        <div class="x-summary"></div>
-                        <div class="mb-2 x-value-wrapper">
-                            <span class="x-value"></span> 
-                            <a href="javascript:void(0)" class="x-modify-charge-button">変更</a>
-                        </div>
-                        <div class="d-none form-inline x-modify-charge-workarea">
-                            <input type="text" class="form-control mr-2 x-modify-charge-input"/>
-                            <span class="mr-2">円</span>
-                            <button class="btn btn-primary btn-sm mr-2 x-modify-charge-enter">入力</button>
-                            <button class="btn btn-secondary btn-sm x-modify-charge-cancel">キャンセル</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary x-enter">入力</button>
-                    <button type="button" class="btn btn-secondary x-cancel">キャンセル</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
 
 <template id="practice-disease-area-template">
     <div class="d-none">
@@ -305,18 +271,8 @@ export function getHtml() {
 export async function initLayout(pane, rest, controller, printAPI) {
     let {parseElement} = await import("./parse-element.js");
     let {PatientDisplay} = await import("./patient-display.js");
-    let {SelectPreviousVisitDialog} = await import("./select-prev-visit-dialog.js");
-    let {ShinryouDisp} = await import("./shinryou/shinryou-disp.js");
-    let {Shinryou} = await import("./shinryou/shinryou.js");
-    let {ShinryouEdit} = await import("./shinryou/shinryou-edit.js");
     let {Record} = await import("./record.js");
-    let {Hoken} = await import("./hoken/hoken.js");
-    let {HokenDisp} = await import("./hoken/hoken-disp.js");
-    let {HokenSelectDialog} = await import("./hoken/hoken-select-dialog.js");
-    let {ConductDisp} = await import("./conduct/conduct-disp.js");
-    let {DrugDisp} = await import("./drug-disp.js");
     let {MeisaiDialog} = await import("./meisai-dialog.js");
-    let {SendFax} = await import("./send-fax.js");
     let {FaxProgress} = await import("./fax-progress.js");
     let {Nav} = await import("./nav.js");
     let {DiseaseCurrent} = await import("./disease-current.js");
@@ -587,37 +543,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
         let map = parseElement(ele);
         let meisaiDialogFactory = new MeisaiDialogFactory();
         let searchTextForPatientDialogFactory = new SearchTextForPatientDialogFactory();
-
-        // addPatientChangedListener(patient => {
-        //     if (!patient) {
-        //         ele.addClass("d-none");
-        //     } else {
-        //         ele.removeClass("d-none");
-        //     }
-        // })
-
-        map.cashier.on("click", async event => {
-            let visitId = controller.getVisitId();
-            if (visitId <= 0) {
-                alert("現在診察中ではないので、会計はできません。");
-                return;
-            }
-            let meisai = await rest.getMeisai(visitId);
-            let dialog = meisaiDialogFactory.create(meisai);
-            let result = await dialog.open();
-            if (result) {
-                await rest.endExam(visitId, meisai.charge);
-                await controller.endSession();
-            }
-        });
-
-        map.end.on("click", async event => {
-            let visitId = controller.getVisitId();
-            if (visitId > 0) {
-                await rest.suspendExam(visitId);
-            }
-            await controller.endSession();
-        });
 
         map.registerCurrent.on("click", async event => {
             if (controller.getVisitId() === 0 && controller.getPatientId() > 0 &&

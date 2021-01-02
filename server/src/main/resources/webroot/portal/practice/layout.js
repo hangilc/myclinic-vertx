@@ -319,6 +319,20 @@ export async function initLayout(pane, rest, controller, printAPI) {
         },
         endSession(){
             pane.dispatchEvent(new Event("end-session"));
+        },
+        publish(event, detail, filter){
+            let e = pane;
+            if( filter && filter.visitId ){
+                e = pane.querySelector(`.practice-record[data-visit-id='${filter.visitId}']`);
+            }
+            if( e ){
+                let sel = `.${event}-subscriber`;
+                let evt = new CustomEvent(event, {detail: detail});
+                if( e.classList.contains(sel) ){
+                    e.dispatchEvent(evt);
+                }
+                e.querySelectorAll(sel).forEach(s => s.dispatchEvent(evt));
+            }
         }
     };
 

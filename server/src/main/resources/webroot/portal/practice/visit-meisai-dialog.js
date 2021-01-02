@@ -1,4 +1,4 @@
-import {Dialog} from "../../js/dialog.js";
+import {Dialog} from "../../js/dialog2.js";
 import {parseElement} from "../../js/parse-node.js";
 import {click} from "../../js/dom-helper.js";
 import {createElementFrom} from "../../js/create-element-from.js";

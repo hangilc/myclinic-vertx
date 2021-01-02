@@ -4,6 +4,7 @@ import {click} from "../../js/dom-helper.js";
 import {SearchTextForPatientDialog} from "./search-text-for-patient-dialog.js";
 import {UploadImageDialog} from "./upload-image-dialog.js";
 import {UploadProgress} from "./upload-progress.js";
+import {PatientImageList} from "../../components/patient-image-list.js";
 
 let tmpl = `
     <button class="x-cashier btn btn-secondary">会計</button>
@@ -15,11 +16,12 @@ let tmpl = `
 `;
 
 export class PatientManip {
-    constructor(prop, ele, generalWorkarea) {
+    constructor(prop, ele, manipWorkarea, generalWorkarea) {
         this.prop = prop;
         this.rest = prop.rest;
         this.ele = ele;
         ele.innerHTML = tmpl;
+        this.manipWorkarea = manipWorkarea;
         this.generalWorkarea = generalWorkarea;
         let map = parseElement(this.ele);
         click(map.cashier, async event => await this.doCashier());
@@ -86,6 +88,17 @@ export class PatientManip {
     }
 
     async doListImage() {
-        return Promise.resolve(undefined);
+        const patient = this.prop.patient;
+        if( !patient ){
+            alert("Patient not selected");
+            return;
+        }
+        const patientId = patient.patientId;
+        if (patientId > 0) {
+            let w = new PatientImageList(rest, true);
+            await w.init(patientId);
+            let wrapper = this.manipWorkarea;
+            wrapper.prepend(w.ele);
+        }
     }
 }

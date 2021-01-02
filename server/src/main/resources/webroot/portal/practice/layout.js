@@ -529,6 +529,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
     }
 
     new PatientManip(prop, document.getElementById("practice-patient-manip"),
+        document.getElementById("practice-patient-manip-workarea"),
         document.getElementById("practice-general-workarea"));
 
     document.getElementById("practice-patient-manip").addEventListener("session-started", event => {
@@ -544,25 +545,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
         let map = parseElement(ele);
         let meisaiDialogFactory = new MeisaiDialogFactory();
         let searchTextForPatientDialogFactory = new SearchTextForPatientDialogFactory();
-
-        map.searchText.on("click", async event => {
-            let patientId = controller.getPatientId();
-            let dialog = searchTextForPatientDialogFactory.create(patientId);
-            await dialog.open();
-        });
-
-        map.uploadImage.on("click", async event => {
-            let patientId = controller.getPatientId();
-            if (patientId > 0) {
-                let dialog = new UploadImageDialog(patientId);
-                let uploaders = await dialog.open();
-                if (uploaders) {
-                    console.log("uploaders", uploaders);
-                    let reporter = new UploadProgress(uploaders);
-                    document.getElementById("practice-general-workarea").append(reporter.ele);
-                }
-            }
-        });
 
         map.listImage.on("click", async event => {
             let patientId = controller.getPatientId();

@@ -20,6 +20,7 @@ let tmpl = `
 export class ConductMenu {
     constructor(prop, workarea, wrapper, visitId, visitDate){
         this.prop = prop;
+        this.rest = prop.rest;
         this.workarea = workarea;
         this.wrapper = wrapper;
         this.visitId = visitId;
@@ -28,7 +29,7 @@ export class ConductMenu {
         let map = parseElement(this.ele);
         click(map.addXp, event => this.doXp());
         click(map.addInjection, event => this.doInjection());
-        click(map.copyAll, event => this.doCopyAll());
+        click(map.copyAll, async event => await this.doCopyAll());
     }
 
     doXp(){
@@ -48,7 +49,24 @@ export class ConductMenu {
         w.initFocus();
     }
 
-    doCopyAll() {
-
+    async doCopyAll() {
+        const targetVisitId = this.prop.getTargetVisitId();
+        if( !(targetVisitId > 0) ){
+            alert("コピー先をみつけられません。");
+            return;
+        }
+        if( targetVisitId === this.visitId ){
+            alert("自分自身にはコピーできません。");
+            return;
+        }
+        const conductIds = await this.rest.copyAllConducts(this.visitId, targetVisitId);
+        const conducts = await this.rest.listConductFullByIds(conductIds);
+        this.ele.dispatchEvent(new CustomEvent("conducts-copied", {
+            bubbles: true,
+            detail: {
+                visitId: targetVisitId,
+                conducts
+            }
+        }));
     }
 }

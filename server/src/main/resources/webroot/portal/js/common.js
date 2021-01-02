@@ -366,12 +366,12 @@ class Rest extends Client {
         return await this.get("/list-drug-full-by-drug-ids", {"drug-id": drugIds});
     }
 
-    async listConductFullByIds(conductIds) {
-        if (conductIds.length === 0) {
-            return [];
-        }
-        return await this.get("/list-conduct-full-by-ids", {"conduct-id": conductIds});
-    }
+    // async listConductFullByIds(conductIds) {
+    //     if (conductIds.length === 0) {
+    //         return [];
+    //     }
+    //     return await this.get("/list-conduct-full-by-ids", {"conduct-id": conductIds});
+    // }
 
     async probeShohousenFaxImage(textId, date) {
         return await this.get("/probe-shohousen-fax-image", {"text-id": textId, "date": date});
@@ -797,6 +797,14 @@ class Rest extends Client {
 
     async batchGetPatient(patientIds){
         return await this.topRest.batchGetPatient(patientIds);
+    }
+
+    async copyAllConducts(srcVisitId, targetVisitId){
+        return await this.topRest.copyAllConducts(srcVisitId, targetVisitId);
+    }
+
+    async listConductFullByIds(conductIds){
+        return await this.topRest.listConductFullByIds(conductIds);
     }
 }
 

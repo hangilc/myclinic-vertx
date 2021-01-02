@@ -221,4 +221,12 @@ export class Rest extends HttpClient {
         return await this.POST("/batch-get-patient", patients, {});
     }
 
+    async copyAllConducts(srcVisitId, targetVisitId){
+        return await this.GET("/copy-all-conducts", {"source-visit-id": srcVisitId, "target-visit-id": targetVisitId})
+    }
+
+    async listConductFullByIds(conductIds){
+        return await this.POST("/list-conduct-full-by-ids", conductIds, {});
+    }
+
 }

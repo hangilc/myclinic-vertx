@@ -113,6 +113,9 @@ export class Record {
                 }
             });
         });
+        this.ele.addEventListener("conducts-entered", event => {
+            event.detail.forEach(conductFull => this.addConduct(conductFull));
+        });
     }
 
     getVisitId() {

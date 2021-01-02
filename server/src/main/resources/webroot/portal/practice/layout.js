@@ -451,6 +451,15 @@ export async function initLayout(pane, rest, controller, printAPI) {
         }
     });
 
+    pane.addEventListener("conducts-copied", event => {
+        let visitId = event.detail.visitId;
+        let conducts = event.detail.conducts;
+        let e = getRecordElementByVisitId(visitId);
+        if( e ){
+            e.dispatchEvent(new CustomEvent("conducts-entered", {detail: conducts}));
+        }
+    });
+
     pane.addEventListener("fax-sent", async event => {
         let textId = event.detail.textId;
         let faxNumber = event.detail.faxNumber;
@@ -562,6 +571,16 @@ export async function initLayout(pane, rest, controller, printAPI) {
             return dialog;
         }
     }
+
+    new PatientManip(prop, document.getElementById("practice-patient-manip"));
+
+    document.getElementById("practice-patient-manip").addEventListener("session-started", event => {
+        show(event.target);
+    });
+
+    document.getElementById("practice-patient-manip").addEventListener("session-ended", event => {
+        hide(event.target);
+    });
 
     (function () {
         let ele = $("#practice-patient-manip");

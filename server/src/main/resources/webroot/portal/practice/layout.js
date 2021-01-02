@@ -283,9 +283,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {SearchTextForPatientDialog} = await import("./search-text-for-patient-dialog.js");
     let {SearchTextGloballyDialog} = await import("./search-text-globally-dialog.js");
     let {RegisteredDrugDialog} = await import("./registered-drug-dialog/registered-drug-dialog.js")
-    let {UploadImageDialog} = await import("./upload-image-dialog.js");
-    let {UploadProgress} = await import("./upload-progress.js");
-    let {PatientImageList} = await import("../../components/patient-image-list.js");
     let {NoPayList} = await import("./no-pay-list.js");
     let {PatientSelectorMenu} = await import("./patient-selector/patient-selector-menu.js");
     let {replaceNode} = await import("../../js/dom-helper.js");
@@ -539,25 +536,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     document.getElementById("practice-patient-manip").addEventListener("session-ended", event => {
         hide(event.target);
     });
-
-    (function () {
-        let ele = $("#practice-patient-manip");
-        let map = parseElement(ele);
-        let meisaiDialogFactory = new MeisaiDialogFactory();
-        let searchTextForPatientDialogFactory = new SearchTextForPatientDialogFactory();
-
-        map.listImage.on("click", async event => {
-            let patientId = controller.getPatientId();
-            if (patientId > 0) {
-                let w = new PatientImageList(rest, true);
-                await w.init(patientId);
-                let wrapper = document.getElementById("practice-patient-manip-workarea");
-                wrapper.prepend(w.ele);
-            }
-        });
-
-    })
-    // ();
 
     function getRecordElementByVisitId(visitId){
         return pane.querySelector(`.practice-record[data-visit-id='${visitId}']`);

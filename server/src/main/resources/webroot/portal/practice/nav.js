@@ -15,6 +15,7 @@ export class Nav {
         this.map = parseElement(this.ele);
         this.currentPage = 0;
         this.totalPages = 0;
+        this.triggerFun = page => {};
         this.map.first.addEventListener("click", event => this.gotoPage(0));
         this.map.prev.addEventListener("click", event => this.gotoPage(this.currentPage - 1));
         this.map.next.addEventListener("click", event => this.gotoPage(this.currentPage + 1));
@@ -28,12 +29,13 @@ export class Nav {
         this.map.total.innerText = totalPages;
     }
 
+    setTriggerFun(f){
+        this.triggerFun = f;
+    }
+
     gotoPage(page) {
         if (page >= 0 && page < this.totalPages && page !== this.currentPage) {
-            this.ele.dispatchEvent(new CustomEvent("load-record-page", {
-                bubbles: true,
-                detail: page
-            }));
+            this.triggerFun(page);
         }
     }
 }

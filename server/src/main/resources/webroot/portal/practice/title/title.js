@@ -4,6 +4,7 @@ import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
 import {on, click} from "../../../js/dom-helper.js";
 import {VisitMeisaiDialog} from "../visit-meisai-dialog.js";
+import {titleRep} from "./title-funs.js";
 
 let tmpl = `
 <div class="practice-title mt-2 form-inline">
@@ -32,7 +33,7 @@ export class Title {
         this.visit = visit;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
-        this.map.text.innerText = this.rep(visit.visitedAt);
+        this.map.text.innerText = titleRep(visit.visitedAt);
         this.bindDelete();
         this.bindTempVisit();
         this.bindUntempVisit();
@@ -101,15 +102,15 @@ export class Title {
         await dialog.open();
     }
 
-    rep(sqldatetime) {
-        let data = kanjidate.sqldatetimeToData(sqldatetime);
-        let nen = (data.nen + "").padStart(2, "0");
-        let month = (data.month + "").padStart(2, "0");
-        let day = (data.day + "").padStart(2, "0");
-        let hour = (data.hour + "").padStart(2, "0");
-        let minute = (data.minute + "").padStart(2, "0");
-        return `${data.gengou.name}${nen}年${month}月${day}日（${data.youbi}） ${hour}時${minute}分`;
-    }
+    // rep(sqldatetime) {
+        // let data = kanjidate.sqldatetimeToData(sqldatetime);
+        // let nen = (data.nen + "").padStart(2, "0");
+        // let month = (data.month + "").padStart(2, "0");
+        // let day = (data.day + "").padStart(2, "0");
+        // let hour = (data.hour + "").padStart(2, "0");
+        // let minute = (data.minute + "").padStart(2, "0");
+        // return `${data.gengou.name}${nen}年${month}月${day}日（${data.youbi}） ${hour}時${minute}分`;
+    // }
 
     async doFutanWariOverride(){
         let p = "負担割";

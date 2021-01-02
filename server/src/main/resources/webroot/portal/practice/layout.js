@@ -544,23 +544,10 @@ export async function initLayout(pane, rest, controller, printAPI) {
         let meisaiDialogFactory = new MeisaiDialogFactory();
         let searchTextForPatientDialogFactory = new SearchTextForPatientDialogFactory();
 
-        map.registerCurrent.on("click", async event => {
-            if (controller.getVisitId() === 0 && controller.getPatientId() > 0 &&
-                confirm("この患者を診察登録しますか？")) {
-                let patientId = controller.getPatientId();
-                let visitId = await rest.startVisit(patientId);
-                await controller.startSession(patientId, visitId);
-            }
-        });
-
         map.searchText.on("click", async event => {
             let patientId = controller.getPatientId();
             let dialog = searchTextForPatientDialogFactory.create(patientId);
             await dialog.open();
-        });
-
-        map.refer.on("click", event => {
-            alert("Not implemented.");
         });
 
         map.uploadImage.on("click", async event => {
@@ -713,37 +700,13 @@ export async function initLayout(pane, rest, controller, printAPI) {
     //     return comp;
     // })();
 
-    // addPatientChangedListener(async patient => {
-    //     if (!patient) {
-    //         diseaseArea.set(0, null);
-    //     } else {
-    //         let patientId = patient.patientId;
-    //         let cur = await rest.listCurrentDisease(patientId);
-    //         diseaseArea.set(patientId, cur);
-    //         diseaseArea.current();
-    //     }
-    //
-    // });
-
-    // let recordFactory = new RecordFactory();
-
-    // class NavFactory {
-    //     constructor() {
-    //         this.html = getTemplateHtml("practice-nav-template");
-    //     }
-    //
-    //     create() {
-    //         let ele = $(this.html);
-    //         let map = parseElement(ele);
-    //         let comp = new Nav(ele, map, rest);
-    //         comp.init();
-    //         return comp;
-    //     }
-    //
-    // }
-
     document.querySelectorAll(".practice-nav").forEach(e => {
         let nav = new Nav(e);
+        nav.setTriggerFun(page => {
+            pane.dispatchEvent(new CustomEvent("load-record-page", {
+                detail: page
+            }));
+        });
         e.addEventListener("record-page-loaded", event => {
             let page = event.detail;
             if( page.totalPages <= 1 ){

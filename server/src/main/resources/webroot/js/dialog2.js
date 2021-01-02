@@ -18,6 +18,7 @@ export class Dialog {
             opt = {};
         }
         this.ele = createElementFrom(tmpl);
+        this.ele.style.maxHeight = (window.innerHeight - 40) + "px";
         this.map = parseElement(this.ele);
         this.map.closeLink.addEventListener("click", event => this.close(undefined));
         if( opt.width ){

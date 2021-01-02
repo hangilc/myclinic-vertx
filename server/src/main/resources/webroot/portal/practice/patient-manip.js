@@ -1,6 +1,7 @@
 import {parseElement} from "../../js/parse-node.js";
 import {MeisaiDialog} from "./meisai-dialog.js";
 import {click} from "../../js/dom-helper.js";
+import {SearchTextForPatientDialog} from "./search-text-for-patient-dialog.js";
 
 let tmpl = `
     <button class="x-cashier btn btn-secondary">会計</button>
@@ -60,7 +61,8 @@ export class PatientManip {
     }
 
     async doSearchText() {
-        return Promise.resolve(undefined);
+        let dialog = new SearchTextForPatientDialog(this.prop);
+        await dialog.open(() => dialog.initFocus());
     }
 
     async doUploadImage() {

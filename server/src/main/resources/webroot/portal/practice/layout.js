@@ -293,6 +293,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
         patient: null,
         currentVisitId: 0,
         tempVisitId: 0,
+        page: 0,   // current page of visit records
         getTargetVisitId(){
             if( this.currentVisitId > 0 ){
                 return this.currentVisitId;
@@ -359,9 +360,24 @@ export async function initLayout(pane, rest, controller, printAPI) {
     pane.addEventListener("load-record-page", async event => {
         let page = event.detail;
         let recordPage = await prop.rest.listVisit(prop.patient.patientId, page);
+        while( page > 0 && recordPage.visits.length === 0 ){
+            page -= 1;
+            recordPage = await prop.rest.listVisit(prop.patient.patientId, page);
+        }
+        prop.page = page;
         pane.querySelectorAll(".record-page-listener").forEach(e => e.dispatchEvent(
             new CustomEvent("record-page-loaded", {detail: recordPage})
         ));
+    });
+
+    pane.addEventListener("visit-deleted", async event => {
+        let visitId = event.detail;
+        if( prop.currentVisitId === visitId ){
+            prop.currentVisitId = 0;
+        } else if( prop.tempVisitId === visitId ){
+            prop.tempVisitId = 0;
+        }
+        pane.dispatchEvent(new CustomEvent("load-record-page", {detail: prop.page}));
     });
 
     pane.addEventListener("set-temp-visit", event => {

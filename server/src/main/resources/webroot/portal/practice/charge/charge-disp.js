@@ -3,7 +3,7 @@ import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
 
 let tmpl = `
-    <div class="payment-listener">
+    <div class="charge-ui">
         <span class="x-charge-value"></span>
         <span class="x-payment-state"></span>
         <span class="text-danger x-no-pay-0410"></span>
@@ -18,11 +18,8 @@ export class ChargeDisp{
         this.ele.classList.add("charge-disp");
         this.map = parseElement(this.ele);
         this.updateUI();
-        this.ele.addEventListener("payment-updated", event => {
-            this.updatePaymentState(props.payment)
-        });
-        this.ele.addEventListener("no-pay-0410-updated", event => {
-            this.update0410NoPay(event.detail)
+        this.ele.addEventListener("update-ui", event => {
+            this.updateUI();
         });
     }
 
@@ -63,8 +60,7 @@ export class ChargeDisp{
     }
 
     updateNoPay0410UI(){
-        const isNoPay = this.props.noPay0410;
-        this.map.noPay0410.innerText = isNoPay ? "遠隔未収候補" : "";
+        this.map.noPay0410.innerText = this.props.isNoPay0410 ? "遠隔未収候補" : "";
     }
 
     setPaymentState(text, color){

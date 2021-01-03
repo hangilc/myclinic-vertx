@@ -1,4 +1,3 @@
-import {Component} from "../component.js";
 import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
 import {ChargeDisp} from "./charge-disp.js";
@@ -7,7 +6,7 @@ import {ChargeModify} from "./charge-modify.js";
 import * as app from "../app.js";
 
 let tmpl = `
-<div class="mt-2 payment-listener"></div>
+<div class="mt-2 charge-listener payment-listener"></div>
 `;
 
 export class Charge {
@@ -16,29 +15,54 @@ export class Charge {
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.addDisp();
-        this.ele.addEventListener("payment-updated", event => {
-            const payment = event.detail;
-            console.log(payment);
+        this.ele.addEventListener("charge-changed", event => {
+            this.props.charge = event.detail;
+            this.updateUI();
         });
+        this.ele.addEventListener("payment-available", event => {
+            this.props.payment = event.detail;
+            this.updateUI();
+        });
+        this.ele.addEventListener("payment-changed", event => {
+            this.props.payment = event.detail;
+            this.updateUI();
+        });
+    }
+
+    getCharge(){
+        return this.props.charge;
+    }
+
+    getPayment(){
+        return this.props.payment;
+    }
+
+    isNoPay0410(){
+        return this.props.isNoPay0410;
+    }
+
+    getVisitId(){
+        return this.getCharge().visitId;
+    }
+
+    updateUI(){
+        const evt = new Event("update-ui");
+        this.ele.querySelectorAll(".charge-ui").forEach(e => e.dispatchEvent(evt));
     }
 
     addDisp(){
         let disp = new ChargeDisp(this.props);
         this.ele.append(disp.ele);
-        let charge = this.props.charge;
+        let charge = this.getCharge();
         if( charge ){
             click(disp.ele, async event => {
-                let meisai = await this.rest.getMeisai(charge.visitId);
-                let payment = await this.rest.getLastPayment(this.visit.visitId);
-                let modify = new ChargeModify(this.rest, meisai, charge, this.visit, payment);
+                const visitId = this.getVisitId();
+                let meisai = await app.rest.getMeisai(visitId);
+                let payment = this.getPayment();
+                let visit = await app.rest.getVisit(visitId);
+                let modify = new ChargeModify(app.rest, meisai, charge, visit, payment);
                 on(modify.ele, "closed", event => {
-                    let result = event.detail;
-                    if( result ){
-                        this.addDisp(result);
-                        this.firePaymentUpdated();
-                    } else {
-                        this.ele.append(disp.ele);
-                    }
+                    this.addDisp();
                 });
                 this.ele.innerHTML = "";
                 this.ele.append(modify.ele);
@@ -46,24 +70,4 @@ export class Charge {
         }
     }
 
-    firePaymentUpdated(){
-        this.ele.dispatchEvent(new CustomEvent("payment-updated", {
-            bubbles: true,
-            detail: [this.visit.visitId]
-        }))
-    }
-
-    updatePaymentState(payment){
-        let chargeEle = this.ele.querySelector(".charge-disp");
-        if( chargeEle ) {
-            chargeEle.dispatchEvent(new CustomEvent("update-payment", {detail: payment}));
-        }
-    }
-
-    update0410NoPay(){
-        let chargeEle = this.ele.querySelector(".charge-disp");
-        if( chargeEle ) {
-            chargeEle.dispatchEvent(new Event("update-0410-no-pay"));
-        }
-    }
 }

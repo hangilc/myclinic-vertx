@@ -8,6 +8,8 @@ export let currentVisitId = 0;
 export let tempVisitId = 0;
 export let currentPage = 0;
 
+let currentVisitFulls = [];
+
 export function getTargetVisitId(){
     if( currentVisitId > 0 ){
         return currentVisitId;
@@ -39,7 +41,9 @@ export async function startSession(patientId, visitId=0){
     publish("patient-listener", "patient-changed");
     currentVisitId = visitId;
     tempVisitId = 0;
-    await loadRecordPage(0);
+    const recordPage = await loadRecordPage(0);
+    currentVisitFulls = recordPage.visits;
+    await batchUpdatePayments(recordPage.visits.map(visitFull => visitFull.visit.visitId));
 }
 
 export function endSession(){
@@ -47,6 +51,8 @@ export function endSession(){
     publish("patient-listener", "patient-changed");
     currentVisitId = 0;
     tempVisitId = 0;
+    currentPage = 0;
+    currentVisitFulls = [];
     publish("session-listener", "session-ended");
 }
 
@@ -58,6 +64,7 @@ export async function loadRecordPage(page){
     }
     currentPage = page;
     publish("record-page-listener", "record-page-loaded", recordPage);
+    return recordPage;
 }
 
 export function setTempVisit(visitId){
@@ -67,6 +74,14 @@ export function setTempVisit(visitId){
 
 export function clearTempVisit(text){
     setTempVisit(0);
+}
+
+async function batchUpdatePayments(visitIds){
+    let map = await rest.batchGetLastPayment(visitIds);
+    for(const visitId of Object.keys(map) ){
+        let payment = map[visitId];
+        publish("payment-listener", "payment-updated", payment, {visitId});
+    }
 }
 
 export function publishTextEntered(text){

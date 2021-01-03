@@ -4,23 +4,28 @@ import {parseElement} from "../../../js/parse-node.js";
 import {ChargeDisp} from "./charge-disp.js";
 import {click, on} from "../../../js/dom-helper.js";
 import {ChargeModify} from "./charge-modify.js";
+import * as app from "../app.js";
 
 let tmpl = `
-<div class="mt-2"></div>
+<div class="mt-2 payment-listener"></div>
 `;
 
 export class Charge {
-    constructor(rest, charge, visit){
-        this.visit = visit;
-        this.rest = rest;
+    constructor(props){
+        this.props = props;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
-        this.addDisp(charge, visit);
+        this.addDisp();
+        this.ele.addEventListener("payment-updated", event => {
+            const payment = event.detail;
+            console.log(payment);
+        });
     }
 
-    addDisp(charge){
-        let disp = new ChargeDisp(charge);
+    addDisp(){
+        let disp = new ChargeDisp(this.props);
         this.ele.append(disp.ele);
+        let charge = this.props.charge;
         if( charge ){
             click(disp.ele, async event => {
                 let meisai = await this.rest.getMeisai(charge.visitId);

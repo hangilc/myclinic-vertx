@@ -77,9 +77,15 @@ export class Record {
             (new ConductMenu(this.prop, this.map.conductWorkarea, this.map.conductWrapper, this.visitId,
                 visitDate)).ele);
         visitFull.conducts.forEach(conductFull => this.addConduct(conductFull));
-        this.map.chargeWrapper.append(
-            (new Charge(this.rest, visitFull.charge, visitFull.visit)).ele
-        );
+        {
+            const props = {
+                charge: visitFull.charge,
+                visit: visitFull.visit,
+                payment: visitFull.payment
+            }
+            const c = new Charge(props);
+            this.map.chargeWrapper.append(c.ele);
+        }
         this.map.enterText.addEventListener("click", event => this.doEnterText());
         this.map.sendShohousenFax.addEventListener("click", event => this.doSendShohousenFax());
         this.map.shinryouMenu.addEventListener("click", async event => await this.doRegularShinryou());

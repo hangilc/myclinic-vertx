@@ -63,12 +63,16 @@ export class ShinryouAuxMenu {
         }
         let shinryouList = await this.rest.listShinryou(this.visitId);
         let newShinryouIds = await this.rest.batchCopyShinryou(targetVisitId, shinryouList);
-        let shinryouFulls = await this.rest.listShinryouFullByIds(newShinryouIds);
-        let detail = {
+        this.prop.publishBatchEntered(targetVisitId, {
             visitId: targetVisitId,
-            shinryouList: shinryouFulls
-        }
-        this.ele.dispatchEvent(new CustomEvent("shinryou-copied", {bubbles: true, detail: detail}));
+            shinryouIds: newShinryouIds
+        });
+        // let shinryouFulls = await this.rest.listShinryouFullByIds(newShinryouIds);
+        // let detail = {
+        //     visitId: targetVisitId,
+        //     shinryouList: shinryouFulls
+        // }
+        // this.ele.dispatchEvent(new CustomEvent("shinryou-copied", {bubbles: true, detail: detail}));
     }
 
     async doDeleteDuplicates() {

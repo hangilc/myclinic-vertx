@@ -5,29 +5,30 @@ import {SearchTextForPatientDialog} from "./search-text-for-patient-dialog.js";
 import {UploadImageDialog} from "./upload-image-dialog.js";
 import {UploadProgress} from "./upload-progress.js";
 import {PatientImageList} from "../../components/patient-image-list.js";
+import * as prop from "./app.js";
+import {createElementFrom} from "../../js/create-element-from.js";
 
 let tmpl = `
-    <button class="x-cashier btn btn-secondary">会計</button>
-    <button class="x-end  ml-2 btn btn-secondary">患者終了</button>
-    <a href="javascript:void(0)" class="x-register-current  ml-2">診察登録</a>
-    <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>
-    <a href="javascript:void(0)" class="x-upload-image ml-2">画像保存</a>
-    <a href="javascript:void(0)" class="x-list-image ml-2">画像一覧</a>
+    <div>
+        <button class="x-cashier btn btn-secondary">会計</button>
+        <button class="x-end  ml-2 btn btn-secondary">患者終了</button>
+        <a href="javascript:void(0)" class="x-register-current  ml-2">診察登録</a>
+        <a href="javascript:void(0)" class="x-search-text  ml-2">文章検索</a>
+        <a href="javascript:void(0)" class="x-upload-image ml-2">画像保存</a>
+        <a href="javascript:void(0)" class="x-list-image ml-2">画像一覧</a>
+    </div>
 `;
 
 export class PatientManip {
-    constructor(prop, ele, manipWorkarea, generalWorkarea) {
+    constructor() {
         this.prop = prop;
         this.rest = prop.rest;
-        this.ele = ele;
-        ele.innerHTML = tmpl;
-        this.manipWorkarea = manipWorkarea;
-        this.generalWorkarea = generalWorkarea;
+        this.ele = createElementFrom(tmpl);
+        this.manipWorkarea = prop.map.patientManipWorkarea;
+        this.generalWorkarea = prop.map.generalWorkarea;
         let map = parseElement(this.ele);
         click(map.cashier, async event => await this.doCashier());
-        click(map.end, event => this.ele.dispatchEvent(
-            new CustomEvent("end-session", {bubbles: true})
-        ));
+        click(map.end, event => this.prop.endSession());
         click(map.registerCurrent, async event => await this.doRegisterCurrent());
         click(map.searchText, async event => await this.doSearchText());
         click(map.uploadImage, async event => await this.doUploadImage());
@@ -62,7 +63,7 @@ export class PatientManip {
         let visitId = await this.rest.startVisit(patientId);
         let currentVisitId = this.prop.currentVisitId;
         this.prop.endSession();
-        this.prop.startSession(patientId, currentVisitId > 0 ? currentVisitId : visitId);
+        await this.prop.startSession(patientId, currentVisitId > 0 ? currentVisitId : visitId);
     }
 
     async doSearchText() {

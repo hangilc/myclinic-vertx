@@ -1,4 +1,3 @@
-import {show, hide} from "../../js/dom-helper.js";
 import {PatientManip} from "./patient-manip.js";
 
 let html = `
@@ -13,8 +12,8 @@ let html = `
                     <a href="javascript:void(0)" class="ml-2" id="practice-search-text-globally">全文検索</a>
                 </div>
             </div>
-            <div id="practice-patient-info" class="session-listener mx-2 my-2"></div>
-            <div id="practice-patient-manip" class="session-listener d-none mx-2 mb-2 form-inline"></div>
+            <div id="practice-patient-info" class="patient-listener mx-2 my-2"></div>
+            <div id="practice-patient-manip" class="patient-listener mx-2 mb-2 form-inline"></div>
             <div id="practice-patient-manip-workarea"></div>
             <div class="practice-nav record-page-listener session-listener d-none mt-2"></div>
             <div id="practice-record-wrapper" class="record-page-listener session-listener"></div>
@@ -28,7 +27,6 @@ let html = `
         </div>
     </div>
 </div>
-
 
 <template id="practice-disease-area-template">
     <div class="d-none">
@@ -285,17 +283,75 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {RegisteredDrugDialog} = await import("./registered-drug-dialog/registered-drug-dialog.js")
     let {NoPayList} = await import("./no-pay-list.js");
     let {PatientSelectorMenu} = await import("./patient-selector/patient-selector-menu.js");
-    let {replaceNode} = await import("../../js/dom-helper.js");
+    let {replaceNode, show, hide} = await import("../../js/dom-helper.js");
     let app = await import("./app.js");
 
     app.init(rest, printAPI, pane, {
-        generalWorkarea: document.getElementById("practice-general-workarea")
+        generalWorkarea: document.getElementById("practice-general-workarea"),
+        patientManipWorkarea: document.getElementById("practice-patient-manip-workarea")
     });
 
     {
         let menu = new PatientSelectorMenu();
         replaceNode(document.getElementById("patient-selector-menu-placeholder"), menu.ele);
     }
+
+    {
+        let e = document.getElementById("practice-patient-info");
+        e.addEventListener("patient-changed", event => {
+            let patient = app.patient;
+            if( patient ){
+                let disp = new PatientDisplay(patient);
+                e.innerHTML = "";
+                e.append(disp.ele);
+            } else {
+                e.innerHTML = "";
+            }
+        });
+    }
+
+    {
+        let e = document.getElementById("practice-patient-manip");
+        e.addEventListener("patient-changed", event => {
+            e.innerHTML = "";
+            if( app.patient ){
+                let manip = new PatientManip();
+                e.append(manip.ele);
+            }
+        })
+    }
+
+    document.querySelectorAll(".practice-nav").forEach(e => {
+        let nav = new Nav(e);
+        nav.setTriggerFun(async page => await app.loadRecordPage(page));
+        e.addEventListener("record-page-loaded", event => {
+            let page = event.detail;
+            if( page.totalPages <= 1 ){
+                hide(e);
+            } else {
+                nav.adaptToPage(page.page, page.totalPages);
+                show(e);
+            }
+        });
+        e.addEventListener("session-ended", event => hide(e));
+    });
+
+    {
+        let e = document.getElementById("practice-record-wrapper");
+        e.addEventListener("record-page-loaded", async event => {
+            let recordPage = event.detail;
+            e.innerHTML = "";
+            for(let visitFull of recordPage.visits){
+                let record = new Record(visitFull);
+                e.append(record.ele);
+            }
+        });
+
+        e.addEventListener("session-ended", event => {
+            e.innerHTML = "";
+        });
+    }
+
 
 
     //

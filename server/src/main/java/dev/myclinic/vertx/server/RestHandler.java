@@ -423,7 +423,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private CallResult listConductFullByIds(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<Integer> conductId = params.getAll("conduct-id[]").stream().map(Integer::valueOf).collect(toList());
+        List<Integer> conductId = mapper.readValue(ctx.getBody().getBytes(), new TypeReference<>(){});
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<ConductFullDTO> _value = backend.listConductFullByIds(conductId);
@@ -2944,6 +2944,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
             src.conductKizaiList.forEach(kizai -> {
                 ConductKizaiDTO copy = new ConductKizaiDTO();
                 copy.kizaicode = kizai.conductKizai.kizaicode;
+                copy.amount = kizai.conductKizai.amount;
                 creq.kizaiList.add(copy);
             });
             req.conducts.add(creq);

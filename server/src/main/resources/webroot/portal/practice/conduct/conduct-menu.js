@@ -60,13 +60,17 @@ export class ConductMenu {
             return;
         }
         const conductIds = await this.rest.copyAllConducts(this.visitId, targetVisitId);
-        const conducts = await this.rest.listConductFullByIds(conductIds);
-        this.ele.dispatchEvent(new CustomEvent("conducts-copied", {
-            bubbles: true,
-            detail: {
-                visitId: targetVisitId,
-                conducts
-            }
-        }));
+        this.prop.publishBatchEntered(targetVisitId, {
+            visitId: targetVisitId,
+            conductIds
+        });
+        // const conducts = await this.rest.listConductFullByIds(conductIds);
+        // this.ele.dispatchEvent(new CustomEvent("conducts-copied", {
+        //     bubbles: true,
+        //     detail: {
+        //         visitId: targetVisitId,
+        //         conducts
+        //     }
+        // }));
     }
 }

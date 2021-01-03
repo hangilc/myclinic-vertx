@@ -75,15 +75,15 @@ export class Title {
         }
         const visitId = this.getVisitId();
         await this.rest.deleteVisit(visitId);
-        this.ele.dispatchEvent(new CustomEvent("visit-deleted", {bubbles: true, detail: visitId}));
+        await this.prop.loadRecordPage(this.prop.currentPage);
     }
 
     doTempVisit(){
-        this.ele.dispatchEvent(new CustomEvent("set-temp-visit", {bubbles: true, detail: this.getVisitId()}));
+        this.prop.setTempVisit(this.getVisitId());
     }
 
     doClearTempVisit(){
-        this.ele.dispatchEvent(new CustomEvent("clear-temp-visit", {bubbles: true}));
+        this.prop.clearTempVisit();
     }
 
     doAddToNoPayList(){

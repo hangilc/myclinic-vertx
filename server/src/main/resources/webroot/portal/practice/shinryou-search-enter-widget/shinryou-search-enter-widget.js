@@ -66,7 +66,7 @@ export class ShinryouSearchEnterWidget extends Widget {
             };
             let shinryouId = await this.rest.enterShinryou(shinryou);
             let entered = await this.rest.getShinryouFull(shinryouId);
-            this.ele.dispatchEvent(new CustomEvent("shinryou-entered", {bubbles: true, detail: entered}));
+            this.ele.dispatchEvent(new CustomEvent("shinryou-entered", {bubbles: true, detail: [entered]}));
         }
     }
 

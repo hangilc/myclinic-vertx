@@ -4,6 +4,7 @@ import {click} from "../../../js/dom-helper.js";
 import * as kanjidate from "../../../js/kanjidate.js";
 import {createElementFrom} from "../../../js/create-element-from.js";
 import {DateInputDialog} from "../../../date-input/date-input-dialog.js";
+import * as prop from "../app.js";
 
 let calIcon = `
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" 
@@ -47,7 +48,7 @@ let footerTmpl = `
 `;
 
 export class ByDateWidget extends Widget {
-    constructor(prop) {
+    constructor() {
         super();
         this.prop = prop;
         this.rest = prop.rest;
@@ -90,15 +91,15 @@ export class ByDateWidget extends Widget {
     }
 
     async doToday(){
-        this.setDate(this.today);
+        await this.setDate(this.today);
     }
 
     bindPatientsArea(e){
-        e.addEventListener("select-patient", event => {
+        e.addEventListener("select-patient", async event => {
             event.stopPropagation();
             let patientId = event.detail;
             this.prop.endSession();
-            this.prop.startSession(patientId);
+            await this.prop.startSession(patientId);
             e.querySelectorAll(".patient-list-item").forEach(
                 e => e.dispatchEvent(new Event("clear-bold")));
             e.querySelector(`.patient-list-item[data-patient-id='${patientId}']`)

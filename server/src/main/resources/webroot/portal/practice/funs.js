@@ -44,31 +44,4 @@ export async function createShohousenPdfForFax(text, rest){
     return savePath;
 }
 
-function publish(prop, subscriber, event, detail, filter){
-    let e = prop.pane;
-    if( filter && filter.visitId ){
-        e = findRecordElement(prop, filter.visitId);
-    }
-    if( e ){
-        let evt = new CustomEvent(event, {detail: detail});
-        if( e.classList.contains(subscriber) ){
-            e.dispatchEvent(evt);
-        }
-        e.querySelectorAll(`.${subscriber}`).forEach(s => s.dispatchEvent(evt));
-    }
-}
-
-export async function findRecordElement(prop, visitId){
-    return prop.pane.querySelector(`.practice-record[data-visit-id='${visitId}']`);
-}
-
-export async function publishPayments(prop, visitIds){
-    let rest = prop.rest;
-    let pane = prop.pane;
-    let map = await rest.batchGetLastPayment(visitIds);
-    for (let visitId of Object.keys(map)) {
-        let payment = map[visitId];
-        publish(prop, "payment-subscriber", "payment-updated", payment, {visitId: visitId});
-    }
-}
 

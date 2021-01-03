@@ -4,6 +4,7 @@ import {click, submit, on} from "../../../js/dom-helper.js";
 import * as kanjidate from "../../../js/kanjidate.js";
 import {sexToRep} from "../../js/consts.js";
 import {PatientDisp} from "./patient-disp.js";
+import * as prop from "../app.js";
 
 let bodyTmpl = `
     <div class="row">
@@ -27,7 +28,7 @@ let footerTmpl = `
 `;
 
 export class SearchDialog extends Dialog {
-    constructor(prop) {
+    constructor() {
         super();
         this.prop = prop;
         this.rest = prop.rest;
@@ -42,7 +43,7 @@ export class SearchDialog extends Dialog {
         this.getFooter().innerHTML = footerTmpl;
         let fmap = parseElement(this.getFooter());
         click(fmap.registerEnter, async event => await this.doRegisterEnter());
-        click(fmap.enter, event => this.doEnter());
+        click(fmap.enter, async event => await this.doEnter());
         click(fmap.cancel, event => this.close());
     }
 
@@ -92,18 +93,18 @@ export class SearchDialog extends Dialog {
         }
         let visitId = await this.rest.startVisit(patient.patientId);
         this.prop.endSession();
-        this.prop.startSession(patient.patientId, visitId);
         this.close();
+        await this.prop.startSession(patient.patientId, visitId);
     }
 
-    doEnter(){
+    async doEnter(){
         let patient = this.patient;
         if( !patient ){
             alert("患者が選択されていません。");
             return;
         }
         this.prop.endSession();
-        this.prop.startSession(patient.patientId, 0);
         this.close();
+        await this.prop.startSession(patient.patientId, 0);
     }
 }

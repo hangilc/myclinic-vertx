@@ -3,6 +3,7 @@ import {parseElement} from "../../../js/parse-node.js";
 import {PatientDisp} from "./patient-disp.js";
 import {click, on} from "../../../js/dom-helper.js";
 import {wqueueStateCodeToRep} from "../../js/consts.js";
+import * as app from "../app.js";
 
 let bodyTmpl = `
     <div class="row">
@@ -19,10 +20,10 @@ let footerTmpl = `
 `;
 
 export class WqueueDialog extends Dialog {
-    constructor(prop, wqueueFulls) {
+    constructor(wqueueFulls) {
         super({width: "700px"});
-        this.prop = prop;
-        this.rest = prop.rest;
+        this.prop = app;
+        this.rest = app.rest;
         this.patient = null;
         this.visitId = 0;
         this.setTitle("受付患者選択");
@@ -75,8 +76,8 @@ export class WqueueDialog extends Dialog {
             return;
         }
         this.prop.endSession();
-        this.prop.startSession(patient.patientId, visitId);
         this.close();
+        await this.prop.startSession(patient.patientId, visitId);
     }
 }
 

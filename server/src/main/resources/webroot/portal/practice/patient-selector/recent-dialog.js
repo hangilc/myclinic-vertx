@@ -3,6 +3,7 @@ import {parseElement} from "../../../js/parse-node.js";
 import {PatientDisp} from "./patient-disp.js";
 import {click, on} from "../../../js/dom-helper.js";
 import * as kanjidate from "../../../js/kanjidate.js";
+import * as prop from "../app.js";
 
 let bodyTmpl = `
     <div class="row">
@@ -23,7 +24,7 @@ let footerTmpl = `
 `;
 
 export class RecentDialog extends Dialog {
-    constructor(prop) {
+    constructor() {
         super({width: "700px"});
         this.prop = prop;
         this.rest = prop.rest;
@@ -90,8 +91,8 @@ export class RecentDialog extends Dialog {
             return;
         }
         this.prop.endSession();
-        this.prop.startSession(patient.patientId, 0);
         this.close();
+        await this.prop.startSession(patient.patientId, 0);
     }
 }
 

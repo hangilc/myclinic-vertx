@@ -286,484 +286,496 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {NoPayList} = await import("./no-pay-list.js");
     let {PatientSelectorMenu} = await import("./patient-selector/patient-selector-menu.js");
     let {replaceNode} = await import("../../js/dom-helper.js");
+    let app = await import("./app.js");
 
-    let prop = {
-        rest,
-        printAPI,
-        patient: null,
-        currentVisitId: 0,
-        tempVisitId: 0,
-        page: 0,   // current page of visit records
-        pane,
-        getTargetVisitId(){
-            if( this.currentVisitId > 0 ){
-                return this.currentVisitId;
-            } else {
-                return this.tempVisitId;
-            }
-        },
-        isCurrentOrTempVisitId(visitId){
-            return visitId !== 0 && (this.currentVisitId === visitId || this.tempVisitId === visitId);
-        },
-        confirmManip(visitId, question){
-            if( visitId === 0 ){
-                throw new Error("invalid VisitId");
-            }
-            if( this.isCurrentOrTempVisitId(visitId) ){
-                return true;
-            } else {
-                return confirm(`現在診察中でありませんが、${question}？`);
-            }
-        },
-        startSession(patientId, visitId=0){
-            pane.dispatchEvent(new CustomEvent("start-session", {detail: {patientId, visitId}}))
-        },
-        endSession(){
-            pane.dispatchEvent(new Event("end-session"));
-        },
-        publish(event, detail, filter){
-            let e = pane;
-            if( filter && filter.visitId ){
-                e = pane.querySelector(`.practice-record[data-visit-id='${filter.visitId}']`);
-            }
-            if( e ){
-                let sel = `.${event}-subscriber`;
-                let evt = new CustomEvent(event, {detail: detail});
-                if( e.classList.contains(sel) ){
-                    e.dispatchEvent(evt);
-                }
-                e.querySelectorAll(sel).forEach(s => s.dispatchEvent(evt));
-            }
-        }
-    };
-
-    pane.addEventListener("start-session", async event => {
-        let patientId = event.detail.patientId;
-        let visitId = event.detail.visitId;
-        if( visitId > 0 ){
-            await rest.startExam(visitId);
-        }
-        prop.patient = await prop.rest.getPatient(patientId);
-        prop.currentVisitId = visitId;
-        prop.tempVisitId = 0;
-        pane.querySelectorAll(".session-listener").forEach(e =>
-            e.dispatchEvent(new Event("session-started")));
-        pane.dispatchEvent(new CustomEvent("load-record-page", {detail: 0}));
+    app.init(rest, printAPI, pane, {
+        generalWorkarea: document.getElementById("practice-general-workarea")
     });
 
-    pane.addEventListener("end-session", async event => {
-        if( prop.currentVisitId > 0 ){
-            await rest.suspendExam(prop.currentVisitId);
-        }
-        prop.patient = null;
-        prop.currentVisitId = 0;
-        prop.tempVisitId = 0;
-        pane.querySelectorAll(".session-listener").forEach(e =>
-            e.dispatchEvent(new Event("session-ended")));
-    });
-
-    pane.addEventListener("change-current-visit-id", event => {
-        let visitId = event.detail;
-        console.log("change-current-visit-id");
-    });
-
-    pane.addEventListener("change-temp-visit-id", event => {
-        let visitId = event.detail;
-        console.log("change-temp-visit-id");
-    });
-
-    pane.addEventListener("load-record-page", async event => {
-        let page = event.detail;
-        let recordPage = await prop.rest.listVisit(prop.patient.patientId, page);
-        while( page > 0 && recordPage.visits.length === 0 ){
-            page -= 1;
-            recordPage = await prop.rest.listVisit(prop.patient.patientId, page);
-        }
-        prop.page = page;
-        pane.querySelectorAll(".record-page-listener").forEach(e => e.dispatchEvent(
-            new CustomEvent("record-page-loaded", {detail: recordPage})
-        ));
-    });
-
-    pane.addEventListener("visit-deleted", async event => {
-        let visitId = event.detail;
-        if( prop.currentVisitId === visitId ){
-            prop.currentVisitId = 0;
-        } else if( prop.tempVisitId === visitId ){
-            prop.tempVisitId = 0;
-        }
-        pane.dispatchEvent(new CustomEvent("load-record-page", {detail: prop.page}));
-    });
-
-    pane.addEventListener("set-temp-visit", event => {
-        let visitId = event.detail;
-        if( prop.currentVisitId !== 0 ){
-            alert("現在診察中なので、暫定診察を設定できません。");
-            return;
-        }
-        prop.tempVisitId = visitId;
-        pane.querySelectorAll(".temp-visit-listener").forEach(e => {
-            e.dispatchEvent(new Event("temp-visit-changed"));
-        });
-    });
-
-    pane.addEventListener("clear-temp-visit", event => {
-        let visitId = event.detail;
-        let save = prop.tempVisitId;
-        prop.tempVisitId = 0;
-        pane.querySelectorAll(".temp-visit-listener").forEach(e => {
-            e.dispatchEvent(new Event("temp-visit-changed"));
-        });
-    });
-
-    pane.addEventListener("text-copied", event => {
-        let newText = event.detail;
-        let visitId = newText.visitId;
-        let e = getRecordElementByVisitId(visitId);
-        if( e ){
-            e.dispatchEvent(new CustomEvent("text-entered", {detail: newText}));
-        }
-    });
-
-    pane.addEventListener("shinryou-copied", event => {
-        console.log("shinryou-copied", event.detail);
-        let visitId = event.detail.visitId;
-        let shinryouFulls = event.detail.shinryouList;
-        let e = getRecordElementByVisitId(visitId);
-        if( e ){
-            e.dispatchEvent(new CustomEvent("shinryou-entered", {detail: shinryouFulls}));
-        }
-    });
-
-    pane.addEventListener("conducts-copied", event => {
-        let visitId = event.detail.visitId;
-        let conducts = event.detail.conducts;
-        let e = getRecordElementByVisitId(visitId);
-        if( e ){
-            e.dispatchEvent(new CustomEvent("conducts-entered", {detail: conducts}));
-        }
-    });
-
-    pane.addEventListener("fax-sent", async event => {
-        let textId = event.detail.textId;
-        let faxNumber = event.detail.faxNumber;
-        let pdfFile = event.detail.pdfFile;
-        let faxSid = event.detail.faxSid;
-        let text = await prop.rest.getText(textId);
-        let visit = await prop.rest.getVisit(text.visitId);
-        let patient = await prop.rest.getPatient(visit.patientId);
-        let title = `${patient.lastName}${patient.firstName} FAX`;
-        let progress = new FaxProgress(prop.rest, title, faxNumber, pdfFile, faxSid);
-        let wrapper = document.getElementById("practice-general-workarea");
-        wrapper.append(progress.ele);
-        progress.start();
-    });
-
-    replaceNode(document.getElementById("patient-selector-menu-placeholder"),
-        (new PatientSelectorMenu(prop, document.getElementById("practice-general-workarea"))).ele);
-
-    function getTemplateHtml(templateId) {
-        let html = $("template#" + templateId).html();
-        if (!html) {
-            console.error(`cannot find "${templateId}"`);
-        }
-        return html;
+    {
+        let menu = new PatientSelectorMenu();
+        replaceNode(document.getElementById("patient-selector-menu-placeholder"), menu.ele);
     }
 
-    let noPayList = null;
 
-    pane.addEventListener("add-to-no-pay-list", async event => {
-        let visitId = event.detail;
-        if (noPayList == null) {
-            noPayList = new NoPayList(prop);
-            noPayList.ele.addEventListener("closed", event => noPayList = null);
-            document.getElementById("practice-general-workarea").append(noPayList.ele);
-        }
-        await noPayList.add(visitId);
-    });
-
-    pane.addEventListener("payment-updated", async event => {
-        let visitIds = event.detail;
-        await batchUpdatePaymentState(visitIds);
-    });
-
-    class SearchTextGloballyDialogFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-search-text-dialog-template");
-        }
-
-        create() {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let dialog = new SearchTextGloballyDialog(ele, map, rest);
-            dialog.init("全文検索");
-            dialog.set();
-            return dialog;
-        }
-    }
-
-    $("#practice-registered-drug-link").on("click", async _ => {
-        let dialog = new RegisteredDrugDialog(rest);
-        await dialog.open();
-    });
-
-    (function () {
-        let searchTextGloballyDialogFactory = new SearchTextGloballyDialogFactory();
-        $("#practice-search-text-globally").on("click", async event => {
-            let dialog = searchTextGloballyDialogFactory.create();
-            await dialog.open();
-        });
-    })();
-
-    document.getElementById("practice-patient-info").addEventListener("session-started", event => {
-        let patient = prop.patient;
-        let disp = new PatientDisplay(patient);
-        let e = event.target;
-        e.innerHTML = "";
-        e.append(disp.ele);
-    });
-
-    document.getElementById("practice-patient-info").addEventListener("session-ended", event => {
-        event.target.innerHTML = "";
-    });
-
-    class MeisaiDialogFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-meisai-dialog-template");
-        }
-
-        create(meisai) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let dialog = new MeisaiDialog(ele, map, rest);
-            dialog.init(meisai);
-            return dialog;
-        }
-    }
-
-    class SearchTextForPatientDialogFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-search-text-dialog-template");
-        }
-
-        create(patientId) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let dialog = new SearchTextForPatientDialog(ele, map, rest);
-            dialog.init("文章検索");
-            dialog.set(patientId);
-            return dialog;
-        }
-    }
-
-    new PatientManip(prop, document.getElementById("practice-patient-manip"),
-        document.getElementById("practice-patient-manip-workarea"),
-        document.getElementById("practice-general-workarea"));
-
-    document.getElementById("practice-patient-manip").addEventListener("session-started", event => {
-        show(event.target);
-    });
-
-    document.getElementById("practice-patient-manip").addEventListener("session-ended", event => {
-        hide(event.target);
-    });
-
-    function getRecordElementByVisitId(visitId){
-        return pane.querySelector(`.practice-record[data-visit-id='${visitId}']`);
-    }
-
-    document.getElementById("practice-record-wrapper").addEventListener("record-page-loaded", async event => {
-        let recordPage = event.detail;
-        let wrapper = event.target;
-        wrapper.innerHTML = "";
-        for(let visitFull of recordPage.visits){
-            let record = new Record(prop, visitFull);
-            wrapper.append(record.ele);
-        }
-    });
-
-    document.getElementById("practice-record-wrapper").addEventListener("session-ended", event => {
-        event.target.innerHTML = "";
-    });
-
-    class DiseaseCurrentFactory {
-        constructor() {
-            this.html = "<div></div>";
-        }
-
-        create(diseaseFulls) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new DiseaseCurrent(ele, map, rest);
-            comp.init();
-            comp.set(diseaseFulls);
-            return comp;
-        }
-    }
-
-    class DiseaseAddFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-disease-add-template");
-        }
-
-        create(patientId, date) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new DiseaseAdd(ele, map, rest);
-            comp.init();
-            comp.set(patientId, date);
-            return comp;
-        }
-    }
-
-    class DiseaseEndFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-disease-end-template");
-        }
-
-        create(diseaseFulls) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new DiseaseEnd(ele, map, rest);
-            comp.init();
-            comp.set(diseaseFulls);
-            return comp;
-        }
-    }
-
-    class DiseaseEditFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-disease-edit-template");
-        }
-
-        create(diseaseFulls) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new DiseaseEdit(ele, map, rest);
-            comp.init();
-            comp.set(diseaseFulls);
-            return comp;
-        }
-    }
-
-    class DiseaseModifyFactory {
-        constructor() {
-            this.html = getTemplateHtml("practice-disease-modify-template");
-        }
-
-        create(diseaseFull, diseaseExamples) {
-            let ele = $(this.html);
-            let map = parseElement(ele);
-            let comp = new DiseaseModify(ele, map, rest);
-            comp.init(diseaseExamples);
-            comp.set(diseaseFull);
-            return comp;
-        }
-    }
-
-    let diseaseExamples = await rest.listDiseaseExample();
-    initDiseaseExamples(diseaseExamples);
-
-    // class DiseaseAreaFactory {
+    //
+    // let prop = {
+    //     rest,
+    //     printAPI,
+    //     patient: null,
+    //     currentVisitId: 0,
+    //     tempVisitId: 0,
+    //     page: 0,   // current page of visit records
+    //     pane,
+    //     getTargetVisitId(){
+    //         if( this.currentVisitId > 0 ){
+    //             return this.currentVisitId;
+    //         } else {
+    //             return this.tempVisitId;
+    //         }
+    //     },
+    //     isCurrentOrTempVisitId(visitId){
+    //         return visitId !== 0 && (this.currentVisitId === visitId || this.tempVisitId === visitId);
+    //     },
+    //     confirmManip(visitId, question){
+    //         if( visitId === 0 ){
+    //             throw new Error("invalid VisitId");
+    //         }
+    //         if( this.isCurrentOrTempVisitId(visitId) ){
+    //             return true;
+    //         } else {
+    //             return confirm(`現在診察中でありませんが、${question}？`);
+    //         }
+    //     },
+    //     startSession(patientId, visitId=0){
+    //         pane.dispatchEvent(new CustomEvent("start-session", {detail: {patientId, visitId}}))
+    //     },
+    //     endSession(){
+    //         pane.dispatchEvent(new Event("end-session"));
+    //     },
+    //     publish(event, detail, filter){
+    //         let e = pane;
+    //         if( filter && filter.visitId ){
+    //             e = pane.querySelector(`.practice-record[data-visit-id='${filter.visitId}']`);
+    //         }
+    //         if( e ){
+    //             let sel = `.${event}-subscriber`;
+    //             let evt = new CustomEvent(event, {detail: detail});
+    //             if( e.classList.contains(sel) ){
+    //                 e.dispatchEvent(evt);
+    //             }
+    //             e.querySelectorAll(sel).forEach(s => s.dispatchEvent(evt));
+    //         }
+    //     }
+    // };
+    //
+    // pane.addEventListener("start-session", async event => {
+    //     let patientId = event.detail.patientId;
+    //     let visitId = event.detail.visitId;
+    //     if( visitId > 0 ){
+    //         await rest.startExam(visitId);
+    //     }
+    //     prop.patient = await prop.rest.getPatient(patientId);
+    //     prop.currentVisitId = visitId;
+    //     prop.tempVisitId = 0;
+    //     pane.querySelectorAll(".session-listener").forEach(e =>
+    //         e.dispatchEvent(new Event("session-started")));
+    //     pane.dispatchEvent(new CustomEvent("load-record-page", {detail: 0}));
+    // });
+    //
+    // pane.addEventListener("end-session", async event => {
+    //     if( prop.currentVisitId > 0 ){
+    //         await rest.suspendExam(prop.currentVisitId);
+    //     }
+    //     prop.patient = null;
+    //     prop.currentVisitId = 0;
+    //     prop.tempVisitId = 0;
+    //     pane.querySelectorAll(".session-listener").forEach(e =>
+    //         e.dispatchEvent(new Event("session-ended")));
+    // });
+    //
+    // pane.addEventListener("change-current-visit-id", event => {
+    //     let visitId = event.detail;
+    //     console.log("change-current-visit-id");
+    // });
+    //
+    // pane.addEventListener("change-temp-visit-id", event => {
+    //     let visitId = event.detail;
+    //     console.log("change-temp-visit-id");
+    // });
+    //
+    // pane.addEventListener("load-record-page", async event => {
+    //     let page = event.detail;
+    //     let recordPage = await prop.rest.listVisit(prop.patient.patientId, page);
+    //     while( page > 0 && recordPage.visits.length === 0 ){
+    //         page -= 1;
+    //         recordPage = await prop.rest.listVisit(prop.patient.patientId, page);
+    //     }
+    //     prop.page = page;
+    //     pane.querySelectorAll(".record-page-listener").forEach(e => e.dispatchEvent(
+    //         new CustomEvent("record-page-loaded", {detail: recordPage})
+    //     ));
+    // });
+    //
+    // pane.addEventListener("visit-deleted", async event => {
+    //     let visitId = event.detail;
+    //     if( prop.currentVisitId === visitId ){
+    //         prop.currentVisitId = 0;
+    //     } else if( prop.tempVisitId === visitId ){
+    //         prop.tempVisitId = 0;
+    //     }
+    //     pane.dispatchEvent(new CustomEvent("load-record-page", {detail: prop.page}));
+    // });
+    //
+    // pane.addEventListener("set-temp-visit", event => {
+    //     let visitId = event.detail;
+    //     if( prop.currentVisitId !== 0 ){
+    //         alert("現在診察中なので、暫定診察を設定できません。");
+    //         return;
+    //     }
+    //     prop.tempVisitId = visitId;
+    //     pane.querySelectorAll(".temp-visit-listener").forEach(e => {
+    //         e.dispatchEvent(new Event("temp-visit-changed"));
+    //     });
+    // });
+    //
+    // pane.addEventListener("clear-temp-visit", event => {
+    //     let visitId = event.detail;
+    //     let save = prop.tempVisitId;
+    //     prop.tempVisitId = 0;
+    //     pane.querySelectorAll(".temp-visit-listener").forEach(e => {
+    //         e.dispatchEvent(new Event("temp-visit-changed"));
+    //     });
+    // });
+    //
+    // pane.addEventListener("text-copied", event => {
+    //     let newText = event.detail;
+    //     let visitId = newText.visitId;
+    //     let e = getRecordElementByVisitId(visitId);
+    //     if( e ){
+    //         e.dispatchEvent(new CustomEvent("text-entered", {detail: newText}));
+    //     }
+    // });
+    //
+    // pane.addEventListener("shinryou-copied", event => {
+    //     console.log("shinryou-copied", event.detail);
+    //     let visitId = event.detail.visitId;
+    //     let shinryouFulls = event.detail.shinryouList;
+    //     let e = getRecordElementByVisitId(visitId);
+    //     if( e ){
+    //         e.dispatchEvent(new CustomEvent("shinryou-entered", {detail: shinryouFulls}));
+    //     }
+    // });
+    //
+    // pane.addEventListener("conducts-copied", event => {
+    //     let visitId = event.detail.visitId;
+    //     let conducts = event.detail.conducts;
+    //     let e = getRecordElementByVisitId(visitId);
+    //     if( e ){
+    //         e.dispatchEvent(new CustomEvent("conducts-entered", {detail: conducts}));
+    //     }
+    // });
+    //
+    // pane.addEventListener("fax-sent", async event => {
+    //     let textId = event.detail.textId;
+    //     let faxNumber = event.detail.faxNumber;
+    //     let pdfFile = event.detail.pdfFile;
+    //     let faxSid = event.detail.faxSid;
+    //     let text = await prop.rest.getText(textId);
+    //     let visit = await prop.rest.getVisit(text.visitId);
+    //     let patient = await prop.rest.getPatient(visit.patientId);
+    //     let title = `${patient.lastName}${patient.firstName} FAX`;
+    //     let progress = new FaxProgress(prop.rest, title, faxNumber, pdfFile, faxSid);
+    //     let wrapper = document.getElementById("practice-general-workarea");
+    //     wrapper.append(progress.ele);
+    //     progress.start();
+    // });
+    //
+    // replaceNode(document.getElementById("patient-selector-menu-placeholder"),
+    //     (new PatientSelectorMenu(prop, document.getElementById("practice-general-workarea"))).ele);
+    //
+    // function getTemplateHtml(templateId) {
+    //     let html = $("template#" + templateId).html();
+    //     if (!html) {
+    //         console.error(`cannot find "${templateId}"`);
+    //     }
+    //     return html;
+    // }
+    //
+    // let noPayList = null;
+    //
+    // pane.addEventListener("add-to-no-pay-list", async event => {
+    //     let visitId = event.detail;
+    //     if (noPayList == null) {
+    //         noPayList = new NoPayList(prop);
+    //         noPayList.ele.addEventListener("closed", event => noPayList = null);
+    //         document.getElementById("practice-general-workarea").append(noPayList.ele);
+    //     }
+    //     await noPayList.add(visitId);
+    // });
+    //
+    // pane.addEventListener("payment-updated", async event => {
+    //     let visitIds = event.detail;
+    //     await batchUpdatePaymentState(visitIds);
+    // });
+    //
+    // class SearchTextGloballyDialogFactory {
     //     constructor() {
-    //         this.html = getTemplateHtml("practice-disease-area-template");
-    //         this.diseaseCurrentFactory = new DiseaseCurrentFactory();
-    //         this.diseaseAddFactory = new DiseaseAddFactory();
-    //         this.diseaseEndFactory = new DiseaseEndFactory();
-    //         this.diseaseEditFactory = new DiseaseEditFactory();
-    //         this.diseaseModifyFactory = new DiseaseModifyFactory();
-    //         this.diseaseExamples = diseaseExamples;
+    //         this.html = getTemplateHtml("practice-search-text-dialog-template");
     //     }
     //
     //     create() {
     //         let ele = $(this.html);
     //         let map = parseElement(ele);
-    //         let comp = new DiseaseArea(ele, map, rest);
-    //         comp.init(this.diseaseCurrentFactory, this.diseaseAddFactory, this.diseaseEndFactory,
-    //             this.diseaseEditFactory, this.diseaseModifyFactory, this.diseaseExamples);
+    //         let dialog = new SearchTextGloballyDialog(ele, map, rest);
+    //         dialog.init("全文検索");
+    //         dialog.set();
+    //         return dialog;
+    //     }
+    // }
+    //
+    // $("#practice-registered-drug-link").on("click", async _ => {
+    //     let dialog = new RegisteredDrugDialog(rest);
+    //     await dialog.open();
+    // });
+    //
+    // (function () {
+    //     let searchTextGloballyDialogFactory = new SearchTextGloballyDialogFactory();
+    //     $("#practice-search-text-globally").on("click", async event => {
+    //         let dialog = searchTextGloballyDialogFactory.create();
+    //         await dialog.open();
+    //     });
+    // })();
+    //
+    // document.getElementById("practice-patient-info").addEventListener("session-started", event => {
+    //     let patient = prop.patient;
+    //     let disp = new PatientDisplay(patient);
+    //     let e = event.target;
+    //     e.innerHTML = "";
+    //     e.append(disp.ele);
+    // });
+    //
+    // document.getElementById("practice-patient-info").addEventListener("session-ended", event => {
+    //     event.target.innerHTML = "";
+    // });
+    //
+    // class MeisaiDialogFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-meisai-dialog-template");
+    //     }
+    //
+    //     create(meisai) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let dialog = new MeisaiDialog(ele, map, rest);
+    //         dialog.init(meisai);
+    //         return dialog;
+    //     }
+    // }
+    //
+    // class SearchTextForPatientDialogFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-search-text-dialog-template");
+    //     }
+    //
+    //     create(patientId) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let dialog = new SearchTextForPatientDialog(ele, map, rest);
+    //         dialog.init("文章検索");
+    //         dialog.set(patientId);
+    //         return dialog;
+    //     }
+    // }
+    //
+    // new PatientManip(prop, document.getElementById("practice-patient-manip"),
+    //     document.getElementById("practice-patient-manip-workarea"),
+    //     document.getElementById("practice-general-workarea"));
+    //
+    // document.getElementById("practice-patient-manip").addEventListener("session-started", event => {
+    //     show(event.target);
+    // });
+    //
+    // document.getElementById("practice-patient-manip").addEventListener("session-ended", event => {
+    //     hide(event.target);
+    // });
+    //
+    // function getRecordElementByVisitId(visitId){
+    //     return pane.querySelector(`.practice-record[data-visit-id='${visitId}']`);
+    // }
+    //
+    // document.getElementById("practice-record-wrapper").addEventListener("record-page-loaded", async event => {
+    //     let recordPage = event.detail;
+    //     let wrapper = event.target;
+    //     wrapper.innerHTML = "";
+    //     for(let visitFull of recordPage.visits){
+    //         let record = new Record(prop, visitFull);
+    //         wrapper.append(record.ele);
+    //     }
+    // });
+    //
+    // document.getElementById("practice-record-wrapper").addEventListener("session-ended", event => {
+    //     event.target.innerHTML = "";
+    // });
+    //
+    // class DiseaseCurrentFactory {
+    //     constructor() {
+    //         this.html = "<div></div>";
+    //     }
+    //
+    //     create(diseaseFulls) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let comp = new DiseaseCurrent(ele, map, rest);
+    //         comp.init();
+    //         comp.set(diseaseFulls);
     //         return comp;
     //     }
     // }
-
-    // let diseaseArea = (function () {
-    //     let diseaseAreaFactory = new DiseaseAreaFactory();
-    //     let comp = diseaseAreaFactory.create();
-    //     comp.appendTo($("#practice-disease-wrapper"));
-    //     return comp;
-    // })();
-
-    document.querySelectorAll(".practice-nav").forEach(e => {
-        let nav = new Nav(e);
-        nav.setTriggerFun(page => {
-            pane.dispatchEvent(new CustomEvent("load-record-page", {
-                detail: page
-            }));
-        });
-        e.addEventListener("record-page-loaded", event => {
-            let page = event.detail;
-            if( page.totalPages <= 1 ){
-                hide(e);
-            } else {
-                nav.adaptToPage(page.page, page.totalPages);
-                show(e);
-            }
-        });
-        e.addEventListener("session-ended", event => hide(e));
-    });
-
-    async function batchUpdatePaymentState(visitIds) {
-        let map = await rest.batchGetLastPayment(visitIds);
-        let wrapper = document.getElementById("practice-record-wrapper");
-        for (let visitId of Object.keys(map)) {
-            let e = wrapper.querySelector(`.record-${visitId}`);
-            if (e) {
-                e.dispatchEvent(new CustomEvent("update-payment", {detail: map[visitId]}));
-            }
-        }
-    }
-
-    let noPay0410cache = {
-        patientId: 0,
-        visitIds: []
-    };
-
-    async function batchUpdate0410NoPay() {
-        let patientId = controller.getPatientId();
-        let cache = noPay0410cache;
-        if (patientId > 0 && cache.patientId !== patientId) {
-            cache.patientId = patientId;
-            cache.visitIds = await rest.list0410NoPay(patientId);
-        }
-        let wrapper = document.getElementById("practice-record-wrapper");
-        for (let visitId of cache.visitIds) {
-            let e = wrapper.querySelector(`.record-${visitId}`);
-            if (e) {
-                e.dispatchEvent(new Event("update-0410-no-pay"));
-            }
-        }
-    }
-
-    function forEachRecord(f) {
-        let xs = $(".practice-record");
-        let len = xs.length;
-        for (let i = 0; i < len; i++) {
-            let x = xs.slice(i, i + 1);
-            let c = x.data("component");
-            f(c);
-        }
-    }
-
-    function findRecord(visitId) {
-        let xs = $(".practice-record");
-        let len = xs.length;
-        for (let i = 0; i < len; i++) {
-            let x = xs.slice(i, i + 1);
-            let c = x.data("component");
-            if (c.getVisitId() === visitId) {
-                return c;
-            }
-        }
-        return null;
-    }
+    //
+    // class DiseaseAddFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-disease-add-template");
+    //     }
+    //
+    //     create(patientId, date) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let comp = new DiseaseAdd(ele, map, rest);
+    //         comp.init();
+    //         comp.set(patientId, date);
+    //         return comp;
+    //     }
+    // }
+    //
+    // class DiseaseEndFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-disease-end-template");
+    //     }
+    //
+    //     create(diseaseFulls) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let comp = new DiseaseEnd(ele, map, rest);
+    //         comp.init();
+    //         comp.set(diseaseFulls);
+    //         return comp;
+    //     }
+    // }
+    //
+    // class DiseaseEditFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-disease-edit-template");
+    //     }
+    //
+    //     create(diseaseFulls) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let comp = new DiseaseEdit(ele, map, rest);
+    //         comp.init();
+    //         comp.set(diseaseFulls);
+    //         return comp;
+    //     }
+    // }
+    //
+    // class DiseaseModifyFactory {
+    //     constructor() {
+    //         this.html = getTemplateHtml("practice-disease-modify-template");
+    //     }
+    //
+    //     create(diseaseFull, diseaseExamples) {
+    //         let ele = $(this.html);
+    //         let map = parseElement(ele);
+    //         let comp = new DiseaseModify(ele, map, rest);
+    //         comp.init(diseaseExamples);
+    //         comp.set(diseaseFull);
+    //         return comp;
+    //     }
+    // }
+    //
+    // let diseaseExamples = await rest.listDiseaseExample();
+    // initDiseaseExamples(diseaseExamples);
+    //
+    // // class DiseaseAreaFactory {
+    // //     constructor() {
+    // //         this.html = getTemplateHtml("practice-disease-area-template");
+    // //         this.diseaseCurrentFactory = new DiseaseCurrentFactory();
+    // //         this.diseaseAddFactory = new DiseaseAddFactory();
+    // //         this.diseaseEndFactory = new DiseaseEndFactory();
+    // //         this.diseaseEditFactory = new DiseaseEditFactory();
+    // //         this.diseaseModifyFactory = new DiseaseModifyFactory();
+    // //         this.diseaseExamples = diseaseExamples;
+    // //     }
+    // //
+    // //     create() {
+    // //         let ele = $(this.html);
+    // //         let map = parseElement(ele);
+    // //         let comp = new DiseaseArea(ele, map, rest);
+    // //         comp.init(this.diseaseCurrentFactory, this.diseaseAddFactory, this.diseaseEndFactory,
+    // //             this.diseaseEditFactory, this.diseaseModifyFactory, this.diseaseExamples);
+    // //         return comp;
+    // //     }
+    // // }
+    //
+    // // let diseaseArea = (function () {
+    // //     let diseaseAreaFactory = new DiseaseAreaFactory();
+    // //     let comp = diseaseAreaFactory.create();
+    // //     comp.appendTo($("#practice-disease-wrapper"));
+    // //     return comp;
+    // // })();
+    //
+    // document.querySelectorAll(".practice-nav").forEach(e => {
+    //     let nav = new Nav(e);
+    //     nav.setTriggerFun(page => {
+    //         pane.dispatchEvent(new CustomEvent("load-record-page", {
+    //             detail: page
+    //         }));
+    //     });
+    //     e.addEventListener("record-page-loaded", event => {
+    //         let page = event.detail;
+    //         if( page.totalPages <= 1 ){
+    //             hide(e);
+    //         } else {
+    //             nav.adaptToPage(page.page, page.totalPages);
+    //             show(e);
+    //         }
+    //     });
+    //     e.addEventListener("session-ended", event => hide(e));
+    // });
+    //
+    // async function batchUpdatePaymentState(visitIds) {
+    //     let map = await rest.batchGetLastPayment(visitIds);
+    //     let wrapper = document.getElementById("practice-record-wrapper");
+    //     for (let visitId of Object.keys(map)) {
+    //         let e = wrapper.querySelector(`.record-${visitId}`);
+    //         if (e) {
+    //             e.dispatchEvent(new CustomEvent("update-payment", {detail: map[visitId]}));
+    //         }
+    //     }
+    // }
+    //
+    // let noPay0410cache = {
+    //     patientId: 0,
+    //     visitIds: []
+    // };
+    //
+    // async function batchUpdate0410NoPay() {
+    //     let patientId = controller.getPatientId();
+    //     let cache = noPay0410cache;
+    //     if (patientId > 0 && cache.patientId !== patientId) {
+    //         cache.patientId = patientId;
+    //         cache.visitIds = await rest.list0410NoPay(patientId);
+    //     }
+    //     let wrapper = document.getElementById("practice-record-wrapper");
+    //     for (let visitId of cache.visitIds) {
+    //         let e = wrapper.querySelector(`.record-${visitId}`);
+    //         if (e) {
+    //             e.dispatchEvent(new Event("update-0410-no-pay"));
+    //         }
+    //     }
+    // }
+    //
+    // function forEachRecord(f) {
+    //     let xs = $(".practice-record");
+    //     let len = xs.length;
+    //     for (let i = 0; i < len; i++) {
+    //         let x = xs.slice(i, i + 1);
+    //         let c = x.data("component");
+    //         f(c);
+    //     }
+    // }
+    //
+    // function findRecord(visitId) {
+    //     let xs = $(".practice-record");
+    //     let len = xs.length;
+    //     for (let i = 0; i < len; i++) {
+    //         let x = xs.slice(i, i + 1);
+    //         let c = x.data("component");
+    //         if (c.getVisitId() === visitId) {
+    //             return c;
+    //         }
+    //     }
+    //     return null;
+    // }
 
 }

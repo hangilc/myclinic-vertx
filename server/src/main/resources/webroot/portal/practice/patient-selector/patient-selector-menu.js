@@ -7,6 +7,7 @@ import {RecentDialog} from "./recent-dialog.js";
 import {PatientListWidget} from "./patient-list-widget.js";
 import {ByDateWidget} from "./by-date-widget.js";
 import * as kanjidate from "../../../js/kanjidate.js";
+import * as app from "../app.js";
 
 let tmpl = `
     <div class="dropdown">
@@ -25,10 +26,10 @@ let tmpl = `
 `;
 
 export class PatientSelectorMenu {
-    constructor(prop, workarea) {
-        this.prop = prop;
-        this.rest = prop.rest;
-        this.workarea = workarea;
+    constructor() {
+        this.prop = app;
+        this.rest = app.rest;
+        this.workarea = app.map.generalWorkarea;
         this.ele = createElementFrom(tmpl);
         let map = parseElement(this.ele);
         click(map.wqueue, async event => await this.doWqueue());
@@ -39,7 +40,7 @@ export class PatientSelectorMenu {
 
     async doWqueue() {
         let wqueue = await this.rest.listWqueueFullForExam();
-        let dialog = new WqueueDialog(this.prop, wqueue);
+        let dialog = new WqueueDialog(wqueue);
         await dialog.open();
     }
 
@@ -49,13 +50,13 @@ export class PatientSelectorMenu {
     }
 
     async doRecent() {
-        let dialog = new RecentDialog(this.prop);
+        let dialog = new RecentDialog();
         await dialog.init();
         await dialog.open();
     }
 
     async doByDate() {
-        let widget = new ByDateWidget(this.prop);
+        let widget = new ByDateWidget();
         await widget.setDate(kanjidate.todayAsSqldate());
         this.workarea.append(widget.ele);
     }

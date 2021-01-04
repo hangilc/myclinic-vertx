@@ -1,7 +1,8 @@
 import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
-import {on} from "../../../js/dom-helper.js";
+import {on, click} from "../../../js/dom-helper.js";
 import {Current} from "./current.js";
+import {Add} from "./add.js";
 
 let tmpl = `
     <div class="disease-listener">
@@ -22,6 +23,7 @@ export class Disease {
         this.map = parseElement(this.ele);
         this.props = {diseases: []};
         this.showCurrent();
+        click(this.map.add, event => this.showAdd());
         on(this.ele, "disease-loaded", event => {
             this.props.diseases = event.detail;
             console.log(this.props);
@@ -33,6 +35,12 @@ export class Disease {
         let current = new Current(this.props);
         this.map.workarea.innerHTML = "";
         this.map.workarea.append(current.ele);
+    }
+
+    showAdd(){
+        let add = new Add();
+        this.map.workarea.innerHTML = "";
+        this.map.workarea.append(add.ele);
     }
 
     updateUI() {

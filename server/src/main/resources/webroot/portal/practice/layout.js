@@ -275,7 +275,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {FaxProgress} = await import("./fax-progress.js");
     let {Nav} = await import("./nav.js");
     let {DiseaseCurrent} = await import("./disease-current.js");
-    let {DiseaseAdd, initDiseaseExamples} = await import("./disease-add.js");
     let {DiseaseEnd} = await import("./disease-end.js");
     let {DiseaseEdit} = await import("./disease-edit.js");
     let {DiseaseModify} = await import("./disease-modify.js");
@@ -286,6 +285,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {PatientSelectorMenu} = await import("./patient-selector/patient-selector-menu.js");
     let {replaceNode, show, hide} = await import("../../js/dom-helper.js");
     let app = await import("./app.js");
+    let DiseaseAdd = await import("./disease/add.js");
 
     app.init(rest, printAPI, pane, {
         generalWorkarea: document.getElementById("practice-general-workarea"),
@@ -365,6 +365,9 @@ export async function initLayout(pane, rest, controller, printAPI) {
             }
         );
     }
+
+    DiseaseAdd.initExamples(await rest.listDiseaseExample());
+
 
 
     //

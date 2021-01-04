@@ -41,6 +41,7 @@ export class Disease {
         let add = new Add();
         this.map.workarea.innerHTML = "";
         this.map.workarea.append(add.ele);
+        add.initFocus();
     }
 
     updateUI() {

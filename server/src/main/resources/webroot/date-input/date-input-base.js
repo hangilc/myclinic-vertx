@@ -1,5 +1,6 @@
 import * as funs from "./date-input-funs.js";
 import {click} from "../js/dom-helper.js";
+import * as kanjidate from "../js/kanjidate.js";
 
 export function createDateInput(ele, map){
     const dateInput = new DateInputBase();
@@ -16,6 +17,10 @@ export class DateInputBase {
 
     set(sqldate){
         funs.setDate(this.map, sqldate);
+    }
+
+    setToday(){
+        this.set(kanjidate.todayAsSqldate());
     }
 
     get(){

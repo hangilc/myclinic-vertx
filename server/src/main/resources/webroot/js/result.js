@@ -8,6 +8,10 @@ class Success {
         return true;
     }
 
+    isFailure(){
+        return false;
+    }
+
     getValue(){
         return this.value;
     }
@@ -20,6 +24,10 @@ class Failure {
 
     isSuccess(){
         return false;
+    }
+
+    isFailure(){
+        return true;
     }
 
     getMessage(){

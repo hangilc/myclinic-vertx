@@ -39,3 +39,9 @@ a:hover {text-decoration: none;}
 .reception .payment-search .search-result tr {
     cursor: pointer;
 }
+
+.form-control-border {
+    border: 1px solid #ced4da;
+    border-radius: 0.25em;
+
+}

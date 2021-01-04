@@ -2,6 +2,7 @@ import {createElementFrom} from "../js/create-element-from.js";
 import {parseElement} from "../js/parse-node.js";
 import * as funs from "./date-input-funs.js";
 import {click} from "../js/dom-helper.js";
+import {DateInputBase} from "./date-input-base.js";
 
 let tmpl = `
     <div class="form-inline">
@@ -21,7 +22,23 @@ let tmpl = `
    </div>
 `;
 
-export class DateInput {
+export class DateInput extends DateInputBase {
+    constructor(opt=null) {
+        super();
+        if( !opt ){
+            opt = {};
+        }
+        const ele = createElementFrom(tmpl);
+        const map = parseElement(ele);
+        if( opt.small ){
+            [map.gengou, map.nen, map.month, map.day]
+                .forEach(e => e.classList.add("form-control-sm"));
+        }
+        this.init(ele, map);
+    }
+}
+
+class DateInputOrig {
     constructor(opt=null) {
         if( !opt ){
             opt = {};

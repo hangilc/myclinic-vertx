@@ -1,4 +1,5 @@
 import {PatientManip} from "./patient-manip.js";
+import {Disease} from "./disease/disease.js";
 
 let html = `
 <div class="pane practice">
@@ -21,25 +22,25 @@ let html = `
         </div>
         <div class="col-xl-3">
             <div id="practice-right-bar">
-                <div id="practice-disease-wrapper" class="mb-3"></div>
+                <div id="practice-disease-wrapper" class="session-listener mb-3"></div>
                 <div id="practice-general-workarea"></div>
             </div>
         </div>
     </div>
 </div>
 
-<template id="practice-disease-area-template">
-    <div class="d-none">
-        <h5>病名</h5>
-        <div class="x-workarea"></div>
-        <div class="x-commands mt-2">
-            <a href="javascript:void(0)" class="x-current">現行</a>
-            <a href="javascript:void(0)" class="x-add">追加</a>
-            <a href="javascript:void(0)" class="x-end">転機</a>
-            <a href="javascript:void(0)" class="x-edit">編集</a>
-        </div>
-    </div>
-</template>
+<!--<template id="practice-disease-area-template">-->
+<!--    <div class="d-none">-->
+<!--        <h5>病名</h5>-->
+<!--        <div class="x-workarea"></div>-->
+<!--        <div class="x-commands mt-2">-->
+<!--            <a href="javascript:void(0)" class="x-current">現行</a>-->
+<!--            <a href="javascript:void(0)" class="x-add">追加</a>-->
+<!--            <a href="javascript:void(0)" class="x-end">転機</a>-->
+<!--            <a href="javascript:void(0)" class="x-edit">編集</a>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</template>-->
 
 <template id="practice-disease-add-template">
     <div>
@@ -300,7 +301,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
         let e = document.getElementById("practice-patient-info");
         e.addEventListener("patient-changed", event => {
             let patient = app.patient;
-            if( patient ){
+            if (patient) {
                 let disp = new PatientDisplay(patient);
                 e.innerHTML = "";
                 e.append(disp.ele);
@@ -314,7 +315,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
         let e = document.getElementById("practice-patient-manip");
         e.addEventListener("patient-changed", event => {
             e.innerHTML = "";
-            if( app.patient ){
+            if (app.patient) {
                 let manip = new PatientManip();
                 e.append(manip.ele);
             }
@@ -326,7 +327,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
         nav.setTriggerFun(async page => await app.loadRecordPage(page));
         e.addEventListener("record-page-loaded", event => {
             let page = event.detail;
-            if( page.totalPages <= 1 ){
+            if (page.totalPages <= 1) {
                 hide(e);
             } else {
                 nav.adaptToPage(page.page, page.totalPages);
@@ -341,7 +342,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
         e.addEventListener("record-page-loaded", async event => {
             let recordPage = event.detail;
             e.innerHTML = "";
-            for(let visitFull of recordPage.visits){
+            for (let visitFull of recordPage.visits) {
                 let record = new Record(visitFull);
                 e.append(record.ele);
             }
@@ -352,6 +353,18 @@ export async function initLayout(pane, rest, controller, printAPI) {
         });
     }
 
+    {
+        let e = document.getElementById("practice-disease-wrapper");
+        e.addEventListener("session-started", event => {
+            let d = new Disease();
+            e.innerHTML = "";
+            e.append(d.ele);
+        });
+        e.addEventListener("session-ended", event => {
+                e.innerHTML = "";
+            }
+        );
+    }
 
 
     //

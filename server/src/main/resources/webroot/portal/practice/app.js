@@ -39,7 +39,9 @@ export async function startSession(patientId, visitId=0){
     publish("patient-listener", "patient-changed");
     currentVisitId = visitId;
     tempVisitId = 0;
-    const recordPage = await loadRecordPage(0);
+    publish("session-listener", "session-started");
+    await loadRecordPage(0);
+    await loadDiseases();
 }
 
 export function endSession(){
@@ -60,6 +62,14 @@ export async function loadRecordPage(page){
     currentPage = page;
     publish("record-page-listener", "record-page-loaded", recordPage);
     await batchUpdatePayments(recordPage.visits.map(visitFull => visitFull.visit.visitId));
+}
+
+async function loadDiseases(){
+    let diseases = [];
+    if( patient ){
+        diseases = await rest.listCurrentDisease(patient.patientId);
+    }
+    publish("disease-listener", "disease-loaded", diseases);
 }
 
 export function setTempVisit(visitId){

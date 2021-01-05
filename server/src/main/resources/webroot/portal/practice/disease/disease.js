@@ -1,8 +1,10 @@
 import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
 import {on, click} from "../../../js/dom-helper.js";
+import * as app from "../app.js";
 import {Current} from "./current.js";
 import {Add} from "./add.js";
+import {Edit} from "./edit.js";
 
 let tmpl = `
     <div class="disease-listener">
@@ -23,7 +25,9 @@ export class Disease {
         this.map = parseElement(this.ele);
         this.props = {diseases: []};
         this.showCurrent();
+        click(this.map.current, event => this.showCurrent());
         click(this.map.add, event => this.showAdd());
+        click(this.map.edit, async event => await this.showEdit());
         on(this.ele, "disease-loaded", event => {
             this.props.diseases = event.detail;
             this.updateUI();
@@ -46,6 +50,13 @@ export class Disease {
         this.map.workarea.innerHTML = "";
         this.map.workarea.append(add.ele);
         add.initFocus();
+    }
+
+    async showEdit(){
+        const list = await app.rest.listDisease(app.patient.patientId);
+        let edit = new Edit(list);
+        this.map.workarea.innerHTML = "";
+        this.map.workarea.append(edit.ele);
     }
 
     updateUI() {

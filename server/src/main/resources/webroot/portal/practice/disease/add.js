@@ -62,6 +62,8 @@ export class Add {
         this.dateInput = createDateInput(this.map.date_, this.map.date);
         this.dateInput.setToday();
         click(map.enter, async event => await this.doEnter());
+        click(map.susp, event => this.doSusp());
+        click(map.delAdj, event => this.doDelAdj());
         submit(map.searchForm, async event => await this.doSearch());
         click(map.example, event => this.doExample());
         on(map.select, "change", async event => await this.doSelect());
@@ -103,6 +105,16 @@ export class Add {
             bubbles: true,
             detail: entered
         }));
+    }
+
+    doSusp(){
+        this.props.adjList.push(consts.suspMaster);
+        this.updateName();
+    }
+
+    doDelAdj(){
+        this.props.adjList = [];
+        this.updateName();
     }
 
     async doSearch(){

@@ -2,6 +2,8 @@ import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
 import {createDateInput} from "./date-input.js";
 import * as DiseaseUtil from "../../js/disease-util.js";
+import {submit} from "../../../js/dom-helper.js";
+import * as funs from "./disease-funs.js";
 
 const tmpl = `
     <div>
@@ -27,7 +29,7 @@ const tmpl = `
             <a href="javascript:void(0)" class="x-delete">削除</a>
         </div>
         <div class="x-search_">
-            <form class="x-form mt-1">
+            <form class="x-form mt-1" onsubmit="return false;">
                 <div class="form-inline">
                     <input type="text" class="x-search-text form-control"/>
                     <button type="submit" class="btn btn-secondary mt-1">検索</button>
@@ -63,6 +65,9 @@ export class Modify {
             endReason: disease.disease.endReason
         }
         this.updateDisp();
+        submit(this.map.form, async event => {
+            funs.search(this.map.searchText, this.startDateInput.get())
+        });
     }
 
     updateDisp(){

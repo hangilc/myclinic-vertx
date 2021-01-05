@@ -28,6 +28,11 @@ export class Disease {
             this.props.diseases = event.detail;
             this.updateUI();
         });
+        on(this.ele, "disease-entered", event => {
+            const diseaseFull = event.detail;
+            this.props.diseases.push(diseaseFull);
+            this.updateUI();
+        });
     }
 
     showCurrent(){

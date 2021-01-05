@@ -72,7 +72,6 @@ export class Add {
     }
 
     updateName(){
-        console.log(this.props);
         this.map.name.innerText = rep(this.props.master, this.props.adjList);
     }
 
@@ -155,7 +154,6 @@ export class Add {
     }
 
     async selectExample(example){
-        console.log("example", example);
         const date = this.getDate();
         if( !date ){
             return;

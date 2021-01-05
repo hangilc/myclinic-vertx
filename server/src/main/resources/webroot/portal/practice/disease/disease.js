@@ -26,7 +26,6 @@ export class Disease {
         click(this.map.add, event => this.showAdd());
         on(this.ele, "disease-loaded", event => {
             this.props.diseases = event.detail;
-            console.log(this.props);
             this.updateUI();
         });
     }

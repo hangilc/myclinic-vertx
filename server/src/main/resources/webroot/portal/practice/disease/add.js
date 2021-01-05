@@ -4,6 +4,8 @@ import {createDateInput} from "../../../date-input/date-input-base.js";
 import {click, on, submit} from "../../../js/dom-helper.js";
 import * as app from "../app.js";
 import * as DiseaseUtil from "../../js/disease-util.js";
+import {suspMaster} from "../../js/consts.js";
+import * as consts from "../../js/consts.js";
 
 let examples = [];
 
@@ -59,19 +61,10 @@ export class Add {
         let map = this.map = parseElement(this.ele);
         this.dateInput = createDateInput(this.map.date_, this.map.date);
         this.dateInput.setToday();
+        click(map.enter, async event => await this.doEnter());
         submit(map.searchForm, async event => await this.doSearch());
-        on(map.select, "change", event => {
-            let opt = map.select.querySelector("option:checked");
-            console.log(opt);
-            if( opt ){
-                if( opt.dataset.kind === "byoumei" ){
-                    this.props.master = opt.master;
-                } else if( opt.dataset.kind === "adj" ){
-                    this.props.adjList.push(opt.master);
-                }
-                this.updateName();
-            }
-        });
+        click(map.example, event => this.doExample());
+        on(map.select, "change", async event => await this.doSelect());
     }
 
     initFocus(){
@@ -79,7 +72,38 @@ export class Add {
     }
 
     updateName(){
+        console.log(this.props);
         this.map.name.innerText = rep(this.props.master, this.props.adjList);
+    }
+
+    getDate(){
+        const dateOpt = this.dateInput.get();
+        if( dateOpt.isFailure() ){
+            alert(dateOpt.getMessage());
+            return null;
+        } else {
+            return dateOpt.getValue();
+        }
+    }
+
+    async doEnter(){
+        const patient = app.patient;
+        if( !patient ){
+            alert("Cannot find current patient.");
+            return;
+        }
+        const patientId = patient.patientId;
+        const date = this.getDate();
+        if( !date ){
+            return;
+        }
+        const req = createRequest(patientId, this.props.master, this.props.adjList, this.getDate());
+        let diseaseId = await app.rest.enterDisease(req);
+        let entered = await app.rest.getDisease(diseaseId);
+        this.ele.dispatchEvent(new CustomEvent("disease-entered", {
+            bubbles: true,
+            detail: entered
+        }));
     }
 
     async doSearch(){
@@ -87,12 +111,10 @@ export class Add {
         if( !text ){
             return;
         }
-        const dateOpt = this.dateInput.get();
-        if( dateOpt.isFailure() ){
-            alert(dateOpt.getMessage());
+        const date = this.getDate();
+        if( !date ){
             return;
         }
-        const date = dateOpt.getValue();
         const searchKind = this.getSearchKind();
         const select = this.map.select;
         select.innerHTML = "";
@@ -103,12 +125,67 @@ export class Add {
             masters = await app.rest.searchShuushokugoMaster(text, date);
         }
         masters.forEach(master => select.append(createOption(master, searchKind)));
+    }
 
+    doExample(){
+        const select = this.map.select;
+        select.innerHTML = "";
+        examples.forEach(example => {
+            const m = {
+                name: exampleRep(example),
+                example: example
+            };
+            const opt = createOption(m, "example");
+            select.append(opt);
+        });
+    }
+
+    async doSelect(){
+        let opt = this.map.select.querySelector("option:checked");
+        if( opt ){
+            if( opt.dataset.kind === "byoumei" ){
+                this.props.master = opt.master;
+            } else if( opt.dataset.kind === "adj" ){
+                this.props.adjList.push(opt.master);
+            } else if( opt.dataset.kind === "example" ){
+                await this.selectExample(opt.master.example);
+            }
+            this.updateName();
+        }
+    }
+
+    async selectExample(example){
+        console.log("example", example);
+        const date = this.getDate();
+        if( !date ){
+            return;
+        }
+        const byoumei = example.byoumei;
+        if( byoumei ){
+            const master = await app.rest.findByoumeiMasterByName(byoumei, date);
+            if( !master ){
+                alert(`傷病名（${byoumei}）を見つけられませんでした。`);
+                return;
+            }
+            this.props.master = master;
+        }
+        if( example.adjList ) {
+            for (const adj of example.adjList) {
+                const master = await app.rest.findShuushokugoMasterByName(adj);
+                if (!master) {
+                    alert(`修飾語（${adj}）を見つけられませんでした。`);
+                    return;
+                }
+                this.props.adjList.push(master);
+            }
+        }
+        this.updateName();
     }
 
     getSearchKind(){
         return this.map.searchForm.querySelector("input[name='search-kind']:checked").value;
     }
+
 }
 
 function createOption(master, kind){
@@ -121,4 +198,35 @@ function createOption(master, kind){
 
 function rep(master, adjList){
     return DiseaseUtil.diseaseRepByMasters(master, adjList);
+}
+
+function exampleRep(example){
+    return example.label || example.byoumei;
+}
+
+function createRequest(patientId, byoumeiMaster, adjMasters, startDate){
+    if( patientId <= 0 ){
+        alert("No patientId");
+        return null;
+    }
+    if( !byoumeiMaster ){
+        alert("病名が指定されていません。");
+        return null;
+    }
+    if( !startDate ){
+        alert("開始日が指定されていません。");
+        return null;
+    }
+    const disease = {
+        patientId,
+        shoubyoumeicode: byoumeiMaster.shoubyoumeicode,
+        startDate,
+        endReason: consts.DiseaseEndReasonNotEnded,
+        endDate: "0000-00-00"
+    };
+    let adjList = adjMasters.map(m => {
+        return {shuushokugocode: m.shuushokugocode};
+    });
+    return {disease, adjList};
+
 }

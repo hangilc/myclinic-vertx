@@ -17,7 +17,6 @@ export class Current {
     }
 
     updateUI(){
-        console.log("updateUI", this.props.diseases);
         this.ele.innerHTML = "";
         this.props.diseases.forEach(diseaseFull => {
             let label = new Label(diseaseFull);

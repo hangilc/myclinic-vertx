@@ -11,16 +11,18 @@
     <div id="workarea"></div>
     <button class="btn btn-secondary" id="get-date">Get</button>
     <script type="module">
-        import {DateInput} from "./date-input/date-input.js";
+        import {RegularDateInput} from "./date-input/date-input.js";
         import * as kanjidate from "./js/kanjidate.js";
 
         window.kanjidate = kanjidate;
-        let dateInput = new DateInput({small:true});
+        let dateInput = new RegularDateInput();
         dateInput.set(kanjidate.todayAsSqldate());
         dateInput.setGengouList(kanjidate.recentGengouList);
         dateInput.setGengou("平成");
         document.getElementById("workarea").append(dateInput.ele);
-        document.getElementById("get-date").addEventListener("click", event => console.log(dateInput.get()));
+        document.getElementById("get-date").addEventListener("click", event => {
+            console.log(dateInput.get());
+        });
     </script>
 </body>
 </html>

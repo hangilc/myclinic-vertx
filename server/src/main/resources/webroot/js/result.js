@@ -42,3 +42,4 @@ export function success(value){
 export function failure(message){
     return new Failure(message);
 }
+

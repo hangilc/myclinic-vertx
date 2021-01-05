@@ -23,8 +23,17 @@ export class DateInputBase {
         this.set(kanjidate.todayAsSqldate());
     }
 
-    get(){
-        return funs.getDate(this.map);
+    // get(){
+    //     return funs.getDate(this.map);
+    // }
+
+    get(errorHandler=((msg, input) => { throw new Error(msg); })){
+        const result = funs.getDate(this.map);
+        if( result.isSuccess() ){
+            return result.getValue();
+        } else {
+            return errorHandler(result.getMessage(), this);
+        }
     }
 
     setGengouList(list){

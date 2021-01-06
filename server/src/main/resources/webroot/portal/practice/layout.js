@@ -29,237 +29,102 @@ let html = `
     </div>
 </div>
 
-<!--<template id="practice-disease-area-template">-->
-<!--    <div class="d-none">-->
-<!--        <h5>病名</h5>-->
-<!--        <div class="x-workarea"></div>-->
-<!--        <div class="x-commands mt-2">-->
-<!--            <a href="javascript:void(0)" class="x-current">現行</a>-->
-<!--            <a href="javascript:void(0)" class="x-add">追加</a>-->
-<!--            <a href="javascript:void(0)" class="x-end">転機</a>-->
-<!--            <a href="javascript:void(0)" class="x-edit">編集</a>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--</template>-->
-
-<!--<template id="practice-disease-add-template">-->
-<!--    <div>-->
-<!--        <div>-->
-<!--            名称：<span class="x-name"></span>-->
-<!--        </div>-->
-<!--        <div class="mt-1">-->
-<!--            <input type="date" class="x-date-input form-control"/>-->
-<!--        </div>-->
-<!--        <div class="mt-1">-->
-<!--            <button type="button" class="x-enter btn btn-secondary">入力</button>-->
-<!--            <a href="javascript:void(0)" class="x-susp">の疑い</a>-->
-<!--            <a href="javascript:void(0)" class="x-del-adj">修飾語削除</a>-->
-<!--        </div>-->
-<!--        <form class="x-search-form mt-1">-->
-<!--            <div class="form-inline">-->
-<!--                <input type="text" class="x-search-text form-control"/>-->
-<!--                <button type="submit" class="btn btn-secondary mt-1">検索</button>-->
-<!--                <a href="javascript:void(0)" class="x-example mt-1 ml-2">例</a>-->
-<!--            </div>-->
-<!--            <div class="mt-1" onsubmit="return false;">-->
-<!--                <input type="radio" name="search-kind" class="x-disease-radio" checked> 病名-->
-<!--                <input type="radio" name="search-kind" class="x-adj-radio"> 修飾語-->
-<!--            </div>-->
-<!--        </form>-->
-<!--        <div class="mt-1">-->
-<!--            <select size="10" class="x-select form-control"></select>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--</template>-->
-
-<!--<template id="practice-disease-end-template">-->
-<!--    <div>-->
-<!--        <div class="x-list"></div>-->
-<!--        <div>-->
-<!--            <input type="date" class="x-date-input form-control"/>-->
-<!--            <div class="x-date-commands_">-->
-<!--                <a href="javascript:void(0)" class="x-advance-week">週</a>-->
-<!--                <a href="javascript:void(0)" class="x-today">今日</a>-->
-<!--                <a href="javascript:void(0)" class="x-end-of-month">月末</a>-->
-<!--                <a href="javascript:void(0)" class="x-end-of-last-month">先月末</a>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--        <div>-->
-<!--            <form class="form-inline x-end-reason-form" onsubmit="return false">-->
-<!--                転機：-->
-<!--                <input type="radio" name="end-reason" value="C" checked>-->
-<!--                <span class="ml-1">治癒</span>-->
-<!--                <input type="radio" name="end-reason" value="S" class="ml-2">-->
-<!--                <span class="ml-1">中止</span>-->
-<!--                <input type="radio" name="end-reason" value="D" class="ml-2">-->
-<!--                <span class="ml-1">死亡</span>-->
-<!--            </form>-->
-<!--        </div>-->
-<!--        <div>-->
-<!--            <button type="button" class="x-enter btn btn-secondary">入力</button>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--</template>-->
-
-<!--<template id="practice-disease-edit-template">-->
-<!--    <div>-->
-<!--        <div class="x-panel_">-->
-<!--            <div>名称：<span class="x-name"></span></div>-->
-<!--            <div>開始日：<span class="x-start-date"></span></div>-->
-<!--            <div>転機：<span class="x-end-reason"></span></div>-->
-<!--            <div>終了日：<span class="x-end-date"></span></div>-->
-<!--        </div>-->
-<!--        <div class="mt-1">-->
-<!--            <button type="button" class="x-edit btn btn-secondary">編集</button>-->
-<!--        </div>-->
-<!--        <select class="form-control x-select mt-1" size="6"></select>-->
-<!--    </div>-->
-<!--</template>-->
-
-<!--<template id="practice-disease-modify-template">-->
-<!--    <div>-->
-<!--        <div>-->
-<!--            名前：<span class="x-name"></span>-->
-<!--        </div>-->
-<!--        <div>-->
-<!--            <input type="date" class="x-start-date form-control"/>-->
-<!--        </div>-->
-<!--        <div>から</div>-->
-<!--        <div>-->
-<!--            <input type="date" class="x-end-date form-control"/>-->
-<!--        </div>-->
-<!--        <div class="form-inline">-->
-<!--            <select class="x-end-reason-select form-control">-->
-<!--                <option value="N">継続</option>-->
-<!--                <option value="C">治癒</option>-->
-<!--                <option value="S">中止</option>-->
-<!--                <option value="D">死亡</option>-->
-<!--            </select>-->
-<!--        </div>-->
-<!--        <div class="mt-1">-->
-<!--            <button type="button" class="x-enter btn btn-secondary">入力</button>-->
-<!--            <a href="javascript:void(0)" class="x-susp">の疑い</a>-->
-<!--            <a href="javascript:void(0)" class="x-del-adj">修飾語削除</a>-->
-<!--            <a href="javascript:void(0)" class="x-clear-end-date">終了日クリア</a>-->
-<!--            <a href="javascript:void(0)" class="x-delete">削除</a>-->
-<!--        </div>-->
-<!--        <div class="x-search_">-->
-<!--            <form class="x-form mt-1">-->
-<!--                <div class="form-inline">-->
-<!--                    <input type="text" class="x-search-text form-control"/>-->
-<!--                    <button type="submit" class="btn btn-secondary mt-1">検索</button>-->
-<!--                    <a href="javascript:void(0)" class="x-example mt-1 ml-2">例</a>-->
+<!--<template id="practice-search-text-dialog-template">-->
+<!--    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">-->
+<!--        <div class="modal-dialog" role="document">-->
+<!--            <div class="modal-content">-->
+<!--                <div class="modal-header">-->
+<!--                    <h5 class="modal-title x-title"></h5>-->
+<!--                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
+<!--                        <span aria-hidden="true">&times;</span>-->
+<!--                    </button>-->
 <!--                </div>-->
-<!--                <div class="mt-1" onsubmit="return false;">-->
-<!--                    <input type="radio" name="search-kind"-->
-<!--                           value="byoumei" checked> 病名-->
-<!--                    <input type="radio" name="search-kind"-->
-<!--                           value="adj"> 修飾語-->
+<!--                <div class="modal-body">-->
+<!--                    <form class="x-search-form form-inline">-->
+<!--                        <input type="text" class="x-search-text form-control"/>-->
+<!--                        <button type="submit" class="btn btn-primary ml-2">検索</button>-->
+<!--                    </form>-->
+<!--                    <div class="x-nav_ d-none mt-2"></div>-->
+<!--                    <div class="x-result"></div>-->
 <!--                </div>-->
-<!--            </form>-->
-<!--            <div class="mt-1">-->
-<!--                <select size="10" class="x-select form-control"></select>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        <template class="x-item-template">-->
+<!--            <div class="my-2 border border-secondary rounded p-2">-->
+<!--                <div class="x-title_ bg-light font-weight-bold p-1">-->
+<!--                    <div class="x-text"></div>-->
+<!--                </div>-->
+<!--                <div class="x-text_ mt-2">-->
+<!--                    <div></div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </template>-->
+<!--        <template class="x-global-item-template">-->
+<!--            <div class="my-2 border border-secondary rounded p-2">-->
+<!--                <div class="x-title_ bg-light font-weight-bold p-1">-->
+<!--                    <span class="x-patient text-primary"></span> <span class="x-text ml-2"></span>-->
+<!--                </div>-->
+<!--                <div class="x-text_ mt-2">-->
+<!--                    <div></div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </template>-->
+<!--    </div>-->
+<!--</template>-->
+
+<!--<template id="practice-example-dialog-template">-->
+<!--    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">-->
+<!--        <div class="modal-dialog modal-lg" role="document">-->
+<!--            <div class="modal-content">-->
+<!--                <div class="modal-header">-->
+<!--                    <h5 class="modal-title">Title</h5>-->
+<!--                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
+<!--                        <span aria-hidden="true">&times;</span>-->
+<!--                    </button>-->
+<!--                </div>-->
+<!--                <div class="modal-body"></div>-->
+<!--                <div class="modal-footer">-->
+<!--                    <button type="button" class="btn btn-secondary x-close">閉じる</button>-->
+<!--                </div>-->
 <!--            </div>-->
 <!--        </div>-->
 <!--    </div>-->
 <!--</template>-->
 
-<template id="practice-search-text-dialog-template">
-    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title x-title"></h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form class="x-search-form form-inline">
-                        <input type="text" class="x-search-text form-control"/>
-                        <button type="submit" class="btn btn-primary ml-2">検索</button>
-                    </form>
-                    <div class="x-nav_ d-none mt-2"></div>
-                    <div class="x-result"></div>
-                </div>
-            </div>
-        </div>
-        <template class="x-item-template">
-            <div class="my-2 border border-secondary rounded p-2">
-                <div class="x-title_ bg-light font-weight-bold p-1">
-                    <div class="x-text"></div>
-                </div>
-                <div class="x-text_ mt-2">
-                    <div></div>
-                </div>
-            </div>
-        </template>
-        <template class="x-global-item-template">
-            <div class="my-2 border border-secondary rounded p-2">
-                <div class="x-title_ bg-light font-weight-bold p-1">
-                    <span class="x-patient text-primary"></span> <span class="x-text ml-2"></span>
-                </div>
-                <div class="x-text_ mt-2">
-                    <div></div>
-                </div>
-            </div>
-        </template>
-    </div>
-</template>
-
-<template id="practice-example-dialog-template">
-    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Title</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary x-close">閉じる</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
-
-<template id="practice-visit-meisai-dialog-template">
-    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">診療明細</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="x-sections"></div>
-                    <div>総点：<span class="x-total-ten"></span></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary x-close">閉じる</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <template class="x-item-template">
-        <div>
-            <div class="x-title"></div>
-            <div class="x-detail"></div>
-        </div>
-    </template>
-    <template class="x-detail-template">
-        <div class="row">
-            <div class="col-sm-2"></div>
-            <div class="col-sm-4 x-detail-label"></div>
-            <div class="col-sm-2 x-detail-ten"></div>
-        </div>
-    </template>
-</template>
+<!--<template id="practice-visit-meisai-dialog-template">-->
+<!--    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">-->
+<!--        <div class="modal-dialog modal-lg" role="document">-->
+<!--            <div class="modal-content">-->
+<!--                <div class="modal-header">-->
+<!--                    <h5 class="modal-title">診療明細</h5>-->
+<!--                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
+<!--                        <span aria-hidden="true">&times;</span>-->
+<!--                    </button>-->
+<!--                </div>-->
+<!--                <div class="modal-body">-->
+<!--                    <div class="x-sections"></div>-->
+<!--                    <div>総点：<span class="x-total-ten"></span></div>-->
+<!--                </div>-->
+<!--                <div class="modal-footer">-->
+<!--                    <button type="button" class="btn btn-secondary x-close">閉じる</button>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--    <template class="x-item-template">-->
+<!--        <div>-->
+<!--            <div class="x-title"></div>-->
+<!--            <div class="x-detail"></div>-->
+<!--        </div>-->
+<!--    </template>-->
+<!--    <template class="x-detail-template">-->
+<!--        <div class="row">-->
+<!--            <div class="col-sm-2"></div>-->
+<!--            <div class="col-sm-4 x-detail-label"></div>-->
+<!--            <div class="col-sm-2 x-detail-ten"></div>-->
+<!--        </div>-->
+<!--    </template>-->
+<!--</template>-->
 
 `;
 
@@ -372,6 +237,11 @@ export async function initLayout(pane, rest, controller, printAPI) {
     document.getElementById("practice-registered-drug-link").addEventListener("click", async _ => {
         let dialog = new RegisteredDrugDialog(rest);
         await dialog.open();
+    });
+
+    document.getElementById("practice-search-text-globally").addEventListener("click", async event => {
+        let dialog = new SearchTextGloballyDialog();
+        await dialog.open(() => dialog.initFocus());
     });
 
     //

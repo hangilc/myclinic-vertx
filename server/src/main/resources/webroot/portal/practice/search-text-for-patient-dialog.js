@@ -41,7 +41,6 @@ export class SearchTextForPatientDialog extends Dialog {
             return;
         }
         let result = await this.rest.searchText(patientId, text, 0);
-        console.log(result);
         let page = result.page;
         let totalPages = result.totalPages;
         let items = result.textVisits.map(result => new Item(result.visit, result.text));

@@ -1,7 +1,8 @@
 import {Dialog} from "../js/dialog2.js";
 import {parseElement} from "../js/parse-node.js";
 import {click} from "../js/dom-helper.js";
-import {DateInput} from "./date-input.js";
+import {RegularDateInput} from "./date-input.js";
+import {alertAndReturnUndefined} from "../js/result.js";
 
 let bodyTmpl = `
     <div class="mb-2 x-date-input-wrapper"></div>
@@ -15,10 +16,11 @@ let footerTmpl = `
 export class DateInputDialog extends Dialog {
     constructor() {
         super();
+        this.resultHandler = alertAndReturnUndefined;
         this.setTitle("日付入力");
         this.getBody().innerHTML = bodyTmpl;
         let bmap = parseElement(this.getBody());
-        let dateInput = this.dateInput = new DateInput();
+        let dateInput = this.dateInput = new RegularDateInput();
         bmap.dateInputWrapper.append(dateInput.ele);
         this.getFooter().innerHTML = footerTmpl;
         let fmap = parseElement(this.getFooter());
@@ -31,11 +33,9 @@ export class DateInputDialog extends Dialog {
     }
 
     doEnter(){
-        let optDate = this.dateInput.get();
-        if( optDate.isSuccess() ){
-            this.close(optDate.getValue());
-        } else {
-            alert(optDate.getMessage());
+        let date = this.dateInput.get(this.resultHandler);
+        if( date !== undefined ){
+            this.close(date);
         }
     }
 }

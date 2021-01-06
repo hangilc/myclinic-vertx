@@ -43,3 +43,24 @@ export function failure(message){
     return new Failure(message);
 }
 
+export function throwError(result){
+    if( result.isSuccess() ){
+        return result.getValue();
+    } else {
+        throw new Error(result.getMessage());
+    }
+}
+
+export function alertAndReturn(value){
+    return result => {
+        if( result.isSuccess() ){
+            return result.getValue();
+        } else {
+            alert(result.getMessage());
+            return value;
+        }
+    }
+}
+
+export let alertAndReturnNull = alertAndReturn(null);
+export let alertAndReturnUndefined = alertAndReturn(undefined);

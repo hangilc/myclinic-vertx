@@ -6,6 +6,7 @@ import * as app from "../app.js";
 import * as DiseaseUtil from "../../js/disease-util.js";
 import {suspMaster} from "../../js/consts.js";
 import * as consts from "../../js/consts.js";
+import {alertAndReturnNull} from "../../../js/result.js";
 
 let examples = [];
 
@@ -78,13 +79,7 @@ export class Add {
     }
 
     getDate(){
-        const dateOpt = this.dateInput.get();
-        if( dateOpt.isFailure() ){
-            alert(dateOpt.getMessage());
-            return null;
-        } else {
-            return dateOpt.getValue();
-        }
+        return this.dateInput.get(alertAndReturnNull);
     }
 
     async doEnter(){

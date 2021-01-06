@@ -13,6 +13,7 @@
     <script type="module">
         import {RegularDateInput} from "./date-input/date-input.js";
         import * as kanjidate from "./js/kanjidate.js";
+        import {alertAndReturnNull} from "./js/result.js";
 
         window.kanjidate = kanjidate;
         let dateInput = new RegularDateInput();
@@ -21,7 +22,7 @@
         dateInput.setGengou("平成");
         document.getElementById("workarea").append(dateInput.ele);
         document.getElementById("get-date").addEventListener("click", event => {
-            console.log(dateInput.get());
+            console.log(dateInput.get(alertAndReturnNull));
         });
     </script>
 </body>

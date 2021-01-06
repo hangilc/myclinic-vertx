@@ -7,6 +7,7 @@ export let patient = null;
 export let currentVisitId = 0;
 export let tempVisitId = 0;
 export let currentPage = 0;
+let noPay0410List = [];
 
 export function getTargetVisitId(){
     if( currentVisitId > 0 ){
@@ -42,6 +43,7 @@ export async function startSession(patientId, visitId=0){
     publish("session-listener", "session-started");
     await loadRecordPage(0);
     await loadDiseases();
+    await loadNoPay0140();
 }
 
 export function endSession(){
@@ -50,6 +52,7 @@ export function endSession(){
     currentVisitId = 0;
     tempVisitId = 0;
     currentPage = 0;
+    noPay0410List = [];
     publish("session-listener", "session-ended");
 }
 
@@ -70,6 +73,18 @@ export async function loadDiseases(){
         diseases = await rest.listCurrentDisease(patient.patientId);
     }
     publish("disease-listener", "disease-loaded", diseases);
+}
+
+export async function loadNoPay0140(){
+    if( patient ){
+        noPay0410List = await rest.list0410NoPay(patient.patientId);
+        console.log(noPay0410List);
+        publish("no-pay-0410-listener", "no-pay-0410-updated");
+    }
+}
+
+export function isNoPay0410(visitId){
+    return noPay0410List.includes(visitId);
 }
 
 export function setTempVisit(visitId){

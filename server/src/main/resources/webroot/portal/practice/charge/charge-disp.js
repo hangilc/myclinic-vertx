@@ -48,7 +48,7 @@ export class ChargeDisp{
             let chargeValue = +charge.charge;
             let paymentValue = +payment.amount;
             if( chargeValue === paymentValue ){
-                this.setPaymentState("済");
+                this.setPaymentState("(済)");
             } else if( paymentValue === 0 ){
                 this.setPaymentState("未収", "text-danger");
             } else if( paymentValue < chargeValue ){

@@ -72,34 +72,34 @@ let html = `
 <!--    </div>-->
 <!--</template>-->
 
-<template id="practice-disease-end-template">
-    <div>
-        <div class="x-list"></div>
-        <div>
-            <input type="date" class="x-date-input form-control"/>
-            <div class="x-date-commands_">
-                <a href="javascript:void(0)" class="x-advance-week">週</a>
-                <a href="javascript:void(0)" class="x-today">今日</a>
-                <a href="javascript:void(0)" class="x-end-of-month">月末</a>
-                <a href="javascript:void(0)" class="x-end-of-last-month">先月末</a>
-            </div>
-        </div>
-        <div>
-            <form class="form-inline x-end-reason-form" onsubmit="return false">
-                転機：
-                <input type="radio" name="end-reason" value="C" checked>
-                <span class="ml-1">治癒</span>
-                <input type="radio" name="end-reason" value="S" class="ml-2">
-                <span class="ml-1">中止</span>
-                <input type="radio" name="end-reason" value="D" class="ml-2">
-                <span class="ml-1">死亡</span>
-            </form>
-        </div>
-        <div>
-            <button type="button" class="x-enter btn btn-secondary">入力</button>
-        </div>
-    </div>
-</template>
+<!--<template id="practice-disease-end-template">-->
+<!--    <div>-->
+<!--        <div class="x-list"></div>-->
+<!--        <div>-->
+<!--            <input type="date" class="x-date-input form-control"/>-->
+<!--            <div class="x-date-commands_">-->
+<!--                <a href="javascript:void(0)" class="x-advance-week">週</a>-->
+<!--                <a href="javascript:void(0)" class="x-today">今日</a>-->
+<!--                <a href="javascript:void(0)" class="x-end-of-month">月末</a>-->
+<!--                <a href="javascript:void(0)" class="x-end-of-last-month">先月末</a>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        <div>-->
+<!--            <form class="form-inline x-end-reason-form" onsubmit="return false">-->
+<!--                転機：-->
+<!--                <input type="radio" name="end-reason" value="C" checked>-->
+<!--                <span class="ml-1">治癒</span>-->
+<!--                <input type="radio" name="end-reason" value="S" class="ml-2">-->
+<!--                <span class="ml-1">中止</span>-->
+<!--                <input type="radio" name="end-reason" value="D" class="ml-2">-->
+<!--                <span class="ml-1">死亡</span>-->
+<!--            </form>-->
+<!--        </div>-->
+<!--        <div>-->
+<!--            <button type="button" class="x-enter btn btn-secondary">入力</button>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</template>-->
 
 <!--<template id="practice-disease-edit-template">-->
 <!--    <div>-->

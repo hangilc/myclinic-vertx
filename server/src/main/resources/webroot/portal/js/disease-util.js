@@ -1,4 +1,5 @@
 import * as kanjidate from "./kanjidate.js";
+import * as consts from "./consts.js";
 
 export function isPrefix(shuushokugocode){
     return shuushokugocode < 8000;
@@ -41,4 +42,17 @@ export function datePart(disease){
         return `(${start})`;
     }
 }
+
+export function containsSusp(diseaseFull) {
+    let suspcode = consts.suspMaster.shuushokugocode;
+    if (diseaseFull.adjList) {
+        for (let adjFull of diseaseFull.adjList) {
+            if (adjFull.diseaseAdj.shuushokugocode === suspcode) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 

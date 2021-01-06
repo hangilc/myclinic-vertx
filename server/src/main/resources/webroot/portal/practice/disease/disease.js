@@ -5,6 +5,7 @@ import * as app from "../app.js";
 import {Current} from "./current.js";
 import {Add} from "./add.js";
 import {Edit} from "./edit.js";
+import {End} from "./end.js";
 
 let tmpl = `
     <div class="disease-listener">
@@ -27,6 +28,7 @@ export class Disease {
         this.showCurrent();
         click(this.map.current, event => this.showCurrent());
         click(this.map.add, event => this.showAdd());
+        click(this.map.end, event => this.showEnd());
         click(this.map.edit, async event => await this.showEdit());
         on(this.ele, "disease-loaded", event => {
             this.props.diseases = event.detail;
@@ -37,8 +39,18 @@ export class Disease {
             this.props.diseases.push(diseaseFull);
             this.updateUI();
         });
-        on(this.ele, "disease-changed", event => this.showCurrent());
-        on(this.ele, "disease-deleted", event => this.showCurrent());
+        on(this.ele, "disease-changed", event => {
+            event.stopPropagation();
+            this.showCurrent();
+        });
+        on(this.ele, "disease-deleted", event => {
+            event.stopPropagation();
+            this.showCurrent();
+        });
+        on(this.ele, "disease-end-reason-changed", event => {
+            event.stopPropagation();
+            this.showEnd();
+        });
     }
 
     showCurrent(){
@@ -52,6 +64,12 @@ export class Disease {
         this.map.workarea.innerHTML = "";
         this.map.workarea.append(add.ele);
         add.initFocus();
+    }
+
+    showEnd(){
+        let end = new End(this.props.diseases);
+        this.map.workarea.innerHTML = "";
+        this.map.workarea.append(end.ele);
     }
 
     async showEdit(){

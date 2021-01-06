@@ -3,16 +3,17 @@ import {click} from "../js/dom-helper.js";
 import * as kanjidate from "../js/kanjidate.js";
 import {throwError} from "../js/result.js";
 
-export function createDateInput(ele, map){
+export function createDateInput(ele, map, resultHandler){
     const dateInput = new DateInputBase();
     dateInput.init(ele, map);
     return dateInput;
 }
 
 export class DateInputBase {
-    init(ele, map) {
+    init(ele, map, resultHandler) {
         this.ele = ele;
         this.map = map;
+        this.resultHandler = resultHandler || throwError;
         this.enableLabelClick();
     }
 
@@ -24,13 +25,17 @@ export class DateInputBase {
         this.set(kanjidate.todayAsSqldate());
     }
 
-    // get(){
-    //     return funs.getDate(this.map);
-    // }
+    clear(){
+        funs.clear(this.map);
+    }
 
-    get(resultHandler=throwError){
+    isCleared(){
+        return funs.isCleared(this.map);
+    }
+
+    get(){
         const result = funs.getDate(this.map);
-        return resultHandler(result, this);
+        return this.resultHandler(result, this);
     }
 
     setGengouList(list){

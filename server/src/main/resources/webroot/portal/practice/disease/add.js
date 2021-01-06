@@ -60,7 +60,7 @@ export class Add {
         };
         this.ele = createElementFrom(tmpl);
         let map = this.map = parseElement(this.ele);
-        this.dateInput = createDateInput(this.map.date_, this.map.date);
+        this.dateInput = createDateInput(this.map.date_, this.map.date, alertAndReturnNull);
         this.dateInput.setToday();
         click(map.enter, async event => await this.doEnter());
         click(map.susp, event => this.doSusp());
@@ -79,7 +79,7 @@ export class Add {
     }
 
     getDate(){
-        return this.dateInput.get(alertAndReturnNull);
+        return this.dateInput.get();
     }
 
     async doEnter(){

@@ -277,7 +277,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {DiseaseCurrent} = await import("./disease-current.js");
     let {DiseaseEnd} = await import("./disease-end.js");
     let {DiseaseEdit} = await import("./disease-edit.js");
-    let {DiseaseModify} = await import("./disease-modify.js");
     let {SearchTextForPatientDialog} = await import("./search-text-for-patient-dialog.js");
     let {SearchTextGloballyDialog} = await import("./search-text-globally-dialog.js");
     let {RegisteredDrugDialog} = await import("./registered-drug-dialog/registered-drug-dialog.js")
@@ -286,6 +285,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {replaceNode, show, hide} = await import("../../js/dom-helper.js");
     let app = await import("./app.js");
     let DiseaseAdd = await import("./disease/add.js");
+    let DiseaseModify = await import("./disease/modify.js");
 
     app.init(rest, printAPI, pane, {
         generalWorkarea: document.getElementById("practice-general-workarea"),
@@ -366,8 +366,11 @@ export async function initLayout(pane, rest, controller, printAPI) {
         );
     }
 
-    DiseaseAdd.initExamples(await rest.listDiseaseExample());
-
+    {
+        const examples = await rest.listDiseaseExample();
+        DiseaseAdd.initExamples(examples);
+        DiseaseModify.initExamples(examples);
+    }
 
 
     //

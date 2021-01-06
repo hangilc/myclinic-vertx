@@ -64,3 +64,4 @@ export function alertAndReturn(value){
 
 export let alertAndReturnNull = alertAndReturn(null);
 export let alertAndReturnUndefined = alertAndReturn(undefined);
+

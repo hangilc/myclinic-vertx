@@ -3,7 +3,7 @@ import {parseElement} from "../js/parse-node.js";
 import {DateInputBase} from "./date-input-base.js";
 
 export class DateInput extends DateInputBase {
-    constructor(ele, map) {
+    constructor(ele, map, resultHandler) {
         super();
         if( typeof ele === "string" ){
             ele = createElementFrom(ele);
@@ -11,7 +11,7 @@ export class DateInput extends DateInputBase {
         if( !map ){
             map = parseElement(ele);
         }
-        this.init(ele, map);
+        this.init(ele, map, resultHandler);
     }
 }
 
@@ -34,8 +34,8 @@ let tmplRegular = `
 `;
 
 export class RegularDateInput extends DateInput {
-    constructor() {
-        super(tmplRegular);
+    constructor(resultHandler) {
+        super(tmplRegular, undefined, resultHandler);
     }
 }
 
@@ -58,23 +58,7 @@ let tmplSmall = `
 `;
 
 export class SmallDateInput extends DateInput {
-    constructor(){
-        super(tmplSmall);
-    }
-}
-
-class DateInputOrig extends DateInputBase {
-    constructor(opt = null) {
-        super();
-        if (!opt) {
-            opt = {};
-        }
-        const ele = createElementFrom(tmpl);
-        const map = parseElement(ele);
-        if (opt.small) {
-            [map.gengou, map.nen, map.month, map.day]
-                .forEach(e => e.classList.add("form-control-sm"));
-        }
-        this.init(ele, map);
+    constructor(resultHandler){
+        super(tmplSmall, undefined, resultHandler);
     }
 }

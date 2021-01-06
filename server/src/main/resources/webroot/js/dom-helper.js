@@ -38,3 +38,17 @@ export function submit(e, handler){
 export function replaceNode(oldNode, newNode){
     oldNode.parentNode.replaceChild(newNode, oldNode);
 }
+
+export function getSelectedValue(selectElement){
+    const opt = selectElement.querySelector("option:checked");
+    if( opt ){
+        return opt.value;
+    }
+}
+
+export function setSelectedValue(selectElement, value){
+    const opt = selectElement.querySelector(`option[value='${value}']`);
+    if( opt ){
+        opt.selected = true;
+    }
+}

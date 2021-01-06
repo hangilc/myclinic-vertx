@@ -8,14 +8,14 @@ import {Modify} from "./modify.js";
 
 const tmpl = `
     <div>
-        <div class="x-panel">
+        <div class="x-panel mb-2">
             <div>名称：<span class="x-name"></span></div>
             <div>開始日：<span class="x-start-date"></span></div>
             <div>転機：<span class="x-end-reason"></span></div>
             <div>終了日：<span class="x-end-date"></span></div>
         </div>
-        <div class="mt-1">
-            <button type="button" class="x-edit btn btn-secondary">編集</button>
+        <div class="mb-2">
+            <button type="button" class="x-edit btn btn-primary btn-sm">編集</button>
         </div>
         <select class="form-control x-select mt-1" size="6"></select>
     </div>

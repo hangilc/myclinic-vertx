@@ -21,7 +21,7 @@ export function clear(map){
 }
 
 export function getDate(map, allowEmpty=false){
-    if( isEmpty(map) ){
+    if( isCleared(map) ){
         if( allowEmpty ){
             return success(null);
         } else {
@@ -61,7 +61,7 @@ export function getDate(map, allowEmpty=false){
     }
 }
 
-function isEmpty(map){
+export function isCleared(map){
     return getNenInput(map) === "" && getMonthInput(map) === "" && getDayInput(map) === "";
 }
 

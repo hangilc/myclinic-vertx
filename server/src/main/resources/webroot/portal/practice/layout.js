@@ -369,6 +369,10 @@ export async function initLayout(pane, rest, controller, printAPI) {
         DiseaseModify.initExamples(examples);
     }
 
+    document.getElementById("practice-registered-drug-link").addEventListener("click", async _ => {
+        let dialog = new RegisteredDrugDialog(rest);
+        await dialog.open();
+    });
 
     //
     // let prop = {

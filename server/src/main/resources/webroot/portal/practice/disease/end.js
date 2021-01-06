@@ -60,6 +60,8 @@ export class End {
         this.map = parseElement(this.ele);
         this.dateInput = createDateInput();
         this.map.dateInputWrapper.append(this.dateInput.ele);
+        click(this.map.advanceWeek, event => this.dateInput.advanceDays(7));
+        click(this.map.today, event => this.dateInput.setToday());
         click(this.map.enter, async event => await this.doEnter());
         on(this.map.list, "item-check-changed", event => {
             const dates = this.listCheckedDate();

@@ -65,12 +65,24 @@ export class DateInputBase {
         }
     }
 
+    advanceDays(n=1){
+        funs.advanceDays(this.map, n);
+    }
+
+    advanceMonths(n=1){
+        funs.advanceMonths(this.map, n);
+    }
+
+    advanceYears(n=1){
+        funs.advanceYears(this.map, n);
+    }
+
     doNenClick(event){
         let n = 1;
         if( event.shiftKey ){
             n = -n;
         }
-        funs.advanceYears(this.map, n);
+        this.advanceYears(n);
     }
 
     doMonthClick(event){
@@ -78,7 +90,7 @@ export class DateInputBase {
         if( event.shiftKey ){
             n = -n;
         }
-        funs.advanceMonths(this.map, n);
+        this.advanceMonths(n);
     }
 
     doDayClick(event){
@@ -89,6 +101,6 @@ export class DateInputBase {
         if( event.shiftKey ){
             n = -n;
         }
-        funs.advanceDays(this.map, n);
+        this.advanceDays(n);
     }
 }

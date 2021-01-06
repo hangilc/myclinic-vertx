@@ -4,7 +4,7 @@ import {createDateInput} from "./date-input.js";
 import * as DiseaseUtil from "../../js/disease-util.js";
 import {click, getSelectedValue, on, setSelectedValue, submit} from "../../../js/dom-helper.js";
 import * as funs from "./disease-funs.js";
-import {alertAndReturnNull} from "../../../js/result.js";
+import * as app from "../app.js";
 
 let examples = [];
 
@@ -59,6 +59,7 @@ const tmpl = `
 
 export class Modify {
     constructor(disease) {
+        this.origDisease = disease.disease;
         this.ele = createElementFrom(tmpl);
         const map = this.map = parseElement(this.ele);
         this.startDateInput = createDateInput();
@@ -69,26 +70,26 @@ export class Modify {
         this.props = {
             master: disease.master,
             adjList: disease.adjList,
-            get startDate(){
+            get startDate() {
                 return self.startDateInput.get();
             },
-            set startDate(value){
+            set startDate(value) {
                 self.startDateInput.set(value);
             },
-            get endDate(){
+            get endDate() {
                 return self.endDateInput.isCleared() ? "0000-00-00" : self.endDateInput.get();
             },
-            set endDate(value){
-                if( value === "0000-00-00" ){
+            set endDate(value) {
+                if (value === "0000-00-00") {
                     self.endDateInput.clear();
                 } else {
                     self.endDateInput.set(value);
                 }
             },
-            get endReason(){
+            get endReason() {
                 return getSelectedValue(self.map.endReasonSelect);
             },
-            set endReason(value){
+            set endReason(value) {
                 setSelectedValue(self.map.endReasonSelect, value);
             }
         }
@@ -125,15 +126,27 @@ export class Modify {
         return this.map.form.querySelector("input[name='search-kind']:checked").value;
     }
 
-    getProps(){
-
-    }
-
-    async doEnter(){
-        const master = this.props.master;
-        if( !master ){
-            alert("病名が選択されていません。");
-            return null;
+    async doEnter() {
+        try {
+            const disease = Object.assign({}, this.origDisease);
+            const master = this.props.master;
+            if (!master) {
+                // noinspection ExceptionCaughtLocallyJS
+                throw new Error("病名が選択されていません。");
+            }
+            disease.shoubyoumeicode = master.shoubyoumeicode;
+            disease.startDate = this.props.startDate;
+            disease.endReason = this.props.endReason;
+            disease.endDate = this.props.endDate;
+            if (disease.endReason === "N") {
+                disease.endDate = "0000-00-00";
+            }
+            const shuushokugocodes = this.props.adjList.map(m => m.shuushokugocode);
+            await app.rest.modifyDisease({disease, shuushokugocodes});
+            await app.loadDiseases();
+            this.ele.dispatchEvent(new CustomEvent("disease-changed", {bubbles: true}));
+        } catch (e) {
+            alert(e.toString());
         }
     }
 
@@ -165,14 +178,13 @@ export class Modify {
                 this.updateDisp();
             },
             async example => {
-                const date = this.startDateInput.get();
-                if (!date) {
-                    return;
-                }
-                const resolved = await funs.resolveExample(example, date, alertAndReturnNull);
-                if (resolved) {
+                try {
+                    const date = this.startDateInput.get();
+                    const resolved = await funs.resolveExample(example, date);
                     Object.assign(this.props, resolved);
                     this.updateDisp();
+                } catch (e) {
+                    alert(e.toString());
                 }
             }
         );

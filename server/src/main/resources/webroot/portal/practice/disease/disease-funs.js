@@ -1,5 +1,4 @@
 import * as app from "../app.js";
-import {failure, success} from "../../../js/result.js";
 
 function createOption(label, data, kind){
     const opt = document.createElement("option");
@@ -49,13 +48,13 @@ export function handleSelected(select, byoumeiHandler, adjHandler, exampleHandle
     }
 }
 
-export async function resolveExample(example, date, resultHandler){
+export async function resolveExample(example, date){
     const props = {master: null, adjList: []};
     const byoumei = example.byoumei;
     if( byoumei ){
         const master = await app.rest.findByoumeiMasterByName(byoumei, date);
         if( !master ){
-            return resultHandler(failure(`傷病名（${byoumei}）を見つけられませんでした。`));
+            throw new Error(`傷病名（${byoumei}）を見つけられませんでした。`);
         }
         props.master = master;
     }
@@ -63,12 +62,12 @@ export async function resolveExample(example, date, resultHandler){
         for (const adj of example.adjList) {
             const master = await app.rest.findShuushokugoMasterByName(adj);
             if (!master) {
-                return resultHandler(failure(`修飾語（${adj}）を見つけられませんでした。`));
+                throw new Error(`修飾語（${adj}）を見つけられませんでした。`);
             }
             props.adjList.push(master);
         }
     }
-    return resultHandler(success(props));
+    return props;
 }
 
 

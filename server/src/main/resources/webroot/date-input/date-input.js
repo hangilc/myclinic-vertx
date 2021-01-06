@@ -3,7 +3,7 @@ import {parseElement} from "../js/parse-node.js";
 import {DateInputBase} from "./date-input-base.js";
 
 export class DateInput extends DateInputBase {
-    constructor(ele, map, resultHandler) {
+    constructor(ele, map) {
         super();
         if( typeof ele === "string" ){
             ele = createElementFrom(ele);
@@ -11,7 +11,7 @@ export class DateInput extends DateInputBase {
         if( !map ){
             map = parseElement(ele);
         }
-        this.init(ele, map, resultHandler);
+        this.init(ele, map);
     }
 }
 
@@ -34,8 +34,8 @@ let tmplRegular = `
 `;
 
 export class RegularDateInput extends DateInput {
-    constructor(resultHandler) {
-        super(tmplRegular, undefined, resultHandler);
+    constructor() {
+        super(tmplRegular);
     }
 }
 
@@ -58,7 +58,8 @@ let tmplSmall = `
 `;
 
 export class SmallDateInput extends DateInput {
-    constructor(resultHandler){
-        super(tmplSmall, undefined, resultHandler);
+    constructor(){
+        super(tmplSmall);
     }
 }
+

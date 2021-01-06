@@ -64,7 +64,7 @@ export async function loadRecordPage(page){
     await batchUpdatePayments(recordPage.visits.map(visitFull => visitFull.visit.visitId));
 }
 
-async function loadDiseases(){
+export async function loadDiseases(){
     let diseases = [];
     if( patient ){
         diseases = await rest.listCurrentDisease(patient.patientId);

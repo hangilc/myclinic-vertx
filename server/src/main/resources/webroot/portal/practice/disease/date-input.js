@@ -1,9 +1,7 @@
 import {parseElement} from "../../../js/parse-node.js";
-import {DateInputBase} from "../../../date-input/date-input-base.js";
 import {createElementFrom} from "../../../js/create-element-from.js";
 import * as base from "../../../date-input/date-input-base.js";
 import * as kanjidate from "../../../js/kanjidate.js";
-import {alertAndReturnUndefined} from "../../../js/result.js";
 
 const tmpl = `
     <div class="form-inline" style="font-size:12px;">
@@ -21,7 +19,8 @@ const tmpl = `
 export function createDateInput(){
     let ele = createElementFrom(tmpl);
     let map = parseElement(ele);
-    const input = base.createDateInput(ele, map, alertAndReturnUndefined);
+    const input = base.createDateInput(ele, map);
     input.setGengouList(kanjidate.recentGengouList);
     return input;
 }
+

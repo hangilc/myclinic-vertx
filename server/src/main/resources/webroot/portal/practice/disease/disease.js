@@ -37,6 +37,7 @@ export class Disease {
             this.props.diseases.push(diseaseFull);
             this.updateUI();
         });
+        on(this.ele, "disease-changed", event => this.showCurrent());
     }
 
     showCurrent(){

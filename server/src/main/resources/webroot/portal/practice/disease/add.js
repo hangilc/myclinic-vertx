@@ -4,9 +4,7 @@ import {createDateInput} from "../../../date-input/date-input-base.js";
 import {click, on, submit} from "../../../js/dom-helper.js";
 import * as app from "../app.js";
 import * as DiseaseUtil from "../../js/disease-util.js";
-import {suspMaster} from "../../js/consts.js";
 import * as consts from "../../js/consts.js";
-import {alertAndReturnNull} from "../../../js/result.js";
 
 let examples = [];
 
@@ -60,7 +58,7 @@ export class Add {
         };
         this.ele = createElementFrom(tmpl);
         let map = this.map = parseElement(this.ele);
-        this.dateInput = createDateInput(this.map.date_, this.map.date, alertAndReturnNull);
+        this.dateInput = createDateInput(this.map.date_, this.map.date);
         this.dateInput.setToday();
         click(map.enter, async event => await this.doEnter());
         click(map.susp, event => this.doSusp());
@@ -89,17 +87,18 @@ export class Add {
             return;
         }
         const patientId = patient.patientId;
-        const date = this.getDate();
-        if( !date ){
-            return;
+        try {
+            const date = this.getDate();
+            const req = createRequest(patientId, this.props.master, this.props.adjList, this.getDate());
+            let diseaseId = await app.rest.enterDisease(req);
+            let entered = await app.rest.getDisease(diseaseId);
+            this.ele.dispatchEvent(new CustomEvent("disease-entered", {
+                bubbles: true,
+                detail: entered
+            }));
+        } catch(e){
+            alert(e.toString());
         }
-        const req = createRequest(patientId, this.props.master, this.props.adjList, this.getDate());
-        let diseaseId = await app.rest.enterDisease(req);
-        let entered = await app.rest.getDisease(diseaseId);
-        this.ele.dispatchEvent(new CustomEvent("disease-entered", {
-            bubbles: true,
-            detail: entered
-        }));
     }
 
     doSusp(){

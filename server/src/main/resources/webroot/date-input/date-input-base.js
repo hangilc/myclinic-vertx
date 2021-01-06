@@ -1,19 +1,17 @@
 import * as funs from "./date-input-funs.js";
 import {click} from "../js/dom-helper.js";
 import * as kanjidate from "../js/kanjidate.js";
-import {throwError} from "../js/result.js";
 
-export function createDateInput(ele, map, resultHandler){
+export function createDateInput(ele, map){
     const dateInput = new DateInputBase();
     dateInput.init(ele, map);
     return dateInput;
 }
 
 export class DateInputBase {
-    init(ele, map, resultHandler) {
+    init(ele, map) {
         this.ele = ele;
         this.map = map;
-        this.resultHandler = resultHandler || throwError;
         this.enableLabelClick();
     }
 
@@ -34,8 +32,7 @@ export class DateInputBase {
     }
 
     get(){
-        const result = funs.getDate(this.map);
-        return this.resultHandler(result, this);
+        return funs.getDate(this.map);
     }
 
     setGengouList(list){

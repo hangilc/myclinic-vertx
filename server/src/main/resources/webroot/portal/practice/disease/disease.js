@@ -38,6 +38,7 @@ export class Disease {
             this.updateUI();
         });
         on(this.ele, "disease-changed", event => this.showCurrent());
+        on(this.ele, "disease-deleted", event => this.showCurrent());
     }
 
     showCurrent(){

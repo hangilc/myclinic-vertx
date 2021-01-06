@@ -5,6 +5,7 @@ import * as DiseaseUtil from "../../js/disease-util.js";
 import {click, getSelectedValue, on, setSelectedValue, submit} from "../../../js/dom-helper.js";
 import * as funs from "./disease-funs.js";
 import * as app from "../app.js";
+import * as consts from "../../js/consts.js";
 
 let examples = [];
 
@@ -61,7 +62,7 @@ export class Modify {
     constructor(disease) {
         this.origDisease = disease.disease;
         this.ele = createElementFrom(tmpl);
-        const map = this.map = parseElement(this.ele);
+        this.map = parseElement(this.ele);
         this.startDateInput = createDateInput();
         this.endDateInput = createDateInput();
         this.map.startDate.append(this.startDateInput.ele);
@@ -69,7 +70,7 @@ export class Modify {
         const self = this;
         this.props = {
             master: disease.master,
-            adjList: disease.adjList,
+            adjList: disease.adjList.map(adj => adj.master),
             get startDate() {
                 return self.startDateInput.get();
             },
@@ -98,12 +99,26 @@ export class Modify {
         this.props.endReason = disease.disease.endReason;
         this.updateDisp();
         click(this.map.enter, async event => await this.doEnter());
+        click(this.map.susp, event => {
+            this.props.adjList.push(consts.suspMaster);
+            this.updateDisp();
+        });
+        click(this.map.delAdj, event => {
+            this.props.adjList = [];
+            this.updateDisp();
+        });
+        click(this.map.clearEndDate, event => {
+            this.endDateInput.clear();
+            this.updateDisp();
+        });
+        click(this.map.delete, async event => await this.doDelete());
         submit(this.map.form, async event => await this.doSearch());
         click(this.map.example, event => this.doExample());
         on(this.map.select, "change", event => this.doSelect());
     }
 
     updateDisp() {
+        console.log(this.props.adjList);
         this.map.name.innerText = DiseaseUtil.diseaseRepByMasters(
             this.props.master, this.props.adjList);
         this.startDateInput.set(this.props.startDate);
@@ -140,6 +155,11 @@ export class Modify {
             disease.endDate = this.props.endDate;
             if (disease.endReason === "N") {
                 disease.endDate = "0000-00-00";
+            } else {
+                if( !disease.endDate || disease.endDate === "0000-00-00" ){
+                    // noinspection ExceptionCaughtLocallyJS
+                    throw new Error("終了日が指定されていません。");
+                }
             }
             const shuushokugocodes = this.props.adjList.map(m => m.shuushokugocode);
             await app.rest.modifyDisease({disease, shuushokugocodes});
@@ -188,6 +208,16 @@ export class Modify {
                 }
             }
         );
+    }
+
+    async doDelete(){
+        if( confirm("本当に、この病名を削除していいですか？") ){
+            const diseaseId = this.origDisease.diseaseId;
+            await app.rest.deleteDisease(diseaseId);
+            this.ele.dispatchEvent(new CustomEvent("disease-deleted", {bubbles: true, detail: diseaseId}));
+            await app.loadDiseases();
+        }
+
     }
 
 }

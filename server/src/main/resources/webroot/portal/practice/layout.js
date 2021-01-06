@@ -274,9 +274,6 @@ export async function initLayout(pane, rest, controller, printAPI) {
     let {MeisaiDialog} = await import("./meisai-dialog.js");
     let {FaxProgress} = await import("./fax-progress.js");
     let {Nav} = await import("./nav.js");
-    let {DiseaseCurrent} = await import("./disease-current.js");
-    let {DiseaseEnd} = await import("./disease-end.js");
-    let {DiseaseEdit} = await import("./disease-edit.js");
     let {SearchTextForPatientDialog} = await import("./search-text-for-patient-dialog.js");
     let {SearchTextGloballyDialog} = await import("./search-text-globally-dialog.js");
     let {RegisteredDrugDialog} = await import("./registered-drug-dialog/registered-drug-dialog.js")

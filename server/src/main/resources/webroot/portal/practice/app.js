@@ -78,7 +78,6 @@ export async function loadDiseases(){
 export async function loadNoPay0140(){
     if( patient ){
         noPay0410List = await rest.list0410NoPay(patient.patientId);
-        console.log(noPay0410List);
         publish("no-pay-0410-listener", "no-pay-0410-updated");
     }
 }

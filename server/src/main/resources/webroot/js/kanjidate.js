@@ -191,20 +191,17 @@ export function calcAge(birthday){
     }
 }
 
-function momentToSqldate(m){
-    return m.format("YYYY-MM-DD");
+export function lastDayOfMonth(year, month){
+    return (new Date(year, month, 0).getDate());
 }
 
 export function toEndOfMonth(sqldate) {
-    let m = moment(sqldate).date(1);
-    m.add(1, "months");
-    m.add(-1, "days");
-    return momentToSqldate(m);
+    const {year, month} = parseSqldate(sqldate);
+    return toSqldate(year, month, lastDayOfMonth(year, month));
 }
 
 export function endOfLastMonth(){
-    let m = moment().date(1).add(-1, "days");
-    return momentToSqldate(m);
+    return toEndOfMonth(advanceMonths(todayAsSqldate(), -1));
 }
 
 function padZero2(num){
@@ -242,13 +239,23 @@ export function advanceDays(sqldate, n=1){
 }
 
 export function advanceMonths(sqldate, n=1){
-    let {year, month, day} = parseSqldate(sqldate);
-    let d = new Date(year, month - 1 + n, day);
-    return jsdateToSqldate(d);
+    const {year: startYear, month: startMonth, day: startDay} = parseSqldate(sqldate);
+    console.log(startYear, startMonth, startDay);
+    const firstDay = new Date(startYear, startMonth - 1 + n, 1);
+    console.log(firstDay);
+    const year = firstDay.getFullYear();
+    const month = firstDay.getMonth() + 1;
+    const lastDay = lastDayOfMonth(year, month);
+    const day = startDay > lastDay ? lastDay : startDay;
+    return toSqldate(year, month, day);
 }
 
 export function advanceYears(sqldate, n=1){
-    let {year, month, day} = parseSqldate(sqldate);
-    let d = new Date(year + n, month - 1, day);
-    return jsdateToSqldate(d);
+    const {year: startYear, month: startMonth, day: startDay} = parseSqldate(sqldate);
+    const firstDay = new Date(startYear + n, startMonth - 1, 1);
+    const year = firstDay.getFullYear();
+    const month = firstDay.getMonth() + 1;
+    const lastDay = lastDayOfMonth(year, month);
+    const day = startDay > lastDay ? lastDay : startDay;
+    return toSqldate(year, month, day);
 }

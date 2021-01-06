@@ -3,7 +3,7 @@ import {parseElement} from "../../../js/parse-node.js";
 import {createDateInput} from "./date-input.js";
 import * as DiseaseUtil from "../../js/disease-util.js";
 import {gensymId} from "../../../js/gensym-id.js";
-import {on, click} from "../../../js/dom-helper.js";
+import {click, on} from "../../../js/dom-helper.js";
 import * as consts from "../../js/consts.js";
 import * as app from "../app.js";
 
@@ -60,14 +60,25 @@ export class End {
         this.map = parseElement(this.ele);
         this.dateInput = createDateInput();
         this.map.dateInputWrapper.append(this.dateInput.ele);
-        click(this.map.advanceWeek, event => this.dateInput.advanceDays(7));
+        click(this.map.advanceWeek, event => {
+            if( event.shiftKey ){
+                this.dateInput.advanceDays(-7)
+            } else {
+                this.dateInput.advanceDays(7)
+            }
+        });
         click(this.map.today, event => this.dateInput.setToday());
+        click(this.map.endOfMonth, event => {
+            this.dateInput.set(kanjidate.toEndOfMonth(this.dateInput.get()));
+        });
+        click(this.map.endOfLastMonth, event => {
+            this.dateInput.set(kanjidate.endOfLastMonth());
+        });
         click(this.map.enter, async event => await this.doEnter());
         on(this.map.list, "item-check-changed", event => {
             const dates = this.listCheckedDate();
             if( dates.length > 0 ){
-                const lastDate = dates[dates.length - 1];
-                this.props.date = lastDate;
+                this.props.date = dates[dates.length - 1];
             } else {
                 self.dateInput.clear();
             }

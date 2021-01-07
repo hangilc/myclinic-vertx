@@ -73,6 +73,10 @@ export class Add {
         this.map.searchText.focus();
     }
 
+    setStartDate(sqldate){
+        this.dateInput.set(sqldate);
+    }
+
     updateName(){
         this.map.name.innerText = rep(this.props.master, this.props.adjList);
     }

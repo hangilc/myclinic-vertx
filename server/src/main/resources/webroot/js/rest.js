@@ -229,4 +229,8 @@ export class Rest extends HttpClient {
         return await this.POST("/list-conduct-full-by-ids", conductIds, {});
     }
 
+    async getMostRecentVisitOfPatient(patientId){
+        return this.GET("/get-most-recent-visit-of-patient", {"patient-id": patientId});
+    }
+
 }

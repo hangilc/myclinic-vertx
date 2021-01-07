@@ -28,7 +28,7 @@ export class Disease {
         this.props = {diseases: []};
         this.showCurrent();
         click(this.map.current, event => this.showCurrent());
-        click(this.map.add, event => this.showAdd());
+        click(this.map.add, async event => await this.showAdd());
         click(this.map.end, event => this.showEnd());
         click(this.map.edit, async event => await this.showEdit());
         on(this.ele, "disease-loaded", event => {
@@ -64,8 +64,12 @@ export class Disease {
         this.map.workarea.append(current.ele);
     }
 
-    showAdd(){
+    async showAdd(){
         let add = new Add();
+        let lastVisit = await app.rest.getMostRecentVisitOfPatient(app.patient.patientId);
+        add.setStartDate(
+            lastVisit == null ? kanjidate.todayAsSqldate() : lastVisit.visitedAt.substring(0, 10)
+        );
         this.map.workarea.innerHTML = "";
         this.map.workarea.append(add.ele);
         add.initFocus();

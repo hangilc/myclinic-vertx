@@ -672,9 +672,9 @@ class Rest extends Client {
         });
     }
 
-    async getMostRecentVisitOfPatient(patientId) {
-        return await this.get("/get-most-recent-visit-of-patient", {"patient-id": patientId});
-    }
+    // async getMostRecentVisitOfPatient(patientId) {
+    //     return await this.get("/get-most-recent-visit-of-patient", {"patient-id": patientId});
+    // }
 
     async createPaperScanPath(patientId, fileName) {
         return await this.get("/create-paper-scan-path", {
@@ -806,6 +806,11 @@ class Rest extends Client {
     async listConductFullByIds(conductIds){
         return await this.topRest.listConductFullByIds(conductIds);
     }
+
+    async getMostRecentVisitOfPatient(patientId){
+        return await this.topRest.getMostRecentVisitOfPatient(patientId);
+    }
+
 }
 
 class Integration extends Client {

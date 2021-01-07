@@ -6,6 +6,7 @@ import {Current} from "./current.js";
 import {Add} from "./add.js";
 import {Edit} from "./edit.js";
 import {End} from "./end.js";
+import {Modify} from "./modify.js";
 
 let tmpl = `
     <div class="disease-listener">
@@ -51,6 +52,10 @@ export class Disease {
             event.stopPropagation();
             this.showEnd();
         });
+        on(this.ele, "disease-clicked", event => {
+            const diseaseFull = event.detail;
+            this.showModify(diseaseFull);
+        });
     }
 
     showCurrent(){
@@ -77,6 +82,12 @@ export class Disease {
         let edit = new Edit(list);
         this.map.workarea.innerHTML = "";
         this.map.workarea.append(edit.ele);
+    }
+
+    showModify(diseaseFull){
+        const modify = new Modify(diseaseFull);
+        this.map.workarea.innerHTML = "";
+        this.map.workarea.append(modify.ele);
     }
 
     updateUI() {

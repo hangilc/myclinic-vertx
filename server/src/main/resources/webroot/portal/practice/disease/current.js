@@ -27,7 +27,7 @@ export class Current {
 }
 
 let labelTmpl = `
-    <div></div>
+    <div style="cursor:pointer;"></div>
 `;
 
 class Label {
@@ -36,7 +36,7 @@ class Label {
         this.ele.innerText = DiseaseUtil.diseaseFullRep(diseaseFull);
         click(this.ele, event => this.ele.dispatchEvent(new CustomEvent("disease-clicked", {
             bubbles: true,
-            detail: diseaseFull.disease.diseaseId
+            detail: diseaseFull
         })));
     }
 }

@@ -97,6 +97,9 @@ export class Add {
                 bubbles: true,
                 detail: entered
             }));
+            this.props.master = null;
+            this.props.adjList = [];
+            this.updateName();
         } catch(e){
             alert(e.toString());
         }

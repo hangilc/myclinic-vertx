@@ -66,6 +66,7 @@ export class Add {
         submit(map.searchForm, async event => await this.doSearch());
         click(map.example, event => this.doExample());
         on(map.select, "change", async event => await this.doSelect());
+        this.doExample();
     }
 
     initFocus(){

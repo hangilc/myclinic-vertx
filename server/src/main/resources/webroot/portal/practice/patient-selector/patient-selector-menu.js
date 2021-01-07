@@ -58,6 +58,7 @@ export class PatientSelectorMenu {
     async doByDate() {
         let widget = new ByDateWidget();
         await widget.setDate(kanjidate.todayAsSqldate());
+        console.log(this.workarea, widget);
         this.workarea.append(widget.ele);
     }
 }

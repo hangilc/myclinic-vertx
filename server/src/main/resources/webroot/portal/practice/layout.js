@@ -24,7 +24,7 @@ let html = `
         <div class="col-xl-3">
             <div id="practice-right-bar">
                 <div id="practice-disease-wrapper" class="session-listener mb-3"></div>
-                <div id="practice-no-pay-list-wrapper" class="session-listener no-pay-list-listener"/>
+                <div id="practice-no-pay-list-wrapper" class="session-listener no-pay-list-listener"></div>
                 <div id="practice-general-workarea"></div>
             </div>
         </div>

@@ -8,6 +8,8 @@ export let currentVisitId = 0;
 export let tempVisitId = 0;
 export let currentPage = 0;
 let noPay0410List = [];
+let noPayList = [];
+let noPayWidget = null;
 
 export function getTargetVisitId(){
     if( currentVisitId > 0 ){
@@ -53,6 +55,7 @@ export function endSession(){
     tempVisitId = 0;
     currentPage = 0;
     noPay0410List = [];
+    noPayList = [];
     publish("session-listener", "session-ended");
 }
 
@@ -142,6 +145,19 @@ function publishToRecord(visitId, event, detail=null){
     if( e ){
         e.dispatchEvent(new CustomEvent(event, {detail: detail}));
     }
+}
+
+export function getNoPayList(){
+    return noPayList;
+}
+
+export function isInNoPayList(visitId){
+    return noPayList.includes(visitId);
+}
+
+export function addToNoPayList(visitId){
+    noPayList.push(visitId);
+    publish("no-pay-list-listener", "no-pay-list-changed");
 }
 
 export function init(rest_, printAPI_, pane_, map_){

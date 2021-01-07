@@ -6,7 +6,7 @@ import {ChargeModify} from "./charge-modify.js";
 import * as app from "../app.js";
 
 let tmpl = `
-<div class="mt-2 charge-listener payment-listener no-pay-0410-listener"></div>
+<div class="mt-2 charge-listener payment-listener no-pay-0410-listener no-pay-list-listener"></div>
 `;
 
 export class Charge {
@@ -31,6 +31,10 @@ export class Charge {
             this.props.isNoPay0410 = app.isNoPay0410(this.props.visitId);
             this.updateUI();
         });
+        on(this.ele, "no-pay-list-changed", event => {
+            this.props.isInNoPayList = app.isInNoPayList(this.props.visitId);
+            this.updateUI();
+        })
     }
 
     getCharge(){

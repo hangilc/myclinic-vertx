@@ -7,6 +7,7 @@ let tmpl = `
         <span class="x-charge-value"></span>
         <span class="x-payment-state"></span>
         <span class="text-danger x-no-pay-0410"></span>
+        <span class="text-success x-no-pay-list"></span>
     </div>
 `;
 
@@ -27,6 +28,7 @@ export class ChargeDisp{
         this.updateChargeValueUI();
         this.updatePaymentStateUI();
         this.updateNoPay0410UI();
+        this.updateNoPayListUI();
     }
 
     updateChargeValueUI(){
@@ -67,6 +69,14 @@ export class ChargeDisp{
         let e = this.map.paymentState;
         e.innerHTML = "";
         e.append(createSpan(text, color));
+    }
+
+    updateNoPayListUI(){
+        if( this.props.isInNoPayList ){
+            this.map.noPayList.innerText = "未収リストメンバー";
+        } else {
+            this.map.noPayList.innerText = "";
+        }
     }
 
 }

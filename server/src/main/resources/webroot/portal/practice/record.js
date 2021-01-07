@@ -82,7 +82,8 @@ export class Record {
                 charge: visitFull.charge,
                 visitId: this.visitId,
                 payment: null,
-                isNoPay0410: prop.isNoPay0410(this.visitId)
+                isNoPay0410: prop.isNoPay0410(this.visitId),
+                isInNoPayList: prop.isInNoPayList(this.visitId)
             };
             const c = new Charge(props);
             this.map.chargeWrapper.append(c.ele);

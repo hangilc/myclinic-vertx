@@ -3,6 +3,7 @@ import {parseElement} from "../../../js/parse-node.js";
 import {on, click} from "../../../js/dom-helper.js";
 import {VisitMeisaiDialog} from "../visit-meisai-dialog.js";
 import {titleRep} from "./title-funs.js";
+import * as app from "../app.js";
 
 let tmpl = `
 <div class="practice-title mt-2 form-inline">
@@ -87,8 +88,7 @@ export class Title {
     }
 
     doAddToNoPayList(){
-        this.ele.dispatchEvent(new CustomEvent("add-to-no-pay-list",
-            {bubbles: true, detail: this.getVisitId()}));
+        app.addToNoPayList(this.getVisitId());
     }
 
     async doMeisai(){

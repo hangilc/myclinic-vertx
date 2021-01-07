@@ -1,5 +1,6 @@
 import {PatientManip} from "./patient-manip.js";
 import {Disease} from "./disease/disease.js";
+import {on} from "../../js/dom-helper.js";
 
 let html = `
 <div class="pane practice">
@@ -23,109 +24,12 @@ let html = `
         <div class="col-xl-3">
             <div id="practice-right-bar">
                 <div id="practice-disease-wrapper" class="session-listener mb-3"></div>
+                <div id="practice-no-pay-list-wrapper" class="session-listener no-pay-list-listener"/>
                 <div id="practice-general-workarea"></div>
             </div>
         </div>
     </div>
 </div>
-
-<!--<template id="practice-search-text-dialog-template">-->
-<!--    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">-->
-<!--        <div class="modal-dialog" role="document">-->
-<!--            <div class="modal-content">-->
-<!--                <div class="modal-header">-->
-<!--                    <h5 class="modal-title x-title"></h5>-->
-<!--                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
-<!--                        <span aria-hidden="true">&times;</span>-->
-<!--                    </button>-->
-<!--                </div>-->
-<!--                <div class="modal-body">-->
-<!--                    <form class="x-search-form form-inline">-->
-<!--                        <input type="text" class="x-search-text form-control"/>-->
-<!--                        <button type="submit" class="btn btn-primary ml-2">検索</button>-->
-<!--                    </form>-->
-<!--                    <div class="x-nav_ d-none mt-2"></div>-->
-<!--                    <div class="x-result"></div>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--        <template class="x-item-template">-->
-<!--            <div class="my-2 border border-secondary rounded p-2">-->
-<!--                <div class="x-title_ bg-light font-weight-bold p-1">-->
-<!--                    <div class="x-text"></div>-->
-<!--                </div>-->
-<!--                <div class="x-text_ mt-2">-->
-<!--                    <div></div>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </template>-->
-<!--        <template class="x-global-item-template">-->
-<!--            <div class="my-2 border border-secondary rounded p-2">-->
-<!--                <div class="x-title_ bg-light font-weight-bold p-1">-->
-<!--                    <span class="x-patient text-primary"></span> <span class="x-text ml-2"></span>-->
-<!--                </div>-->
-<!--                <div class="x-text_ mt-2">-->
-<!--                    <div></div>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </template>-->
-<!--    </div>-->
-<!--</template>-->
-
-<!--<template id="practice-example-dialog-template">-->
-<!--    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">-->
-<!--        <div class="modal-dialog modal-lg" role="document">-->
-<!--            <div class="modal-content">-->
-<!--                <div class="modal-header">-->
-<!--                    <h5 class="modal-title">Title</h5>-->
-<!--                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
-<!--                        <span aria-hidden="true">&times;</span>-->
-<!--                    </button>-->
-<!--                </div>-->
-<!--                <div class="modal-body"></div>-->
-<!--                <div class="modal-footer">-->
-<!--                    <button type="button" class="btn btn-secondary x-close">閉じる</button>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--</template>-->
-
-<!--<template id="practice-visit-meisai-dialog-template">-->
-<!--    <div class="modal x-dialog" tabindex="-1" role="dialog" data-backdrop="true">-->
-<!--        <div class="modal-dialog modal-lg" role="document">-->
-<!--            <div class="modal-content">-->
-<!--                <div class="modal-header">-->
-<!--                    <h5 class="modal-title">診療明細</h5>-->
-<!--                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
-<!--                        <span aria-hidden="true">&times;</span>-->
-<!--                    </button>-->
-<!--                </div>-->
-<!--                <div class="modal-body">-->
-<!--                    <div class="x-sections"></div>-->
-<!--                    <div>総点：<span class="x-total-ten"></span></div>-->
-<!--                </div>-->
-<!--                <div class="modal-footer">-->
-<!--                    <button type="button" class="btn btn-secondary x-close">閉じる</button>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--    <template class="x-item-template">-->
-<!--        <div>-->
-<!--            <div class="x-title"></div>-->
-<!--            <div class="x-detail"></div>-->
-<!--        </div>-->
-<!--    </template>-->
-<!--    <template class="x-detail-template">-->
-<!--        <div class="row">-->
-<!--            <div class="col-sm-2"></div>-->
-<!--            <div class="col-sm-4 x-detail-label"></div>-->
-<!--            <div class="col-sm-2 x-detail-ten"></div>-->
-<!--        </div>-->
-<!--    </template>-->
-<!--</template>-->
-
 `;
 
 export function getHtml() {
@@ -133,13 +37,9 @@ export function getHtml() {
 }
 
 export async function initLayout(pane, rest, controller, printAPI) {
-    let {parseElement} = await import("./parse-element.js");
     let {PatientDisplay} = await import("./patient-display.js");
     let {Record} = await import("./record.js");
-    let {MeisaiDialog} = await import("./meisai-dialog.js");
-    let {FaxProgress} = await import("./fax-progress.js");
     let {Nav} = await import("./nav.js");
-    let {SearchTextForPatientDialog} = await import("./search-text-for-patient-dialog.js");
     let {SearchTextGloballyDialog} = await import("./search-text-globally-dialog.js");
     let {RegisteredDrugDialog} = await import("./registered-drug-dialog/registered-drug-dialog.js")
     let {NoPayList} = await import("./no-pay-list.js");
@@ -243,6 +143,20 @@ export async function initLayout(pane, rest, controller, printAPI) {
         let dialog = new SearchTextGloballyDialog();
         await dialog.open(() => dialog.initFocus());
     });
+
+    {
+        const e = document.getElementById("practice-no-pay-list-wrapper");
+        on(e, "session-ended", event => e.innerHTML = "");
+        on(e, "no-pay-list-changed", event => {
+            let noPay = e.querySelector(".practice-no-pay-list");
+            if( !noPay ){
+                noPay = (new NoPayList()).ele;
+                e.append(noPay);
+            }
+            noPay.dispatchEvent(new Event("update-ui"));
+        });
+    }
+
 
     //
     // let prop = {

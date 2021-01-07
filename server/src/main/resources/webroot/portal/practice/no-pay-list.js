@@ -1,6 +1,8 @@
 import {createElementFrom} from "../../js/create-element-from.js";
 import {parseElement} from "../../js/parse-node.js";
 import * as kanjidate from "../../js/kanjidate.js";
+import * as app from "./app.js";
+import {on} from "../../js/dom-helper.js";
 
 let itemTmpl = `
     <div>
@@ -16,9 +18,14 @@ class Item {
         this.chargeValue = this.getChargeValue();
         this.visitId = visit.visitId;
         this.ele = createElementFrom(itemTmpl);
+        this.ele.style.order = visit.visitId;
         this.map = parseElement(this.ele);
         this.map.date.innerText = kanjidate.sqldateToKanji(visit.visitedAt.substring(0, 10));
         this.map.charge.innerText = this.chargeRep(charge);
+    }
+
+    getVisitId(){
+        return this.visitId;
     }
 
     getChargeValue(){
@@ -61,9 +68,9 @@ class PdfMangement {
 }
 
 let tmpl = `
-    <div class="mb-2 border rounded p-2">
+    <div class="practice-no-pay-list no-pay-list-listener mb-2 border rounded p-2">
         <div class="h5">未収リスト</div>
-        <div class="x-list"></div>
+        <div class="x-list d-flex flex-column"></div>
         <div class="x-sum"></div>
         <div class="x-commands">
             <button class="btn btn-primary btn-sm x-receipt-pdf">領収書PDF</button>
@@ -75,11 +82,12 @@ let tmpl = `
 `;
 
 export class NoPayList {
-    constructor(prop){
-        this.prop = prop;
+    constructor(){
+        this.prop = app;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.items = [];
+        on(this.ele, "update-ui", async event => this.updateUI());
         this.map.receiptPdf.addEventListener("click", async event => {
             let visitIds = this.items.map(item => item.visitId);
             let pdfToken = await this.prop.rest.createReceiptPdf(visitIds);
@@ -106,6 +114,19 @@ export class NoPayList {
         this.map.close.addEventListener("click", event => {
             this.ele.dispatchEvent(new Event("closed"));
             this.ele.remove();
+        });
+    }
+
+    async updateUI(){
+        const visitIds = app.getNoPayList();
+        console.log(visitIds);
+        visitIds.forEach(visitId => {
+            for(const item of this.items){
+                if( item.getVisitId() === visitId ){
+                    return;
+                }
+            }
+            this.add(visitId);
         });
     }
 

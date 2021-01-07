@@ -91,7 +91,7 @@ export class NoPayList {
         this.map.receiptPdf.addEventListener("click", async event => {
             let visitIds = this.items.map(item => item.visitId);
             let pdfToken = await this.prop.rest.createReceiptPdf(visitIds);
-            let mgmt = new PdfMangement(prop, pdfToken);
+            let mgmt = new PdfMangement(this.prop, pdfToken);
             this.map.receiptWorkarea.innerHTML = "";
             this.map.receiptWorkarea.append(mgmt.ele);
         });
@@ -119,7 +119,6 @@ export class NoPayList {
 
     async updateUI(){
         const visitIds = app.getNoPayList();
-        console.log(visitIds);
         visitIds.forEach(visitId => {
             for(const item of this.items){
                 if( item.getVisitId() === visitId ){

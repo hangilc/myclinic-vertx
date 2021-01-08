@@ -1,16 +1,10 @@
-import {Component} from "../component.js";
 import {formatPresc} from "../../js/format-presc.js";
-import {RegisteredDrugDialog} from "../registered-drug-dialog/registered-drug-dialog.js";
-import {
-    createShohousenOps,
-    createShohousenPdfForFax,
-    shohousenTextContentDataToDisp,
-    shohousenTextContentDispToData
-} from "../funs.js";
+import {createShohousenOps, createShohousenPdfForFax} from "../funs.js";
+import {shohousenTextContentDataToDisp, shohousenTextContentDispToData} from "../../../js/text-util.js";
 import {ShohousenPreviewDialog} from "../shohousen-preview-dialog.js";
 import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
-import {show, hide} from "../../../js/dom-helper.js";
+import {show} from "../../../js/dom-helper.js";
 
 let tmpl = `
     <div class="mt-2">
@@ -36,7 +30,7 @@ let tmpl = `
 `;
 
 export class TextEdit {
-    constructor(prop, text){
+    constructor(prop, text) {
         this.prop = prop;
         this.text = text;
         this.ele = createElementFrom(tmpl);
@@ -50,7 +44,7 @@ export class TextEdit {
             this.map.copyMemo.addEventListener("click", async event => await this.doCopyMemo());
             show(this.map.copyMemo);
         }
-        if( isShohousen(text.content) ){
+        if (isShohousen(text.content)) {
             this.map.shohousen.addEventListener("click", async event => await this.doShohousen());
             this.map.shohousenFax.addEventListener("click", async event => await this.doShohousenFax());
             this.map.formatPresc.addEventListener("click", async event => await this.doFormatPresc());
@@ -59,11 +53,11 @@ export class TextEdit {
         }
     }
 
-    initFocus(){
+    initFocus() {
         this.map.textarea.focus();
     }
 
-    async doEnter(){
+    async doEnter() {
         let content = shohousenTextContentDispToData(this.map.textarea.value.trim());
         let text = Object.assign({}, this.text, {content: content});
         await this.prop.rest.updateText(text);
@@ -177,7 +171,7 @@ function hasMemo(content) {
     return content && (content.startsWith("●") || content.startsWith("★"));
 }
 
-function isShohousen(content){
+function isShohousen(content) {
     return content.startsWith("院外処方");
 }
 

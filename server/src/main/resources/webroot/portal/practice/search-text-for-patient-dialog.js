@@ -3,7 +3,7 @@ import {Dialog} from "../../js/dialog2.js";
 import {submit} from "../../js/dom-helper.js";
 import {titleRep} from "./title/title-funs.js";
 import {createElementFrom} from "../../js/create-element-from.js";
-import {textRep} from "./text/text-funs.js";
+import {textRep} from "../../js/text-util.js";
 
 let tmpl = `
     <form class="x-search-form form-inline" onsubmit="return false;">

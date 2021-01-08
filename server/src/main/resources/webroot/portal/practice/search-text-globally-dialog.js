@@ -1,14 +1,9 @@
-import {SearchTextDialog} from "./search-text-dialog.js";
-import {Component} from "../js/component.js";
-import {TitleDisp} from "./title-disp.js";
-import {TextDisp} from "./text/text-disp.js";
 import {parseElement} from "../../js/parse-node.js";
 import {Dialog} from "../../js/dialog2.js";
 import {submit, show, hide} from "../../js/dom-helper.js";
 import * as app from "./app.js";
 import {createElementFrom} from "../../js/create-element-from.js";
-import {titleRep} from "./title/title-funs.js";
-import {textRep} from "./text/text-funs.js";
+import {textRep} from "../../js/text-util.js";
 import {Nav} from "./nav.js";
 
 let tmpl = `

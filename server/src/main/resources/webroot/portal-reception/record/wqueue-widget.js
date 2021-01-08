@@ -1,6 +1,7 @@
 import {Widget} from "../../js/widget.js";
 import {createElementFrom} from "../../js/create-element-from.js";
 import {parseElement} from "../../js/parse-node.js";
+import {click, on} from "../../js/dom-helper.js";
 
 export class WqueueWidget extends Widget {
     constructor(patients) {
@@ -32,5 +33,10 @@ class Item {
         const map = parseElement(this.ele);
         const patientIdRep = `${patient.patientId}`.padStart(4, "0");
         map.label.innerText = `(${patientIdRep}) ${patient.lastName}${patient.firstName}`;
+        click(map.label, event => this.ele.dispatchEvent(
+            new CustomEvent("patient-clicked", {
+            bubbles: true,
+            detail: patient
+        })));
     }
 }

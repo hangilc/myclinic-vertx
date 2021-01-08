@@ -1,5 +1,5 @@
 import {createElementFrom} from "../../../js/create-element-from.js";
-import {textRep} from "./text-funs.js";
+import {textRep} from "../../../js/text-util.js";
 
 let tmpl = `
     <div class="my-1"></div>

@@ -1,7 +1,7 @@
 // import {WidgetBase} from "../widget-base.js";
 // import {ShinryouSearch} from "./shinryou-search.js";
 import {parseElement} from "../../../js/parse-node.js";
-import {Widget} from "../widget2.js";
+import {Widget} from "../../../js/widget.js";
 import {click, submit} from "../../../js/dom-helper.js";
 
 let bodyTmpl = `

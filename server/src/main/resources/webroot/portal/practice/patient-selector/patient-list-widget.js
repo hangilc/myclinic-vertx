@@ -1,4 +1,4 @@
-import {Widget} from "../widget2.js";
+import {Widget} from "../../../js/widget.js";
 import {parseElement} from "../../../js/parse-node.js";
 import {click} from "../../../js/dom-helper.js";
 import {createElementFrom} from "../../../js/create-element-from.js";

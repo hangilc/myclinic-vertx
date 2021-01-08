@@ -1,5 +1,3 @@
-import {Component} from "./component.js";
-//import {shinryouSearchEnterWidgetFactory} from "./shinryou-search-enter-widget/shinryou-search-enter-widget.js";
 import {createShohousenPdfForFax} from "./funs.js";
 import {ShinryouKensaDialog} from "./shinryou/shinryou-kensa-dialog.js";
 import {Charge} from "./charge/charge.js";

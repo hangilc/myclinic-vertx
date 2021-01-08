@@ -1,4 +1,4 @@
-import {Widget} from "../widget2.js";
+import {Widget} from "../../../js/widget.js";
 import {parseElement} from "../../../js/parse-node.js";
 import {click, submit} from "../../../js/dom-helper.js";
 import {gensymId} from "../../../js/gensym-id.js";

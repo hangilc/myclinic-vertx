@@ -21,6 +21,7 @@
                 <ul class="list-unstyled menu-elements mb-1">
                     <li><a href="javascript:void(0)" id="index-main-link">メイン</a></li>
                     <li><a href="javascript:void(0)" id="index-patient-management-link">患者管理</a></li>
+                    <li><a href="javascript:void(0)" id="index-record-link">診療記録</a></li>
                     <li><a href="javascript:void(0)" id="index-scan-link">スキャン</a></li>
                 </ul>
             </div>
@@ -44,13 +45,14 @@
         let {PrintAPI} = await import("../js/print-api.js");
         let {parseQueryParams} = await import("../js/parse-query-params.js");
         let {HotlineComponent} = await import("../hotline/hotline-component.js");
+        const {RecordPanel} = await import ("./record/record-panel.js");
 
         let rest = new Rest("/json");
         let printAPI = null;
-        (function(){
+        (function () {
             let printPort = 48080;
             let queryParams = parseQueryParams();
-            if( queryParams["print-port"] ){
+            if (queryParams["print-port"]) {
                 printPort = parseInt(queryParams["print-port"]);
                 console.log("print-port", printPort);
             }
@@ -70,6 +72,11 @@
                 return {};
             },
             document.getElementById("index-patient-management-link"));
+        menu.addItem("record", e => {
+            const panel = new RecordPanel(rest);
+            e.appendChild(panel.ele);
+            return {};
+        }, document.getElementById("index-record-link"));
         menu.addItem("scan", e => {
                 let panel = new ScanPanel(rest, printAPI);
                 e.appendChild(panel.ele);
@@ -79,7 +86,6 @@
                 };
             },
             document.getElementById("index-scan-link"));
-
         let hotlineComp = new HotlineComponent(
             document.getElementById("index-hotline-part"),
             "reception", "practice",

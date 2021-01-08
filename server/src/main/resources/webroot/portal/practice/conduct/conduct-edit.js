@@ -1,4 +1,4 @@
-import {Widget} from "../widget2.js";
+import {Widget} from "../../../js/widget.js";
 import {ConductDisp} from "./conduct-disp.js";
 import {parseElement} from "../../../js/parse-node.js";
 import {click} from "../../../js/dom-helper.js";

@@ -4,7 +4,6 @@ import {click} from "../../../js/dom-helper.js";
 import {SearchDialog} from "./search-dialog.js";
 import {WqueueDialog} from "./wqueue-dialog.js";
 import {RecentDialog} from "./recent-dialog.js";
-import {PatientListWidget} from "./patient-list-widget.js";
 import {ByDateWidget} from "./by-date-widget.js";
 import * as kanjidate from "../../../js/kanjidate.js";
 import * as app from "../app.js";

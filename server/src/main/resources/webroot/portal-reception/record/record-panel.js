@@ -5,6 +5,7 @@ import {WqueueWidget} from "./wqueue-widget.js";
 import {Record} from "./record.js";
 import {PatientDisplay} from "./patient-display.js";
 import {Nav} from "../../components/nav.js";
+import {SearchWidget} from "./search-widget.js";
 
 let tmpl = `
 <div>
@@ -71,7 +72,9 @@ export class RecordPanel {
     }
 
     async doSearch(){
-
+        const w = new SearchWidget(this.rest);
+        this.setWorkarea(w.ele);
+        w.initFocus();
     }
 
     async doRecent(){

@@ -1,4 +1,9 @@
 
+export function setOnlyChild(parent, child){
+    parent.innerHTML = "";
+    parent.append(child);
+}
+
 export function show(e, show=true){
     if( show ){
         e.classList.remove("d-none");
@@ -53,7 +58,9 @@ export function setSelectedValue(selectElement, value){
     }
 }
 
-export function setOnlyChild(parent, child){
-    parent.innerHTML = "";
-    parent.append(child);
+export function createOption(label, value){
+    const opt = document.createElement("option");
+    opt.innerText = label;
+    opt.value = value;
+    return opt;
 }

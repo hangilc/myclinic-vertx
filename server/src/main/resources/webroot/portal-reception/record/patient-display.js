@@ -4,8 +4,8 @@ import {parseElement} from "../../js/parse-node.js";
 
 let tmpl = `
     <div>
-        [<span class="x-patient-id"></span>]
-        <span class="x-last-name"></span><span class="x-first-name"></span>
+        [<span class="font-weight-bold x-patient-id"></span>]
+        <span class="font-weight-bold x-last-name"></span><span class="font-weight-bold x-first-name"></span>
         (<span class="x-last-name-yomi"></span><span class="x-first-name-yomi"></span>)
         <span class="x-birthday"></span>生
         (<span class="x-age"></span>)

@@ -14,12 +14,12 @@ let tmpl = `
     <div class="mb-3 form-inline">
         <div class="h3">診療記録</div>
     </div>
-    <div class="x-patient-wrapper"></div>
+    <div class="mb-2 x-patient-wrapper"></div>
     <div class="row">
         <div class="col-9 x-main-pane">
-            <div class="d-none nav"></div>
-            <div class="x-records"></div>
-            <div class="d-none nav"></div>
+            <div class="d-none mb-2 page-nav"></div>
+            <div class="mb-2 x-records"></div>
+            <div class="d-none page-nav"></div>
         </div>
         <div class="col-3 x-side-pane">
             <div class="dropdown mb-3">
@@ -118,7 +118,7 @@ export class RecordPanel {
     }
 
     getNavElements(){
-        return this.ele.querySelectorAll(".nav");
+        return this.ele.querySelectorAll(".page-nav");
     }
 
     updateNavUI(){

@@ -1,11 +1,13 @@
 import {parseElement} from "../js/parse-node.js";
 
 let tmpl = `
-    <a href="javascript:void(0)" class="x-first">最初</a>
+    <div class="border" style="height:1.5em;line-height:1.5em;">
+    <a href="javascript:void(0)" class="border x-first">最初</a>
     <a href="javascript:void(0)" class="x-prev ml-1">前へ</a>
     <a href="javascript:void(0)" class="x-next ml-1">次へ</a>
     <a href="javascript:void(0)" class="x-last ml-1 mr-1">最後</a>
-    [<span class="x-page"></span>/<span class="x-total"></span>]
+    <span class="border" style="display:inline-block;vertical-align:middle;line-height:1.5em;">[<span class="x-page"></span>/<span class="x-total"></span>]</span>
+    </div>
 `;
 
 export class Nav {

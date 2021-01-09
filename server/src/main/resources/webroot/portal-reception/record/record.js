@@ -3,6 +3,7 @@ import {parseElement} from "../../js/parse-node.js";
 import * as TitleUtil from "../../js/title-util.js";
 import * as TextUtil from "../../js/text-util.js";
 import * as DrugUtil from "../../js/drug-util.js";
+import * as ChargeUtil from "../../js/charge-util.js";
 import {toZenkaku} from "../../js/jp-util.js";
 import {ConductDisp} from "../../components/conduct-disp.js";
 
@@ -16,6 +17,7 @@ const tmpl = `
                 <div class="x-drugs"></div>
                 <div class="x-shinryou-list"></div>
                 <div class="x-conducts"></div>
+                <div class="x-charge"></div>
             </div>
         </div>
     </div>
@@ -74,5 +76,6 @@ export class Record {
             const c = new ConductDisp(conductFull, true);
             map.conducts.append(c.ele);
         });
+        map.charge.innerText = ChargeUtil.chargeRep(visitFull.charge);
     }
 }

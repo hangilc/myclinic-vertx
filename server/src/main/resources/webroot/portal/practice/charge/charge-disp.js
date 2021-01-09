@@ -1,6 +1,7 @@
 import {Component} from "../component.js";
 import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
+import * as ChargeUtil from "../../../js/charge-util.js";
 
 let tmpl = `
     <div class="charge-ui">
@@ -32,13 +33,14 @@ export class ChargeDisp{
     }
 
     updateChargeValueUI(){
-        let charge = this.props.charge;
-        if( charge ){
-            let value = +(charge.charge);
-            this.map.chargeValue.innerText = `請求額：${value.toLocaleString()}円`;
-        } else {
-            this.map.chargeValue.innerText = "［未請求］";
-        }
+        this.map.chargeValue.innerText = ChargeUtil.chargeRep(this.props.charge);
+        // let charge = this.props.charge;
+        // if( charge ){
+        //     let value = +(charge.charge);
+        //     this.map.chargeValue.innerText = `請求額：${value.toLocaleString()}円`;
+        // } else {
+        //     this.map.chargeValue.innerText = "［未請求］";
+        // }
     }
 
     updatePaymentStateUI(){

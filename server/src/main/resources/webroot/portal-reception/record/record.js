@@ -4,6 +4,7 @@ import * as TitleUtil from "../../js/title-util.js";
 import * as TextUtil from "../../js/text-util.js";
 import * as DrugUtil from "../../js/drug-util.js";
 import {toZenkaku} from "../../js/jp-util.js";
+import {ConductDisp} from "../../components/conduct-disp.js";
 
 const tmpl = `
     <div>
@@ -14,6 +15,7 @@ const tmpl = `
                 <div class="x-hoken"></div>
                 <div class="x-drugs"></div>
                 <div class="x-shinryou-list"></div>
+                <div class="x-conducts"></div>
             </div>
         </div>
     </div>
@@ -67,6 +69,10 @@ export class Record {
             const e = createElementFrom(shinryouTmpl);
             e.innerText = shinryouFull.master.name;
             map.shinryouList.append(e);
+        });
+        visitFull.conducts.forEach(conductFull => {
+            const c = new ConductDisp(conductFull, true);
+            map.conducts.append(c.ele);
         });
     }
 }

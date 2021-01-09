@@ -1,5 +1,5 @@
 import {createElementFrom} from "../../../js/create-element-from.js";
-import {ConductDisp} from "./conduct-disp.js";
+import {ConductDisp} from "../../../components/conduct-disp.js";
 import {ConductEdit} from "./conduct-edit.js";
 import {replaceNode} from "../../../js/dom-helper.js";
 

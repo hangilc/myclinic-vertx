@@ -64,3 +64,7 @@ export function createOption(label, value){
     opt.value = value;
     return opt;
 }
+
+export function clear(e){
+    e.innerHTML = "";
+}

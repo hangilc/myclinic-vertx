@@ -7,6 +7,7 @@ import {PatientDisplay} from "./patient-display.js";
 import {Nav} from "../../components/nav.js";
 import {SearchWidget} from "./search-widget.js";
 import {RecentWidget} from "./recent-widget.js";
+import {ByDateWidget} from "./by-date-widget.js";
 
 let tmpl = `
 <div>
@@ -85,7 +86,9 @@ export class RecordPanel {
     }
 
     async doByDate(){
-
+        const w = new ByDateWidget(this.rest);
+        await w.init();
+        this.setWorkarea(w.ele);
     }
 
     setWorkarea(e){

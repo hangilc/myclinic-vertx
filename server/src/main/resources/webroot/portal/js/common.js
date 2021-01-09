@@ -318,8 +318,12 @@ class Rest extends Client {
     }
 
     async listVisitPatientAt(at) {
-        return await this.get("/list-visit-patient-at", {at: at});
+        return this.topRest.listVisitPatientAt(at);
     }
+
+    // async listVisitPatientAt(at) {
+    //     return await this.get("/list-visit-patient-at", {at: at});
+    // }
 
     async batchEnterShinryouByNames(names, visitId) {
         return await this.get("/batch-enter-shinryou-by-name", {

@@ -1,6 +1,6 @@
 import {Component} from "../component2.js";
 import {parseElement} from "../../js/parse-element.js";
-import {drugExampleRep} from "../../js/drug-util.js";
+import {drugExampleRep} from "../../../js/drug-util.js";
 
 let template = `
     <div>

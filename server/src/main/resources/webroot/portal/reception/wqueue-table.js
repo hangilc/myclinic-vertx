@@ -1,6 +1,6 @@
 import {Component} from "./component.js";
 import {parseElement} from "../js/parse-element.js";
-import * as consts from "../js/consts.js";
+import * as consts from "../../js/consts.js";
 import * as kanjidate from "../js/kanjidate.js";
 
 export class WqueueTable extends Component {

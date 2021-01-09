@@ -4,7 +4,7 @@ import {createDateInput} from "./date-input.js";
 import * as DiseaseUtil from "../../js/disease-util.js";
 import {gensymId} from "../../../js/gensym-id.js";
 import {click, on} from "../../../js/dom-helper.js";
-import * as consts from "../../js/consts.js";
+import * as consts from "../../../js/consts.js";
 import * as app from "../app.js";
 
 const tmpl = `

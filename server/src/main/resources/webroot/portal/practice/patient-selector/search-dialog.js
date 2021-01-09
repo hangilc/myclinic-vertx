@@ -2,7 +2,7 @@ import {Dialog} from "../../../js/dialog2.js";
 import {parseElement} from "../../../js/parse-node.js";
 import {click, submit, on} from "../../../js/dom-helper.js";
 import * as kanjidate from "../../../js/kanjidate.js";
-import {sexToRep} from "../../js/consts.js";
+import {sexToRep} from "../../../js/consts.js";
 import {PatientDisp} from "./patient-disp.js";
 import * as prop from "../app.js";
 

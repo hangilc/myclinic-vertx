@@ -4,7 +4,7 @@ import {createDateInput} from "../../../date-input/date-input-base.js";
 import {click, on, submit} from "../../../js/dom-helper.js";
 import * as app from "../app.js";
 import * as DiseaseUtil from "../../js/disease-util.js";
-import * as consts from "../../js/consts.js";
+import * as consts from "../../../js/consts.js";
 
 let examples = [];
 

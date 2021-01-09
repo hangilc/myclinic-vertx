@@ -1,7 +1,7 @@
 import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
 import * as kanjidate from "../../../js/kanjidate.js";
-import {sexToRep} from "../../js/consts.js";
+import {sexToRep} from "../../../js/consts.js";
 
 let tmpl = `
     <div class="card">

@@ -1,6 +1,6 @@
 import {Component} from "./component.js";
-import {drugRep} from "../js/drug-util.js";
-import {toZenkaku} from "../js/jp-util.js";
+import {drugRep} from "../../js/drug-util.js";
+import {toZenkaku} from "../../js/jp-util.js";
 
 export class Drug extends Component {
     constructor(ele, map, rest) {

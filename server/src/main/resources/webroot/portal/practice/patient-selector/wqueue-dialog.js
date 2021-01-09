@@ -2,7 +2,7 @@ import {Dialog} from "../../../js/dialog2.js";
 import {parseElement} from "../../../js/parse-node.js";
 import {PatientDisp} from "./patient-disp.js";
 import {click, on} from "../../../js/dom-helper.js";
-import {wqueueStateCodeToRep} from "../../js/consts.js";
+import {wqueueStateCodeToRep} from "../../../js/consts.js";
 import * as app from "../app.js";
 
 let bodyTmpl = `

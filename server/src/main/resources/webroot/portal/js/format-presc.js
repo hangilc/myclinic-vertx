@@ -1,4 +1,4 @@
-import * as JpUtil from "./jp-util.js";
+import * as JpUtil from "../../js/jp-util.js";
 
 class Item {
     constructor() {

@@ -1,6 +1,6 @@
 import {Component} from "../component2.js";
-import {toZenkaku} from "../../js/jp-util.js";
-import * as consts from "../../js/consts.js";
+import {toZenkaku} from "../../../js/jp-util.js";
+import * as consts from "../../../js/consts.js";
 
 let template = `
     <textarea class="my-2 p-1 border rounded d-none form-control" readonly rows="8"></textarea>

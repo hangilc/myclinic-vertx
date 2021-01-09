@@ -1,7 +1,7 @@
 import {Component} from "../../js/component.js";
 import {parseElement} from "../../js/parse-element.js";
-import {toZenkaku} from "../../js/jp-util.js";
-import {drugRep} from "../../js/drug-util.js";
+import {toZenkaku} from "../../../js/jp-util.js";
+import {drugRep} from "../../../js/drug-util.js";
 
 let template = `
     <div><span class="x-index"></span>）<span class="x-rep"></span></div>

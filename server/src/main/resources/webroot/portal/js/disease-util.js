@@ -1,5 +1,5 @@
 import * as kanjidate from "./kanjidate.js";
-import * as consts from "./consts.js";
+import * as consts from "../../js/consts.js";
 
 export function isPrefix(shuushokugocode){
     return shuushokugocode < 8000;

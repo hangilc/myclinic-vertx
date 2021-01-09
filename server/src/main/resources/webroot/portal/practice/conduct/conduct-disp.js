@@ -1,4 +1,4 @@
-import * as consts from "../../js/consts.js";
+import * as consts from "../../../js/consts.js";
 import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
 import {click} from "../../../js/dom-helper.js";

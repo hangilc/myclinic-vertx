@@ -5,7 +5,7 @@ import * as DiseaseUtil from "../../js/disease-util.js";
 import {click, getSelectedValue, on, setSelectedValue, submit} from "../../../js/dom-helper.js";
 import * as funs from "./disease-funs.js";
 import * as app from "../app.js";
-import * as consts from "../../js/consts.js";
+import * as consts from "../../../js/consts.js";
 
 let examples = [];
 

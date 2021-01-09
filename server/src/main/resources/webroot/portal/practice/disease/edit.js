@@ -3,7 +3,7 @@ import {parseElement} from "../../../js/parse-node.js";
 import * as DiseaseUtil from "../../js/disease-util.js";
 import {click, on, replaceNode} from "../../../js/dom-helper.js";
 import * as kanjidate from "../../js/kanjidate.js";
-import * as consts from "../../js/consts.js";
+import * as consts from "../../../js/consts.js";
 import {Modify} from "./modify.js";
 
 const tmpl = `

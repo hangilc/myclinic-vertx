@@ -1,6 +1,6 @@
 import {createElementFrom} from "../../js/create-element-from.js";
 import {parseElement} from "../../js/parse-node.js";
-import {wqueueStateCodeToRep, WqueueStateWaitCashier, sexToRep} from "../js/consts.js";
+import {wqueueStateCodeToRep, WqueueStateWaitCashier, sexToRep} from "../../js/consts.js";
 import {calcAge, sqldateToKanji} from "../../js/kanjidate.js";
 import {click} from "../../js/dom-helper.js";
 import {CashierDialog} from "./cashier-dialog.js";

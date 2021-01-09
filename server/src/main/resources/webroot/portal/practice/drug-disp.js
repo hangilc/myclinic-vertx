@@ -1,6 +1,6 @@
 import {Component} from "./component.js";
-import {drugRep} from "../js/drug-util.js";
-import {toZenkaku} from "../js/jp-util.js";
+import {drugRep} from "../../js/drug-util.js";
+import {toZenkaku} from "../../js/jp-util.js";
 import {createElementFrom} from "../../js/create-element-from.js";
 import {parseElement} from "../../js/parse-node.js";
 

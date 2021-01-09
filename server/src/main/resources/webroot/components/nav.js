@@ -1,4 +1,4 @@
-import {parseElement} from "../../js/parse-node.js";
+import {parseElement} from "../js/parse-node.js";
 
 let tmpl = `
     <a href="javascript:void(0)" class="x-first">最初</a>

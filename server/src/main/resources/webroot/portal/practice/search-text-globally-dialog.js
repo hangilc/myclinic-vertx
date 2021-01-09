@@ -4,7 +4,7 @@ import {submit, show, hide} from "../../js/dom-helper.js";
 import * as app from "./app.js";
 import {createElementFrom} from "../../js/create-element-from.js";
 import {textRep} from "../../js/text-util.js";
-import {Nav} from "./nav.js";
+import {Nav} from "../../components/nav.js";
 
 let tmpl = `
     <form class="x-search-form form-inline" onsubmit="return false;">

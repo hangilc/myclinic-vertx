@@ -43,7 +43,6 @@ export class Record {
         this.ele = createElementFrom(tmpl);
         const map = parseElement(this.ele);
         map.title.innerText = TitleUtil.titleRep(visitFull.visit.visitedAt);
-        console.log(visitFull);
         visitFull.texts.forEach(text => {
             const e = createElementFrom(textTmpl);
             e.innerHTML = TextUtil.textRep(text.content);

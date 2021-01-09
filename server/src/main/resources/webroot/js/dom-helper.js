@@ -52,3 +52,8 @@ export function setSelectedValue(selectElement, value){
         opt.selected = true;
     }
 }
+
+export function setOnlyChild(parent, child){
+    parent.innerHTML = "";
+    parent.append(child);
+}

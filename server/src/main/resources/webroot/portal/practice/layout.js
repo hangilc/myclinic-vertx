@@ -39,7 +39,7 @@ export function getHtml() {
 export async function initLayout(pane, rest, controller, printAPI) {
     let {PatientDisplay} = await import("./patient-display.js");
     let {Record} = await import("./record.js");
-    let {Nav} = await import("./nav.js");
+    let {Nav} = await import("../../components/nav.js");
     let {SearchTextGloballyDialog} = await import("./search-text-globally-dialog.js");
     let {RegisteredDrugDialog} = await import("./registered-drug-dialog/registered-drug-dialog.js")
     let {NoPayList} = await import("./no-pay-list.js");

@@ -1,17 +1,22 @@
 import {createElementFrom} from "../../js/create-element-from.js";
 import {parseElement} from "../../js/parse-node.js";
-import {click, on} from "../../js/dom-helper.js";
+import {click, show, hide, on, setOnlyChild} from "../../js/dom-helper.js";
 import {WqueueWidget} from "./wqueue-widget.js";
 import {Record} from "./record.js";
+import {PatientDisplay} from "./patient-display.js";
+import {Nav} from "../../components/nav.js";
 
 let tmpl = `
 <div>
     <div class="mb-3 form-inline">
         <div class="h3">診療記録</div>
     </div>
+    <div class="x-patient-wrapper"></div>
     <div class="row">
         <div class="col-9 x-main-pane">
+            <div class="d-none nav"></div>
             <div class="x-records"></div>
+            <div class="d-none nav"></div>
         </div>
         <div class="col-3 x-side-pane">
             <div class="dropdown mb-3">
@@ -38,20 +43,24 @@ export class RecordPanel {
         this.props = {
             patient: null,
             page: 0,
+            totalPages: 0,
             visitsFulls: []
         };
         this.rest = rest;
         this.ele = createElementFrom(tmpl);
         const map = this.map = parseElement(this.ele);
+        this.navs = Array.from(this.getNavElements()).map(e => {
+            const nav = new Nav(e);
+            nav.setTriggerFun(page => this.gotoPage(page));
+            return nav;
+        });
         click(map.wqueue, async event => await this.doWqueue());
         click(map.search, async event => await this.doSearch());
         click(map.recent, async event => await this.doRecent());
         click(map.byDate, async event => await this.doByDate());
         on(this.ele, "patient-clicked", async event => {
             this.props.patient = event.detail;
-            this.props.page = 0;
-            await this.fetchVisits();
-            await this.updateRecordUI();
+            await this.gotoPage(0);
         });
     }
 
@@ -79,9 +88,37 @@ export class RecordPanel {
         workarea.append(e);
     }
 
+    async gotoPage(page){
+        this.props.page = page;
+        await this.fetchVisits();
+        this.updatePatientUI();
+        this.updateNavUI();
+        await this.updateRecordUI();
+    }
+
     async fetchVisits(){
         const recordPage = await this.rest.listVisit(this.props.patient.patientId, this.props.page);
         this.props.visitFulls = recordPage.visits;
+        this.props.page = recordPage.page;
+        this.props.totalPages = recordPage.totalPages;
+    }
+
+    updatePatientUI(){
+        const disp = new PatientDisplay(this.props.patient);
+        setOnlyChild(this.map.patientWrapper, disp.ele);
+    }
+
+    getNavElements(){
+        return this.ele.querySelectorAll(".nav");
+    }
+
+    updateNavUI(){
+        if( this.props.totalPages > 1 ){
+            this.navs.forEach(nav => nav.adaptToPage(this.props.page, this.props.totalPages));
+            this.getNavElements().forEach(e => show(e));
+        } else {
+            this.getNavElements().forEach(e => hide(e));
+        }
     }
 
     async updateRecordUI(){
@@ -91,6 +128,7 @@ export class RecordPanel {
             const record = new Record(visitFull);
             wrapper.append(record.ele);
         });
+        window.scrollTo(0, 0);
     }
 
 }

@@ -6,6 +6,7 @@ import {Record} from "./record.js";
 import {PatientDisplay} from "./patient-display.js";
 import {Nav} from "../../components/nav.js";
 import {SearchWidget} from "./search-widget.js";
+import {RecentWidget} from "./recent-widget.js";
 
 let tmpl = `
 <div>
@@ -56,7 +57,7 @@ export class RecordPanel {
             return nav;
         });
         click(map.wqueue, async event => await this.doWqueue());
-        click(map.search, async event => await this.doSearch());
+        click(map.search, event => this.doSearch());
         click(map.recent, async event => await this.doRecent());
         click(map.byDate, async event => await this.doByDate());
         on(this.ele, "patient-clicked", async event => {
@@ -71,14 +72,16 @@ export class RecordPanel {
         this.setWorkarea(w.ele);
     }
 
-    async doSearch(){
+    doSearch(){
         const w = new SearchWidget(this.rest);
         this.setWorkarea(w.ele);
         w.initFocus();
     }
 
     async doRecent(){
-
+        const w = new RecentWidget(this.rest);
+        await w.init();
+        this.setWorkarea(w.ele);
     }
 
     async doByDate(){

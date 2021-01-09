@@ -237,4 +237,8 @@ export class Rest extends HttpClient {
         return this.GET("/list-visit-full2", {"patient-id": patientId, page: page});
     }
 
+    async listRecentVisitWithPatient(page, itemsPerPage){
+        return this.GET("/list-recent-visit-with-patient", {page, "items-per-page": itemsPerPage});
+    }
+
 }

@@ -1,12 +1,10 @@
 import {parseElement} from "../../js/parse-node.js";
 
 let tmpl = `
-    <div class="border" style="vertical-align:middle; line-height:2em">
-        <a href="javascript:void(0)" class="x-first">最初</a>
-        <a href="javascript:void(0)" class="x-prev ml-1">前へ</a>
-        <a href="javascript:void(0)" class="x-next ml-1">次へ</a>
-        [<span class="x-page"></span>]
-    </div>
+    <a href="javascript:void(0)" class="x-first">最初</a>
+    <a href="javascript:void(0)" class="x-prev ml-1">前へ</a>
+    <a href="javascript:void(0)" class="x-next ml-1">次へ</a>
+    <span style="vertical-align:10%">[<span class="x-page"></span>]</span>
 `;
 
 export class NoEndNav {

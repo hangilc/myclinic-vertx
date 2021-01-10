@@ -8,16 +8,16 @@ import {toZenkaku} from "../../js/jp-util.js";
 import {ConductDisp} from "../../components/conduct-disp.js";
 
 const tmpl = `
-    <div>
+    <div class="mb-2">
         <div class="record-title mb-2 x-title"></div>
         <div class="row">
             <div class="col-6 x-texts"></div>
             <div class="col-6">
-                <div class="x-hoken"></div>
-                <div class="x-drugs"></div>
-                <div class="x-shinryou-list"></div>
-                <div class="x-conducts"></div>
-                <div class="x-charge"></div>
+                <div class="mb-2 x-hoken"></div>
+                <div class="mb-2 x-drugs"></div>
+                <div class="mb-2 x-shinryou-list"></div>
+                <div class="mb-2 x-conducts"></div>
+                <div class="mb-2 x-charge"></div>
             </div>
         </div>
     </div>

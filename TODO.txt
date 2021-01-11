@@ -1,5 +1,3 @@
-* 主治医意見書の印刷ができない (practice)
-* 診断書の改善 (practice)
 * set timeout for ScanTask (scan)
 * Delete file when error occurred in ScanTask (scan)
 * 処方箋印刷時に 0410対応でないことを確認する (practice)
@@ -7,6 +5,8 @@
 * Paper-scan 患者変更の polish (practice)
 * set label for regular shinryou input (practice)
 ### FIXED ######################################################
+* 診断書の改善 (practice) -- 2021-01-11
+* 主治医意見書の印刷ができない (practice) -- 2021-01-11
 * スキャンのアップロードが遅い件 (reception) -- 2020-12-13
 * 紹介状が機能しない (practice) -- 2020-12-03
 * Beep 解決していない。(practice, reception) -- 2020-12-03

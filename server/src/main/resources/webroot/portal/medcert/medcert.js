@@ -124,7 +124,7 @@ export class MedCert {
             patientName: this.inputValue("name"),
             birthDate: this.inputValue("birthDate"),
             diagnosis: this.inputValue("diagnosis"),
-            text: this.inputValue("text").value,
+            text: this.inputValue("text"),
             issueDate: this.inputValue("issueDate"),
             postalCode: clinicInfo.postalCode,
             address: clinicInfo.address,

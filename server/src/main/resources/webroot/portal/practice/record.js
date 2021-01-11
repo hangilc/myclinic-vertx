@@ -17,6 +17,7 @@ import {Conduct} from "./conduct/conduct.js";
 import {ConductMenu} from "./conduct/conduct-menu.js";
 import * as prop from "./app.js";
 import {FaxProgress} from "./fax-progress.js";
+import {is0410Shohousen} from "../../js/text-util.js";
 
 let tmpl = `
     <div class="practice-record temp-visit-listener" data-visit-id="0">
@@ -170,6 +171,11 @@ export class Record {
         if (!shohousenText) {
             alert("処方箋の入力を見つけられません。");
             return;
+        }
+        if( !is0410Shohousen(shohousenText.content) ){
+            if( !confirm("0410対応処方箋でありませんが、FAXしますか？") ){
+                return;
+            }
         }
         if (!(pharmaName && faxNumber)) {
             alert("送付先薬局が設定されていません。");

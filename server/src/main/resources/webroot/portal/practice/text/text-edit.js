@@ -1,6 +1,12 @@
 import {formatPresc} from "../../js/format-presc.js";
 import {createShohousenOps, createShohousenPdfForFax} from "../funs.js";
-import {shohousenTextContentDataToDisp, shohousenTextContentDispToData} from "../../../js/text-util.js";
+import {
+    extractMemo,
+    hasMemo, is0410Shohousen,
+    isShohousen,
+    shohousenTextContentDataToDisp,
+    shohousenTextContentDispToData
+} from "../../../js/text-util.js";
 import {ShohousenPreviewDialog} from "../shohousen-preview-dialog.js";
 import {createElementFrom} from "../../../js/create-element-from.js";
 import {parseElement} from "../../../js/parse-node.js";
@@ -117,6 +123,11 @@ export class TextEdit {
     }
 
     async doShohousen() {
+        if( is0410Shohousen(this.text.content) ){
+            if( !confirm("0410対応処方箋ですが印刷しますか？") ){
+                return;
+            }
+        }
         let ops = await createShohousenOps(this.text, {}, this.prop.rest);
         let dialog = new ShohousenPreviewDialog(ops);
         await dialog.setPrintAPI(this.prop.printAPI);
@@ -125,6 +136,11 @@ export class TextEdit {
     }
 
     async doShohousenFax() {
+        if( !is0410Shohousen(this.text.content) ){
+            if( !confirm("0410対応処方箋でありませんが、FAXしますか？") ){
+                return;
+            }
+        }
         if (confirm("この処方箋をPDFとして保存しますか？")) {
             await createShohousenPdfForFax(this.text, this.prop.rest);
             this.ele.dispatchEvent(new Event("cancel"));
@@ -150,28 +166,5 @@ export class TextEdit {
         await dialog.open();
     }
 
-}
-
-let lineTermPattern = /\r\n|\n|\r/;
-
-function extractMemo(content) {
-    let lines = content.split(lineTermPattern);
-    let memo = [];
-    for (let line of lines) {
-        if (line.startsWith("●") || line.startsWith("★")) {
-            memo.push(line);
-        } else {
-            break;
-        }
-    }
-    return memo.join("\n");
-}
-
-function hasMemo(content) {
-    return content && (content.startsWith("●") || content.startsWith("★"));
-}
-
-function isShohousen(content) {
-    return content.startsWith("院外処方");
 }
 

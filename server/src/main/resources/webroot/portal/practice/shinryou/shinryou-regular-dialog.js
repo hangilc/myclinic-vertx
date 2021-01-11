@@ -6,8 +6,8 @@ import {gensymId} from "../../../js/gensym-id.js";
 
 let bodyTmpl = `
     <div class="row">
-        <div class="col-sm-6 x-left"></div>
-        <div class="col-sm-6 x-right"></div>
+        <div class="col-sm-6 mb-2 x-left"></div>
+        <div class="col-sm-6 mb-2 x-right"></div>
         <div class="col-sm-12 form-inline justify-content-center x-bottom"></div>
     </div>
 `;
@@ -18,12 +18,14 @@ let footerTmpl = `
 `;
 
 let leftNames = [
-    "初診", "再診", "外来管理加算", "特定疾患管理", "尿便検査判断料", "血液検査判断料", "生化Ⅰ判断料",
+    "初診", "再診", "外来管理加算", "特定疾患管理", "",
+    "尿便検査判断料", "血液検査判断料", "生化Ⅰ判断料",
     "生化Ⅱ判断料", "免疫検査判断料", "微生物検査判断料", "静脈採血"
 ];
 
 let rightNames = [
-    "尿一般", "便潜血", "処方箋料", "特定疾患処方管理加算２（処方箋料）", "一般名処方加算２（処方箋料）",
+    "尿一般", "便潜血", "",
+    "処方箋料", "特定疾患処方管理加算２（処方箋料）", "一般名処方加算２（処方箋料）",
     "一般名処方加算１（処方箋料）", "処方料", "処方料７", "特定疾患処方"
 ];
 
@@ -82,6 +84,9 @@ let checkTmpl = `
 let checkIndex = 1;
 
 function createCheck(label, value){
+    if( !label ){
+        return createBlank();
+    }
     let id = `gensym-check-${checkIndex}`
     checkIndex += 1;
     if( !value ){
@@ -95,6 +100,14 @@ function createCheck(label, value){
     labelElement.htmlFor = id;
     labelElement.innerText = label;
     return e;
+}
+
+const blankTmpl = `
+    <div style="height:1.2em;"></div>
+`;
+
+function createBlank(){
+    return createElementFrom(blankTmpl);
 }
 
 // class ShinryouRegularDialogOrig extends Component {

@@ -74,7 +74,7 @@ export class ByDateWidget extends Widget {
     }
 
     updateDateUI(){
-        let str = `${kanjidate.sqldateToKanji(this.props.date)}`;
+        let str = `${kanjidate.sqldateToKanji(this.props.date, {"youbi": true})}`;
         if( this.props.date === this.today ){
             str += "（今日）";
         }

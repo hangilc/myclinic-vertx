@@ -25,9 +25,16 @@ public class ShujiiForm {
     }
 
     public List<Op> render(ShujiiData data){
-        leftBox(new Box(40, 59-15, 40+97, 59));
-        rightBox(new Box(210-56, 56.5-10, 210-13, 56));
-        detail(new Box(12.5, 150, 210-11, 380));
+
+        // old format
+//        leftBox(new Box(40, 59-15, 40+97, 59));
+//        rightBox(new Box(210-56, 56.5-10, 210-13, 56));
+//        detail(new Box(12.5, 150, 210-11, 380));
+
+        // new format (2021-02-15)
+        leftBox(new Box(45, 80, 110, 95));
+        rightBox(new Box(133, 85, 176, 95));
+        detail(new Box(22, 164, 195, 185));
         if( data != null ){
             writeSmall("doctorName", data.doctorName);
             writeSmall("clinicName", data.clinicName);

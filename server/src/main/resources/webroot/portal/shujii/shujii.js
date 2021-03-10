@@ -14,6 +14,13 @@ let html = `
         <h4 class="mt-3">作成</h4>
         <textarea class="form-control" id="shujii-detail-textarea" rows="8"></textarea>
         <div class="mt-2">
+            <div class="form-inline d-inline-block mr-2">
+                設定：
+                <select id="print-settings" class="form-control mr-2">
+                    <option value="--manual--">手動</option>
+                </select>
+                <a href="http://127.0.0.1:48080/" target="_blank" class="x-open-print-manager">管理画面表示</a>
+            </div>
             <button type="button" class="btn btn-success" id="shujii-print-button">印刷</button>
             （印刷時５行までが望ましい）
         </div>
@@ -88,7 +95,6 @@ let html = `
 `;
 
 export function getHtml(){
-    console.log("shujii template", html);
     return html;
 }
 
@@ -219,6 +225,16 @@ export async function initShujii(pane, rest, printAPI, reloadFunc) {
         setRecords(visitPage.visits, scrollToBottom);
     }
 
+    await (async function(){
+        let select = document.getElementById("print-settings");
+        for (let setting of await printAPI.listSetting()) {
+            let opt = document.createElement("option");
+            opt.innerText = setting;
+            select.appendChild(opt);
+        }
+        select.value = "shujii";
+    })();
+
     $("#shujii-select-patient-button").on("click", async event => {
         let dialog = patientSelectDialogFactory.create();
         let result = await dialog.open();
@@ -265,9 +281,10 @@ export async function initShujii(pane, rest, printAPI, reloadFunc) {
             detail: detail
         };
         let ops = await rest.compileShujiiDrawer(data);
-        //let setting = "shujii";
-        let setting = null;
-        //await rest.printDrawer([ops], setting);
+        let setting = document.getElementById("print-settings").value;
+        if( setting === "--manual--" ){
+            setting = null;
+        }
         printAPI.print([], [ops], setting);
     });
 

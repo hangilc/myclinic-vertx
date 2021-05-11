@@ -105,6 +105,10 @@ public class FormCompiler extends DrawerCompiler {
         return new MultiSpace(width);
     }
 
+    public MultiFiller mFiller(){
+        return new MultiFiller();
+    }
+
     public MultiBracket mBracket(String left, String mark, String description, List<Hint> hints, String right){
         return new MultiBracket(left, mark, description, hints, right);
     }

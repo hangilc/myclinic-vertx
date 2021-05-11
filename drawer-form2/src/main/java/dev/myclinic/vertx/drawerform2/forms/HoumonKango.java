@@ -584,7 +584,11 @@ public class HoumonKango {
         c.addMark("rehabilitation", "留意事項：リハビリテーション", b, List.of(Hints.xPadding(4), Hints.vCenter()));
         c.multi(rr[1], VAlign.Center, List.of(c.mLabel("２"), c.mLabel("．褥瘡の処置など")));
         c.multi(rr[2], VAlign.Center, List.of(c.mLabel("３"), c.mLabel("．装置・使用機器等の操作援助・管理")));
-        c.multi(rr[3], VAlign.Center, List.of(c.mLabel("４"), c.mLabel("．その他")));
+        c.multi(rr[3], VAlign.Center, List.of(
+                c.mLabel("４")
+                        .mark("", "")
+                        .addHints(Hints.circle(), Hints.radius(1.5)),
+                c.mLabel("．その他")));
     }
 
     private void renderRow6(Box row) {

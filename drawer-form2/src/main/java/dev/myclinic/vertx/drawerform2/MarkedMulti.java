@@ -33,4 +33,9 @@ public class MarkedMulti implements Multi {
         return this;
     }
 
+    public MarkedMulti addHints(List<Hint> hints){
+        this.hints.addAll(hints);
+        return this;
+    }
+
 }

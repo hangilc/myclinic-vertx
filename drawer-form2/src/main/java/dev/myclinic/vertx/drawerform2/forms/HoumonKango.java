@@ -1,15 +1,20 @@
 package dev.myclinic.vertx.drawerform2.forms;
 
+import dev.myclinic.vertx.drawer.Box;
+import dev.myclinic.vertx.drawer.DrawerCompiler;
+import dev.myclinic.vertx.drawer.DrawerConsts;
+import dev.myclinic.vertx.drawer.PaperSize;
+import dev.myclinic.vertx.drawer.form.Form;
+import dev.myclinic.vertx.drawer.form.Page;
 import dev.myclinic.vertx.drawerform2.FormCompiler;
+import dev.myclinic.vertx.drawerform2.Hint;
 import dev.myclinic.vertx.drawerform2.Hints;
-import dev.myclinic.vertx.drawer.*;
 
 import java.util.List;
 
 import static dev.myclinic.vertx.drawer.Box.HorizAnchor;
 import static dev.myclinic.vertx.drawer.Box.VertAnchor;
 import static dev.myclinic.vertx.drawer.DrawerCompiler.*;
-import dev.myclinic.vertx.drawer.form.*;
 
 public class HoumonKango {
 
@@ -575,20 +580,24 @@ public class HoumonKango {
                 c1.shift(2, 0).splitToEvenRows(4)[0].setWidth(c.getCurrentFontSize(), HorizAnchor.Left),
                 HAlign.Center, VAlign.Center);
         Box[] rr = c2.splitToEvenRows(4);
+        List<Hint> textHints = List.of(Hints.xPadding(4), Hints.vCenter());
         Box b;
         b = c.multi(rr[0], VAlign.Center, List.of(
                 c.mLabel("１").mark("rehabilitation.mark", "留意事項：リハビリテーション（マーク）")
                         .addHints(Hints.circle(), Hints.radius(1.5)),
                 c.mLabel("．リハビリテーション")));
         b = rr[0].setLeft(b.getRight());
-        c.addMark("rehabilitation", "留意事項：リハビリテーション", b, List.of(Hints.xPadding(4), Hints.vCenter()));
+        c.addMark("rehabilitation", "留意事項：リハビリテーション", b, textHints);
         c.multi(rr[1], VAlign.Center, List.of(c.mLabel("２"), c.mLabel("．褥瘡の処置など")));
         c.multi(rr[2], VAlign.Center, List.of(c.mLabel("３"), c.mLabel("．装置・使用機器等の操作援助・管理")));
         c.multi(rr[3], VAlign.Center, List.of(
                 c.mLabel("４")
-                        .mark("", "")
+                        .mark("sonota.mark", "留意事項：その他（マーク）")
                         .addHints(Hints.circle(), Hints.radius(1.5)),
-                c.mLabel("．その他")));
+                c.mLabel("．その他"),
+                c.mFiller()
+                        .mark("sonota", "留意事項：その他")
+                        .addHints(textHints)));
     }
 
     private void renderRow6(Box row) {

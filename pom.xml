@@ -126,6 +126,16 @@
                 <version>7.51.0</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.camel</groupId>
+                <artifactId>camel-core</artifactId>
+                <version>3.9.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.camel</groupId>
+                <artifactId>camel-stream</artifactId>
+                <version>3.9.0</version>
+            </dependency>
+            <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
                 <version>${junit.version}</version>
@@ -202,6 +212,7 @@
         <module>scanner</module>
         <module>drawer-site</module>
         <module>hanko-image</module>
+        <module>camelcomp</module>
     </modules>
 
 </project>

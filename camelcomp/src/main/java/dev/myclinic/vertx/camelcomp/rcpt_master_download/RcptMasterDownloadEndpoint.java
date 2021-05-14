@@ -1,5 +1,6 @@
 package dev.myclinic.vertx.camelcomp.rcpt_master_download;
 
+import org.apache.camel.Component;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
@@ -9,8 +10,8 @@ import org.apache.camel.support.DefaultEndpoint;
 @UriEndpoint(scheme = "rcpt-master-download", syntax = "rcpt-master-download", title = "RcptMasterDownload")
 public class RcptMasterDownloadEndpoint extends DefaultEndpoint {
 
-    public RcptMasterDownloadEndpoint() {
-
+    public RcptMasterDownloadEndpoint(String endpointUri, Component component) {
+        super(endpointUri, component);
     }
 
     @Override

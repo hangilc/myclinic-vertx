@@ -11,14 +11,14 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         CamelContext camelContext = new DefaultCamelContext();
-        RcptMasterDownloadComponent comp = new RcptMasterDownloadComponent();
-        RcptMasterDownloadEndpoint endpoint = new RcptMasterDownloadEndpoint();
-        endpoint.setEndpointUriIfNotSpecified("rcpt-master-download");
-        camelContext.addEndpoint("rcpt-master-download", endpoint);
+//        RcptMasterDownloadComponent comp = new RcptMasterDownloadComponent();
+//        RcptMasterDownloadEndpoint endpoint = new RcptMasterDownloadEndpoint();
+//        endpoint.setEndpointUriIfNotSpecified("rcpt-master-download");
+//        camelContext.addEndpoint("rcpt-master-download", endpoint);
         camelContext.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
-                from("rcpt-master-download")
+                from("rcpt-master-download:all")
                         .to("stream:out");
 
             }

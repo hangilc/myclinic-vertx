@@ -1,21 +1,25 @@
 package dev.myclinic.vertx.master.csv;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-class MasterHandler {
+public class MasterHandler {
 
-    private Statement stmt;
+//    private Statement stmt;
+//
+//    MasterHandler(Statement stmt) {
+//        this.stmt = stmt;
+//    }
 
-    MasterHandler(Statement stmt) {
-        this.stmt = stmt;
-    }
-
-    boolean enterShinryouMaster(ShinryouMasterCSV shinryouCSV, String validFrom) throws SQLException {
+    public static boolean enterShinryouMaster(Connection conn, ShinryouMasterCSV shinryouCSV, String validFrom)
+            throws SQLException {
         int kubun = shinryouCSV.kubun;
         if (kubun == 0 || kubun == 3 || kubun == 5) {
             String sql = shinryouSql(shinryouCSV, validFrom);
+            Statement stmt = conn.createStatement();
             stmt.executeUpdate(sql);
+            stmt.close();
             return true;
         } else {
             return false;
@@ -23,55 +27,55 @@ class MasterHandler {
 
     }
 
-    boolean enterIyakuhinMaster(IyakuhinMasterCSV iyakuhinCSV, String validFrom) throws SQLException {
-        int kubun = iyakuhinCSV.kubun;
-        if (kubun == 0 || kubun == 3 || kubun == 5) {
-            String sql = iyakuhinSql(iyakuhinCSV, validFrom);
-            stmt.executeUpdate(sql);
-            return true;
-        } else {
-            return false;
-        }
+//    public boolean enterIyakuhinMaster(IyakuhinMasterCSV iyakuhinCSV, String validFrom) throws SQLException {
+//        int kubun = iyakuhinCSV.kubun;
+//        if (kubun == 0 || kubun == 3 || kubun == 5) {
+//            String sql = iyakuhinSql(iyakuhinCSV, validFrom);
+//            stmt.executeUpdate(sql);
+//            return true;
+//        } else {
+//            return false;
+//        }
+//
+//    }
+//
+//    public boolean enterKizaiMaster(KizaiMasterCSV kizaiCSV, String validFrom) throws SQLException {
+//        int kubun = kizaiCSV.kubun;
+//        if (kubun == 0 || kubun == 3 || kubun == 5) {
+//            String sql = kizaiSql(kizaiCSV, validFrom);
+//            stmt.executeUpdate(sql);
+//            return true;
+//        } else {
+//            return false;
+//        }
+//
+//    }
+//
+//    public boolean enterShoubyoumeiMaster(ShoubyoumeiMasterCSV shoubyoumeiCSV, String validFrom) throws SQLException {
+//        int kubun = shoubyoumeiCSV.kubun;
+//        if (kubun == 0 || kubun == 3 || kubun == 5) {
+//            String sql = shoubyoumeiSql(shoubyoumeiCSV, validFrom);
+//            stmt.executeUpdate(sql);
+//            return true;
+//        } else {
+//            return false;
+//        }
+//
+//    }
+//
+//    public boolean enterShuushokugoMaster(ShuushokugoMasterCSV shuushokugoCSV, String validFrom) throws SQLException {
+//        int kubun = shuushokugoCSV.kubun;
+//        if (kubun == 0 || kubun == 3 || kubun == 5) {
+//            String sql = shuushokugoSql(shuushokugoCSV, validFrom);
+//            stmt.executeUpdate(sql);
+//            return true;
+//        } else {
+//            return false;
+//        }
+//
+//    }
 
-    }
-
-    boolean enterKizaiMaster(KizaiMasterCSV kizaiCSV, String validFrom) throws SQLException {
-        int kubun = kizaiCSV.kubun;
-        if (kubun == 0 || kubun == 3 || kubun == 5) {
-            String sql = kizaiSql(kizaiCSV, validFrom);
-            stmt.executeUpdate(sql);
-            return true;
-        } else {
-            return false;
-        }
-
-    }
-
-    boolean enterShoubyoumeiMaster(ShoubyoumeiMasterCSV shoubyoumeiCSV, String validFrom) throws SQLException {
-        int kubun = shoubyoumeiCSV.kubun;
-        if (kubun == 0 || kubun == 3 || kubun == 5) {
-            String sql = shoubyoumeiSql(shoubyoumeiCSV, validFrom);
-            stmt.executeUpdate(sql);
-            return true;
-        } else {
-            return false;
-        }
-
-    }
-
-    boolean enterShuushokugoMaster(ShuushokugoMasterCSV shuushokugoCSV, String validFrom) throws SQLException {
-        int kubun = shuushokugoCSV.kubun;
-        if (kubun == 0 || kubun == 3 || kubun == 5) {
-            String sql = shuushokugoSql(shuushokugoCSV, validFrom);
-            stmt.executeUpdate(sql);
-            return true;
-        } else {
-            return false;
-        }
-
-    }
-
-    private static String shinryouTemplate;
+    private final static String shinryouTemplate;
 
     static {
         shinryouTemplate = String.join(" ",
@@ -104,7 +108,7 @@ class MasterHandler {
         );
     }
 
-    private static String iyakuhinTemplate;
+    private static final String iyakuhinTemplate;
 
     static {
         iyakuhinTemplate = String.join(" ",
@@ -137,7 +141,7 @@ class MasterHandler {
                 "0000-00-00");
     }
 
-    private static String kizaiTemplate;
+    private static final String kizaiTemplate;
 
     static {
         kizaiTemplate = String.join(" ",
@@ -164,7 +168,7 @@ class MasterHandler {
         );
     }
 
-    private static String shoubyoumeiTemplate;
+    private static final String shoubyoumeiTemplate;
 
     static {
         shoubyoumeiTemplate = String.join(" ",
@@ -185,7 +189,7 @@ class MasterHandler {
         );
     }
 
-    private static String shuushokugoTemplate;
+    private static final String shuushokugoTemplate;
 
     static {
         shuushokugoTemplate = String.join(" ",

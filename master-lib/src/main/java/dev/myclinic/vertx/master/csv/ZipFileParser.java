@@ -1,6 +1,7 @@
 package dev.myclinic.vertx.master.csv;
 
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 import java.io.File;
@@ -27,6 +28,14 @@ public class ZipFileParser {
             ShinryouMasterCSV csv = new ShinryouMasterCSV(new CommonsCSVRow(rec));
             consumer.accept(csv);
         });
+    }
+
+    public static void iterShinryouFile(String fileContent, Consumer<ShinryouMasterCSV> consumer) throws IOException {
+        CSVParser parser = CSVParser.parse(fileContent, CSVFormat.RFC4180);
+        for(CSVRecord rec: parser){
+            ShinryouMasterCSV csv = new ShinryouMasterCSV(new CommonsCSVRow(rec));
+            consumer.accept(csv);
+        }
     }
 
     static void parse(File zipFile, Pattern fileNamePattern, Consumer<CSVRecord> consumer) throws IOException {

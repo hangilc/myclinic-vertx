@@ -2,12 +2,17 @@ package dev.myclinic.vertx.camelcomp;
 
 import dev.myclinic.vertx.camelcomp.file.FileName;
 import dev.myclinic.vertx.camelcomp.rcpt.RcptMasterDownloadProcessor;
+import dev.myclinic.vertx.camelcomp.rcpt.ShinryouMasterContentProcessor;
+import dev.myclinic.vertx.master.csv.MasterHandler;
+import dev.myclinic.vertx.master.csv.ShinryouMasterCSV;
+import dev.myclinic.vertx.master.db.DB;
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.util.concurrent.CompletableFuture;
 
 public class Main {
@@ -53,7 +58,36 @@ public class Main {
                         .to("direct:start-rcpt-master-download")
                         .withBody("all")
                         .send();
-                control.whenComplete((v, e) -> context.stop());
+                control.join();
+                context.stop();
+                break;
+            }
+            case "2021-04-kansenshou-kasan": {
+                CamelContext context = new DefaultCamelContext();
+                CompletableFuture<Void> control = new CompletableFuture<>();
+                Connection conn = DB.openConnection();
+                context.addRoutes(new RouteBuilder(){
+                    @Override
+                    public void configure() throws Exception {
+                        from("file:./work/masters?noop=true&fileName=s.zip")
+                                .unmarshal().zipFile()
+                                .convertBodyTo(String.class, "MS932")
+                                .process(new ShinryouMasterContentProcessor())
+                                .split(body())
+                                    .process(ex -> {
+                                        ShinryouMasterCSV rec = ex.getIn().getBody(ShinryouMasterCSV.class);
+                                        if( rec.name.contains("感染症対策実施加算") ){
+                                            MasterHandler.enterShinryouMaster(conn, rec, "2021-04-01");
+                                        }
+                                    })
+                                .end()
+                                .process(ex -> control.complete(null));
+                    }
+                });
+                context.start();
+                control.join();
+                conn.close();
+                context.stop();
                 break;
             }
             default: {

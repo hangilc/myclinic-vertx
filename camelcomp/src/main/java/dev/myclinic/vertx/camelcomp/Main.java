@@ -2,7 +2,6 @@ package dev.myclinic.vertx.camelcomp;
 
 import dev.myclinic.vertx.camelcomp.file.FileName;
 import dev.myclinic.vertx.camelcomp.rcpt.RcptMasterDownloadProcessor;
-import dev.myclinic.vertx.camelcomp.rcpt.RcptMasterDownloader;
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
@@ -14,7 +13,6 @@ import java.util.concurrent.CompletableFuture;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-<<<<<<< HEAD
         CmdOpts cmdOpts = CmdOpts.parse(args);
         switch(cmdOpts.command){
             case "download-masters": {
@@ -61,19 +59,6 @@ public class Main {
             default: {
                 System.err.printf("Unknown command: %s\n", args[0]);
                 System.exit(1);
-=======
-        CamelContext camelContext = new DefaultCamelContext();
-//        RcptMasterDownloadComponent comp = new RcptMasterDownloadComponent();
-//        RcptMasterDownloadEndpoint endpoint = new RcptMasterDownloadEndpoint();
-//        endpoint.setEndpointUriIfNotSpecified("rcpt-master-download");
-//        camelContext.addEndpoint("rcpt-master-download", endpoint);
-        camelContext.addRoutes(new RouteBuilder() {
-            @Override
-            public void configure() {
-                from("rcpt-master-download:all")
-                        .to("stream:out");
-
->>>>>>> origin/camel
             }
         }
     }

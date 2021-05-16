@@ -18,7 +18,9 @@ let footerTmpl = `
 `;
 
 let leftNames = [
-    "初診", "再診", "外来管理加算", "特定疾患管理", "",
+    "初診", "再診", "外来管理加算",
+    "感染症対策加算（初診）", "感染症対策加算（再診）",
+    "特定疾患管理", "",
     "尿便検査判断料", "血液検査判断料", "生化Ⅰ判断料",
     "生化Ⅱ判断料", "免疫検査判断料", "微生物検査判断料", "静脈採血"
 ];
@@ -109,46 +111,3 @@ const blankTmpl = `
 function createBlank(){
     return createElementFrom(blankTmpl);
 }
-
-// class ShinryouRegularDialogOrig extends Component {
-//     constructor(ele, map, rest) {
-//         super(ele, map, rest);
-//         this.checksElement = map.checks;
-//         this.enterElement = map.enter;
-//         this.cancelElement = map.cancel;
-//         this.result = {
-//             mode: "cancel",
-//             shinryouIds: null
-//         };
-//         this.resolver = result => { console.log("dummy resolver", result)};
-//     }
-//
-//     init(visitId) {
-//         this.enterElement.on("click", async event => {
-//             let values = [];
-//             this.checksElement.find("input[type=checkbox]:checked")
-//                 .toArray()
-//                 .forEach(e => {
-//                     values.push($(e).val());
-//                 });
-//             let batchEnterResult = await this.rest.batchEnterShinryouByNames(values, visitId);
-//             this.result.mode = "entered";
-//             this.result.shinryouIds = batchEnterResult.shinryouIds;
-//             this.result.drugIds = batchEnterResult.drugIds;
-//             this.result.conductIds = batchEnterResult.conductIds;
-//             this.ele.modal("hide");
-//         });
-//         this.cancelElement.on("click", event => this.ele.modal("hide"));
-//         this.ele.on("hidden.bs.modal", event => {
-//             this.resolver(this.result);
-//         });
-//     }
-//
-//     async open() {
-//         this.checksElement.find("input[type=checkbox]:checked").prop("checked", false);
-//         return new Promise(resolve => {
-//             this.resolver = resolve;
-//             this.ele.modal("show");
-//         });
-//     }
-// }

@@ -31,6 +31,8 @@ public class Main {
                         System.err.printf("%s already exists.\n", dstDir);
                         System.exit(1);
                     }
+
+
                 }
                 Files.createDirectories(dstDir);
                 CamelContext context = new DefaultCamelContext();

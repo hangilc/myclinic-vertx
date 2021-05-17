@@ -78,6 +78,8 @@ export class DateInputBase {
     }
 
     doNenClick(event){
+        event.preventDefault = true;
+        event.stopPropagation = true;
         let n = 1;
         if( event.shiftKey ){
             n = -n;
@@ -86,6 +88,8 @@ export class DateInputBase {
     }
 
     doMonthClick(event){
+        event.preventDefault = true;
+        event.stopPropagation = true;
         let n = 1;
         if( event.shiftKey ){
             n = -n;
@@ -94,6 +98,8 @@ export class DateInputBase {
     }
 
     doDayClick(event){
+        event.preventDefault = true;
+        event.stopPropagation = true;
         let n = 1;
         if( event.ctrlKey ){
             n = 7;

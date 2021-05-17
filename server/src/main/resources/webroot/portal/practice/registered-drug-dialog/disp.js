@@ -46,7 +46,11 @@ function normalizeName(name){
 function naifukuLines(drug, master, index){
     index = toZenkaku("" + index) + "）";
     let name = normalizeName(master.name);
-    let pad = "　".repeat(21 - index.length - name.length);
+    let padAmount = 21 - index.length - name.length;
+    if( padAmount < 1 ){
+        padAmount = 1;
+    }
+    let pad = "　".repeat(padAmount);
     let amount = toZenkaku("" + drug.amount) + master.unit;
     let line1 = `${index}${name}${pad}${amount}`;
     let line2 = "　".repeat(index.length) + drug.usage + "　" +

@@ -8,11 +8,12 @@ const tmpl = `
         <select class="x-gengou mr-1 form-control form-control-sm" style="font-size:12px">
         </select>
         <input type="text" class="x-nen form-control form-control-sm mr-1" style="width:38px; "/> 
-            <span class="x-nen-label mr-1">年</span>
+            <span class="x-nen-label mr-1" style="user-select:none">年</span>
         <input type="text" class="x-month form-control form-control-sm mr-1"  style="width:38px; "/> 
-            <span class="x-month-label mr-1">月</span>
-        <input type="text" class="x-day form-control form-control-sm mr-1"  style="width:38px; "/> 
-            <span class="x-day-label">日</span>
+            <span class="x-month-label mr-1" style="user-select:none">月</span>
+        <input type="text" class="x-day form-control form-control-sm mr-1"  
+            style="width:38px; "/> 
+            <span class="x-day-label" style="user-select:none">日</span>
     </div>
 `;
 

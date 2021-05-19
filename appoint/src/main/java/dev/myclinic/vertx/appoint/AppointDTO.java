@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.Map;
 
 public class AppointDTO {
@@ -24,6 +25,15 @@ public class AppointDTO {
         } else {
             return mapper.writeValueAsString(attrs);
         }
+    }
+
+    public Map<String, Object> toJsonObject(){
+        Map<String, Object> map = new HashMap<>();
+        map.put("appontDate", appointDate.toString());
+        map.put("appointTime", Misc.toSqlTime(appointTime));
+        map.put("patientName", patientName);
+        map.put("attrs", attrs);
+        return map;
     }
 
 }

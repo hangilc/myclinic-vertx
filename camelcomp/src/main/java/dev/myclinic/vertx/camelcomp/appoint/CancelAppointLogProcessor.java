@@ -10,17 +10,11 @@ import java.sql.Connection;
 
 public class CancelAppointLogProcessor implements Processor {
 
-    private final Connection conn;
-    private final ObjectMapper mapper;
-
-    public CancelAppointLogProcessor(Connection conn, ObjectMapper mapper) {
-        this.conn = conn;
-        this.mapper = mapper;
-    }
-
     @Override
     public void process(Exchange exchange) throws Exception {
         AppointDTO created = exchange.getIn().getBody(AppointDTO.class);
+        Connection conn = exchange.getProperty("dbConnection", Connection.class);
+        ObjectMapper mapper = exchange.getProperty("objectMapper", ObjectMapper.class);
         AppointPersist.logAppointCanceled(conn, mapper, created);
     }
 }

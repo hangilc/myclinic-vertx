@@ -2,6 +2,7 @@ package dev.myclinic.vertx.camelcli;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.appoint.AppointDTO;
+import dev.myclinic.vertx.camelcomp.appoint.CancelAppointLogProcessor;
 import dev.myclinic.vertx.camelcomp.appoint.CancelAppointProcessor;
 import dev.myclinic.vertx.camelcomp.appoint.EnterAppointLogProcessor;
 import dev.myclinic.vertx.camelcomp.appoint.EnterAppointProcessor;
@@ -24,10 +25,10 @@ public class Appoint {
         DataSource ds = MysqlDataSourceFactory.create(new MysqlDataSourceConfig());
         ObjectMapper mapper = new ObjectMapper();
         enter(ds, mapper);
-        //cancel(ds);
+        cancel(ds, mapper);
     }
 
-    private static void cancel(DataSource ds) throws Exception {
+    private static void cancel(DataSource ds, ObjectMapper mapper) throws Exception {
         Connection conn = ds.getConnection();
         conn.setAutoCommit(false);
         CamelContext context = new DefaultCamelContext();
@@ -37,6 +38,7 @@ public class Appoint {
             public void configure() throws Exception {
                 from("direct:start-cancel-appoint")
                         .process(new CancelAppointProcessor(conn))
+                        .process(new CancelAppointLogProcessor(conn, mapper))
                         .process(ex -> {
                             conn.commit();
                             conn.close();

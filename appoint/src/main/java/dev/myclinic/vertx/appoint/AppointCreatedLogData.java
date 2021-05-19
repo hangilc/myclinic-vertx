@@ -1,8 +1,5 @@
 package dev.myclinic.vertx.appoint;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,10 +12,10 @@ public class AppointCreatedLogData {
         this.created = created;
     }
 
-    public String toJson(ObjectMapper mapper) throws JsonProcessingException {
+    public Map<String, Object> toJsonObject() {
         Map<String, Object> map = new HashMap<>();
         map.put("kind", kind);
         map.put("created", created.toJsonObject());
-        return mapper.writeValueAsString(map);
+        return map;
     }
 }

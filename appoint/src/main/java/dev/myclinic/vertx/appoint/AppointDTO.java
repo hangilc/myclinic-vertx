@@ -29,7 +29,7 @@ public class AppointDTO {
 
     public Map<String, Object> toJsonObject(){
         Map<String, Object> map = new HashMap<>();
-        map.put("appontDate", appointDate.toString());
+        map.put("appointDate", appointDate.toString());
         map.put("appointTime", Misc.toSqlTime(appointTime));
         map.put("patientName", patientName);
         map.put("attrs", attrs);

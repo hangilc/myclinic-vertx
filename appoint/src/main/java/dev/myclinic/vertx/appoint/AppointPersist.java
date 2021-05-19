@@ -37,7 +37,19 @@ public class AppointPersist {
         try(PreparedStatement stmt = conn.prepareStatement(sql)){
             stmt.setInt(1, 0);
             stmt.setObject(2, Misc.toSqlDatetime(log.createdAt));
-            stmt.setString(3, log.logData);
+            stmt.setString(3, mapper.writeValueAsString(log.logData));
+            stmt.executeUpdate();
+        }
+    }
+
+    public static void logAppointCanceled(Connection conn, ObjectMapper mapper, AppointDTO canceled)
+            throws SQLException, JsonProcessingException {
+        AppointLogDTO log = AppointLogDTO.canceled(mapper, canceled);
+        String sql = "insert into appoint_log values(?, ?, ?)";
+        try(PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setInt(1, 0);
+            stmt.setObject(2, Misc.toSqlDatetime(log.createdAt));
+            stmt.setString(3, mapper.writeValueAsString(log.logData));
             stmt.executeUpdate();
         }
     }

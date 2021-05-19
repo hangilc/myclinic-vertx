@@ -1,4 +1,4 @@
-package dev.myclinic.vertx.camelcomp;
+package dev.myclinic.vertx.camelcli;
 
 class CmdOpts {
 

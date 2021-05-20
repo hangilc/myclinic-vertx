@@ -50,7 +50,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private final HoukatsuKensa houkatsuKensa;
     private final Vertx vertx;
 
-    private static class CallResult {
+    static class CallResult {
         public List<HotlineLogDTO> hotlineLogs;
         public List<PracticeLogDTO> practiceLogs;
 
@@ -62,6 +62,11 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         public CallResult() {
             this.hotlineLogs = new ArrayList<>();
             this.practiceLogs = new ArrayList<>();
+        }
+
+        public CallResult(List<HotlineLogDTO> hotlineLogs, List<PracticeLogDTO> practiceLogs) {
+            this.hotlineLogs = hotlineLogs;
+            this.practiceLogs = practiceLogs;
         }
     }
 
@@ -2440,6 +2445,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("resolve-shinryou-master-by-name", this::resolveShinryouMasterByName);
         funcMap.put("enter-xp", this::enterXp);
         funcMap.put("list-0410-no-pay", this::list0410NoPay);
+        AppointRestHandler.register(funcMap, mapper);
     }
 
     private CallResult updateVisitAttr(RoutingContext ctx, Connection conn) throws Exception {

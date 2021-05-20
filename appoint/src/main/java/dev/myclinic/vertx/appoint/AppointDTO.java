@@ -13,17 +13,17 @@ public class AppointDTO {
     public LocalDate appointDate;
     public LocalTime appointTime;
     public String patientName;
-    public Map<String, Object> attrs;
+    public Map<String, Object> attributes;
 
     public AppointDTO() {
 
     }
 
     public String getAttrsAsJson(ObjectMapper mapper) throws JsonProcessingException {
-        if( attrs == null ){
+        if( attributes == null ){
             return null;
         } else {
-            return mapper.writeValueAsString(attrs);
+            return mapper.writeValueAsString(attributes);
         }
     }
 
@@ -32,7 +32,7 @@ public class AppointDTO {
         map.put("appointDate", appointDate.toString());
         map.put("appointTime", Misc.toSqlTime(appointTime));
         map.put("patientName", patientName);
-        map.put("attrs", attrs);
+        map.put("attributes", attributes);
         return map;
     }
 

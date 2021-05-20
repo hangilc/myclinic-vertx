@@ -1,0 +1,45 @@
+
+.appoint-date {
+    padding: 0.5em;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 0.3em;
+    width: 7em;
+    margin-bottom: 1em;
+    font-weight: bold;
+}
+
+.appoint-entry {
+    width: 7em;
+    height: 3em;
+    border-radius: 0.3em;
+    margin-bottom: 0.5em;
+    line-height: 1.2em;
+    padding: 0.3em;
+    text-align: center;
+    overflow: hidden;
+}
+
+.appoint-entry .time-part {
+    font-weight: bold;
+}
+
+.appoint-empty {
+    background-color: #ddd;
+}
+
+.appoint-spare {
+    background-color: khaki;
+}
+
+.appoint-occupied {
+    background-color: #f5c6cb;
+}
+
+.appoint-kenshin {
+    background-color: hotpink;
+}
+
+.appoint-space {
+    height: 2em;
+}

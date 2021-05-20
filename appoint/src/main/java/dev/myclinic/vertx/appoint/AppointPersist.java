@@ -1,6 +1,7 @@
 package dev.myclinic.vertx.appoint;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.sql.Connection;
@@ -9,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AppointPersist {
@@ -58,34 +60,54 @@ public class AppointPersist {
         }
     }
 
-    public static AppointDTO resultSetToAppointDTO(ResultSet rs) throws SQLException {
+    public static AppointDTO resultSetToAppointDTO(ResultSet rs, ObjectMapper mapper)
+            throws SQLException, JsonProcessingException {
         int startIndex = 1;
         AppointDTO dto = new AppointDTO();
-        dto.appointDate = rs.getObject(startIndex + 0, LocalDate.class);
+        dto.appointDate = rs.getObject(startIndex, LocalDate.class);
         dto.appointTime = rs.getObject(startIndex + 1, LocalTime.class);
         dto.patientName = rs.getString(startIndex + 2);
-        dto.attributes = rs.getObject(startIndex + 3, );
+        String attr = rs.getString(startIndex + 3);
+        dto.attributes = attr == null ? null : mapper.readValue(attr, new TypeReference<>(){});
+        return dto;
     }
 
     public static AppointDTO getAppoint(Connection conn, ObjectMapper mapper, LocalDate atDate, LocalTime atTime)
-            throws SQLException {
+            throws SQLException, JsonProcessingException {
         String sql = "select * from appoint where appoint_date = ? and appoint_time = ?";
         try(PreparedStatement stmt = conn.prepareStatement(sql)){
+            AppointDTO appoint = null;
             stmt.setString(1, atDate.toString());
             stmt.setString(2, Misc.toSqlTime(atTime));
-            ResultSet rs = stmt.executeQuery();
-            while(rs.next()){
-                AppointDTO dto = new AppointDTO();
-                rs.getObject(1, LocalDate.class);
-
+            try(ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    appoint = resultSetToAppointDTO(rs, mapper);
+                    if (rs.next()) {
+                        String msg = String.format("Multiple result. getAppoint. %s %s",
+                                atDate.toString(), Misc.toSqlTime(atTime));
+                        throw new RuntimeException(msg);
+                    }
+                }
+                return appoint;
             }
         }
-
     }
 
     public static List<AppointDTO> listAppoint(Connection conn, ObjectMapper mapper, LocalDate from, LocalDate upto)
             throws SQLException, JsonProcessingException{
-
+        String sql = "select * from appoint where appoint_date >= ? and appoint_date <= ?";
+        try(PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setString(1, from.toString());
+            stmt.setString(2, upto.toString());
+            List<AppointDTO> result = new ArrayList<>();
+            try(ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    AppointDTO appoint = resultSetToAppointDTO(rs, mapper);
+                    result.add(appoint);
+                }
+                return result;
+            }
+        }
     }
 
 }

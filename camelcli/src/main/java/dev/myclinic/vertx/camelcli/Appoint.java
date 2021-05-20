@@ -2,6 +2,7 @@ package dev.myclinic.vertx.camelcli;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.appoint.AppointDTO;
+import dev.myclinic.vertx.appoint.AppointPersist;
 import dev.myclinic.vertx.camelcomp.appoint.CancelAppointLogProcessor;
 import dev.myclinic.vertx.camelcomp.appoint.CancelAppointProcessor;
 import dev.myclinic.vertx.camelcomp.appoint.EnterAppointLogProcessor;
@@ -18,14 +19,21 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 public class Appoint {
 
     public static void main(String[] args) throws Exception {
         DataSource ds = MysqlDataSourceFactory.create(new MysqlDataSourceConfig());
         ObjectMapper mapper = new ObjectMapper();
+        {
+            Connection conn = ds.getConnection();
+            List<AppointDTO> appoints = AppointPersist.listAppoint(conn, mapper, LocalDate.of(2021, 5, 1),
+                    LocalDate.of(2021, 6, 30));
+            conn.close();
+        }
         //enter(ds, mapper);
-        cancel(ds, mapper);
+        //cancel(ds, mapper);
     }
 
     private static void cancel(DataSource ds, ObjectMapper mapper) throws Exception {

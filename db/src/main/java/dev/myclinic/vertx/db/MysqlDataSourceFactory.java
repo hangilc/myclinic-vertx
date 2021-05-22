@@ -25,10 +25,13 @@ public class MysqlDataSourceFactory {
         //config.setAutoCommit(false);
         HikariDataSource ds = new HikariDataSource(config);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("closing data souce");
             ds.close();
         }));
         return ds;
+    }
+
+    public static DataSource create(){
+        return create(new MysqlDataSourceConfig());
     }
 
 }

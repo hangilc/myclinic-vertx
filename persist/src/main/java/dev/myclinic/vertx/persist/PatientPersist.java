@@ -1,31 +1,30 @@
 package dev.myclinic.vertx.persist;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.myclinic.vertx.appoint.AppointDTO;
+import dev.myclinic.vertx.dto.PatientDTO;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.LocalTime;
 
 public class PatientPersist {
 
-    public static PatientDTO resultSetToPatientDTO(){
-        public static AppointDTO resultSetToAppointDTO(ResultSet rs, ObjectMapper mapper)
-            throws SQLException, JsonProcessingException {
-            int startIndex = 1;
-            AppointDTO dto = new AppointDTO();
-            dto.appointDate = rs.getObject(startIndex, LocalDate.class);
-            dto.appointTime = rs.getObject(startIndex + 1, LocalTime.class);
-            dto.patientName = rs.getString(startIndex + 2);
-            String attr = rs.getString(startIndex + 3);
-            dto.attributes = attr == null ? null : mapper.readValue(attr, new TypeReference<>(){});
-            return dto;
-        }
+    public static PatientDTO resultSetToPatientDTO(ResultSet rs, int startIndex)
+            throws SQLException {
+        PatientDTO dto = new PatientDTO();
+        dto.patientId = rs.getInt(startIndex);
+        dto.lastName = rs.getString(startIndex + 1);
+        dto.firstName = rs.getString(startIndex + 2);
+        dto.lastNameYomi = rs.getString(startIndex + 3);
+        dto.firstNameYomi = rs.getString(startIndex + 4);
+        dto.sex = rs.getString(startIndex + 5);
+        dto.birthday = rs.getString(startIndex + 6);
+        dto.address = rs.getString(startIndex + 7);
+        dto.phone = rs.getString(startIndex + 8);
+        return dto;
+    }
 
-
+    public static PatientDTO resultSetToPatientDTO(ResultSet rs)
+            throws SQLException {
+        return resultSetToPatientDTO(rs, 1);
     }
 
 }

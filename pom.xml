@@ -239,6 +239,7 @@
         <module>camelcli</module>
         <module>appoint</module>
         <module>cli</module>
+        <module>persist</module>
     </modules>
 
 </project>

@@ -8,6 +8,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -32,7 +33,7 @@ class Misc {
 
     public static List<String> readLines(String file){
         try(InputStream ins = new FileInputStream(file) ){
-            BufferedReader reader = new BufferedReader(new InputStreamReader(ins));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(ins, StandardCharsets.UTF_8));
             List<String> lines = new ArrayList<>();
             String line;
             while( (line = reader.readLine()) != null ){

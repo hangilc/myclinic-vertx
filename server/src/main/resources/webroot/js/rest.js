@@ -245,8 +245,21 @@ export class Rest extends HttpClient {
         return this.GET("/list-visit-patient-at", {at: at});
     }
 
-    async twilioWebphoneToken(){
+    async twilioWebphoneToken() {
         return this.GET("/twilio-webphone-token", {});
+    }
+
+    async enterAppoint(date, time, name){
+        let appoint = {date, time, name};
+        return this.POST("/enter-appoint", "", appoint);
+    }
+
+    async listAppointInRange(from, upto){
+        return this.GET("/list-appoint-in-range", {from, upto});
+    }
+
+    async getAppoint(date, time){
+        return this.GET("/get-appoint", {date, time});
     }
 
 }

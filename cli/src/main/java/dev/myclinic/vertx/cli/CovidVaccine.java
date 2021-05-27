@@ -1,8 +1,7 @@
 package dev.myclinic.vertx.cli;
 
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -13,9 +12,10 @@ public class CovidVaccine {
 
     public static void main(String[] args) throws Exception {
         List<RegularPatient> rps = readRegularPatients();
-        List<RegularPatient> patients = rps.stream()
-                .filter(rp -> !rp.excluded && rp.age >= 65).collect(toList());
-        List<RegularPatient> over65Candidates = listOver65Candidates(patients);
+        List<RegularPatient> candidates = rps.stream()
+                .filter(rp -> !rp.isExcluded()).collect(toList());
+        List<RegularPatient> over65Candidates = candidates.stream()
+                .filter(rp -> rp.age >= 65).collect(toList());
         saveOver65Candidates(over65Candidates);
         saveOver65CandidatePatientIds(over65Candidates);
     }
@@ -25,17 +25,35 @@ public class CovidVaccine {
         String name;
         int age;
         String phone;
-        boolean excluded;
+        String attr;
+
+        public boolean isExcluded(){
+            return attr.startsWith("x") || attr.startsWith("X");
+        }
 
         @Override
         public String toString() {
-            return "RegularPatient{" +
-                    "patientId=" + patientId +
-                    ", name='" + name + '\'' +
-                    ", age=" + age +
-                    ", phone='" + phone + '\'' +
-                    ", excluded=" + excluded +
-                    '}';
+            return String.format("%s %d %s %d才 %s", attr, patientId, name, age, phone);
+        }
+    }
+
+    private static RegularPatient parseRegularPatient(String line){
+        if( line == null || line.isEmpty() ){
+            return null;
+        } else {
+            RegularPatient rp = new RegularPatient();
+            char ch = line.charAt(0);
+            if( Character.isDigit(ch) ){
+                line = "* " + line;
+            }
+            String[] parts = line.split("\\s+", 5);
+            String attr = parts[0];
+            rp.attr = attr.equals("*") ? "" : attr;
+            rp.patientId = Integer.parseInt(parts[1]);
+            rp.name = parts[2];
+            rp.age = Integer.parseInt(parts[3]);
+            rp.phone = parts[4];
+            return rp;
         }
     }
 
@@ -46,17 +64,30 @@ public class CovidVaccine {
                 .filter(Objects::nonNull).collect(toList());
     }
 
-    private static List<RegularPatient> listOver65Candidates(List<RegularPatient> patients){
-        return patients.stream().filter(
-                p -> !p.excluded && p.age >= 65
-        ).collect(toList());
-    }
-
     private static void saveOver65Candidates(List<RegularPatient> candidates){
+        Map<String,List<RegularPatient>> groups = new HashMap<>();
+        candidates.forEach(p -> {
+            String code = p.attr;
+            if( code.length() > 0 ){
+                code = code.substring(0, 1).toUpperCase();
+            }
+            List<RegularPatient> list = groups.computeIfAbsent(code, k -> new ArrayList<>());
+            list.add(p);
+        });
+        List<String> codes = new ArrayList<>();
+        Set<String> keys = new HashSet<>(groups.keySet());
+        List.of("C", "S", "", "T").forEach(c -> {
+            codes.add(c);
+            keys.remove(c);
+        });
+        codes.addAll(keys);
+        List<String> lines = new ArrayList<>();
+        for(String code: codes){
+            List<RegularPatient> list = groups.getOrDefault(code, Collections.emptyList());
+            list.forEach(p -> lines.add(p.toString()));
+            lines.add("");
+        }
         Path file = Path.of(CovidVaccineDir, "over65-candidates.txt");
-        List<String> lines = candidates.stream()
-                .map(p -> String.format("%d %s %s", p.patientId, p.name, p.phone))
-                .collect(toList());
         Misc.saveLines(file.toString(), lines);
     }
 
@@ -68,25 +99,6 @@ public class CovidVaccine {
                 .map(patientId -> String.format("%d", patientId))
                 .collect(joining(", "));
         Misc.saveString(file.toString(), content);
-    }
-
-    private static RegularPatient parseRegularPatient(String line){
-        if( line == null || line.isEmpty() ){
-            return null;
-        } else {
-            RegularPatient rp = new RegularPatient();
-            char ch = line.charAt(0);
-            if( ch == 'x' ){
-                rp.excluded = true;
-                line = line.substring(1).stripLeading();
-            }
-            String[] parts = line.split("\\s+", 4);
-            rp.patientId = Integer.parseInt(parts[0]);
-            rp.name = parts[1];
-            rp.age = Integer.parseInt(parts[2]);
-            rp.phone = parts[3];
-            return rp;
-        }
     }
 
 }

@@ -22,25 +22,95 @@ const timeSpansPM = [
 ];
 
 const tmpl = `
-    <div class="appoint-weekly-view d-flex"></div>
+    <div>
+        <div class="x-manage">
+            <a href="javascript:void(0);" class="x-this-week-link">今週</a>
+            <a href="javascript:void(0);" class="x-prev-week-link">前週</a>
+            <span class="x-start-date-disp"></span> -
+            <span class="x-end-date-disp"></span>
+            <a href="javascript:void(0);" class="x-next-week-link">次週</a>
+     </div>
+        <div class="appoint-weekly-view d-flex x-weekly-view"></div>
+    </div>
 `;
 
 export class WeeklyView {
     constructor(sqldate) {
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
-        this.props = {
-            startDay: kanjidate.startOfWeek(sqldate)
-        };
+        this.setupProps(sqldate);
         this.updateUI();
+        this.setupNextWeekLink(this.map.nextWeekLink);
+        this.setupPrevWeekLink(this.map.prevWeekLink);
+        this.setupThisWeekLink(this.map.thisWeekLink);
+    }
+
+    setupProps(sqldate){
+        let startDate = kanjidate.startOfWeek(sqldate, 1);
+        this.props = {
+            days: kanjidate.consecutiveDays(startDate, 6)
+        };
     }
 
     updateUI(){
-        const days = selectWorkingDays(kanjidate.consecutiveDays(this.props.startDay, 7));
-        days.forEach(day => {
-            const col = new DayColumn(day);
-            this.ele.append(col.ele);
-        })
+        this.updateStartDateUI();
+        this.updateEndDateUI();
+        this.map.weeklyView.innerHTML = "";
+        const self = this;
+        this.props.days.forEach(date => self.enterDate(date));
+        // const days = selectWorkingDays();
+        // days.forEach(day => {
+        //     const col = new DayColumn(day);
+        //     this.map.weeklyView.append(col.ele);
+        // })
+    }
+
+    updateStartDateUI(){
+        let date = this.props.days[0];
+        let disp = kanjidate.sqldateToKanji(date);
+        this.map.startDateDisp.innerText = disp;
+    }
+
+    updateEndDateUI(){
+        let date = this.props.days[this.props.days.length-1];
+        let disp = kanjidate.sqldateToKanji(date);
+        this.map.endDateDisp.innerText = disp;
+    }
+
+    enterDate(date){
+        let youbiIndex = kanjidate.youbiIndexOfSqldate(date);
+        if( youbiIndex === 3 ){
+            // nop
+        } else {
+            const col = new DayColumn(date);
+            this.map.weeklyView.append(col.ele);
+        }
+    }
+
+    setupNextWeekLink(e){
+        e.addEventListener("click", event => {
+            let date = this.props.days[0];
+            date = kanjidate.advanceDays(date, 7);
+            this.setupProps(date);
+            this.updateUI();
+        });
+    }
+
+    setupPrevWeekLink(e){
+        e.addEventListener("click", event => {
+            let date = this.props.days[0];
+            date = kanjidate.advanceDays(date, -7);
+            this.setupProps(date);
+            this.updateUI();
+        });
+    }
+
+    setupThisWeekLink(e){
+        e.addEventListener("click", event => {
+            let date = kanjidate.todayAsSqldate();
+            this.setupProps(date);
+            this.updateUI();
+        });
     }
 
 }

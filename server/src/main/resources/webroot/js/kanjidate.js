@@ -269,9 +269,9 @@ export function advanceYears(sqldate, n=1){
     return toSqldate(year, month, day);
 }
 
-export function startOfWeek(sqldate){
+export function startOfWeek(sqldate, offset=0){
     const youbiIndex = youbiIndexOfSqldate(sqldate);
-    return advanceDays(sqldate, -youbiIndex);
+    return advanceDays(sqldate, -youbiIndex + offset);
 }
 
 export function consecutiveDays(startSqldate, n){

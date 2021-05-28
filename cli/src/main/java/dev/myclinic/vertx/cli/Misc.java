@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 class Misc {
 
@@ -31,17 +32,27 @@ class Misc {
     }
 
     public static List<String> readLines(String file) {
-        try (InputStream ins = new FileInputStream(file)) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(ins, StandardCharsets.UTF_8));
-            List<String> lines = new ArrayList<>();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                lines.add(line);
+        return readLines(file, () -> {
+            throw new RuntimeException("File does not exist: " + file);
+        });
+    }
+
+    public static List<String> readLines(String file, Supplier<List<String>> ifFileMissing){
+        if( Files.exists(Path.of(file)) ) {
+            try (InputStream ins = new FileInputStream(file)) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(ins, StandardCharsets.UTF_8));
+                List<String> lines = new ArrayList<>();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    lines.add(line);
+                }
+                return lines;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-            return lines;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } else {
+            return ifFileMissing.get();
         }
     }
 

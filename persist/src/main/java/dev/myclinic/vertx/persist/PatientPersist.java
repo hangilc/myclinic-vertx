@@ -2,6 +2,8 @@ package dev.myclinic.vertx.persist;
 
 import dev.myclinic.vertx.dto.PatientDTO;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -25,6 +27,20 @@ public class PatientPersist {
     public static PatientDTO resultSetToPatientDTO(ResultSet rs)
             throws SQLException {
         return resultSetToPatientDTO(rs, 1);
+    }
+
+    public static PatientDTO getPatient(Connection conn, int patientId) throws SQLException {
+        String sql = "select * from patient where patient_id = ?";
+        try(PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setInt(1, patientId);
+            try(ResultSet rs = stmt.executeQuery()){
+                if( rs.next() ){
+                    return resultSetToPatientDTO(rs);
+                } else {
+                    return null;
+                }
+            }
+        }
     }
 
 }

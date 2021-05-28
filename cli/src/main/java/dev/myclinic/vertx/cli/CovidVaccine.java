@@ -85,6 +85,7 @@ public class CovidVaccine {
         for(String code: codes){
             List<RegularPatient> list = groups.getOrDefault(code, Collections.emptyList());
             list.forEach(p -> lines.add(p.toString()));
+            lines.add(String.format("(%d)", list.size()));
             lines.add("");
         }
         Path file = Path.of(CovidVaccineDir, "over65-candidates.txt");

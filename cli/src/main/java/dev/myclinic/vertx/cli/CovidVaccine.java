@@ -54,6 +54,9 @@ public class CovidVaccine {
                 case "apply-patches":
                     applyPatches();
                     break;
+                case "current":
+                    current();
+                    break;
                 case "help": // fall through
                 default:
                     printHelp();
@@ -72,6 +75,7 @@ public class CovidVaccine {
         System.out.println("  register-patch ATTR PATIENT-ID");
         System.out.println("  list-patches");
         System.out.println("  apply-patches");
+        System.out.println("  current");
         System.out.println("  help");
     }
 
@@ -354,7 +358,7 @@ public class CovidVaccine {
         return new ArrayList<>(map.values());
     }
 
-    private static void list() throws Exception {
+    private static List<String> prepareList() throws Exception {
         List<RegularPatient> patients = executeLogbook();
         Map<String, List<RegularPatient>> groups = new HashMap<>();
         patients.forEach(p -> {
@@ -380,7 +384,19 @@ public class CovidVaccine {
             lines.add(String.format("(%d)", list.size()));
             lines.add("");
         }
+        return lines;
+    }
+
+
+    private static void list() throws Exception {
+        List<String> lines = prepareList();
         lines.forEach(System.out::println);
+    }
+
+    private static void current() throws Exception {
+        List<String> lines = prepareList();
+        Path currentPath = Path.of(CovidVaccineDir, "current.txt");
+        Misc.saveLines(currentPath.toString(), lines);
     }
 
     private interface PatientState {

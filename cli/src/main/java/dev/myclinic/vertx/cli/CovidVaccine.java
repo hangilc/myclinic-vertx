@@ -208,8 +208,8 @@ public class CovidVaccine {
             Misc.ensureDirectory(archDir.toString());
             String stamp = Misc.makeTimestamp();
             Path backupPath = archDir.resolve(String.format("logbook-%s.txt", stamp));
-            Files.move(logbookPath, backupPath);
-            System.out.printf("%s moved to %s.\n ", logbookPath.toString(), backupPath.toString());
+            Files.copy(logbookPath, backupPath);
+            System.out.printf("%s copied to %s.\n ", logbookPath.toString(), backupPath.toString());
         } else {
             System.err.printf("logbook file (%s) does not exists.\n", logbookPath.toString());
         }

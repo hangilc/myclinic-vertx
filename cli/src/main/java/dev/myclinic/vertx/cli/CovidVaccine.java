@@ -3,7 +3,10 @@ package dev.myclinic.vertx.cli;
 import dev.myclinic.vertx.client2.Client;
 import dev.myclinic.vertx.dto.PatientDTO;
 
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -19,6 +22,7 @@ public class CovidVaccine {
 
     private final static String CovidVaccineDir = System.getenv("COVID_VACCINE_DIR");
     private final static Path logbookPath = Path.of(CovidVaccineDir, "logbook.txt");
+    private final static Path patchPath = Path.of(CovidVaccineDir, "logbook-patch.txt");
 
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
@@ -41,6 +45,15 @@ public class CovidVaccine {
                 case "due-second-shot":
                     dueSecondShot();
                     break;
+                case "register-patch":
+                    registerPatch(args);
+                    break;
+                case "list-patches":
+                    listPatches();
+                    break;
+                case "apply-patches":
+                    applyPatches();
+                    break;
                 case "help": // fall through
                 default:
                     printHelp();
@@ -56,7 +69,67 @@ public class CovidVaccine {
         System.out.println("  prepare-patient-yomi");
         System.out.println("  list");
         System.out.println("  due-second-shot");
+        System.out.println("  register-patch ATTR PATIENT-ID");
+        System.out.println("  list-patches");
+        System.out.println("  apply-patches");
         System.out.println("  help");
+    }
+
+    private static void applyPatches() throws Exception {
+        List<RegularPatient> patients = executeLogbook();
+        Map<Integer, RegularPatient> map = new HashMap<>();
+        patients.forEach(p -> map.put(p.patientId, p));
+        List<String> patchLines = Misc.readLines(patchPath.toString());
+        for(String patchLine: patchLines){
+            PatchCommand cmd = parsePatch(patchLine);
+            if( cmd instanceof PatchAdd ){
+                PatchAdd pa = (PatchAdd) cmd;
+                System.out.printf("ADD %s\n", pa.patient.toString());
+            } else if( cmd instanceof PatchState ){
+                PatchState ps = (PatchState) cmd;
+                RegularPatient rp = map.get(ps.patientId);
+                if( rp == null ){
+                    throw new RuntimeException("Cannot find patient with patient-id: " + ps.patientId);
+                }
+                rp.attr = ps.attr;
+                System.out.printf("STATE %s\n", rp.toString());
+            } else {
+                throw new RuntimeException("Unknown patch: " + patchLine);
+            }
+        }
+        System.console().writer().print("Apply these patches? (Y/N)");
+        String input = System.console().readLine();
+        if( input.startsWith("Y") ){
+            List<String> logs = Misc.readLines(logbookPath.toString());
+            logs.addAll(patchLines);
+            executeLogbook(logs);
+            Misc.appendLines(logbookPath.toString(), patchLines);
+        }
+    }
+
+    private static void listPatches() throws Exception {
+        if( Files.exists(patchPath) ){
+            List<String> lines = Misc.readLines(patchPath.toString());
+            lines.forEach(System.out::println);
+        }
+    }
+
+    private static void registerPatch(String[] args) throws Exception {
+        if( args.length != 3 ){
+            System.out.println();
+            System.err.print("Invalid patch: ");
+            for(int i=1;i<args.length;i++){
+                System.err.print(args[i]);
+                System.err.print(" ");
+            }
+            System.err.println();
+            System.exit(1);
+        }
+        String attr = args[1];
+        int patientId = Integer.parseInt(args[2]);
+        parsePatientAttr(attr);
+        String patch = logbookState(patientId, attr);
+        Misc.appendLines(patchPath.toString(), Collections.singletonList(patch));
     }
 
     private static void dueSecondShot() throws Exception {
@@ -187,54 +260,95 @@ public class CovidVaccine {
         }
     }
 
-    private static List<RegularPatient> executeLogbook() {
-        Map<Integer, RegularPatient> map = new HashMap<>();
+    private interface PatchCommand {};
+
+    private static class PatchAdd implements PatchCommand {
+        public RegularPatient patient;
+
+        public PatchAdd(RegularPatient patient) {
+            this.patient = patient;
+        }
+    }
+
+    private static class PatchState implements PatchCommand {
+        public String attr;
+        public int patientId;
+
+        public PatchState(String attr, int patientId) {
+            this.attr = attr;
+            this.patientId = patientId;
+        }
+    }
+
+    private static PatchCommand parsePatch(String patch){
+        patch = patch.trim();
+        String[] parts = patch.split("\\s+", 2);
+        if (parts.length != 2) {
+            throw new RuntimeException("Invalid log/patch: " + patch);
+        }
+        String cmd = parts[0];
+        switch (cmd) {
+            case "ADD": {
+                String[] items = parts[1].split("\\s+", 4);
+                if (items.length != 4) {
+                    throw new RuntimeException("Invalid log: " + patch);
+                }
+                RegularPatient p = new RegularPatient();
+                p.patientId = Integer.parseInt(items[0]);
+                p.name = items[1];
+                p.age = Integer.parseInt(items[2]);
+                p.phone = items[3];
+                p.attr = p.age >= 65 ? "*" : "U";
+                return new PatchAdd(p);
+            }
+            case "STATE": {
+                String[] items = parts[1].split("\\s+", 2);
+                if (items.length != 2) {
+                    throw new RuntimeException("Invalid log: " + patch);
+                }
+                int patientId = Integer.parseInt(items[0]);
+                String attr = items[1];
+                parsePatientAttr(attr);
+                return new PatchState(attr, patientId);
+            }
+            default: {
+                throw new RuntimeException("Invalid command: " + patch);
+            }
+        }
+    }
+
+    private static List<RegularPatient> executeLogbook(){
         List<String> logs = Misc.readLines(logbookPath.toString());
+        return executeLogbook(logs);
+    }
+
+    private static List<RegularPatient> executeLogbook(List<String> logs) {
+        Map<Integer, RegularPatient> map = new HashMap<>();
         for (String log : logs) {
             log = log.trim();
             if (log.isEmpty()) {
                 continue;
             }
-            String[] parts = log.split("\\s+", 2);
-            if (parts.length != 2) {
-                throw new RuntimeException("Invalid log: " + log);
-            }
-            String cmd = parts[0];
-            switch (cmd) {
-                case "ADD": {
-                    String[] items = parts[1].split("\\s+", 4);
-                    if (items.length != 4) {
-                        throw new RuntimeException("Invalid log: " + log);
-                    }
-                    RegularPatient p = new RegularPatient();
-                    p.patientId = Integer.parseInt(items[0]);
-                    p.name = items[1];
-                    p.age = Integer.parseInt(items[2]);
-                    p.phone = items[3];
-                    if (map.containsKey(p.patientId)) {
-                        throw new RuntimeException("Duplicate ADD command: " + log);
-                    }
-                    map.put(p.patientId, p);
-                    break;
+            PatchCommand cmd = parsePatch(log);
+            if( cmd instanceof PatchAdd ){
+                PatchAdd pa = (PatchAdd) cmd;
+                RegularPatient p = pa.patient;
+                if (map.containsKey(p.patientId)) {
+                    throw new RuntimeException("Duplicate ADD command: " + log);
                 }
-                case "STATE": {
-                    String[] items = parts[1].split("\\s+", 2);
-                    if (items.length != 2) {
-                        throw new RuntimeException("Invalid log: " + log);
-                    }
-                    int patientId = Integer.parseInt(items[0]);
-                    String attr = items[1];
-                    parsePatientAttr(attr);
-                    RegularPatient patient = map.get(patientId);
-                    if (patient == null) {
-                        throw new RuntimeException("Invalid patient-id: " + String.format("%d", patientId));
-                    }
-                    patient.attr = attr;
-                    break;
+                map.put(p.patientId, p);
+            } else if( cmd instanceof PatchState ){
+                PatchState ps = (PatchState) cmd;
+                int patientId = ps.patientId;
+                String attr = ps.attr;
+                parsePatientAttr(attr);
+                RegularPatient patient = map.get(patientId);
+                if (patient == null) {
+                    throw new RuntimeException("Invalid patient-id: " + String.format("%d", patientId));
                 }
-                default: {
-                    throw new RuntimeException("Invalid command: " + log);
-                }
+                patient.attr = attr;
+            } else {
+                throw new RuntimeException("Unknown patch: " + log);
             }
         }
         return new ArrayList<>(map.values());
@@ -271,8 +385,6 @@ public class CovidVaccine {
 
     private interface PatientState {
     }
-
-    ;
 
     private static class FirstShotCandidate implements PatientState {
     }

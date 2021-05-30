@@ -51,6 +51,9 @@ public class CovidVaccine {
             for(RegularPatient p: patients){
                 logs.add(logbookAdd(p.patientId, p.name, p.age, p.phone));
                 parsePatientAttr(p.attr);
+                if( p.attr.equals("*") && p.age < 65 ){
+                    p.attr = "U";
+                }
                 logs.add(logbookState(p.patientId, p.attr));
             }
             if( Files.exists(logbookPath) ){
@@ -115,6 +118,18 @@ public class CovidVaccine {
                     break;
                 }
                 case "STATE": {
+                    String[] items = parts[1].split("\\s+", 2);
+                    if( items.length != 2 ){
+                        throw new RuntimeException("Invalid log: " + log);
+                    }
+                    int patientId = Integer.parseInt(items[0]);
+                    String attr = items[1];
+                    parsePatientAttr(attr);
+                    RegularPatient patient = map.get(patientId);
+                    if( patient == null ){
+                        throw new RuntimeException("Invalid patient-id: " + String.format("%d", patientId));
+                    }
+                    patient.attr = attr;
                     break;
                 }
                 default: {
@@ -127,7 +142,29 @@ public class CovidVaccine {
 
     private static void list() throws Exception {
         List<RegularPatient> patients = executeLogbook();
-        patients.forEach(System.out::println);
+        Map<String, List<RegularPatient>> groups = new HashMap<>();
+        patients.forEach(p -> {
+            String code = p.attr.substring(0, 1);
+            List<RegularPatient> list = groups.computeIfAbsent(code, k -> new ArrayList<>());
+            list.add(p);
+        });
+        List<String> codes = new ArrayList<>();
+        Set<String> keys = new HashSet<>(groups.keySet());
+        List.of("C", "S", "*", "P", "T").forEach(c -> {
+            codes.add(c);
+            keys.remove(c);
+        });
+        keys.remove("x");
+        keys.remove("U");
+        codes.addAll(keys);
+        List<String> lines = new ArrayList<>();
+        for(String code: codes){
+            List<RegularPatient> list = groups.getOrDefault(code, Collections.emptyList());
+            list.forEach(p -> lines.add(p.toString()));
+            lines.add(String.format("(%d)", list.size()));
+            lines.add("");
+        }
+        lines.forEach(System.out::println);
     }
 
     private interface PatientState {};
@@ -151,6 +188,8 @@ public class CovidVaccine {
 
     private static class DoneAtOtherPlace implements PatientState {}
 
+    private static class Under65 implements PatientState {}
+
     private static PatientState parsePatientAttr(String attr){
         attr = attr.trim();
         if( attr.length() > 0 ){
@@ -165,6 +204,8 @@ public class CovidVaccine {
                     return new NeedConfirm();
                 case "T":
                     return new DoneAtOtherPlace();
+                case "U":
+                    return new Under65();
                 default:
                     Matcher m = SecondShotCandidate.pat.matcher(attr);
                     if (m.matches()) {

@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.toList;
 public class CovidVaccine {
 
     private final static String CovidVaccineDir = System.getenv("COVID_VACCINE_DIR");
+    private final static Path logbookPath = Path.of(CovidVaccineDir, "logbook.txt");
 
     public static void main(String[] args) throws Exception {
         if( args.length == 0 ){
@@ -23,6 +24,7 @@ public class CovidVaccine {
             switch (cmd) {
                 case "backup-logbook": backupLogbook(); break;
                 case "logbook-from-list": logbookFromList(); break;
+                case "list": list(); break;
                 case "help": // fall through
                 default:
                     printHelp();
@@ -35,6 +37,7 @@ public class CovidVaccine {
         System.out.println("CovidVaccine COMMAND [ARGS..]");
         System.out.println("  backup-logbook");
         System.out.println("  logbook-from-list");
+        System.out.println("  list");
         System.out.println("  help");
     }
 
@@ -50,7 +53,6 @@ public class CovidVaccine {
                 parsePatientAttr(p.attr);
                 logs.add(logbookState(p.patientId, p.attr));
             }
-            Path logbookPath = Path.of(CovidVaccineDir, "logbook.txt");
             if( Files.exists(logbookPath) ){
                 System.err.printf("logbook (%s) already exists.\n", logbookPath.toString());
                 System.exit(1);
@@ -70,7 +72,6 @@ public class CovidVaccine {
     }
 
     private static void backupLogbook() throws Exception {
-        Path logbookPath = Path.of(CovidVaccineDir, "logbook.txt");
         if( Files.exists(logbookPath) ){
             Path archDir = Path.of(CovidVaccineDir, "arch");
             Misc.ensureDirectory(archDir.toString());
@@ -81,6 +82,52 @@ public class CovidVaccine {
         } else {
             System.err.printf("logbook file (%s) does not exists.\n", logbookPath.toString());
         }
+    }
+
+    private static List<RegularPatient> executeLogbook(){
+        Map<Integer, RegularPatient> map = new HashMap<>();
+        List<String> logs = Misc.readLines(logbookPath.toString());
+        for(String log: logs){
+            log = log.trim();
+            if( log.isEmpty() ){
+                continue;
+            }
+            String[] parts = log.split("\\s+", 2);
+            if( parts.length != 2 ){
+                throw new RuntimeException("Invalid log: " + log);
+            }
+            String cmd = parts[0];
+            switch(cmd){
+                case "ADD": {
+                    String[] items = parts[1].split("\\s+", 4);
+                    if( items.length != 4 ){
+                        throw new RuntimeException("Invalid log: " + log);
+                    }
+                    RegularPatient p = new RegularPatient();
+                    p.patientId = Integer.parseInt(items[0]);
+                    p.name = items[1];
+                    p.age = Integer.parseInt(items[2]);
+                    p.phone = items[3];
+                    if( map.containsKey(p.patientId) ){
+                        throw new RuntimeException("Duplicate ADD command: " + log);
+                    }
+                    map.put(p.patientId, p);
+                    break;
+                }
+                case "STATE": {
+                    break;
+                }
+                default: {
+                    throw new RuntimeException("Invalid command: " + log);
+                }
+            }
+        }
+        return new ArrayList<>(map.values());
+    }
+
+    private static void list() throws Exception {
+        List<RegularPatient> patients = executeLogbook();
+        patients.forEach(System.out::println);
     }
 
     private interface PatientState {};

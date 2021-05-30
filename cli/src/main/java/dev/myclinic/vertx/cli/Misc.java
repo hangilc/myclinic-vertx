@@ -82,6 +82,14 @@ class Misc {
         }
     }
 
+    public static void appendLines(String file, List<String> lines) throws Exception {
+        try(FileWriter fw = new FileWriter(file, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter pw = new PrintWriter(bw)){
+            lines.forEach(pw::println);
+        }
+    }
+
     public static void ensureDirectory(String dirPath) throws Exception {
         Path path = Path.of(dirPath);
         if( !Files.exists(Path.of(path.toString())) ){

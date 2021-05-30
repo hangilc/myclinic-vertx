@@ -2,6 +2,7 @@ package dev.myclinic.vertx.cli;
 
 import dev.myclinic.vertx.db.MysqlDataSourceFactory;
 import dev.myclinic.vertx.util.DateTimeUtil;
+import dev.myclinic.vertx.util.kanjidate.KanjiDate;
 
 import javax.sql.DataSource;
 import java.io.*;
@@ -9,6 +10,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -85,5 +87,13 @@ class Misc {
         if( !Files.exists(Path.of(path.toString())) ){
             Files.createDirectories(path);
         }
+    }
+
+    public static String youbiIndexToKanji(int index){
+        return DateTimeUtil.youbiIndexToKanji(index);
+    }
+
+    public static String youbiAsKanji(DayOfWeek dow){
+        return DateTimeUtil.youbiAsKanji(dow);
     }
 }

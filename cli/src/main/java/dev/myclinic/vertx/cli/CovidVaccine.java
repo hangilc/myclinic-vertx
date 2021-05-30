@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,6 +38,9 @@ public class CovidVaccine {
                 case "list":
                     list();
                     break;
+                case "due-second-shot":
+                    dueSecondShot();
+                    break;
                 case "help": // fall through
                 default:
                     printHelp();
@@ -51,7 +55,41 @@ public class CovidVaccine {
         System.out.println("  logbook-from-list");
         System.out.println("  prepare-patient-yomi");
         System.out.println("  list");
+        System.out.println("  due-second-shot");
         System.out.println("  help");
+    }
+
+    private static void dueSecondShot() throws Exception {
+        List<RegularPatient> patients = executeLogbook();
+        Map<LocalDate, List<RegularPatient>> map = new HashMap<>();
+        for(RegularPatient patient: patients){
+            PatientState st = parsePatientAttr(patient.attr);
+            if( st instanceof SecondShotCandidate ){
+                SecondShotCandidate ssc = (SecondShotCandidate) st;
+                LocalDate dueDate = ssc.firstShotDate.plus(3, ChronoUnit.WEEKS);
+                List<RegularPatient> list = map.computeIfAbsent(dueDate, k -> new ArrayList<>());
+                list.add(patient);
+            }
+        }
+        List<LocalDate> dates = new ArrayList<>(map.keySet());
+        dates.sort(Comparator.naturalOrder());
+        Map<Integer, String> yomiMap = readPatientYomi();
+        for(LocalDate d: dates){
+            List<RegularPatient> list = map.get(d);
+            list.sort(Comparator.comparing(p -> getPatientYomi(p.patientId, yomiMap)));
+            list.forEach(p -> {
+                String s = String.format("%02d/%02d（%s） %04d %s", d.getMonthValue(), d.getDayOfMonth(),
+                        Misc.youbiIndexToKanji(d.getDayOfWeek().getValue()),
+                        p.patientId, p.name);
+                System.out.println(s);
+            });
+            System.out.println();
+        }
+    }
+
+    private static void sortPatients(List<RegularPatient> list) throws Exception {
+        Map<Integer, String> yomiMap = readPatientYomi();
+        list.sort(Comparator.comparing(p -> getPatientYomi(p.patientId, yomiMap)));
     }
 
     private static void logbookFromList() throws Exception {

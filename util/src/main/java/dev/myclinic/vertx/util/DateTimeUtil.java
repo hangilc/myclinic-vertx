@@ -2,6 +2,7 @@ package dev.myclinic.vertx.util;
 
 import dev.myclinic.vertx.util.kanjidate.KanjiDateRepBuilder;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -100,5 +101,20 @@ public class DateTimeUtil {
 
     public static int calcAge(LocalDate birthday) {
         return calcAge(birthday, LocalDate.now());
+    }
+
+    private static final String[] youbiKanji = new String[]{
+            "日", "月", "火", "水", "木", "金", "土"
+    };
+
+    public static String youbiIndexToKanji(int index){
+        if( index == 7 ){
+            index = 0;
+        }
+        return youbiKanji[index];
+    }
+
+    public static String youbiAsKanji(DayOfWeek dow){
+        return youbiIndexToKanji(dow.getValue());
     }
 }

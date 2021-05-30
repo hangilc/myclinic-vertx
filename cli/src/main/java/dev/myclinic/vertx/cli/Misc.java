@@ -5,6 +5,7 @@ import dev.myclinic.vertx.util.DateTimeUtil;
 
 import javax.sql.DataSource;
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,9 +57,9 @@ class Misc {
         }
     }
 
-    public static void saveLines(String file, List<String> lines) {
+    public static void saveLines(String file, List<String> lines, Charset charset) {
         try (OutputStream os = new FileOutputStream(file);
-             PrintWriter writer = new PrintWriter(os)) {
+             PrintWriter writer = new PrintWriter(os, false, charset)) {
             for (String line : lines) {
                 writer.println(line);
             }
@@ -67,11 +68,22 @@ class Misc {
         }
     }
 
+    public static void saveLines(String file, List<String> lines) {
+        saveLines(file, lines, StandardCharsets.UTF_8);
+    }
+
     public static void saveString(String file, String content) {
         try {
             Files.writeString(Path.of(file), content, StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static void ensureDirectory(String dirPath) throws Exception {
+        Path path = Path.of(dirPath);
+        if( !Files.exists(Path.of(path.toString())) ){
+            Files.createDirectories(path);
         }
     }
 }

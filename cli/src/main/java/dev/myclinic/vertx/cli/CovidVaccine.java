@@ -106,7 +106,8 @@ public class CovidVaccine {
                 throw new RuntimeException("Unknown patch: " + patchLine);
             }
         }
-        System.console().writer().print("Apply these patches? (Y/N)");
+        System.console().writer().print("Apply these patches? (Y/N) ");
+        System.console().writer().flush();
         String input = System.console().readLine();
         if (input.startsWith("Y")) {
             List<String> logs = Misc.readLines(logbookPath.toString());
@@ -114,6 +115,9 @@ public class CovidVaccine {
             executeLogbook(logs);
             Misc.appendLines(logbookPath.toString(), patchLines);
         }
+        Path archDir = Path.of(CovidVaccineDir, "arch");
+        Misc.ensureDirectory(archDir);
+        Misc.backupFile(patchPath, archDir, s -> s + "-done");
     }
 
     private static void listPatches() throws Exception {

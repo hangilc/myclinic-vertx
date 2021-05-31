@@ -16,7 +16,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class Misc {
 
@@ -32,6 +35,29 @@ class Misc {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuuMMddHHmmss");
         return now.format(formatter);
+    }
+
+    public static Path backupFile(Path src, Path archDir, Function<String, String> filePartRewriter)
+            throws IOException {
+        File srcFile = src.toFile();
+        String parent = srcFile.getParent();
+        String file = srcFile.getName();
+        Pattern pat = Pattern.compile("(.+?)(\\.[^.]*)?$");
+        Matcher m = pat.matcher(file);
+        String backupFile;
+        String ts = makeTimestamp();
+        if( m.matches() ){
+            backupFile = String.format("%s-%s%s", filePartRewriter.apply(m.group(1)), ts, m.group(2));
+        } else {
+            backupFile = file + "-" + ts;
+        }
+        Path dst = archDir.resolve(backupFile);
+        Files.move(src, dst);
+        return dst;
+    }
+
+    public static Path backupFile(Path src, Path archDir) throws IOException {
+        return backupFile(src, archDir, s -> s);
     }
 
     public static List<String> readLines(String file) {
@@ -91,7 +117,10 @@ class Misc {
     }
 
     public static void ensureDirectory(String dirPath) throws Exception {
-        Path path = Path.of(dirPath);
+        ensureDirectory(Path.of(dirPath));
+    }
+
+    public static void ensureDirectory(Path path) throws Exception {
         if( !Files.exists(Path.of(path.toString())) ){
             Files.createDirectories(path);
         }

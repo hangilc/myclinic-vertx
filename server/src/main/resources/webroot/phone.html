@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Phone</title>
+    <script type="text/javascript" src="./vendor/twilio.min.js"></script>
+</head>
+<body>
+    <button id="setup-button">セットアップ</button>
+    <input id="phone-input" type="text"/>
+    <button id="callout-button">発信</button>
+    <script>
+        (async function(){
+            let {Rest} = await import("./js/rest.js");
+            let rest = new Rest("/json");
+            let device;
+            document.getElementById("setup-button").addEventListener("click", async e => {
+                let token = await rest.twilioWebphoneToken();
+                device = new Twilio.Device();
+                device.setup(token, {
+                    "edget": "tokyo"
+                });
+            });
+            let calloutButton = document.getElementById("callout-button");
+            calloutButton.addEventListener("click", async e => {
+                 let phone = document.getElementById("phone-input").value;
+                device.connect({
+                    phone: phone
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

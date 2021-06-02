@@ -245,4 +245,8 @@ export class Rest extends HttpClient {
         return this.GET("/list-visit-patient-at", {at: at});
     }
 
+    async twilioWebphoneToken(){
+        return this.GET("/twilio-webphone-token", {});
+    }
+
 }

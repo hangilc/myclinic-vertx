@@ -3,6 +3,10 @@ package dev.myclinic.vertx.server;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itextpdf.text.Image;
+import com.twilio.Twilio;
+import com.twilio.jwt.accesstoken.AccessToken;
+import com.twilio.jwt.accesstoken.ChatGrant;
+import com.twilio.jwt.accesstoken.VoiceGrant;
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.appconfig.types.StampInfo;
 import dev.myclinic.vertx.client2.Client;
@@ -358,6 +362,34 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         noDatabaseFuncMap.put("create-receipt-pdf", this::createReceiptPdf);
         noDatabaseFuncMap.put("list-print-setting", this::listPrintSetting);
         noDatabaseFuncMap.put("batch-resolve-hoken-rep", this::batchResolveHokenRep);
+        noDatabaseFuncMap.put("twilio-webphone-token", this::twilioWebphoneToken);
+    }
+
+    private void twilioWebphoneToken(RoutingContext routingContext) {
+        String twilioAccountSid = System.getenv("TWILIO_SID");
+        String twilioApiKey = System.getenv("TWILIO_WEBPHONE_API_SID");
+        String twilioApiSecret = System.getenv("TWILIO_WEBPHONE_API_SECRET");
+
+        // Required for Voice
+        String outgoingApplicationSid = System.getenv("TWILIO_WEBPHONE_APP_SID");
+        String identity = "webphone";
+
+        // Create Voice grant
+        VoiceGrant grant = new VoiceGrant();
+        grant.setOutgoingApplicationSid(outgoingApplicationSid);
+
+        // Optional: add to allow incoming calls
+        grant.setIncomingAllow(true);
+
+        // Create access token
+        AccessToken token = new AccessToken.Builder(
+                twilioAccountSid,
+                twilioApiKey,
+                twilioApiSecret
+        ).identity(identity).grant(grant).build();
+
+        routingContext.response().headers().set("content-type", "text/plain");
+        routingContext.response().end(token.toJwt());
     }
 
     private void batchResolveHokenRep(RoutingContext ctx) {
@@ -1032,17 +1064,6 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         });
     }
 
-    //    private void referDrawer(RoutingContext ctx) {
-//        try {
-//            ReferData data = mapper.readValue(ctx.getBody().getBytes(), ReferData.class);
-//            ReferForm form = new ReferForm();
-//            List<Op> ops = form.render(data);
-//            ctx.response().end(jsonEncode(ops));
-//        } catch (Exception e) {
-//            ctx.fail(e);
-//        }
-//    }
-//
     private static double objectToDouble(Object obj) {
         if (obj instanceof Number) {
             return ((Number) obj).doubleValue();
@@ -1767,19 +1788,6 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
         return new GlobalService.AppDirToken(
                 GlobalService.getInstance().shohousenFaxDirToken,
                 List.of(month)).toFileToken(file).toString();
-//        String parentToken = GlobalService.getInstance().createAppPathToken(
-//                GlobalService.getInstance().shohousenFaxDirToken,
-//                month
-//        );
-//        Path parentPath = GlobalService.getInstance().resolveAppPath(parentToken);
-//        if( !Files.exists(parentPath) ){
-//            try {
-//                Files.createDirectories(parentPath);
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
-//        }
-//        return parentToken + File.separator + file;
     }
 
     private boolean isNotRomaji(String s) {
@@ -2062,62 +2070,6 @@ class NoDatabaseRestHandler extends RestHandlerBase implements Handler<RoutingCo
             ctx.fail(e);
         }
     }
-
-//    private void saveShohousenPdf(RoutingContext ctx) {
-//        vertx.<String>executeBlocking(promise -> {
-//            try {
-//                String textIdArg = ctx.request().getParam("text-id");
-//                if (textIdArg == null) {
-//                    throw new RuntimeException("text-id is missing");
-//                }
-//                int textId = Integer.parseInt(textIdArg);
-//                byte[] bytes = ctx.getBody().getBytes();
-//                ShohousenRequest req = mapper.readValue(bytes, ShohousenRequest.class);
-//                if (req.patient == null) {
-//                    throw new RuntimeException("patient info is missing");
-//                }
-//                if (req.issueDate == null) {
-//                    throw new RuntimeException("issue date is missing");
-//                }
-//                ShohousenData data = convertToShohousenData(req);
-//                ShohousenDrawer drawer = new ShohousenDrawer();
-//                if (req.color != null) {
-//                    DrawerColor defaultColor = DrawerColor.resolve(req.color);
-//                    drawer.setDefaultColor(defaultColor);
-//                }
-//                drawer.init();
-//                data.applyTo(drawer);
-//                List<Op> ops = drawer.getOps();
-//                String saveTokenPath = composeShohousenSavePdfTokenPath(
-//                        req.patient.lastNameYomi + req.patient.firstNameYomi,
-//                        textId,
-//                        req.patient.patientId,
-//                        LocalDate.parse(req.issueDate)
-//                );
-//                SaveDrawerAsPdfRequest saveReq = new SaveDrawerAsPdfRequest();
-//                saveReq.pages = List.of(ops);
-//                saveReq.paperSize = "A5";
-//                saveReq.savePath = saveTokenPath;
-//                //ShohousenGrayStampInfo stampInfo = appConfig.getShohousenGrayStampInfo();
-////                StampRequest stampReq = new StampRequest();
-////                stampReq.path = stampInfo.path;
-////                stampReq.scale = stampInfo.scale;
-////                stampReq.offsetX = stampInfo.offsetX;
-////                stampReq.offsetY = stampInfo.offsetY;
-////                saveReq.stamp = stampReq;
-//                doSaveDrawerAsPdf(saveReq);
-//                promise.complete(jsonEncode(saveTokenPath));
-//            } catch (Exception e) {
-//                promise.fail(e);
-//            }
-//        }, ar -> {
-//            if (ar.succeeded()) {
-//                ctx.response().end(ar.result());
-//            } else {
-//                ctx.fail(ar.cause());
-//            }
-//        });
-//    }
 
     private void hokenRep(RoutingContext ctx) {
         try {

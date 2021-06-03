@@ -61,6 +61,10 @@ public class CovidVaccine {
                     patientIds();
                     break;
                 }
+                case "search": {
+                    search(args);
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -81,7 +85,42 @@ public class CovidVaccine {
         System.out.println("  apply-patches");
         System.out.println("  current");
         System.out.println("  patient-ids");
+        System.out.println("  search SEARCH-TEXT");
         System.out.println("  help");
+    }
+
+    private static void search(String[] args) throws Exception {
+        if( args.length != 2 ){
+            System.err.println("Invalid arguments to search command.");
+            printHelp();
+            System.exit(1);
+        } else {
+            String text = args[1];
+            List<RegularPatient> patients = executeLogbook();
+            List<RegularPatient> results = new ArrayList<>();
+            try {
+                int patientId = Integer.parseInt(text);
+                for(RegularPatient p: patients){
+                    if( p.patientId == patientId ){
+                        results.add(p);
+                        break;
+                    }
+                }
+            } catch(NumberFormatException e){
+                for(RegularPatient p: patients){
+                    if( p.name.contains(text) ){
+                        results.add(p);
+                    }
+                }
+            }
+            if( results.size() == 0 ){
+                System.out.println("(No result)");
+            } else {
+                for (RegularPatient p : results) {
+                    System.out.println(p.toString());
+                }
+            }
+        }
     }
 
     private static void applyPatches() throws Exception {
@@ -408,36 +447,6 @@ public class CovidVaccine {
         }
         return lines;
     }
-
-//    private static List<String> prepareList() throws Exception {
-//        List<RegularPatient> patients = executeLogbook();
-//        Map<String, List<RegularPatient>> groups = new HashMap<>();
-//        patients.forEach(p -> {
-//            String code = p.attr.substring(0, 1);
-//            List<RegularPatient> list = groups.computeIfAbsent(code, k -> new ArrayList<>());
-//            list.add(p);
-//        });
-//        List<String> codes = new ArrayList<>();
-//        Set<String> keys = new HashSet<>(groups.keySet());
-//        List.of("C", "S", "*", "P", "T").forEach(c -> {
-//            codes.add(c);
-//            keys.remove(c);
-//        });
-//        keys.remove("x");
-//        keys.remove("U");
-//        codes.addAll(keys);
-//        List<String> lines = new ArrayList<>();
-//        Map<Integer, String> yomiMap = readPatientYomi();
-//        for (String code : codes) {
-//            List<RegularPatient> list = groups.getOrDefault(code, Collections.emptyList());
-//            list.sort(Comparator.comparing(p -> getPatientYomi(p.patientId, yomiMap)));
-//            list.forEach(p -> lines.add(p.toString()));
-//            lines.add(String.format("(%d)", list.size()));
-//            lines.add("");
-//        }
-//        return lines;
-//    }
-
 
     private static void list() throws Exception {
         List<String> lines = prepareList();

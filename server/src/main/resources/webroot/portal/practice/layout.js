@@ -64,7 +64,7 @@ export async function initLayout(pane, rest, controller, printAPI) {
         e.addEventListener("patient-changed", event => {
             let patient = app.patient;
             if (patient) {
-                let disp = new PatientDisplay(patient);
+                let disp = new PatientDisplay(patient, rest);
                 e.innerHTML = "";
                 e.append(disp.ele);
             } else {

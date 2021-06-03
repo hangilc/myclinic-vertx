@@ -1,6 +1,7 @@
 import * as kanjidate from "../../js/kanjidate.js";
 import {createElementFrom} from "../../js/create-element-from.js";
 import {parseElement} from "../../js/parse-node.js";
+import {CalloutDialog} from "../../components/phone-dialog.js";
 
 let tmpl = `
     <div>
@@ -21,8 +22,9 @@ let tmpl = `
 `;
 
 export class PatientDisplay {
-    constructor(patient){
+    constructor(patient, rest){
         this.ele = createElementFrom(tmpl);
+        this.rest = rest;
         let map = parseElement(this.ele);
         map.patientId.innerText = patient.patientId;
         map.lastName.innerText = patient.lastName;
@@ -34,6 +36,7 @@ export class PatientDisplay {
         map.sex.innerText = patient.sex === "M" ? "男性" : "女性";
         map.address.innerText = patient.address;
         map.phone.innerText = patient.phone;
+        map.phone.addEventListener("click", e => this.doPhone());
         map.detailLink.addEventListener("click", event => {
             if( map.detail.classList.contains("d-none") ){
                 map.detail.classList.remove("d-none");
@@ -41,5 +44,10 @@ export class PatientDisplay {
                 map.detail.classList.add("d-none");
             }
         });
+    }
+
+    async doPhone(){
+        const dialog = new CalloutDialog("", this.rest);
+        dialog.open();
     }
 }

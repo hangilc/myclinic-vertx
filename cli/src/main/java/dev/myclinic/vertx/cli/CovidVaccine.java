@@ -65,6 +65,10 @@ public class CovidVaccine {
                     search(args);
                     break;
                 }
+                case "choose": {
+                    choose();
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -86,7 +90,24 @@ public class CovidVaccine {
         System.out.println("  current");
         System.out.println("  patient-ids");
         System.out.println("  search SEARCH-TEXT");
+        System.out.println("  choose");
         System.out.println("  help");
+    }
+
+    private static void choose() throws Exception {
+        List<RegularPatient> patients = executeLogbook();
+        List<RegularPatient> candidates = patients.stream()
+                .filter(p -> {
+                    PatientState ps = parsePatientAttr(p.attr);
+                    return ps instanceof FirstShotCandidate;
+                })
+                .collect(toList());
+        RegularPatient chosen = Misc.chooseRandom(candidates);
+        if( chosen != null ) {
+            System.out.println(chosen.toString());
+        } else {
+            System.out.println("(No candidate)");
+        }
     }
 
     private static void search(String[] args) throws Exception {

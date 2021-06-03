@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -132,5 +133,16 @@ class Misc {
 
     public static String youbiAsKanji(DayOfWeek dow){
         return DateTimeUtil.youbiAsKanji(dow);
+    }
+
+    private final static Random random = new Random();
+
+    public static <T> T chooseRandom(List<T> candidates){
+        if( candidates.size() == 0 ){
+            return null;
+        } else {
+            int i = random.nextInt(candidates.size());
+            return candidates.get(i);
+        }
     }
 }

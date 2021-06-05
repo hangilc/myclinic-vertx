@@ -1,8 +1,35 @@
-import {Dialog} from "../js/dialog2.js";
-import {parseElement} from "../js/parse-node.js";
-import {createElementFrom} from "../js/create-element-from.js";
+import {Dialog} from "./dialog2.js";
+import {parseElement} from "./parse-node.js";
+import {createElementFrom} from "./create-element-from.js";
 
+let rest = null;
 let device = null;
+
+export async function initPhone(restObject){
+    rest = restObject;
+    //await setupDevice();
+}
+
+async function setupDevice(cb){
+    if( device == null ){
+        let token = await rest.twilioWebphoneToken();
+        device = new Twilio.Device();
+        device.setup(token, {
+            "edge": "tokyo"
+        });
+    } else {
+
+    }
+}
+
+export async function callout(phoneNumber){
+    await setupDevice();
+    if( device != null ){
+        device.connect({
+            phone: phoneNumber
+        });
+    }
+}
 
 const tmpl = `
     <div class="form-inline">

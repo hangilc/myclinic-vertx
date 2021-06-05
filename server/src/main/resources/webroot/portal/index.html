@@ -69,6 +69,7 @@
         let printerSetting = await import("./printer-setting/printer-setting.js");
         let refer = await import("./refer/refer.js");
         let {MedCert} = await import("./medcert/medcert.js");
+        let {initPhone} = await import("../js/phone.js");
 
         let printAPI = null;
         (function(){
@@ -89,6 +90,8 @@
             rest,
             printAPI
         }
+
+        await initPhone(rest);
 
         let menu = new Menu(document.getElementById("index-pane-wrapper"));
         menu.addItem("practice", e => {

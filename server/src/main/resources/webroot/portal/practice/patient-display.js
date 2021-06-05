@@ -1,7 +1,9 @@
 import * as kanjidate from "../../js/kanjidate.js";
 import {createElementFrom} from "../../js/create-element-from.js";
 import {parseElement} from "../../js/parse-node.js";
-import {CalloutDialog} from "../../components/phone-dialog.js";
+import {CalloutDialog} from "../../js/phone.js";
+import {detectPhoneNumber} from "../../js/phone-number.js";
+import {callout} from "../../js/phone.js";
 
 let tmpl = `
     <div>
@@ -35,8 +37,7 @@ export class PatientDisplay {
         map.age.innerText = kanjidate.calcAge(patient.birthday) + "才";
         map.sex.innerText = patient.sex === "M" ? "男性" : "女性";
         map.address.innerText = patient.address;
-        map.phone.innerText = patient.phone;
-        map.phone.addEventListener("click", e => this.doPhone());
+        this.setupPhone(map.phone, patient.phone);
         map.detailLink.addEventListener("click", event => {
             if( map.detail.classList.contains("d-none") ){
                 map.detail.classList.remove("d-none");
@@ -44,6 +45,33 @@ export class PatientDisplay {
                 map.detail.classList.add("d-none");
             }
         });
+    }
+
+    setupPhone(wrapper, phone){
+        wrapper.innerHTML = "";
+        const spanTmpl = `<span class="x-span mr-2"></span>`;
+        const buttonTmpl = `<button class="btn btn-sm mr-2">発信</button>`;
+        if( phone) {
+            const nums = detectPhoneNumber(phone);
+            if( nums && nums.length > 0 ){
+                let left = 0;
+                for(let m of nums){
+                    let s = phone.substring(left, m.index);
+                    wrapper.appendChild(document.createTextNode(s));
+                    const span = createElementFrom(spanTmpl);
+                    parseElement(span).span.innerText = phone.substring(m.index, m.index + m.length);
+                    wrapper.appendChild(span);
+                    const button = createElementFrom(buttonTmpl);
+                    button.addEventListener("click", async e => {
+                        const phoneNumber = m.phone;
+                        await callout(phoneNumber);
+                    });
+                    wrapper.appendChild(button);
+                }
+            } else {
+                wrapper.innerText = phone;
+            }
+        }
     }
 
     async doPhone(){

@@ -5,29 +5,37 @@ import {createElementFrom} from "./create-element-from.js";
 let rest = null;
 let device = null;
 
-export async function initPhone(restObject){
+export function initPhone(restObject){
     rest = restObject;
-    //await setupDevice();
 }
 
-async function setupDevice(cb){
+async function setupDevice(){
     if( device == null ){
         let token = await rest.twilioWebphoneToken();
         device = new Twilio.Device();
         device.setup(token, {
             "edge": "tokyo"
         });
+        return new Promise((accept, reject) => {
+            device.on("ready", _ => accept(true));
+        });
     } else {
-
+        return true;
     }
 }
 
 export async function callout(phoneNumber){
     await setupDevice();
     if( device != null ){
-        device.connect({
+        if( device.status() !== "ready" ){
+            alert("Device is not ready.");
+            return null;
+        }
+        return device.connect({
             phone: phoneNumber
         });
+    } else {
+        return null;
     }
 }
 

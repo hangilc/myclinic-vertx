@@ -1,5 +1,5 @@
 import * as kanjidate from "../../js/kanjidate.js";
-import {createElementFrom} from "../../js/create-element-from.js";
+import {createElementFrom, appendElementsFromTemplate} from "../../js/create-element-from.js";
 import {parseElement} from "../../js/parse-node.js";
 import {CalloutDialog} from "../../js/phone.js";
 import {detectPhoneNumber} from "../../js/phone-number.js";
@@ -49,25 +49,35 @@ export class PatientDisplay {
 
     setupPhone(wrapper, phone){
         wrapper.innerHTML = "";
-        const spanTmpl = `<span class="x-span mr-2"></span>`;
-        const buttonTmpl = `<button class="btn btn-sm mr-2">発信</button>`;
+        const tmpl = `
+            <span class="x-span mr-2" style="color: green"></span>
+            <button class="x-callout btn btn-sm mr-2">発信</button>
+            <button class="x-disconnect btn btn-sm mr-2">終了</button>
+        `;
+        const resetTmpl = `<button class="x-reset btn btn-sm ml-2">リセット</button>`;
         if( phone) {
             const nums = detectPhoneNumber(phone);
+            let left = 0;
             if( nums && nums.length > 0 ){
-                let left = 0;
                 for(let m of nums){
-                    let s = phone.substring(left, m.index);
+                    const s = phone.substring(left, m.index);
                     wrapper.appendChild(document.createTextNode(s));
-                    const span = createElementFrom(spanTmpl);
-                    parseElement(span).span.innerText = phone.substring(m.index, m.index + m.length);
-                    wrapper.appendChild(span);
-                    const button = createElementFrom(buttonTmpl);
-                    button.addEventListener("click", async e => {
+                    const map = appendElementsFromTemplate(wrapper, tmpl, true);
+                    map.span.innerText = phone.substring(m.index, m.index + m.length);
+                    left = m.index + m.length;
+                    map.callout.addEventListener("click", async e => {
                         const phoneNumber = m.phone;
-                        await callout(phoneNumber);
+                        const conn = await callout(phoneNumber);
+                        if( conn ){
+                            map.disconnect.addEventListener("click", e => {
+                                conn.disconnect();
+                            });
+                        }
                     });
-                    wrapper.appendChild(button);
                 }
+                const reset = createElementFrom(resetTmpl);
+                reset.addEventListener("click", e => this.setupPhone(wrapper, phone));
+                wrapper.appendChild(reset);
             } else {
                 wrapper.innerText = phone;
             }

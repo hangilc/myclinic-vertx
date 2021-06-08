@@ -15,6 +15,8 @@ import dev.myclinic.vertx.mastermap.MasterMap;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -64,7 +66,6 @@ public class Main {
         HoukatsuKensa houkatsuKensa = config.getHoukatsuKensa();
         HotlineStreamerVerticle hotlineVerticls = new HotlineStreamerVerticle(mapper);
         vertx.deployVerticle(hotlineVerticls);
-        HttpServer server = vertx.createHttpServer();
         Router router = Router.router(vertx);
         Route restRoute = router.route("/json/:action");
         restRoute.handler(BodyHandler.create());
@@ -97,6 +98,7 @@ public class Main {
         router.route("/reception").handler(ctx -> ctx.response().setStatusCode(301)
                 .putHeader("Location", "/web/portal-reception/index.html")
                 .end());
+        HttpServer server = vertx.createHttpServer();
         server.requestHandler(router);
         server.webSocketHandler(ws -> {
             System.out.println("opened: " + ws.path());
@@ -110,7 +112,33 @@ public class Main {
         String bind = resolveBind(cmdArgs);
         int port = cmdArgs.port;
         server.listen(port, bind);
-        System.out.printf("server started at %s:%d\n", bind, port);
+        System.out.printf("server listening to %s:%d\n", bind, port);
+
+        String certPath = System.getenv("MYCLINIC_SERVER_CERT");
+        String privateKey = System.getenv("MYCLINIC_SERVER_PRIVATE_KEY");
+        if( certPath != null && privateKey != null ){
+            HttpServer sslServer = vertx.createHttpServer(new HttpServerOptions()
+                    .setPemKeyCertOptions(new PemKeyCertOptions()
+                            .setCertPath(certPath)
+                            .setKeyPath(privateKey)
+                    )
+                    .setSsl(true)
+            );
+            sslServer.requestHandler(router);
+            sslServer.webSocketHandler(ws -> {
+                System.out.println("opened: " + ws.path());
+                if( ws.path().equals("/hotline") ){
+                    hotlineVerticls.addClient(ws);
+                } else {
+                    ws.reject();
+                }
+                ws.closeHandler(e -> System.out.println("closed"));
+            });
+            String sslBind = resolveSslBind(cmdArgs);
+            int sslPort = cmdArgs.sslPort;
+            sslServer.listen(sslPort, sslBind);
+            System.out.printf("server listening to %s:%d\n", sslBind, sslPort);
+        }
     }
 
     private static void ensureAppDir(String dirToken) throws IOException {
@@ -159,6 +187,17 @@ public class Main {
         String bind = cmdArgs.bind;
         if( bind == null ){
             bind = System.getenv("MYCLINIC_BIND");
+        }
+        if( bind == null ){
+            bind = "0.0.0.0";
+        }
+        return bind;
+    }
+
+    private static String resolveSslBind(CmdArgs cmdArgs){
+        String bind = cmdArgs.bind;
+        if( bind == null ){
+            bind = System.getenv("MYCLINIC_SSL_BIND");
         }
         if( bind == null ){
             bind = "0.0.0.0";

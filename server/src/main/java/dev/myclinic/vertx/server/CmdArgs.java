@@ -8,7 +8,7 @@ import java.util.List;
 class CmdArgs {
 
     int port = 28080;
-    int sslPort = 443
+    int sslPort = 443;
     String bind = null;
     boolean isDev = false;
     boolean simulateSlowUpload = false;

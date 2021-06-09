@@ -8,7 +8,7 @@ import java.util.List;
 class CmdArgs {
 
     int port = 28080;
-    int sslPort = 443;
+    int sslPort = 2443;
     String bind = null;
     boolean isDev = false;
     boolean simulateSlowUpload = false;
@@ -18,6 +18,8 @@ class CmdArgs {
 
     public static CmdArgs parse(String[] args) {
         CmdArgs cmdArgs = new CmdArgs();
+        cmdArgs.initPortValue();
+        cmdArgs.initSslPortValue();
         int i = 0;
         first:
         for (i = 0; i < args.length; i++) {
@@ -62,6 +64,20 @@ class CmdArgs {
             cmdArgs.args.add(args[i]);
         }
         return cmdArgs;
+    }
+
+    private void initPortValue(){
+        String s = System.getenv("MYCLINIC_SERVER_PORT");
+        if( s != null ){
+            this.port = Integer.parseInt(s);
+        }
+    }
+
+    private void initSslPortValue(){
+        String s = System.getenv("MYCLINIC_SERVER_SSL_PORT");
+        if( s != null ){
+            this.sslPort = Integer.parseInt(s);
+        }
     }
 
     public static String findWebroot() {

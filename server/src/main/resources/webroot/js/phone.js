@@ -10,30 +10,47 @@ export function initPhone(restObject){
 }
 
 async function setupDevice(){
+    let token = await rest.twilioWebphoneToken();
+    device.setup(token, {
+        "edge": "tokyo"
+    });
+    return new Promise((accept, reject) => {
+        device.on("ready", _ => accept(true));
+    });
+}
+
+async function ensureDevice(){
     if( device == null ){
-        let token = await rest.twilioWebphoneToken();
         device = new Twilio.Device();
-        device.setup(token, {
-            "edge": "tokyo"
-        });
-        return new Promise((accept, reject) => {
-            device.on("ready", _ => accept(true));
-        });
+        return await setupDevice();
     } else {
         return true;
     }
 }
 
 export async function callout(phoneNumber){
-    await setupDevice();
+    await ensureDevice();
     if( device != null ){
-        if( device.status() !== "ready" ){
-            alert("Device is not ready.");
-            return null;
+        // noinspection FallThroughInSwitchStatementJS
+        switch(device.status()){
+            case "offline": {
+                await setupDevice();
+                // fall through
+            }
+            case "ready": {
+                return device.connect({
+                    phone: phoneNumber
+                });
+            }
+            case "busy": {
+                alert("Device is busy.");
+                return null;
+            }
+            default: {
+                console.log("Unknown device status:", device.status());
+                return null;
+            }
         }
-        return device.connect({
-            phone: phoneNumber
-        });
     } else {
         return null;
     }

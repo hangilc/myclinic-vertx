@@ -2,6 +2,7 @@ package dev.myclinic.vertx.cli;
 
 import dev.myclinic.vertx.db.MysqlDataSourceFactory;
 import dev.myclinic.vertx.util.DateTimeUtil;
+import dev.myclinic.vertx.util.kanjidate.GengouNenPair;
 import dev.myclinic.vertx.util.kanjidate.KanjiDate;
 
 import javax.sql.DataSource;
@@ -65,6 +66,10 @@ class Misc {
         return readLines(file, () -> {
             throw new RuntimeException("File does not exist: " + file);
         });
+    }
+
+    public static List<String> readLines(Path path) {
+        return readLines(path.toString());
     }
 
     public static List<String> readLines(String file, Supplier<List<String>> ifFileMissing){
@@ -133,6 +138,17 @@ class Misc {
 
     public static String youbiAsKanji(DayOfWeek dow){
         return DateTimeUtil.youbiAsKanji(dow);
+    }
+
+    public static String localDateToKanji(LocalDate date, boolean twoDigits, boolean youbi){
+        GengouNenPair geng = KanjiDate.yearToGengou(date);
+        return String.format("%s%s年%s月%s日%s",
+                geng.gengou,
+                twoDigits ? String.format("%02d", geng.nen) : String.format("%d", geng.nen),
+                twoDigits ? String.format("%02d", date.getMonthValue()) : String.format("%d", date.getMonthValue()),
+                twoDigits ? String.format("%02d", date.getDayOfMonth()) : String.format("%d", date.getDayOfMonth()),
+                youbi ? String.format("（%s）", youbiAsKanji(date.getDayOfWeek())) : ""
+        );
     }
 
     private final static Random random = new Random();

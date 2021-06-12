@@ -69,6 +69,10 @@ public class CovidVaccine {
                     choose();
                     break;
                 }
+                case "list-appoint-dates": {
+                    listAppointDates();
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -91,7 +95,49 @@ public class CovidVaccine {
         System.out.println("  patient-ids");
         System.out.println("  search SEARCH-TEXT");
         System.out.println("  choose");
+        System.out.println("  list-appoint-dates");
         System.out.println("  help");
+    }
+
+    private static final Path appointDatesFile = Path.of(CovidVaccineDir, "appoint-dates.txt");
+
+    private static class AppointDate {
+        public LocalDate date;
+        public int capacity;
+
+        public AppointDate(LocalDate date, int capacity) {
+            this.date = date;
+            this.capacity = capacity;
+        }
+
+        private static final Pattern pat = Pattern.compile("^(\\d+-\\d+-\\d+)\\s+\\d+");
+
+        public static AppointDate parse(String line) {
+            Matcher m = pat.matcher(line);
+            if (m.matches()) {
+                return new AppointDate(
+                        LocalDate.parse(m.group(1)),
+                        Integer.parseInt(m.group(2))
+                );
+            } else {
+                throw new RuntimeException("Invalid appoint date line: " + line);
+            }
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s %d名", Misc.localDateToKanji(date, true, true), capacity);
+        }
+    }
+
+    private static void listAppointDates() throws Exception {
+        if (Files.exists(appointDatesFile)) {
+            List<String> lines = Misc.readLines(appointDatesFile);
+            lines.stream()
+                    .filter(String::isBlank)
+                    .map(AppointDate::parse)
+                    .forEach(System.out::println);
+        }
     }
 
     private static void choose() throws Exception {
@@ -103,7 +149,7 @@ public class CovidVaccine {
                 })
                 .collect(toList());
         RegularPatient chosen = Misc.chooseRandom(candidates);
-        if( chosen != null ) {
+        if (chosen != null) {
             System.out.println(chosen.toString());
         } else {
             System.out.println("(No candidate)");
@@ -111,7 +157,7 @@ public class CovidVaccine {
     }
 
     private static void search(String[] args) throws Exception {
-        if( args.length != 2 ){
+        if (args.length != 2) {
             System.err.println("Invalid arguments to search command.");
             printHelp();
             System.exit(1);
@@ -121,20 +167,20 @@ public class CovidVaccine {
             List<RegularPatient> results = new ArrayList<>();
             try {
                 int patientId = Integer.parseInt(text);
-                for(RegularPatient p: patients){
-                    if( p.patientId == patientId ){
+                for (RegularPatient p : patients) {
+                    if (p.patientId == patientId) {
                         results.add(p);
                         break;
                     }
                 }
-            } catch(NumberFormatException e){
-                for(RegularPatient p: patients){
-                    if( p.name.contains(text) ){
+            } catch (NumberFormatException e) {
+                for (RegularPatient p : patients) {
+                    if (p.name.contains(text)) {
                         results.add(p);
                     }
                 }
             }
-            if( results.size() == 0 ){
+            if (results.size() == 0) {
                 System.out.println("(No result)");
             } else {
                 for (RegularPatient p : results) {
@@ -482,7 +528,7 @@ public class CovidVaccine {
 
     private static void patientIds() throws Exception {
         Map<String, List<RegularPatient>> groups = prepareGroupsForListing();
-        for(String code: groups.keySet()){
+        for (String code : groups.keySet()) {
             List<RegularPatient> list = groups.computeIfAbsent(code, k -> Collections.emptyList());
             List<String> patientIds = list.stream()
                     .sorted(Comparator.comparing(p -> p.patientId))

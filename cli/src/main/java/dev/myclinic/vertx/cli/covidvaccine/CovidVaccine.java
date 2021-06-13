@@ -88,6 +88,10 @@ public class CovidVaccine {
                     registerAppoint(args);
                     break;
                 }
+                case "appoints-at": {
+                    appointsAt(args);
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -115,7 +119,26 @@ public class CovidVaccine {
         System.out.println("  check-appoint-prefs");
         System.out.println("  appoint-sheet MM-DDThh:ss");
         System.out.println("  register-appoint APPOINT-TIME PATIENT-ID PATIENT-ID ...");
+        System.out.println("  appoints-at APPOINT-TIME");
         System.out.println("  help");
+    }
+
+    private static void appointsAt(String[] args){
+        var params = new Object(){
+            LocalDateTime at;
+        };
+        if( args.length == 2 ){
+            params.at = parseAppointTime(args[1]);
+        } else {
+            System.err.println("Invalid arg to appoints-at");
+            System.err.println("example -- appoints-at 06-19T14:00");
+            System.exit(1);
+        }
+        List<RegularPatient> patients = getAppointsAt(params.at, executeLogbook());
+        int index = 1;
+        for(RegularPatient p: patients){
+            System.out.printf("%d. %s\n", index++, p);
+        }
     }
 
     static List<RegularPatient> getAppointsAt(LocalDateTime at, Collection<RegularPatient> patients){

@@ -15,34 +15,44 @@ class AppointPref {
 
     public static AppointPref parse(String src) {
         AppointPref ap = new AppointPref();
-        for (String arg : src.split("\\s+")) {
-            arg = arg.trim();
-            Pref pref = ExcludeDates.parse(arg);
-            if (pref != null) {
-                ap.addPref(pref);
-                continue;
+        for(String opt: src.split("\\s*;\\s*") ){
+            opt = opt.trim();
+            List<Pref> prefOpt = new ArrayList<>();
+            for (String arg : opt.split("\\s+")) {
+                arg = arg.trim();
+                Pref pref = ExcludeDates.parse(arg);
+                if (pref != null) {
+                    prefOpt.add(pref);
+                    continue;
+                }
+                pref = OnlyAtTimes.parse(arg);
+                if (pref != null) {
+                    prefOpt.add(pref);
+                    continue;
+                }
+                pref = Exclude.parse(arg);
+                if (pref != null) {
+                    prefOpt.add(pref);
+                    continue;
+                }
+                pref = OnlyDayOfWeek.parse(arg);
+                if (pref != null) {
+                    prefOpt.add(pref);
+                    continue;
+                }
+                pref = AfterDate.parse(arg);
+                if (pref != null) {
+                    prefOpt.add(pref);
+                    continue;
+                }
+                pref = AcceptDates.parse(arg);
+                if (pref != null) {
+                    prefOpt.add(pref);
+                    continue;
+                }
+                throw new RuntimeException("Invalid appoint pref: " + arg);
             }
-            pref = OnlyAtTimes.parse(arg);
-            if (pref != null) {
-                ap.addPref(pref);
-                continue;
-            }
-            pref = Exclude.parse(arg);
-            if (pref != null) {
-                ap.addPref(pref);
-                continue;
-            }
-            pref = OnlyDayOfWeek.parse(arg);
-            if (pref != null) {
-                ap.addPref(pref);
-                continue;
-            }
-            pref = AfterDate.parse(arg);
-            if (pref != null) {
-                ap.addPref(pref);
-                continue;
-            }
-            throw new RuntimeException("Invalid appoint pref: " + arg);
+            ap.addPrefOpt(prefOpt);
         }
         return ap;
     }
@@ -51,19 +61,28 @@ class AppointPref {
         boolean acceptable(LocalDateTime at);
     }
 
-    private final List<Pref> prefs = new ArrayList<>();
+    private final List<List<Pref>> prefOpts = new ArrayList<>();
 
-    public void addPref(Pref pref) {
-        this.prefs.add(pref);
+    public void addPrefOpt(List<Pref> prefOpt) {
+        this.prefOpts.add(prefOpt);
     }
 
-    public boolean acceptable(LocalDateTime at) {
-        for (Pref pref : prefs) {
+    private static boolean optAcceptable(List<Pref> opt, LocalDateTime at){
+        for (Pref pref : opt) {
             if (!pref.acceptable(at)) {
                 return false;
             }
         }
         return true;
+    }
+
+    public boolean acceptable(LocalDateTime at) {
+        for(List<Pref> opt: prefOpts) {
+            if( optAcceptable(opt, at) ){
+                return true;
+            }
+        }
+        return false;
     }
 
     private static class ExcludeDates implements Pref {
@@ -217,7 +236,7 @@ class AppointPref {
             map.put("Mon", DayOfWeek.MONDAY);
             map.put("Tue", DayOfWeek.TUESDAY);
             map.put("Wed", DayOfWeek.WEDNESDAY);
-            map.put("Thur", DayOfWeek.THURSDAY);
+            map.put("Thu", DayOfWeek.THURSDAY);
             map.put("Fri", DayOfWeek.FRIDAY);
             map.put("Sat", DayOfWeek.SATURDAY);
         }
@@ -266,6 +285,42 @@ class AppointPref {
                         Integer.parseInt(m.group(1)),
                         Integer.parseInt(m.group(2))
                 );
+                return pref;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    private static class AcceptDates implements Pref {
+
+        private final List<LocalDate> acceptables = new ArrayList<>();
+
+        @Override
+        public boolean acceptable(LocalDateTime at) {
+            for(LocalDate d: acceptables){
+                if( d.equals(at.toLocalDate()) ){
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static final Pattern pat = Pattern.compile("accept-dates=(.+)");
+
+        public static AcceptDates parse(String src) {
+            Matcher m = pat.matcher(src);
+            if (m.matches()) {
+                AcceptDates pref = new AcceptDates();
+                String[] items = m.group(1).split("\\s*,\\s*");
+                for (String item : items) {
+                    item = item.trim();
+                    if (item.matches("\\d+-\\d+")) {
+                        item = String.format("%d-%s", LocalDate.now().getYear(), item);
+                    }
+                    LocalDate at = LocalDate.parse(item);
+                    pref.acceptables.add(at);
+                }
                 return pref;
             } else {
                 return null;

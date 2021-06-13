@@ -84,6 +84,10 @@ public class CovidVaccine {
                     appointSheet(args);
                     break;
                 }
+                case "register-appoint": {
+                    registerAppoint(args);
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -110,7 +114,77 @@ public class CovidVaccine {
         System.out.println("  appoint-acceptable PATIENT-ID APPOINT-TIME");
         System.out.println("  check-appoint-prefs");
         System.out.println("  appoint-sheet MM-DDThh:ss");
+        System.out.println("  register-appoint APPOINT-TIME PATIENT-ID PATIENT-ID ...");
         System.out.println("  help");
+    }
+
+    static List<RegularPatient> getAppointsAt(LocalDateTime at, Collection<RegularPatient> patients){
+        List<RegularPatient> result = new ArrayList<>();
+        for(RegularPatient p: patients){
+            PatientState state = parsePatientAttr(p.attr);
+            if( state instanceof FirstShotAppoint ){
+                if( at.equals(((FirstShotAppoint) state).at) ) {
+                    result.add(p);
+                }
+            } else if( state instanceof SecondShotAppoint ){
+                if( at.equals(((SecondShotAppoint) state).at) ){
+                    result.add(p);
+                }
+            }
+        }
+        return result;
+    }
+
+    private static void registerAppoint(String[] args) throws Exception {
+        var params = new Object(){
+            LocalDateTime at;
+            final List<Integer> patientIds = new ArrayList<>();
+        };
+        if( args.length > 1 ){
+            params.at = parseAppointTime(args[1]);
+            for(int i=2;i<args.length;i++){
+                params.patientIds.add(Integer.parseInt(args[i]));
+            }
+        } else {
+            System.err.println("Invalid arg to register-appoint.");
+            System.err.println("example -- register-appoint APPOINT-TIME PATIENT-ID PATIENT-ID ...");
+            System.exit(1);
+        }
+        Map<LocalDateTime, AppointDate> appointMap = readAppointDatesAsMap();
+        AppointDate appDate = appointMap.get(params.at);
+        if( appDate == null ){
+            System.err.println("Invalid appoint date: " + params.at);
+            System.exit(1);
+        }
+        Map<Integer, RegularPatient> patientMap = executeLogbookAsMap();
+        List<RegularPatient> currentAppoints = getAppointsAt(params.at, patientMap.values());
+        if( appDate.capacity < currentAppoints.size() + params.patientIds.size()){
+            System.err.println("Overbooking!");
+            System.exit(1);
+        }
+        Set<Integer> appointIds = new HashSet<>();
+        appointIds.addAll(currentAppoints.stream().map(p -> p.patientId).collect(toList()));
+        appointIds.addAll(params.patientIds);
+        if( appointIds.size() != currentAppoints.size() + params.patientIds.size() ){
+            System.err.println("Duplicate patient appointments.");
+            System.exit(1);
+        }
+        List<PatchCommand> patches = new ArrayList<>();
+        for(int patientId: params.patientIds){
+            RegularPatient p = patientMap.get(patientId);
+            if( p == null ){
+                throw new RuntimeException("Unknown patient-id: " + patientId);
+            }
+            PatientState state = parsePatientAttr(p.attr);
+            if( state instanceof Appointable ){
+                PatientState newState = ((Appointable) state).registerAppoint(params.at);
+                patches.add(new PatchState(newState.toString(), patientId));
+            } else {
+                System.err.printf("Cannot register appointment: %s\n", p);
+                System.exit(1);
+            }
+        }
+        doApplyPatches(patches, patientMap);
     }
 
     private static final Path appointPrefFile = Path.of(CovidVaccineDir, "appoint-pref.txt");
@@ -389,6 +463,33 @@ public class CovidVaccine {
         }
     }
 
+    private static boolean doApplyPatches(List<PatchCommand> patches, Map<Integer, RegularPatient> patientMap)
+            throws Exception {
+        for(PatchCommand patch: patches){
+            if( patch instanceof PatchAdd ){
+                PatchAdd patchAdd = (PatchAdd) patch;
+                System.out.printf("ADD %s\n", patchAdd.patient);
+            } else if( patch instanceof PatchState ){
+                PatchState patchState = (PatchState) patch;
+                RegularPatient patient = patientMap.get(patchState.patientId).copy();
+                patient.attr = patchState.attr;
+                System.out.printf("STATE %s\n", patient);
+            } else {
+                throw new RuntimeException("Unknown patch: " + patch);
+            }
+        }
+        System.console().writer().print("Apply these patches? (Y/N) ");
+        System.console().writer().flush();
+        String input = System.console().readLine();
+        if (input.startsWith("Y")) {
+            List<String> patchLines = patches.stream().map(PatchCommand::encode).collect(toList());
+            Misc.appendLines(logbookPath.toString(), patchLines);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private static void applyPatches() throws Exception {
         List<RegularPatient> patients = executeLogbook();
         Map<Integer, RegularPatient> map = new HashMap<>();
@@ -419,10 +520,10 @@ public class CovidVaccine {
             logs.addAll(patchLines);
             executeLogbook(logs);
             Misc.appendLines(logbookPath.toString(), patchLines);
+            Path archDir = Path.of(CovidVaccineDir, "arch");
+            Misc.ensureDirectory(archDir);
+            Misc.backupFile(patchPath, archDir, s -> s + "-done");
         }
-        Path archDir = Path.of(CovidVaccineDir, "arch");
-        Misc.ensureDirectory(archDir);
-        Misc.backupFile(patchPath, archDir, s -> s + "-done");
     }
 
     private static void listPatches() throws Exception {
@@ -579,6 +680,7 @@ public class CovidVaccine {
     }
 
     private interface PatchCommand {
+        String encode();
     }
 
     private static class PatchAdd implements PatchCommand {
@@ -586,6 +688,11 @@ public class CovidVaccine {
 
         public PatchAdd(RegularPatient patient) {
             this.patient = patient;
+        }
+
+        @Override
+        public String encode() {
+            return String.format("ADD %s", patient.toStringWithoutAttr());
         }
     }
 
@@ -596,6 +703,12 @@ public class CovidVaccine {
         public PatchState(String attr, int patientId) {
             this.attr = attr;
             this.patientId = patientId;
+            parsePatientAttr(attr);
+        }
+
+        @Override
+        public String encode() {
+            return String.format("STATE %d %s", patientId, attr);
         }
     }
 
@@ -673,6 +786,17 @@ public class CovidVaccine {
         return new ArrayList<>(map.values());
     }
 
+    static Map<Integer, RegularPatient> executeLogbookAsMap(){
+        Map<Integer, RegularPatient> map = new HashMap<>();
+        executeLogbook().forEach(p -> {
+            if( map.containsKey(p.patientId) ){
+                throw new RuntimeException("Duplicate patient-ids in logbook.");
+            }
+            map.put(p.patientId, p);
+        });
+        return map;
+    }
+
     private static Map<String, List<RegularPatient>> prepareGroupsForListing() throws Exception {
         List<RegularPatient> patients = executeLogbook();
         Map<String, List<RegularPatient>> groups = new HashMap<>();
@@ -740,15 +864,32 @@ public class CovidVaccine {
     private interface PatientState {
     }
 
-    private static class FirstShotCandidate implements PatientState {
+    interface Appointable {
+        PatientState registerAppoint(LocalDateTime at);
     }
 
-    private static class SecondShotCandidate implements PatientState {
+    private static class FirstShotCandidate implements PatientState, Appointable {
+        @Override
+        public PatientState registerAppoint(LocalDateTime at) {
+            return new FirstShotAppoint(at);
+        }
+    }
+
+    private static class SecondShotCandidate implements PatientState, Appointable {
         public static Pattern pat = Pattern.compile("S(\\d\\d)(\\d\\d)");
         public LocalDate firstShotDate;
 
         public SecondShotCandidate(LocalDate firstShotDate) {
             this.firstShotDate = firstShotDate;
+        }
+
+        @Override
+        public PatientState registerAppoint(LocalDateTime at) {
+            LocalDate dueDate = firstShotDate.plus(21, ChronoUnit.DAYS);
+            if( at.toLocalDate().isBefore(dueDate) ){
+                throw new RuntimeException("Too early second shot appointment.");
+            }
+            return new SecondShotAppoint(at);
         }
     }
 
@@ -774,6 +915,11 @@ public class CovidVaccine {
         public FirstShotAppoint(LocalDateTime at) {
             this.at = at;
         }
+
+        @Override
+        public String toString(){
+            return "A" + encodeAppointTime(at);
+        }
     }
 
     private static class SecondShotAppoint implements PatientState {
@@ -782,6 +928,11 @@ public class CovidVaccine {
 
         public SecondShotAppoint(LocalDateTime at) {
             this.at = at;
+        }
+
+        @Override
+        public String toString(){
+            return "B" + encodeAppointTime(at);
         }
     }
 
@@ -869,6 +1020,11 @@ public class CovidVaccine {
         throw new RuntimeException("Cannot parse appoint time: " + src);
     }
 
+    static String encodeAppointTime(LocalDateTime at){
+        return String.format("%d-%02d-%02dT%02d:%02d", at.getYear(), at.getMonthValue(), at.getDayOfMonth(),
+                at.getHour(), at.getMinute());
+    }
+
     static String appointTimeRep(LocalDateTime at) {
         return String.format("%s %02d時%02d分",
                 Misc.localDateToKanji(at.toLocalDate(), false, true),
@@ -887,9 +1043,23 @@ public class CovidVaccine {
             return attr.startsWith("x") || attr.startsWith("X");
         }
 
+        public String toStringWithoutAttr(){
+            return String.format("%d %s %d才 %s", patientId, name, age, phone);
+        }
+
         @Override
         public String toString() {
-            return String.format("%s %d %s %d才 %s", attr, patientId, name, age, phone);
+            return attr + " " + toStringWithoutAttr();
+        }
+
+        RegularPatient copy(){
+            RegularPatient c = new RegularPatient();
+            c.patientId = patientId;
+            c.name = name;
+            c.age = age;
+            c.phone = phone;
+            c.attr = attr;
+            return c;
         }
     }
 

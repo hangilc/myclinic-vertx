@@ -23,7 +23,7 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class Misc {
+public class Misc {
 
     public static DataSource getDataSource() {
         return MysqlDataSourceFactory.create();
@@ -143,7 +143,7 @@ class Misc {
     public static String localDateToKanji(LocalDate date, boolean twoDigits, boolean youbi){
         GengouNenPair geng = KanjiDate.yearToGengou(date);
         return String.format("%s%s年%s月%s日%s",
-                geng.gengou,
+                geng.gengou.getKanjiRep(),
                 twoDigits ? String.format("%02d", geng.nen) : String.format("%d", geng.nen),
                 twoDigits ? String.format("%02d", date.getMonthValue()) : String.format("%d", date.getMonthValue()),
                 twoDigits ? String.format("%02d", date.getDayOfMonth()) : String.format("%d", date.getDayOfMonth()),

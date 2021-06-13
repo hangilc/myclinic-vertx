@@ -1,21 +1,20 @@
-package dev.myclinic.vertx.cli;
+package dev.myclinic.vertx.cli.covidvaccine;
 
+import dev.myclinic.vertx.cli.Misc;
 import dev.myclinic.vertx.client2.Client;
 import dev.myclinic.vertx.dto.PatientDTO;
 
-import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 public class CovidVaccine {
@@ -65,8 +64,8 @@ public class CovidVaccine {
                     search(args);
                     break;
                 }
-                case "choose": {
-                    choose();
+                case "candidates-at": {
+                    candidatesAt(args);
                     break;
                 }
                 case "list-appoint-dates": {
@@ -94,7 +93,7 @@ public class CovidVaccine {
         System.out.println("  current");
         System.out.println("  patient-ids");
         System.out.println("  search SEARCH-TEXT");
-        System.out.println("  choose");
+        System.out.println("  candidates-at");
         System.out.println("  list-appoint-dates");
         System.out.println("  help");
     }
@@ -102,22 +101,25 @@ public class CovidVaccine {
     private static final Path appointDatesFile = Path.of(CovidVaccineDir, "appoint-dates.txt");
 
     private static class AppointDate {
-        public LocalDate date;
+        public LocalDateTime at;
         public int capacity;
 
-        public AppointDate(LocalDate date, int capacity) {
-            this.date = date;
+        public AppointDate(LocalDateTime at, int capacity) {
+            this.at = at;
             this.capacity = capacity;
         }
 
-        private static final Pattern pat = Pattern.compile("^(\\d+-\\d+-\\d+)\\s+\\d+");
+        private static final Pattern pat = Pattern.compile("^(\\d+-\\d+-\\d+)\\s+(\\d+):(\\d+)\\s+(\\d+)");
 
         public static AppointDate parse(String line) {
             Matcher m = pat.matcher(line);
             if (m.matches()) {
-                return new AppointDate(
+                LocalDateTime at = LocalDateTime.of(
                         LocalDate.parse(m.group(1)),
-                        Integer.parseInt(m.group(2))
+                        LocalTime.of(Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3))));
+                return new AppointDate(
+                        at,
+                        Integer.parseInt(m.group(4))
                 );
             } else {
                 throw new RuntimeException("Invalid appoint date line: " + line);
@@ -126,7 +128,11 @@ public class CovidVaccine {
 
         @Override
         public String toString() {
-            return String.format("%s %d名", Misc.localDateToKanji(date, true, true), capacity);
+            return String.format("%s %02d時%02d分 %d名",
+                    Misc.localDateToKanji(at.toLocalDate(), true, true),
+                    at.getHour(),
+                    at.getMinute(),
+                    capacity);
         }
     }
 
@@ -134,26 +140,54 @@ public class CovidVaccine {
         if (Files.exists(appointDatesFile)) {
             List<String> lines = Misc.readLines(appointDatesFile);
             lines.stream()
-                    .filter(String::isBlank)
+                    .filter(s -> !s.isBlank())
                     .map(AppointDate::parse)
                     .forEach(System.out::println);
         }
     }
 
-    private static void choose() throws Exception {
-        List<RegularPatient> patients = executeLogbook();
-        List<RegularPatient> candidates = patients.stream()
-                .filter(p -> {
-                    PatientState ps = parsePatientAttr(p.attr);
-                    return ps instanceof FirstShotCandidate;
-                })
-                .collect(toList());
-        RegularPatient chosen = Misc.chooseRandom(candidates);
-        if (chosen != null) {
-            System.out.println(chosen.toString());
+    private static boolean isCandidateAt(RegularPatient p, LocalDateTime at){
+        PatientState state = parsePatientAttr(p.attr);
+        if( state instanceof FirstShotCandidate ){
+            return true;
+        } else if( state instanceof SecondShotCandidate ){
+            SecondShotCandidate sc = (SecondShotCandidate) state;
+            LocalDate dueDate = sc.firstShotDate.plus(21, ChronoUnit.DAYS);
+            return dueDate.isEqual(at.toLocalDate()) || dueDate.isBefore(at.toLocalDate());
         } else {
-            System.out.println("(No candidate)");
+            return false;
         }
+    }
+
+    private static void candidatesAt(String[] args) throws Exception {
+        LocalDateTime at = null;
+        if( args.length == 2 ){
+            at = parseAppointTime(args[1]);
+        } else {
+            System.err.println("Invalid arg to candidates-at");
+            System.err.println("exmaple -- candidates-at 2021-06-19T14:00");
+            System.exit(1);
+        }
+        LocalDateTime finalAt = at;
+        List<RegularPatient> candidates = executeLogbook()
+                .stream()
+                .filter(p -> isCandidateAt(p, finalAt))
+                .limit(20)
+                .collect(toList());
+        candidates.forEach(System.out::println);
+
+//        List<RegularPatient> candidates = patients.stream()
+//                .filter(p -> {
+//                    PatientState ps = parsePatientAttr(p.attr);
+//                    return ps instanceof FirstShotCandidate;
+//                })
+//                .collect(toList());
+//        RegularPatient chosen = Misc.chooseRandom(candidates);
+//        if (chosen != null) {
+//            System.out.println(chosen.toString());
+//        } else {
+//            System.out.println("(No candidate)");
+//        }
     }
 
     private static void search(String[] args) throws Exception {
@@ -382,8 +416,6 @@ public class CovidVaccine {
     private interface PatchCommand {
     }
 
-    ;
-
     private static class PatchAdd implements PatchCommand {
         public RegularPatient patient;
 
@@ -570,23 +602,41 @@ public class CovidVaccine {
     private static class Under65 implements PatientState {
     }
 
+    private static class FirstShotAppoint implements PatientState {
+        public static Pattern pat = Pattern.compile("A(\\d+-\\d+-\\d+)T(\\d+):(\\d+)");
+        public LocalDateTime at;
+
+        public FirstShotAppoint(LocalDateTime at) {
+            this.at = at;
+        }
+    }
+
+    private static class SecondShotAppoint implements PatientState {
+        public static Pattern pat = Pattern.compile("B(\\d+-\\d+-\\d+)T(\\d+):(\\d+)");
+        public LocalDateTime at;
+
+        public SecondShotAppoint(LocalDateTime at) {
+            this.at = at;
+        }
+    }
+
     private static PatientState parsePatientAttr(String attr) {
         attr = attr.trim();
         if (attr.length() > 0) {
-            switch (attr) {
-                case "C":
+            switch (attr.charAt(0)) {
+                case 'C':
                     return new FirstShotCandidate();
-                case "x":
+                case 'x':
                     return new NotCurrentCandidate();
-                case "P":
+                case 'P':
                     return new WaitingReply();
-                case "*":
+                case '*':
                     return new NeedConfirm();
-                case "T":
+                case 'T':
                     return new DoneAtOtherPlace();
-                case "U":
+                case 'U':
                     return new Under65();
-                default:
+                case 'S': {
                     Matcher m = SecondShotCandidate.pat.matcher(attr);
                     if (m.matches()) {
                         int month = Integer.parseInt(m.group(1));
@@ -595,10 +645,54 @@ public class CovidVaccine {
                         return new SecondShotCandidate(LocalDate.of(year, month, day));
                     }
                     break;
+                }
+                case 'A': {
+                    Matcher m = FirstShotAppoint.pat.matcher(attr);
+                    if (m.matches()) {
+                        LocalDateTime at = LocalDateTime.of(
+                                LocalDate.parse(m.group(1)),
+                                LocalTime.of(
+                                        Integer.parseInt(m.group(2)),
+                                        Integer.parseInt(m.group(3)))
+                        );
+                        return new FirstShotAppoint(at);
+                    }
+                    break;
+                }
+                case 'B': {
+                    Matcher m = FirstShotAppoint.pat.matcher(attr);
+                    if (m.matches()) {
+                        LocalDateTime at = LocalDateTime.of(
+                                LocalDate.parse(m.group(1)),
+                                LocalTime.of(
+                                        Integer.parseInt(m.group(2)),
+                                        Integer.parseInt(m.group(3)))
+                        );
+                        return new SecondShotAppoint(at);
+                    }
+                    break;
+                }
             }
         }
         throw new RuntimeException("Invalid attribute: " + attr);
     }
+
+    private static final Pattern patAppointAtime = Pattern.compile("(\\d+-\\d+-\\d+)T(\\d+):(\\d+)");
+
+    static LocalDateTime parseAppointTime(String src){
+        Matcher m = patAppointAtime.matcher(src);
+        if( m.matches() ){
+            return LocalDateTime.of(
+                    LocalDate.parse(m.group(1)),
+                    LocalTime.of(
+                            Integer.parseInt(m.group(2)),
+                            Integer.parseInt(m.group(3)))
+            );
+        } else {
+            throw new RuntimeException("Cannot parse appoint time: " + src);
+        }
+    }
+
 
     private static class RegularPatient {
         int patientId;

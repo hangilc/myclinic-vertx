@@ -72,6 +72,10 @@ public class CovidVaccine {
                     listAppointDates();
                     break;
                 }
+                case "appoint-acceptable": {
+                    appointAcceptable(args);
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -93,9 +97,69 @@ public class CovidVaccine {
         System.out.println("  current");
         System.out.println("  patient-ids");
         System.out.println("  search SEARCH-TEXT");
-        System.out.println("  candidates-at");
+        System.out.println("  candidates-at APPOINT-TIME");
         System.out.println("  list-appoint-dates");
+        System.out.println("  appoint-acceptable PATIENT-ID APPOINT-TIME");
         System.out.println("  help");
+    }
+
+    private static final Path appointPrefFile = Path.of(CovidVaccineDir, "appoint-pref.txt");
+
+    private static class PatientAppointPref {
+        public int patientId;
+        public String name;
+        public AppointPref appointPref;
+
+        public PatientAppointPref(int patientId, String name, AppointPref appointPref) {
+            this.patientId = patientId;
+            this.name = name;
+            this.appointPref = appointPref;
+        }
+
+        boolean acceptable(LocalDateTime at){
+            return appointPref.acceptable(at);
+        }
+    }
+
+    private static Map<Integer, PatientAppointPref> readPatientAppointPrefs() throws Exception {
+        Map<Integer, PatientAppointPref> map = new HashMap<>();
+        for(String line: Misc.readLines(appointPrefFile)){
+            line = line.trim();
+            if(line.isEmpty() || line.startsWith("%")){
+                continue;
+            }
+            String[] items = line.split("\\s+", 3);
+            int patientId = Integer.parseInt(items[0]);
+            String name = items[1];
+            AppointPref ap = AppointPref.parse(items[2]);
+            if( map.containsKey(patientId) ){
+                throw new RuntimeException("Duplicate appoint pref definition: " + patientId);
+            }
+            map.put(patientId, new PatientAppointPref(patientId, name, ap));
+        }
+        return map;
+    }
+
+    private static void appointAcceptable(String[] args) throws Exception {
+        var params = new Object(){
+            public int patientId;
+            public LocalDateTime at;
+        };
+        if( args.length == 3 ){
+            params.patientId = Integer.parseInt(args[1]);
+            params.at = parseAppointTime(args[2]);
+        } else {
+            System.err.println("Invalid arg to pref-dates-for.");
+            System.err.println("example -- pref-dates-for 1234 2021-09-21T14:00");
+            System.exit(1);
+        }
+        Map<Integer, PatientAppointPref> prefMap = readPatientAppointPrefs();
+        PatientAppointPref pref = prefMap.get(params.patientId);
+        if( pref == null || pref.acceptable(params.at) ){
+            System.out.println("Acceptable");
+        } else {
+            System.out.println("Not acceptable");
+        }
     }
 
     private static final Path appointDatesFile = Path.of(CovidVaccineDir, "appoint-dates.txt");
@@ -172,22 +236,10 @@ public class CovidVaccine {
         List<RegularPatient> candidates = executeLogbook()
                 .stream()
                 .filter(p -> isCandidateAt(p, finalAt))
-                .limit(20)
                 .collect(toList());
+        Collections.shuffle(candidates);
+        candidates = candidates.subList(0, 30);
         candidates.forEach(System.out::println);
-
-//        List<RegularPatient> candidates = patients.stream()
-//                .filter(p -> {
-//                    PatientState ps = parsePatientAttr(p.attr);
-//                    return ps instanceof FirstShotCandidate;
-//                })
-//                .collect(toList());
-//        RegularPatient chosen = Misc.chooseRandom(candidates);
-//        if (chosen != null) {
-//            System.out.println(chosen.toString());
-//        } else {
-//            System.out.println("(No candidate)");
-//        }
     }
 
     private static void search(String[] args) throws Exception {
@@ -677,10 +729,10 @@ public class CovidVaccine {
         throw new RuntimeException("Invalid attribute: " + attr);
     }
 
-    private static final Pattern patAppointAtime = Pattern.compile("(\\d+-\\d+-\\d+)T(\\d+):(\\d+)");
+    private static final Pattern patAppointTime = Pattern.compile("(\\d+-\\d+-\\d+)T(\\d+):(\\d+)");
 
     static LocalDateTime parseAppointTime(String src){
-        Matcher m = patAppointAtime.matcher(src);
+        Matcher m = patAppointTime.matcher(src);
         if( m.matches() ){
             return LocalDateTime.of(
                     LocalDate.parse(m.group(1)),

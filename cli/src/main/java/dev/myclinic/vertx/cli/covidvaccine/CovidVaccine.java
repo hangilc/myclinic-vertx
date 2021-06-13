@@ -76,6 +76,14 @@ public class CovidVaccine {
                     appointAcceptable(args);
                     break;
                 }
+                case "check-appoint-prefs": {
+                    checkAppointPrefs();
+                    break;
+                }
+                case "appoint-sheet": {
+                    appointSheet(args);
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -100,6 +108,8 @@ public class CovidVaccine {
         System.out.println("  candidates-at APPOINT-TIME");
         System.out.println("  list-appoint-dates");
         System.out.println("  appoint-acceptable PATIENT-ID APPOINT-TIME");
+        System.out.println("  check-appoint-prefs");
+        System.out.println("  appoint-sheet MM-DDThh:ss");
         System.out.println("  help");
     }
 
@@ -116,23 +126,23 @@ public class CovidVaccine {
             this.appointPref = appointPref;
         }
 
-        boolean acceptable(LocalDateTime at){
+        boolean acceptable(LocalDateTime at) {
             return appointPref.acceptable(at);
         }
     }
 
     private static Map<Integer, PatientAppointPref> readPatientAppointPrefs() throws Exception {
         Map<Integer, PatientAppointPref> map = new HashMap<>();
-        for(String line: Misc.readLines(appointPrefFile)){
+        for (String line : Misc.readLines(appointPrefFile)) {
             line = line.trim();
-            if(line.isEmpty() || line.startsWith("%")){
+            if (line.isEmpty() || line.startsWith("%")) {
                 continue;
             }
             String[] items = line.split("\\s+", 3);
             int patientId = Integer.parseInt(items[0]);
             String name = items[1];
             AppointPref ap = AppointPref.parse(items[2]);
-            if( map.containsKey(patientId) ){
+            if (map.containsKey(patientId)) {
                 throw new RuntimeException("Duplicate appoint pref definition: " + patientId);
             }
             map.put(patientId, new PatientAppointPref(patientId, name, ap));
@@ -140,12 +150,32 @@ public class CovidVaccine {
         return map;
     }
 
+    private static void checkAppointPrefs() throws Exception {
+        Map<Integer, RegularPatient> patientMap = new HashMap<>();
+        executeLogbook().forEach(p -> {
+            patientMap.put(p.patientId, p);
+        });
+        Map<Integer, PatientAppointPref> prefMap = readPatientAppointPrefs();
+        for (int patientId : prefMap.keySet()) {
+            PatientAppointPref ap = prefMap.get(patientId);
+            RegularPatient p = patientMap.get(patientId);
+            if (p == null) {
+                System.err.printf("No such patient: (%d) %s\n", patientId, ap.name);
+            } else {
+                if (!p.name.equals(ap.name)) {
+                    System.err.printf("Name mismatch: (%d) %s -- %s\n",
+                            patientId, ap.name, p.name);
+                }
+            }
+        }
+    }
+
     private static void appointAcceptable(String[] args) throws Exception {
-        var params = new Object(){
+        var params = new Object() {
             public int patientId;
             public LocalDateTime at;
         };
-        if( args.length == 3 ){
+        if (args.length == 3) {
             params.patientId = Integer.parseInt(args[1]);
             params.at = parseAppointTime(args[2]);
         } else {
@@ -155,7 +185,7 @@ public class CovidVaccine {
         }
         Map<Integer, PatientAppointPref> prefMap = readPatientAppointPrefs();
         PatientAppointPref pref = prefMap.get(params.patientId);
-        if( pref == null || pref.acceptable(params.at) ){
+        if (pref == null || pref.acceptable(params.at)) {
             System.out.println("Acceptable");
         } else {
             System.out.println("Not acceptable");
@@ -200,21 +230,43 @@ public class CovidVaccine {
         }
     }
 
-    private static void listAppointDates() throws Exception {
+    private static List<AppointDate> readAppointDates() {
         if (Files.exists(appointDatesFile)) {
             List<String> lines = Misc.readLines(appointDatesFile);
-            lines.stream()
+            return lines.stream()
                     .filter(s -> !s.isBlank())
                     .map(AppointDate::parse)
-                    .forEach(System.out::println);
+                    .collect(toList());
+        } else {
+            return Collections.emptyList();
         }
     }
 
-    private static boolean isCandidateAt(RegularPatient p, LocalDateTime at){
+    private static Map<LocalDateTime, AppointDate> readAppointDatesAsMap() {
+        Map<LocalDateTime, AppointDate> map = new HashMap<>();
+        readAppointDates().forEach(ap -> {
+            if (map.containsKey(ap.at)) {
+                throw new RuntimeException("Duplicate appoint dates: " + ap.at);
+            }
+            map.put(ap.at, ap);
+        });
+        return map;
+    }
+
+    private static void listAppointDates() throws Exception {
+        readAppointDates().forEach(System.out::println);
+    }
+
+    private static boolean isCandidateAt(RegularPatient p, LocalDateTime at,
+                                         Map<Integer, PatientAppointPref> prefMap) {
+        PatientAppointPref ap = prefMap.get(p.patientId);
+        if (ap != null && !ap.acceptable(at)) {
+            return false;
+        }
         PatientState state = parsePatientAttr(p.attr);
-        if( state instanceof FirstShotCandidate ){
+        if (state instanceof FirstShotCandidate) {
             return true;
-        } else if( state instanceof SecondShotCandidate ){
+        } else if (state instanceof SecondShotCandidate) {
             SecondShotCandidate sc = (SecondShotCandidate) state;
             LocalDate dueDate = sc.firstShotDate.plus(21, ChronoUnit.DAYS);
             return dueDate.isEqual(at.toLocalDate()) || dueDate.isBefore(at.toLocalDate());
@@ -223,23 +275,84 @@ public class CovidVaccine {
         }
     }
 
+    private static List<RegularPatient> listCandidates(List<RegularPatient> logbook,
+                                                       LocalDateTime at,
+                                                       Map<Integer, PatientAppointPref> prefMap,
+                                                       int n) {
+        List<RegularPatient> candidates = logbook
+                .stream()
+                .filter(p -> isCandidateAt(p, at, prefMap))
+                .collect(toList());
+        Collections.shuffle(candidates);
+        return candidates.subList(0, Math.min(n, candidates.size()));
+    }
+
     private static void candidatesAt(String[] args) throws Exception {
-        LocalDateTime at = null;
-        if( args.length == 2 ){
-            at = parseAppointTime(args[1]);
+        var params = new Object() {
+            public LocalDateTime at;
+        };
+        if (args.length == 2) {
+            params.at = parseAppointTime(args[1]);
         } else {
             System.err.println("Invalid arg to candidates-at");
             System.err.println("exmaple -- candidates-at 2021-06-19T14:00");
             System.exit(1);
         }
-        LocalDateTime finalAt = at;
-        List<RegularPatient> candidates = executeLogbook()
-                .stream()
-                .filter(p -> isCandidateAt(p, finalAt))
-                .collect(toList());
-        Collections.shuffle(candidates);
-        candidates = candidates.subList(0, 30);
+        Map<Integer, PatientAppointPref> prefMap = readPatientAppointPrefs();
+        List<RegularPatient> candidates = listCandidates(executeLogbook(), params.at, prefMap, 30);
         candidates.forEach(System.out::println);
+    }
+
+    private static void appointSheet(String[] args) throws Exception {
+        var params = new Object() {
+            LocalDateTime at;
+        };
+        if (args.length == 2) {
+            params.at = parseAppointTime(args[1]);
+        } else {
+            System.err.println("Invalid arg to appoint-sheet.");
+            System.err.println("example -- appoint-sheet 06-19T14:00");
+            System.exit(1);
+        }
+        Map<LocalDateTime, AppointDate> appointMap = readAppointDatesAsMap();
+        AppointDate ap = appointMap.get(params.at);
+        if (ap == null) {
+            System.err.printf("Not an appoint date: %s", params.at);
+            System.exit(1);
+        } else {
+            System.out.printf("%s\n", appointTimeRep(params.at));
+            System.out.println();
+            List<RegularPatient> logbook = executeLogbook();
+            List<RegularPatient> patients = logbook.stream().filter(p -> {
+                PatientState state = parsePatientAttr(p.attr);
+                if (state instanceof FirstShotAppoint) {
+                    FirstShotAppoint fsa = (FirstShotAppoint) state;
+                    return fsa.at.equals(params.at);
+                } else if (state instanceof SecondShotAppoint) {
+                    SecondShotAppoint ssa = (SecondShotAppoint) state;
+                    return ssa.at.equals(params.at);
+                } else {
+                    return false;
+                }
+            }).collect(toList());
+            var locals = new Object() {
+                int index = 1;
+            };
+            int capacity = ap.capacity;
+            patients.forEach(p -> System.out.printf("%d. %s\n", locals.index++, p));
+            for (int i = locals.index; i <= capacity; i++) {
+                System.out.printf("%d. \n", i);
+            }
+            System.out.println();
+            if (capacity < patients.size()) {
+                System.err.println("Overbooking!");
+                System.exit(1);
+            } else if (capacity > patients.size()) {
+                Map<Integer, PatientAppointPref> prefMap = readPatientAppointPrefs();
+                List<RegularPatient> candidates = listCandidates(logbook, params.at, prefMap, 30);
+                candidates.forEach(System.out::println);
+            }
+        }
     }
 
     private static void search(String[] args) throws Exception {
@@ -730,19 +843,36 @@ public class CovidVaccine {
     }
 
     private static final Pattern patAppointTime = Pattern.compile("(\\d+-\\d+-\\d+)T(\\d+):(\\d+)");
+    private static final Pattern patAppointTime2 = Pattern.compile("(\\d+)-(\\d+)T(\\d+):(\\d+)");
 
-    static LocalDateTime parseAppointTime(String src){
+    static LocalDateTime parseAppointTime(String src) {
         Matcher m = patAppointTime.matcher(src);
-        if( m.matches() ){
+        if (m.matches()) {
             return LocalDateTime.of(
                     LocalDate.parse(m.group(1)),
                     LocalTime.of(
                             Integer.parseInt(m.group(2)),
                             Integer.parseInt(m.group(3)))
             );
-        } else {
-            throw new RuntimeException("Cannot parse appoint time: " + src);
         }
+        m = patAppointTime2.matcher(src);
+        if (m.matches()) {
+            return LocalDateTime.of(
+                    LocalDate.of(LocalDate.now().getYear(),
+                            Integer.parseInt(m.group(1)),
+                            Integer.parseInt(m.group(2))),
+                    LocalTime.of(
+                            Integer.parseInt(m.group(3)),
+                            Integer.parseInt(m.group(4)))
+            );
+        }
+        throw new RuntimeException("Cannot parse appoint time: " + src);
+    }
+
+    static String appointTimeRep(LocalDateTime at) {
+        return String.format("%s %02d時%02d分",
+                Misc.localDateToKanji(at.toLocalDate(), false, true),
+                at.getHour(), at.getMinute());
     }
 
 

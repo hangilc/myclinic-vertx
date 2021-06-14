@@ -1,5 +1,6 @@
 package dev.myclinic.vertx.cli;
 
+import dev.myclinic.vertx.client2.Client;
 import dev.myclinic.vertx.db.MysqlDataSourceFactory;
 import dev.myclinic.vertx.util.DateTimeUtil;
 import dev.myclinic.vertx.util.kanjidate.GengouNenPair;
@@ -116,7 +117,7 @@ public class Misc {
     }
 
     public static void appendLines(String file, List<String> lines) throws Exception {
-        try(FileWriter fw = new FileWriter(file, true);
+        try(FileWriter fw = new FileWriter(file, StandardCharsets.UTF_8, true);
             BufferedWriter bw = new BufferedWriter(fw);
             PrintWriter pw = new PrintWriter(bw)){
             lines.forEach(pw::println);
@@ -161,6 +162,11 @@ public class Misc {
             int i = random.nextInt(candidates.size());
             return candidates.get(i);
         }
+    }
+
+    public static Client getClient(){
+        String url = System.getenv("MYCLINIC_SERVICE");
+        return new Client(url);
     }
 
 }

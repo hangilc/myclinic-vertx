@@ -92,6 +92,10 @@ public class CovidVaccine {
                     appointsAt(args);
                     break;
                 }
+                case "add-patient": {
+                    addPatient(args);
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -120,7 +124,30 @@ public class CovidVaccine {
         System.out.println("  appoint-sheet MM-DDThh:ss");
         System.out.println("  register-appoint APPOINT-TIME PATIENT-ID PATIENT-ID ...");
         System.out.println("  appoints-at APPOINT-TIME");
+        System.out.println("  add-patient PATIENT-ID");
         System.out.println("  help");
+    }
+
+    private static void addPatient(String[] args) throws Exception {
+        var params = new Object(){
+            int patientId;
+        };
+        if( args.length == 2 ){
+            params.patientId = Integer.parseInt(args[1]);
+        } else {
+            System.err.println("Invalid arg to add-patient");
+            printHelp();
+            System.exit(1);
+        }
+        Client client = Misc.getClient();
+        PatientDTO patient = client.getPatient(params.patientId);
+        RegularPatient regp = CovidMisc.patientToRegularPatient(patient);
+        List<PatchCommand> patches = List.of(
+                new PatchAdd(regp),
+                new PatchState(regp.attr, patient.patientId));
+        Map<Integer, RegularPatient> map = new HashMap<>();
+        map.put(patient.patientId, regp);
+        doApplyPatches(patches, map);
     }
 
     private static void appointsAt(String[] args){
@@ -715,7 +742,8 @@ public class CovidVaccine {
 
         @Override
         public String encode() {
-            return String.format("ADD %s", patient.toStringWithoutAttr());
+            return String.format("ADD %d %s %d %s",
+                    patient.patientId, patient.name, patient.age, patient.phone);
         }
     }
 
@@ -999,7 +1027,7 @@ public class CovidVaccine {
                     break;
                 }
                 case 'B': {
-                    Matcher m = FirstShotAppoint.pat.matcher(attr);
+                    Matcher m = SecondShotAppoint.pat.matcher(attr);
                     if (m.matches()) {
                         LocalDateTime at = LocalDateTime.of(
                                 LocalDate.parse(m.group(1)),
@@ -1055,12 +1083,24 @@ public class CovidVaccine {
     }
 
 
-    private static class RegularPatient {
+    static class RegularPatient {
         int patientId;
         String name;
         int age;
         String phone;
         String attr;
+
+        public RegularPatient(int patientId, String name, int age, String phone, String attr) {
+            this.patientId = patientId;
+            this.name = name;
+            this.age = age;
+            this.phone = phone;
+            this.attr = attr;
+        }
+
+        RegularPatient(){
+
+        }
 
         public boolean isExcluded() {
             return attr.startsWith("x") || attr.startsWith("X");

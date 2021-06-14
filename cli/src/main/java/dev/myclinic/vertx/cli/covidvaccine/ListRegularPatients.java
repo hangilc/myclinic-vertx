@@ -1,5 +1,6 @@
-package dev.myclinic.vertx.cli;
+package dev.myclinic.vertx.cli.covidvaccine;
 
+import dev.myclinic.vertx.cli.Misc;
 import dev.myclinic.vertx.db.MysqlDataSourceFactory;
 import dev.myclinic.vertx.dto.PatientDTO;
 import dev.myclinic.vertx.dto.VisitDTO;

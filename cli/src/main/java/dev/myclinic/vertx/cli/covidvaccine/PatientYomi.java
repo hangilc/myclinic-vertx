@@ -1,4 +1,4 @@
-package dev.myclinic.vertx.cli;
+package dev.myclinic.vertx.cli.covidvaccine;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;

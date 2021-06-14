@@ -11,7 +11,6 @@ public class CovidVacServer {
     public static void main(String[] args){
         Vertx vertx = Vertx.vertx();
         Router router = Router.router(vertx);
-        router.route("/")
         String certPath = System.getenv("MYCLINIC_SERVER_CERT");
         String privateKey = System.getenv("MYCLINIC_SERVER_PRIVATE_KEY");
         HttpServer server = vertx.createHttpServer(new HttpServerOptions()

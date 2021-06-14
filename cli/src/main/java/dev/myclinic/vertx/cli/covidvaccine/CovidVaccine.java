@@ -96,6 +96,10 @@ public class CovidVaccine {
                     addPatient(args);
                     break;
                 }
+                case "batch-update-phone": {
+                    batchUpdatePhone();
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -125,7 +129,21 @@ public class CovidVaccine {
         System.out.println("  register-appoint APPOINT-TIME PATIENT-ID PATIENT-ID ...");
         System.out.println("  appoints-at APPOINT-TIME");
         System.out.println("  add-patient PATIENT-ID");
+        System.out.println("  batch-update-phone");
         System.out.println("  help");
+    }
+
+    private static void batchUpdatePhone() throws Exception {
+        Map<Integer, RegularPatient> patientMap = executeLogbookAsMap();
+        Client client = Misc.getClient();
+        List<PatchCommand> patches = new ArrayList<>();
+        for(RegularPatient regp: patientMap.values()){
+            PatientDTO p = client.getPatient(regp.patientId);
+            if( p.phone != null && !p.phone.equals(regp.phone) ){
+                patches.add(new PatchPhone(regp.patientId, p.phone));
+            }
+        }
+        doApplyPatches(patches, patientMap);
     }
 
     private static void addPatient(String[] args) throws Exception {
@@ -519,11 +537,16 @@ public class CovidVaccine {
             if( patch instanceof PatchAdd ){
                 PatchAdd patchAdd = (PatchAdd) patch;
                 System.out.printf("ADD %s\n", patchAdd.patient);
-            } else if( patch instanceof PatchState ){
+            } else if( patch instanceof PatchState ) {
                 PatchState patchState = (PatchState) patch;
                 RegularPatient patient = patientMap.get(patchState.patientId).copy();
                 patient.attr = patchState.attr;
                 System.out.printf("STATE %s\n", patient);
+            } else if( patch instanceof PatchPhone ){
+                PatchPhone patchPhone = (PatchPhone) patch;
+                RegularPatient patient = patientMap.get(patchPhone.patientId).copy();
+                patient.phone = patchPhone.phone;
+                System.out.printf("PHONE %s\n", patient);
             } else {
                 throw new RuntimeException("Unknown patch: " + patch);
             }
@@ -719,9 +742,9 @@ public class CovidVaccine {
         if (map.containsKey(patientId)) {
             return map.get(patientId);
         } else {
-            String server = System.getenv("MYCLINIC_REMOTE_SERVICE");
+            String server = System.getenv("MYCLINIC_SERVICE");
             if (server == null) {
-                throw new RuntimeException("Cannot find env var: MYCLINIC_REMOTE_SERVICE");
+                throw new RuntimeException("Cannot find env var: MYCLINIC_SERVICE");
             }
             Client client = new Client(server);
             PatientDTO patient = client.getPatient(patientId);
@@ -763,6 +786,21 @@ public class CovidVaccine {
         }
     }
 
+    private static class PatchPhone implements PatchCommand {
+        public int patientId;
+        public String phone;
+
+        public PatchPhone(int patientId, String phone) {
+            this.patientId = patientId;
+            this.phone = phone;
+        }
+
+        @Override
+        public String encode() {
+            return String.format("PHONE %d %s", patientId, phone);
+        }
+    }
+
     private static PatchCommand parsePatch(String patch) {
         patch = patch.trim();
         String[] parts = patch.split("\\s+", 2);
@@ -793,6 +831,15 @@ public class CovidVaccine {
                 String attr = items[1];
                 parsePatientAttr(attr);
                 return new PatchState(attr, patientId);
+            }
+            case "PHONE": {
+                String[] items = parts[1].split("\\s+", 2);
+                if( items.length != 2 ){
+                    throw new RuntimeException("Invalid log: " + patch);
+                }
+                int patientId = Integer.parseInt(items[0]);
+                String phone = items[1];
+                return new PatchPhone(patientId, phone);
             }
             default: {
                 throw new RuntimeException("Invalid command: " + patch);
@@ -830,6 +877,13 @@ public class CovidVaccine {
                     throw new RuntimeException("Invalid patient-id: " + String.format("%d", patientId));
                 }
                 patient.attr = attr;
+            } else if( cmd instanceof PatchPhone){
+                PatchPhone pp = (PatchPhone) cmd;
+                RegularPatient patient = map.get(pp.patientId);
+                if (patient == null) {
+                    throw new RuntimeException("Invalid patient-id: " + String.format("%d", pp.patientId));
+                }
+                patient.phone = pp.phone;
             } else {
                 throw new RuntimeException("Unknown patch: " + log);
             }

@@ -999,7 +999,7 @@ public class CovidVaccine {
                     break;
                 }
                 case 'B': {
-                    Matcher m = FirstShotAppoint.pat.matcher(attr);
+                    Matcher m = SecondShotAppoint.pat.matcher(attr);
                     if (m.matches()) {
                         LocalDateTime at = LocalDateTime.of(
                                 LocalDate.parse(m.group(1)),

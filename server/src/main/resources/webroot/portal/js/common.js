@@ -819,6 +819,10 @@ class Rest extends Client {
         return await this.topRest.getMostRecentVisitOfPatient(patientId);
     }
 
+    async twilioWebphoneToken(){
+        return await this.topRest.twilioWebphoneToken();
+    }
+
 }
 
 class Integration extends Client {

@@ -8,7 +8,8 @@ export class HotlineController {
         this.listElement = listElement;
         this.rest = rest;
         this.printAPI = printAPI;
-        this.ws = new WebSocket(`ws://${window.location.host}/hotline`);
+        const proto = document.location.protocol === 'https:' ? "wss" : "ws";
+        this.ws = new WebSocket(proto + `://${window.location.host}/hotline`);
         this.ws.addEventListener("message", async event => await this.doMessage(event.data));
         this.lastHotlineId = 0;
         this.timer = setInterval(async () => this.doCheckMessages(), 20000); // every 20 seconds

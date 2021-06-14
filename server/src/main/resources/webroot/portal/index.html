@@ -10,6 +10,7 @@
     <script src="js/common.js"></script>
     <script src="js/popper.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script src="../vendor/twilio.min.js"></script>
     <link rel="stylesheet" href="../css/modal-dialog.css">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="../css/appoint.css">
@@ -71,6 +72,7 @@
         let refer = await import("./refer/refer.js");
         let {MedCert} = await import("./medcert/medcert.js");
         let {Appoint} = await import("../appoint/appoint.js");
+        let {initPhone} = await import("../js/phone.js");
 
         let printAPI = null;
         (function(){
@@ -91,6 +93,8 @@
             rest,
             printAPI
         }
+
+        initPhone(rest);
 
         let menu = new Menu(document.getElementById("index-pane-wrapper"));
         menu.addItem("practice", e => {

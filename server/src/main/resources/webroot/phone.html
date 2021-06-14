@@ -10,6 +10,17 @@
     <input id="phone-input" type="text"/>
     <button id="callout-button">発信</button>
     <script>
+
+        // (async function(){
+        //     let {detectPhoneNumber} = await import("./js/phone-number.js");
+        //     document.getElementById("callout-button").addEventListener("click", e => {
+        //         let src = document.getElementById("phone-input").value;
+        //         let m = detectPhoneNumber(src);
+        //         console.log("result", m);
+        //     });
+        // })();
+
+
         (async function(){
             let {Rest} = await import("./js/rest.js");
             let rest = new Rest("/json");

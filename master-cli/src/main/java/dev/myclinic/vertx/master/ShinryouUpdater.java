@@ -228,7 +228,7 @@ public class ShinryouUpdater {
         }
     }
 
-    private void iter(Consumer<ShinryouMasterCSV> consumer)
+    void iter(Consumer<ShinryouMasterCSV> consumer)
             throws SQLException, ClassNotFoundException, IOException {
         ZipFileParser.iterShinryouZipFile(zipFile.toFile(), consumer);
     }

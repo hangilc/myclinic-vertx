@@ -912,7 +912,7 @@ public class CovidVaccine {
         });
         List<String> codes = new ArrayList<>();
         Set<String> keys = new HashSet<>(groups.keySet());
-        List.of("C", "S", "*", "P", "T").forEach(c -> {
+        List.of("C", "S", "*", "P", "T", "U").forEach(c -> {
             codes.add(c);
             keys.remove(c);
         });

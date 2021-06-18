@@ -100,6 +100,10 @@ public class CovidVaccine {
                     batchUpdatePhone();
                     break;
                 }
+                case "random": {
+                    pickRandom(args);
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -130,7 +134,23 @@ public class CovidVaccine {
         System.out.println("  appoints-at APPOINT-TIME");
         System.out.println("  add-patient PATIENT-ID");
         System.out.println("  batch-update-phone");
+        System.out.println("  random MIN MAX");
         System.out.println("  help");
+    }
+
+    private static void pickRandom(String[] args) {
+        int minValue = 0;
+        int maxValue = 0;
+        if( args.length == 3 ){
+            minValue = Integer.parseInt(args[1]);
+            maxValue = Integer.parseInt(args[2]);
+        } else {
+            System.err.println("Invalid arg to random.");
+            printHelp();
+            System.exit(1);
+        }
+        int r = Misc.randomValue(minValue, maxValue);
+        System.out.printf("%d\n", r);
     }
 
     private static void batchUpdatePhone() throws Exception {
@@ -170,19 +190,28 @@ public class CovidVaccine {
 
     private static void appointsAt(String[] args){
         var params = new Object(){
-            LocalDateTime at;
+            List<LocalDateTime> atTimes = new ArrayList<>();
         };
-        if( args.length == 2 ){
-            params.at = parseAppointTime(args[1]);
+        if( args.length >= 2 ){
+            for(int i=1;i<args.length;i++){
+                params.atTimes.add(parseAppointTime(args[i]));
+            }
         } else {
             System.err.println("Invalid arg to appoints-at");
             System.err.println("example -- appoints-at 06-19T14:00");
             System.exit(1);
         }
-        List<RegularPatient> patients = getAppointsAt(params.at, executeLogbook());
-        int index = 1;
-        for(RegularPatient p: patients){
-            System.out.printf("%d. %s\n", index++, p);
+        List<RegularPatient> logbook = executeLogbook();
+        for(LocalDateTime at: params.atTimes){
+            System.out.printf("%s %02d時%02d分\n",
+                    Misc.localDateToKanji(at.toLocalDate(), true, true),
+                    at.getHour(), at.getMinute());
+            List<RegularPatient> patients = getAppointsAt(at, logbook);
+            int index = 1;
+            for(RegularPatient p: patients){
+                System.out.printf("%d. %s\n", index++, p);
+            }
+            System.out.println();
         }
     }
 

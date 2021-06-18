@@ -164,6 +164,12 @@ public class Misc {
         }
     }
 
+    public static int randomValue(int minValue, int maxValue){
+        int size = maxValue - minValue + 1;
+        int r = random.nextInt(size);
+        return minValue + r;
+    }
+
     public static Client getClient(){
         String url = System.getenv("MYCLINIC_SERVICE");
         return new Client(url);

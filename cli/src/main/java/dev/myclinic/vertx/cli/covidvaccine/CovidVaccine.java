@@ -144,14 +144,35 @@ public class CovidVaccine {
         System.out.println("  help");
     }
 
+    private static String calendarLabel(LocalDateTime at, List<RegularPatient> hist){
+        String label = null;
+        for(RegularPatient p: hist){
+            PatientState s = parsePatientAttr(p.attr);
+            if( s instanceof FirstShotAppoint ){
+                FirstShotAppoint firstShotAppoint = (FirstShotAppoint) s;
+                if( at.equals(firstShotAppoint.at) ) {
+                    label = "１回目予約";
+                } else if( at.equals(firstShotAppoint.tmpSecondAppoint) ){
+                    label = "２回目仮予約";
+                }
+            } else if( s instanceof SecondShotAppoint ){
+                SecondShotAppoint secondShotAppoint = (SecondShotAppoint) s;
+                if( at.equals(secondShotAppoint.at) ){
+                    label = "２回目予約";
+
+                }
+            }
+        }
+        return null;
+    }
+
     private static void calendar() throws Exception {
         List<AppointDate> appointDates = readAppointDates();
         for (AppointDate appointDate : appointDates) {
             System.out.printf("%s\n", appointDate.toString());
         }
-        executeLogbook(readLogs(), patient -> {
-            System.out.println(patient);
-        });
+        Map<Integer, List<RegularPatient>> histories = readPatientHistories();
+
     }
 
     private static void pickRandom(String[] args) {
@@ -957,6 +978,15 @@ public class CovidVaccine {
         return map;
     }
 
+    static Map<Integer, List<RegularPatient>> readPatientHistories() throws Exception {
+        Map<Integer, List<RegularPatient>> result = new HashMap<>();
+        executeLogbook(readLogs(), patient -> {
+            List<RegularPatient> hist = result.computeIfAbsent(patient.patientId, k -> new ArrayList<>());
+            hist.add(patient);
+        });
+        return result;
+    }
+
     private static Map<String, List<RegularPatient>> prepareGroupsForListing() throws Exception {
         List<RegularPatient> patients = executeLogbook();
         Map<String, List<RegularPatient>> groups = new HashMap<>();
@@ -1068,9 +1098,10 @@ public class CovidVaccine {
     private static class Under65 implements PatientState {
     }
 
-    private static class FirstShotAppoint implements PatientState {
+    private static class FirstShotAppoint implements PatientState, Appointable {
         public static Pattern pat = Pattern.compile("A(\\d+-\\d+-\\d+)T(\\d+):(\\d+)");
         public LocalDateTime at;
+        public LocalDateTime tmpSecondAppoint;
 
         public FirstShotAppoint(LocalDateTime at) {
             this.at = at;
@@ -1079,6 +1110,16 @@ public class CovidVaccine {
         @Override
         public String toString() {
             return "A" + encodeAppointTime(at);
+        }
+
+        @Override
+        public PatientState registerAppoint(LocalDateTime registerAt) {
+            LocalDate due = at.toLocalDate().plus(21, ChronoUnit.DAYS);
+            if( registerAt.toLocalDate().equals(due) || registerAt.toLocalDate().isAfter(due) ){
+                return new SecondShotAppoint(registerAt);
+            } else {
+                throw new RuntimeException("Cannot put appointment at " + registerAt);
+            }
         }
     }
 

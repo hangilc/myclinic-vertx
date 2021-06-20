@@ -42,7 +42,7 @@ public class CovidVaccine {
                     preparePatientYomi();
                     break;
                 case "list":
-                    list();
+                    list(args);
                     break;
                 case "due-second-shot":
                     dueSecondShot();
@@ -157,7 +157,57 @@ public class CovidVaccine {
     }
 
     private static void registerEphemeralSecondAppoint(String[] args) throws Exception {
-
+        List<Integer> patientIds = new ArrayList<>();
+        if (args.length > 1) {
+            for (int i = 1; i < args.length; i++) {
+                String arg = args[i];
+                patientIds.add(Integer.parseInt(arg));
+            }
+        } else {
+            System.err.println("Invalid arg to register-ephemeral-second-appoint.");
+            printHelp();
+            System.exit(1);
+        }
+        Collections.shuffle(patientIds);
+        Map<Integer, PatientAppointPref> prefMap = readPatientAppointPrefs();
+        List<String> logs = readLogs();
+        Map<LocalDateTime, AppointFrame> cal = AppointFrame.readFromLogs(logs);
+        Map<Integer, RegularPatient> patMap = executeLogbookAsMap(logs);
+        List<PatchCommand> patches = new ArrayList<>();
+        for (int patientId : patientIds) {
+            RegularPatient patient = patMap.get(patientId);
+            if (patient == null) {
+                System.err.println("Cannot find patient: " + patientId);
+                System.exit(1);
+            }
+            if (patient.state instanceof SecondShotCandidate) {
+                SecondShotCandidate secondShotCandidate = (SecondShotCandidate) patient.state;
+                LocalDate due = secondShotCandidate.firstShotDate.plus(21, ChronoUnit.DAYS);
+                PatientAppointPref pref = prefMap.get(patientId);
+                LocalDateTime at = AppointFrame.findVacancy(due, cal, candidate -> {
+                    if (pref != null) {
+                        return pref.appointPref.acceptable(candidate);
+                    } else {
+                        return true;
+                    }
+                });
+                if (at == null) {
+                    System.err.println("予約枠を見つけられませんでした。" + patient);
+                } else {
+                    System.out.printf("%s -> %s\n", CovidMisc.encodeAppointTime(at), patient);
+                    EphemeralSecondShotAppoint newState = new EphemeralSecondShotAppoint(
+                            at, secondShotCandidate.firstShotDate
+                    );
+                    patches.add(new PatchState(newState.encode(), patient.patientId));
+                }
+            } else {
+                System.err.println("Is not second shot candidate: " + patient);
+                System.exit(1);
+            }
+        }
+        if (patches.size() > 0) {
+            doApplyPatches(patches, patMap);
+        }
     }
 
     private static void history(String[] args) throws Exception {
@@ -180,10 +230,10 @@ public class CovidVaccine {
 
     private static void calendar() throws Exception {
         Map<LocalDateTime, AppointFrame> appoints = AppointFrame.readFromLogs(readLogs());
-        for(LocalDateTime at: appoints.keySet()){
+        for (LocalDateTime at : appoints.keySet()) {
             AppointFrame frame = appoints.get(at);
             System.out.printf("%s (%d)\n", appointTimeRep(at), frame.appointDate.capacity);
-            if( frame.entries.size() > frame.appointDate.capacity ){
+            if (frame.entries.size() > frame.appointDate.capacity) {
                 System.err.printf("Overbooking ! %s", CovidMisc.encodeAppointTime(at));
                 System.exit(1);
             }
@@ -914,7 +964,7 @@ public class CovidVaccine {
     }
 
     public static List<RegularPatient> executeLogbook(List<String> logs,
-                                                       BiConsumer<RegularPatient, Boolean> callback) {
+                                                      BiConsumer<RegularPatient, Boolean> callback) {
         Map<Integer, RegularPatient> map = new HashMap<>();
         for (String log : logs) {
             log = log.trim();
@@ -956,6 +1006,17 @@ public class CovidVaccine {
         return new ArrayList<>(map.values());
     }
 
+    static Map<Integer, RegularPatient> executeLogbookAsMap(List<String> logs) {
+        Map<Integer, RegularPatient> map = new HashMap<>();
+        executeLogbook(logs).forEach(p -> {
+            if (map.containsKey(p.patientId)) {
+                throw new RuntimeException("Duplicate patient-ids in logbook.");
+            }
+            map.put(p.patientId, p);
+        });
+        return map;
+    }
+
     static Map<Integer, RegularPatient> executeLogbookAsMap() {
         Map<Integer, RegularPatient> map = new HashMap<>();
         executeLogbook().forEach(p -> {
@@ -967,42 +1028,47 @@ public class CovidVaccine {
         return map;
     }
 
-    static Map<Integer, List<RegularPatient>> readPatientHistories() throws Exception {
-        Map<Integer, List<RegularPatient>> result = new HashMap<>();
-        executeLogbook(readLogs(), patient -> {
-            List<RegularPatient> hist = result.computeIfAbsent(patient.patientId, k -> new ArrayList<>());
-            hist.add(patient);
-        });
-        return result;
+    private static Map<String, List<RegularPatient>> prepareGroupsForListing() {
+        return prepareGroupsForListing(null);
     }
 
-    private static Map<String, List<RegularPatient>> prepareGroupsForListing() throws Exception {
+    private static Map<String, List<RegularPatient>> prepareGroupsForListing(List<String> select) {
         List<RegularPatient> patients = executeLogbook();
         Map<String, List<RegularPatient>> groups = new HashMap<>();
         patients.forEach(p -> {
             String code = p.state.encode().substring(0, 1);
+            if (select != null && !select.contains(code)) {
+                return;
+            }
             List<RegularPatient> list = groups.computeIfAbsent(code, k -> new ArrayList<>());
             list.add(p);
         });
-        List<String> codes = new ArrayList<>();
-        Set<String> keys = new HashSet<>(groups.keySet());
-        List.of("C", "S", "*", "P", "T", "U").forEach(c -> {
-            codes.add(c);
-            keys.remove(c);
-        });
-        keys.remove("x");
-        keys.remove("U");
-        codes.addAll(keys);
-        Map<String, List<RegularPatient>> result = new LinkedHashMap<>();
-        for (String code : codes) {
-            result.put(code, groups.get(code));
+        if (select != null) {
+            return groups;
+        } else {
+            List<String> codes = new ArrayList<>();
+            Set<String> keys = new HashSet<>(groups.keySet());
+            List.of("C", "S", "*", "P", "T", "U").forEach(c -> {
+                codes.add(c);
+                keys.remove(c);
+            });
+            keys.remove("x");
+            //keys.remove("U");
+            codes.addAll(keys);
+            Map<String, List<RegularPatient>> result = new LinkedHashMap<>();
+            for (String code : codes) {
+                result.put(code, groups.get(code));
+            }
+            return result;
         }
-        return result;
     }
 
-
     private static List<String> prepareList() throws Exception {
-        Map<String, List<RegularPatient>> groups = prepareGroupsForListing();
+        return prepareList(null);
+    }
+
+    private static List<String> prepareList(List<String> select) throws Exception {
+        Map<String, List<RegularPatient>> groups = prepareGroupsForListing(select);
         Map<Integer, String> yomiMap = readPatientYomi();
         List<String> lines = new ArrayList<>();
         for (String code : groups.keySet()) {
@@ -1015,8 +1081,15 @@ public class CovidVaccine {
         return lines;
     }
 
-    private static void list() throws Exception {
-        List<String> lines = prepareList();
+    private static void list(String[] args) throws Exception {
+        List<String> select = null;
+        if (args.length > 1) {
+            select = new ArrayList<>();
+            for (int i = 1; i < args.length; i++) {
+                select.add(args[i]);
+            }
+        }
+        List<String> lines = prepareList(select);
         lines.forEach(System.out::println);
     }
 

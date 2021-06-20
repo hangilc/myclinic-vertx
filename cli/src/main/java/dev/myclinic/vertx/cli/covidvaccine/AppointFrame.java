@@ -1,11 +1,17 @@
 package dev.myclinic.vertx.cli.covidvaccine;
 
+import dev.myclinic.vertx.cli.covidvaccine.patientstate.EphemeralSecondShotAppoint;
 import dev.myclinic.vertx.cli.covidvaccine.patientstate.FirstShotAppoint;
 import dev.myclinic.vertx.cli.covidvaccine.patientstate.PatientState;
 import dev.myclinic.vertx.cli.covidvaccine.patientstate.SecondShotAppoint;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 class AppointFrame {
 
@@ -16,16 +22,16 @@ class AppointFrame {
         this.appointDate = appointDate;
     }
 
-    public AppointEntry findByPatientId(int patientId){
-        for(AppointEntry entry: entries){
-            if( entry.patient.patientId == patientId ){
+    public AppointEntry findByPatientId(int patientId) {
+        for (AppointEntry entry : entries) {
+            if (entry.patient.patientId == patientId) {
                 return entry;
             }
         }
         return null;
     }
 
-    public boolean isFull(){
+    public boolean isFull() {
         return entries.size() >= appointDate.capacity;
     }
 
@@ -80,10 +86,10 @@ class AppointFrame {
             if (state instanceof FirstShotAppoint && stateChanged) {
                 FirstShotAppoint firstShotAppoint = (FirstShotAppoint) state;
                 AppointFrame frame = result.get(firstShotAppoint.at);
-                if( frame == null ){
+                if (frame == null) {
                     throw new RuntimeException("Invalid appoint date: " + firstShotAppoint);
                 }
-                if( frame.isFull() ){
+                if (frame.isFull()) {
                     throw new RuntimeException("Overbooking! " + firstShotAppoint.at);
                 }
                 AppointEntry entry = frame.findByPatientId(regularPatient.patientId);
@@ -94,10 +100,10 @@ class AppointFrame {
             } else if (state instanceof SecondShotAppoint && stateChanged) {
                 SecondShotAppoint secondShotAppoint = (SecondShotAppoint) state;
                 AppointFrame frame = result.get(secondShotAppoint.at);
-                if( frame == null ){
+                if (frame == null) {
                     throw new RuntimeException("Invalid appoint date: " + secondShotAppoint);
                 }
-                if( frame.isFull() ){
+                if (frame.isFull()) {
                     throw new RuntimeException("Overbooking! " + secondShotAppoint.at);
                 }
                 AppointEntry entry = frame.findByPatientId(regularPatient.patientId);
@@ -105,9 +111,38 @@ class AppointFrame {
                     throw new RuntimeException("Duplicate appointments (2nd): " + regularPatient);
                 }
                 frame.entries.add(new AppointEntry(PatientCalendar.SecondAppoint, regularPatient));
+            } else if (state instanceof EphemeralSecondShotAppoint && stateChanged) {
+                EphemeralSecondShotAppoint estate = (EphemeralSecondShotAppoint) state;
+                AppointFrame frame = result.get(estate.at);
+                if (frame == null) {
+                    throw new RuntimeException("Invalid appoint date: " + estate.at);
+                }
+                if (frame.isFull()) {
+                    throw new RuntimeException("Overbooking! " + estate.at);
+                }
+                AppointEntry entry = frame.findByPatientId(regularPatient.patientId);
+                if (entry != null) {
+                    throw new RuntimeException("Duplicate appointments (ephemeral 2nd): " + regularPatient);
+                }
+                frame.entries.add(new AppointEntry(PatientCalendar.TemporarySecondAppoint, regularPatient));
             }
         });
         return result;
+    }
+
+    public static LocalDateTime findVacancy(LocalDate start, Map<LocalDateTime, AppointFrame> calendar,
+                                            Function<LocalDateTime, Boolean> acceptable) {
+        for (LocalDateTime at : calendar.keySet()) {
+            if (at.toLocalDate().isBefore(start)) {
+                continue;
+            }
+            AppointFrame frame = calendar.get(at);
+            if (frame.isFull() || !acceptable.apply(at)) {
+                continue;
+            }
+            return at;
+        }
+        return null;
     }
 
 }

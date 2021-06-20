@@ -12,7 +12,7 @@ public class EphemeralSecondShotAppoint implements PatientState {
 
     public LocalDateTime at;
     public LocalDate firstShotAt;
-    private static final Pattern pat = Pattern.compile("E(\\d+-\\d+-\\d+)T(\\d+):(\\d+):(\\d+-\\d+-\\d+)");
+    private static final Pattern pat = Pattern.compile("E(\\d+-\\d+-\\d+)T(\\d+):(\\d+)<(\\d+-\\d+-\\d+)");
 
     public EphemeralSecondShotAppoint(LocalDateTime at, LocalDate firstShotAt) {
         this.at = at;
@@ -21,7 +21,7 @@ public class EphemeralSecondShotAppoint implements PatientState {
 
     @Override
     public String encode() {
-        return String.format("E%s:%s", CovidMisc.encodeAppointTime(at), firstShotAt.toString());
+        return String.format("E%s<%s", CovidMisc.encodeAppointTime(at), firstShotAt.toString());
     }
 
     public static EphemeralSecondShotAppoint decode(String src){

@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -110,6 +111,10 @@ public class CovidVaccine {
                     calendar();
                     break;
                 }
+                case "history": {
+                    history(args);
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -142,38 +147,131 @@ public class CovidVaccine {
         System.out.println("  batch-update-phone");
         System.out.println("  random MIN MAX");
         System.out.println("  calendar");
+        System.out.println("  history PATIENT-ID");
         System.out.println("  help");
     }
 
-    private static String calendarLabel(LocalDateTime at, List<RegularPatient> hist){
-//        String label = null;
-//        for(RegularPatient p: hist){
-//            PatientState s = CovidMisc.parsePatientAttr(p.attr);
-//            if( s instanceof FirstShotAppoint){
-//                FirstShotAppoint firstShotAppoint = (FirstShotAppoint) s;
-//                if( at.equals(firstShotAppoint.at) ) {
-//                    label = "１回目予約";
-//                } else if( at.equals(firstShotAppoint.tmpSecondAppoint) ){
-//                    label = "２回目仮予約";
-//                }
-//            } else if( s instanceof SecondShotAppoint){
-//                SecondShotAppoint secondShotAppoint = (SecondShotAppoint) s;
-//                if( at.equals(secondShotAppoint.at) ){
-//                    label = "２回目予約";
-//
-//                }
-//            }
-//        }
+    private static void history(String[] args) throws Exception {
+        var params = new Object() {
+            int patientId;
+        };
+        if (args.length == 2) {
+            params.patientId = Integer.parseInt(args[1]);
+        } else {
+            System.err.println("Invalid arg to history.");
+            printHelp();
+            System.exit(1);
+        }
+        executeLogbook(readLogs(), patient -> {
+            if (patient.patientId == params.patientId) {
+                System.out.println(patient);
+            }
+        });
+    }
+
+    enum PatientCalendar {
+        FirstAppoint,
+        FirstDone,
+        TemporarySecondAppoint,
+        SecondAppoint,
+        SecondDone
+    }
+
+    private static class AppointEntry {
+        PatientCalendar patientCalendar;
+        RegularPatient patient;
+
+        public AppointEntry(PatientCalendar patientCalendar, RegularPatient patient) {
+            this.patientCalendar = patientCalendar;
+            this.patient = patient;
+        }
+
+        private static String calendarLabel(PatientCalendar calendar) {
+            switch (calendar) {
+                case FirstAppoint:
+                    return "１回目予約";
+                case FirstDone:
+                    return "１回目接種済";
+                case TemporarySecondAppoint:
+                    return "２回目暫定予約";
+                case SecondAppoint:
+                    return "２回目予約";
+                case SecondDone:
+                    return "２回目接種済";
+                default:
+                    throw new RuntimeException("Unknown calendar state: " + calendar);
+            }
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s %d %s", calendarLabel(patientCalendar),
+                    patient.patientId, patient.name);
+        }
+    }
+
+    private static AppointEntry findAppointEntry(int patientId, LocalDateTime at,
+                                                 Map<LocalDateTime, List<AppointEntry>> map) {
+        List<AppointEntry> entries = map.get(at);
+        if (entries != null) {
+            for (AppointEntry entry : entries) {
+                if (entry.patient.patientId == patientId) {
+                    return entry;
+                }
+            }
+        }
         return null;
+    }
+
+    private static void addAppointEntry(LocalDateTime at, AppointEntry entry,
+                                        Map<LocalDateTime, List<AppointEntry>> map) {
+        List<AppointEntry> entries = map.computeIfAbsent(at, k -> new ArrayList<>());
+        entries.add(entry);
     }
 
     private static void calendar() throws Exception {
         List<AppointDate> appointDates = readAppointDates();
+        Map<LocalDateTime, Integer> capacityMap = new HashMap<>();
         for (AppointDate appointDate : appointDates) {
-            System.out.printf("%s\n", appointDate.toString());
+            if (capacityMap.containsKey(appointDate.at)) {
+                throw new RuntimeException("Duplicate appoint date: " + appointDate.at);
+            }
+            capacityMap.put(appointDate.at, appointDate.capacity);
         }
-        Map<Integer, List<RegularPatient>> histories = readPatientHistories();
-
+        Map<LocalDateTime, List<AppointEntry>> appointMap = new HashMap<>();
+        executeLogbook(readLogs(), (regularPatient, stateChanged) -> {
+            PatientState state = regularPatient.state;
+            if (state instanceof FirstShotAppoint && stateChanged) {
+                FirstShotAppoint firstShotAppoint = (FirstShotAppoint) state;
+                AppointEntry entry = findAppointEntry(regularPatient.patientId, firstShotAppoint.at, appointMap);
+                if (entry != null) {
+                    throw new RuntimeException("Invalid state: " + regularPatient);
+                }
+                addAppointEntry(firstShotAppoint.at, new AppointEntry(PatientCalendar.FirstAppoint, regularPatient),
+                        appointMap);
+//                if( firstShotAppoint.tmpSecondAppoint != null ) {
+//                    System.out.printf("%s %s\n", CovidMisc.encodeAppointTime(firstShotAppoint.tmpSecondAppoint),
+//                            regularPatient);
+//                }
+            } else if (state instanceof SecondShotAppoint && stateChanged) {
+                SecondShotAppoint secondShotAppoint = (SecondShotAppoint) state;
+                AppointEntry entry = findAppointEntry(regularPatient.patientId, secondShotAppoint.at, appointMap);
+                if (entry != null) {
+                    throw new RuntimeException("Invalid state: " + regularPatient);
+                }
+                addAppointEntry(secondShotAppoint.at, new AppointEntry(PatientCalendar.SecondAppoint, regularPatient),
+                        appointMap);
+            }
+        });
+        for (LocalDateTime at : appointMap.keySet()) {
+            System.out.printf("%s\n", CovidMisc.encodeAppointTime(at));
+            List<AppointEntry> entries = appointMap.get(at);
+            int i = 1;
+            for (AppointEntry e : entries) {
+                System.out.printf("%d. %s\n", i++, e.toString());
+            }
+            System.out.println();
+        }
     }
 
     private static void pickRandom(String[] args) {
@@ -922,10 +1020,16 @@ public class CovidVaccine {
     }
 
     private static List<RegularPatient> executeLogbook(List<String> logs) {
-        return executeLogbook(logs, p -> {});
+        return executeLogbook(logs, p -> {
+        });
     }
 
     private static List<RegularPatient> executeLogbook(List<String> logs, Consumer<RegularPatient> callback) {
+        return executeLogbook(logs, (p, b) -> callback.accept(p));
+    }
+
+    private static List<RegularPatient> executeLogbook(List<String> logs,
+                                                       BiConsumer<RegularPatient, Boolean> callback) {
         Map<Integer, RegularPatient> map = new HashMap<>();
         for (String log : logs) {
             log = log.trim();
@@ -940,7 +1044,7 @@ public class CovidVaccine {
                     throw new RuntimeException("Duplicate ADD command: " + log);
                 }
                 map.put(p.patientId, p);
-                callback.accept(p);
+                callback.accept(p, true);
             } else if (cmd instanceof PatchState) {
                 PatchState ps = (PatchState) cmd;
                 int patientId = ps.patientId;
@@ -951,7 +1055,7 @@ public class CovidVaccine {
                     throw new RuntimeException("Invalid patient-id: " + String.format("%d", patientId));
                 }
                 patient.state = state;
-                callback.accept(patient);
+                callback.accept(patient, true);
             } else if (cmd instanceof PatchPhone) {
                 PatchPhone pp = (PatchPhone) cmd;
                 RegularPatient patient = map.get(pp.patientId);
@@ -959,7 +1063,7 @@ public class CovidVaccine {
                     throw new RuntimeException("Invalid patient-id: " + String.format("%d", pp.patientId));
                 }
                 patient.phone = pp.phone;
-                callback.accept(patient);
+                callback.accept(patient, false);
             } else {
                 throw new RuntimeException("Unknown patch: " + log);
             }

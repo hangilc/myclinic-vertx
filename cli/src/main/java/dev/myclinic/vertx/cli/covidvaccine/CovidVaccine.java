@@ -1,6 +1,7 @@
 package dev.myclinic.vertx.cli.covidvaccine;
 
 import dev.myclinic.vertx.cli.Misc;
+import dev.myclinic.vertx.cli.covidvaccine.patientstate.*;
 import dev.myclinic.vertx.client2.Client;
 import dev.myclinic.vertx.dto.PatientDTO;
 
@@ -147,15 +148,15 @@ public class CovidVaccine {
     private static String calendarLabel(LocalDateTime at, List<RegularPatient> hist){
         String label = null;
         for(RegularPatient p: hist){
-            PatientState s = parsePatientAttr(p.attr);
-            if( s instanceof FirstShotAppoint ){
+            PatientState s = CovidMisc.parsePatientAttr(p.attr);
+            if( s instanceof FirstShotAppoint){
                 FirstShotAppoint firstShotAppoint = (FirstShotAppoint) s;
                 if( at.equals(firstShotAppoint.at) ) {
                     label = "１回目予約";
                 } else if( at.equals(firstShotAppoint.tmpSecondAppoint) ){
                     label = "２回目仮予約";
                 }
-            } else if( s instanceof SecondShotAppoint ){
+            } else if( s instanceof SecondShotAppoint){
                 SecondShotAppoint secondShotAppoint = (SecondShotAppoint) s;
                 if( at.equals(secondShotAppoint.at) ){
                     label = "２回目予約";
@@ -255,7 +256,7 @@ public class CovidVaccine {
     static List<RegularPatient> getAppointsAt(LocalDateTime at, Collection<RegularPatient> patients) {
         List<RegularPatient> result = new ArrayList<>();
         for (RegularPatient p : patients) {
-            PatientState state = parsePatientAttr(p.attr);
+            PatientState state = CovidMisc.parsePatientAttr(p.attr);
             if (state instanceof FirstShotAppoint) {
                 if (at.equals(((FirstShotAppoint) state).at)) {
                     result.add(p);
@@ -309,7 +310,7 @@ public class CovidVaccine {
             if (p == null) {
                 throw new RuntimeException("Unknown patient-id: " + patientId);
             }
-            PatientState state = parsePatientAttr(p.attr);
+            PatientState state = CovidMisc.parsePatientAttr(p.attr);
             if (state instanceof Appointable) {
                 PatientState newState = ((Appointable) state).registerAppoint(params.at);
                 patches.add(new PatchState(newState.toString(), patientId));
@@ -471,7 +472,7 @@ public class CovidVaccine {
         if (ap != null && !ap.acceptable(at)) {
             return false;
         }
-        PatientState state = parsePatientAttr(p.attr);
+        PatientState state = CovidMisc.parsePatientAttr(p.attr);
         if (state instanceof FirstShotCandidate) {
             return true;
         } else if (state instanceof SecondShotCandidate) {
@@ -532,7 +533,7 @@ public class CovidVaccine {
             System.out.println();
             List<RegularPatient> logbook = executeLogbook();
             List<RegularPatient> patients = logbook.stream().filter(p -> {
-                PatientState state = parsePatientAttr(p.attr);
+                PatientState state = CovidMisc.parsePatientAttr(p.attr);
                 if (state instanceof FirstShotAppoint) {
                     FirstShotAppoint fsa = (FirstShotAppoint) state;
                     return fsa.at.equals(params.at);
@@ -685,7 +686,7 @@ public class CovidVaccine {
         }
         String attr = args[1];
         int patientId = Integer.parseInt(args[2]);
-        parsePatientAttr(attr);
+        CovidMisc.parsePatientAttr(attr);
         String patch = logbookState(patientId, attr);
         Misc.appendLines(patchPath.toString(), Collections.singletonList(patch));
     }
@@ -694,7 +695,7 @@ public class CovidVaccine {
         List<RegularPatient> patients = executeLogbook();
         Map<LocalDate, List<RegularPatient>> map = new HashMap<>();
         for (RegularPatient patient : patients) {
-            PatientState st = parsePatientAttr(patient.attr);
+            PatientState st = CovidMisc.parsePatientAttr(patient.attr);
             if (st instanceof SecondShotCandidate) {
                 SecondShotCandidate ssc = (SecondShotCandidate) st;
                 LocalDate dueDate = ssc.firstShotDate.plus(3, ChronoUnit.WEEKS);
@@ -732,7 +733,7 @@ public class CovidVaccine {
             List<String> logs = new ArrayList<>();
             for (RegularPatient p : patients) {
                 logs.add(logbookAdd(p.patientId, p.name, p.age, p.phone));
-                parsePatientAttr(p.attr);
+                CovidMisc.parsePatientAttr(p.attr);
                 if (p.attr.equals("*") && p.age < 65) {
                     p.attr = "U";
                 }
@@ -843,7 +844,7 @@ public class CovidVaccine {
         public PatchState(String attr, int patientId) {
             this.attr = attr;
             this.patientId = patientId;
-            parsePatientAttr(attr);
+            CovidMisc.parsePatientAttr(attr);
         }
 
         @Override
@@ -895,7 +896,7 @@ public class CovidVaccine {
                 }
                 int patientId = Integer.parseInt(items[0]);
                 String attr = items[1];
-                parsePatientAttr(attr);
+                CovidMisc.parsePatientAttr(attr);
                 return new PatchState(attr, patientId);
             }
             case "PHONE": {
@@ -945,7 +946,7 @@ public class CovidVaccine {
                 PatchState ps = (PatchState) cmd;
                 int patientId = ps.patientId;
                 String attr = ps.attr;
-                parsePatientAttr(attr);
+                CovidMisc.parsePatientAttr(attr);
                 RegularPatient patient = map.get(patientId);
                 if (patient == null) {
                     throw new RuntimeException("Invalid patient-id: " + String.format("%d", patientId));
@@ -1051,156 +1052,6 @@ public class CovidVaccine {
         }
     }
 
-    private interface PatientState {
-    }
-
-    interface Appointable {
-        PatientState registerAppoint(LocalDateTime at);
-    }
-
-    private static class FirstShotCandidate implements PatientState, Appointable {
-        @Override
-        public PatientState registerAppoint(LocalDateTime at) {
-            return new FirstShotAppoint(at);
-        }
-    }
-
-    private static class SecondShotCandidate implements PatientState, Appointable {
-        public static Pattern pat = Pattern.compile("S(\\d\\d)(\\d\\d)");
-        public LocalDate firstShotDate;
-
-        public SecondShotCandidate(LocalDate firstShotDate) {
-            this.firstShotDate = firstShotDate;
-        }
-
-        @Override
-        public PatientState registerAppoint(LocalDateTime at) {
-            LocalDate dueDate = firstShotDate.plus(21, ChronoUnit.DAYS);
-            if (at.toLocalDate().isBefore(dueDate)) {
-                throw new RuntimeException("Too early second shot appointment.");
-            }
-            return new SecondShotAppoint(at);
-        }
-    }
-
-    private static class NotCurrentCandidate implements PatientState {
-    }
-
-    private static class WaitingReply implements PatientState {
-    }
-
-    private static class NeedConfirm implements PatientState {
-    }
-
-    private static class DoneAtOtherPlace implements PatientState {
-    }
-
-    private static class Under65 implements PatientState {
-    }
-
-    private static class FirstShotAppoint implements PatientState, Appointable {
-        public static Pattern pat = Pattern.compile("A(\\d+-\\d+-\\d+)T(\\d+):(\\d+)");
-        public LocalDateTime at;
-        public LocalDateTime tmpSecondAppoint;
-
-        public FirstShotAppoint(LocalDateTime at) {
-            this.at = at;
-        }
-
-        @Override
-        public String toString() {
-            return "A" + encodeAppointTime(at);
-        }
-
-        @Override
-        public PatientState registerAppoint(LocalDateTime registerAt) {
-            LocalDate due = at.toLocalDate().plus(21, ChronoUnit.DAYS);
-            if( registerAt.toLocalDate().equals(due) || registerAt.toLocalDate().isAfter(due) ){
-                return new SecondShotAppoint(registerAt);
-            } else {
-                throw new RuntimeException("Cannot put appointment at " + registerAt);
-            }
-        }
-    }
-
-    private static class SecondShotAppoint implements PatientState {
-        public static Pattern pat = Pattern.compile("B(\\d+-\\d+-\\d+)T(\\d+):(\\d+)");
-        public LocalDateTime at;
-
-        public SecondShotAppoint(LocalDateTime at) {
-            this.at = at;
-        }
-
-        @Override
-        public String toString() {
-            return "B" + encodeAppointTime(at);
-        }
-    }
-
-    private static class Done implements PatientState {
-
-    }
-
-    private static PatientState parsePatientAttr(String attr) {
-        attr = attr.trim();
-        if (attr.length() > 0) {
-            switch (attr.charAt(0)) {
-                case 'C':
-                    return new FirstShotCandidate();
-                case 'x':
-                    return new NotCurrentCandidate();
-                case 'P':
-                    return new WaitingReply();
-                case '*':
-                    return new NeedConfirm();
-                case 'T':
-                    return new DoneAtOtherPlace();
-                case 'U':
-                    return new Under65();
-                case 'S': {
-                    Matcher m = SecondShotCandidate.pat.matcher(attr);
-                    if (m.matches()) {
-                        int month = Integer.parseInt(m.group(1));
-                        int day = Integer.parseInt(m.group(2));
-                        int year = LocalDate.now().getYear();
-                        return new SecondShotCandidate(LocalDate.of(year, month, day));
-                    }
-                    break;
-                }
-                case 'A': {
-                    Matcher m = FirstShotAppoint.pat.matcher(attr);
-                    if (m.matches()) {
-                        LocalDateTime at = LocalDateTime.of(
-                                LocalDate.parse(m.group(1)),
-                                LocalTime.of(
-                                        Integer.parseInt(m.group(2)),
-                                        Integer.parseInt(m.group(3)))
-                        );
-                        return new FirstShotAppoint(at);
-                    }
-                    break;
-                }
-                case 'B': {
-                    Matcher m = SecondShotAppoint.pat.matcher(attr);
-                    if (m.matches()) {
-                        LocalDateTime at = LocalDateTime.of(
-                                LocalDate.parse(m.group(1)),
-                                LocalTime.of(
-                                        Integer.parseInt(m.group(2)),
-                                        Integer.parseInt(m.group(3)))
-                        );
-                        return new SecondShotAppoint(at);
-                    }
-                    break;
-                }
-                case 'D': {
-                    return new Done();
-                }
-            }
-        }
-        throw new RuntimeException("Invalid attribute: " + attr);
-    }
-
     private static final Pattern patAppointTime = Pattern.compile("(\\d+-\\d+-\\d+)T(\\d+):(\\d+)");
     private static final Pattern patAppointTime2 = Pattern.compile("(\\d+)-(\\d+)T(\\d+):(\\d+)");
 
@@ -1226,11 +1077,6 @@ public class CovidVaccine {
             );
         }
         throw new RuntimeException("Cannot parse appoint time: " + src);
-    }
-
-    static String encodeAppointTime(LocalDateTime at) {
-        return String.format("%d-%02d-%02dT%02d:%02d", at.getYear(), at.getMonthValue(), at.getDayOfMonth(),
-                at.getHour(), at.getMinute());
     }
 
     static String appointTimeRep(LocalDateTime at) {

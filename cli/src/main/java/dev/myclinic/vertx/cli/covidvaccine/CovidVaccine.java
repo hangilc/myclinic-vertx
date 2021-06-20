@@ -253,10 +253,6 @@ public class CovidVaccine {
                 }
                 addAppointEntry(firstShotAppoint.at, new AppointEntry(PatientCalendar.FirstAppoint, regularPatient),
                         appointMap);
-//                if( firstShotAppoint.tmpSecondAppoint != null ) {
-//                    System.out.printf("%s %s\n", CovidMisc.encodeAppointTime(firstShotAppoint.tmpSecondAppoint),
-//                            regularPatient);
-//                }
             } else if (state instanceof SecondShotAppoint && stateChanged) {
                 SecondShotAppoint secondShotAppoint = (SecondShotAppoint) state;
                 AppointEntry entry = findAppointEntry(regularPatient.patientId, secondShotAppoint.at, appointMap);
@@ -284,15 +280,6 @@ public class CovidVaccine {
             }
             System.out.println();
         }
-//        for (LocalDateTime at : capacityMap.keySet()) {
-//            System.out.printf("%s\n", CovidMisc.encodeAppointTime(at));
-//            List<AppointEntry> entries = appointMap.get(at);
-//            int i = 1;
-//            for (AppointEntry e : entries) {
-//                System.out.printf("%d. %s\n", i++, e.toString());
-//            }
-//            System.out.println();
-//        }
     }
 
     private static void pickRandom(String[] args) {

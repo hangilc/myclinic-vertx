@@ -7,11 +7,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FirstShotAppoint implements PatientState, Appointable {
-    public static Pattern pat = Pattern.compile("A(\\d+-\\d+-\\d+)T(\\d+):(\\d+)(:E(\\d+-\\d+-\\d+)T(\\d+):(\\d+))?");
+    public static Pattern pat = Pattern.compile("A(\\d+-\\d+-\\d+)T(\\d+):(\\d+)(>E(\\d+-\\d+-\\d+)T(\\d+):(\\d+))?");
     public LocalDateTime at;
     public LocalDateTime tmpSecondAppoint;
 
@@ -25,7 +26,7 @@ public class FirstShotAppoint implements PatientState, Appointable {
     }
 
     @Override
-    public PatientState copy() {
+    public FirstShotAppoint copy() {
         return new FirstShotAppoint(at, tmpSecondAppoint);
     }
 
@@ -49,7 +50,7 @@ public class FirstShotAppoint implements PatientState, Appointable {
         if( tmpSecondAppoint == null ) {
             return "A" + CovidMisc.encodeAppointTime(at);
         } else {
-            return "A" + CovidMisc.encodeAppointTime(at) + ":E" + CovidMisc.encodeAppointTime(tmpSecondAppoint);
+            return "A" + CovidMisc.encodeAppointTime(at) + ">E" + CovidMisc.encodeAppointTime(tmpSecondAppoint);
         }
     }
 
@@ -77,4 +78,16 @@ public class FirstShotAppoint implements PatientState, Appointable {
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FirstShotAppoint that = (FirstShotAppoint) o;
+        return Objects.equals(at, that.at) && tmpSecondAppoint.equals(that.tmpSecondAppoint);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(at, tmpSecondAppoint);
+    }
 }

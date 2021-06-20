@@ -119,6 +119,10 @@ public class CovidVaccine {
                     registerEphemeralSecondAppoint(args);
                     break;
                 }
+                case "batch-register-ephemeral-second-appoint": {
+                    batchRegisterEphemeralSecondAppoint();
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -153,7 +157,48 @@ public class CovidVaccine {
         System.out.println("  calendar");
         System.out.println("  history PATIENT-ID");
         System.out.println("  register-ephemeral-second-appoint PATIENT-ID PATIENT-ID ...");
+        System.out.println("  batch-register-ephemeral-second-appoint");
         System.out.println("  help");
+    }
+
+    private static void batchRegisterEphemeralSecondAppoint() throws Exception {
+        Map<Integer, PatientAppointPref> prefMap = readPatientAppointPrefs();
+        List<String> logs = readLogs();
+        Map<LocalDateTime, AppointFrame> cal = AppointFrame.readFromLogs(logs);
+        Map<Integer, RegularPatient> patMap = executeLogbookAsMap(logs);
+        List<RegularPatient> patients = patMap.values().stream()
+                .filter(p -> {
+                    return p.state instanceof FirstShotAppoint &&
+                            ((FirstShotAppoint) p.state).tmpSecondAppoint == null;
+                })
+                .collect(toList());
+        Collections.shuffle(patients);
+        List<PatchCommand> patches = new ArrayList<>();
+        for (RegularPatient patient : patients) {
+            FirstShotAppoint state = (FirstShotAppoint) patient.state;
+            PatientAppointPref pref = prefMap.get(patient.patientId);
+            LocalDateTime at = AppointFrame.findVacancy(
+                    state.at.toLocalDate().plus(21, ChronoUnit.DAYS),
+                    cal,
+                    candidate -> {
+                        if (pref != null) {
+                            return pref.appointPref.acceptable(candidate);
+                        } else {
+                            return true;
+                        }
+                    }
+            );
+            if (at == null) {
+                System.err.println("(No Vacancy: " + patient);
+            } else {
+                state = state.copy();
+                state.tmpSecondAppoint = at;
+                patches.add(new PatchState(state.encode(), patient.patientId));
+            }
+        }
+        if (patches.size() > 0) {
+            doApplyPatches(patches, patMap);
+        }
     }
 
     private static void registerEphemeralSecondAppoint(String[] args) throws Exception {
@@ -297,7 +342,7 @@ public class CovidVaccine {
 
     private static void appointsAt(String[] args) {
         var params = new Object() {
-            List<LocalDateTime> atTimes = new ArrayList<>();
+            final List<LocalDateTime> atTimes = new ArrayList<>();
         };
         if (args.length >= 2) {
             for (int i = 1; i < args.length; i++) {
@@ -314,7 +359,7 @@ public class CovidVaccine {
                     Misc.localDateToKanji(at.toLocalDate(), true, true),
                     at.getHour(), at.getMinute());
             AppointFrame frame = cal.get(at);
-            if( frame == null ){
+            if (frame == null) {
                 System.err.println("Invalid appoint time: " + at);
                 System.exit(1);
             }
@@ -330,7 +375,7 @@ public class CovidVaccine {
     static List<RegularPatient> getAppointsAt(LocalDateTime at) {
         Map<LocalDateTime, AppointFrame> cal = AppointFrame.readFromLogs(readLogs());
         AppointFrame frame = cal.get(at);
-        if( frame == null ){
+        if (frame == null) {
             return Collections.emptyList();
         } else {
             return frame.entries.stream().map(e -> e.patient).collect(toList());

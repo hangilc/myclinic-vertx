@@ -93,10 +93,11 @@ class AppointFrame {
                     throw new RuntimeException("Overbooking! " + firstShotAppoint.at);
                 }
                 AppointEntry entry = frame.findByPatientId(regularPatient.patientId);
-                if (entry != null) {
-                    throw new RuntimeException("Duplicate appointments (1st): " + regularPatient);
+                if (entry == null) {
+                    frame.entries.add(new AppointEntry(PatientCalendar.FirstAppoint, regularPatient));
+                } else {
+                    entry.patient = regularPatient;
                 }
-                frame.entries.add(new AppointEntry(PatientCalendar.FirstAppoint, regularPatient));
             } else if (state instanceof SecondShotAppoint && stateChanged) {
                 SecondShotAppoint secondShotAppoint = (SecondShotAppoint) state;
                 AppointFrame frame = result.get(secondShotAppoint.at);

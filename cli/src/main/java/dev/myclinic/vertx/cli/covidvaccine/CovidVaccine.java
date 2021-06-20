@@ -247,6 +247,10 @@ public class CovidVaccine {
                 if (entry != null) {
                     throw new RuntimeException("Invalid state: " + regularPatient);
                 }
+                if( !capacityMap.containsKey(firstShotAppoint.at) ){
+                    System.err.println("No such appoint date: " + regularPatient);
+                    System.exit(1);
+                }
                 addAppointEntry(firstShotAppoint.at, new AppointEntry(PatientCalendar.FirstAppoint, regularPatient),
                         appointMap);
 //                if( firstShotAppoint.tmpSecondAppoint != null ) {
@@ -259,19 +263,36 @@ public class CovidVaccine {
                 if (entry != null) {
                     throw new RuntimeException("Invalid state: " + regularPatient);
                 }
+                if( !capacityMap.containsKey(secondShotAppoint.at) ){
+                    System.err.println("No such appoint date: " + regularPatient);
+                    System.exit(1);
+                }
                 addAppointEntry(secondShotAppoint.at, new AppointEntry(PatientCalendar.SecondAppoint, regularPatient),
                         appointMap);
             }
         });
-        for (LocalDateTime at : appointMap.keySet()) {
-            System.out.printf("%s\n", CovidMisc.encodeAppointTime(at));
-            List<AppointEntry> entries = appointMap.get(at);
+        for(AppointDate appointDate: appointDates){
+            System.out.printf("%s (%d)\n", appointTimeRep(appointDate.at), appointDate.capacity);
+            List<AppointEntry> entries = appointMap.computeIfAbsent(appointDate.at, k -> Collections.emptyList());
+            if( entries.size() > appointDate.capacity ){
+                System.err.printf("Overbooking ! %s", CovidMisc.encodeAppointTime(appointDate.at));
+                System.exit(1);
+            }
             int i = 1;
             for (AppointEntry e : entries) {
                 System.out.printf("%d. %s\n", i++, e.toString());
             }
             System.out.println();
         }
+//        for (LocalDateTime at : capacityMap.keySet()) {
+//            System.out.printf("%s\n", CovidMisc.encodeAppointTime(at));
+//            List<AppointEntry> entries = appointMap.get(at);
+//            int i = 1;
+//            for (AppointEntry e : entries) {
+//                System.out.printf("%d. %s\n", i++, e.toString());
+//            }
+//            System.out.println();
+//        }
     }
 
     private static void pickRandom(String[] args) {

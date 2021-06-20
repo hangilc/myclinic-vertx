@@ -40,44 +40,48 @@ public class CovidMisc {
                 case 'U':
                     return new Under65();
                 case 'S': {
-                    Matcher m = SecondShotCandidate.pat.matcher(attr);
-                    if (m.matches()) {
-                        int month = Integer.parseInt(m.group(1));
-                        int day = Integer.parseInt(m.group(2));
-                        int year = LocalDate.now().getYear();
-                        return new SecondShotCandidate(LocalDate.of(year, month, day));
-                    }
-                    break;
+                    return SecondShotCandidate.decode(attr);
+//                    Matcher m = SecondShotCandidate.pat.matcher(attr);
+//                    if (m.matches()) {
+//                        int month = Integer.parseInt(m.group(1));
+//                        int day = Integer.parseInt(m.group(2));
+//                        int year = LocalDate.now().getYear();
+//                        return new SecondShotCandidate(LocalDate.of(year, month, day));
+//                    }
+//                    break;
                 }
                 case 'A': {
-                    Matcher m = FirstShotAppoint.pat.matcher(attr);
-                    if (m.matches()) {
-                        LocalDateTime at = LocalDateTime.of(
-                                LocalDate.parse(m.group(1)),
-                                LocalTime.of(
-                                        Integer.parseInt(m.group(2)),
-                                        Integer.parseInt(m.group(3)))
-                        );
-                        return new FirstShotAppoint(at);
-                    }
-                    break;
+                    return FirstShotAppoint.decode(attr);
+//                    Matcher m = FirstShotAppoint.pat.matcher(attr);
+//                    if (m.matches()) {
+//                        LocalDateTime at = LocalDateTime.of(
+//                                LocalDate.parse(m.group(1)),
+//                                LocalTime.of(
+//                                        Integer.parseInt(m.group(2)),
+//                                        Integer.parseInt(m.group(3)))
+//                        );
+//                        return new FirstShotAppoint(at);
+//                    }
+//                    break;
                 }
                 case 'B': {
-                    Matcher m = SecondShotAppoint.pat.matcher(attr);
-                    if (m.matches()) {
-                        LocalDateTime at = LocalDateTime.of(
-                                LocalDate.parse(m.group(1)),
-                                LocalTime.of(
-                                        Integer.parseInt(m.group(2)),
-                                        Integer.parseInt(m.group(3)))
-                        );
-                        return new SecondShotAppoint(at);
-                    }
-                    break;
+                    return SecondShotAppoint.decode(attr);
+//                    Matcher m = SecondShotAppoint.pat.matcher(attr);
+//                    if (m.matches()) {
+//                        LocalDateTime at = LocalDateTime.of(
+//                                LocalDate.parse(m.group(1)),
+//                                LocalTime.of(
+//                                        Integer.parseInt(m.group(2)),
+//                                        Integer.parseInt(m.group(3)))
+//                        );
+//                        return new SecondShotAppoint(at);
+//                    }
+//                    break;
                 }
                 case 'D': {
                     return new Done();
                 }
+                case 'E': return EphemeralSecondShotAppoint.decode(attr);
             }
         }
         throw new RuntimeException("Invalid attribute: " + attr);

@@ -16,7 +16,7 @@ import java.util.function.Function;
 class AppointFrame {
 
     public AppointDate appointDate;
-    public List<AppointEntry> entries = new ArrayList<>();
+    private List<AppointEntry> entries = new ArrayList<>();
 
     public AppointFrame(AppointDate appointDate) {
         this.appointDate = appointDate;
@@ -35,7 +35,18 @@ class AppointFrame {
         return entries.size() >= appointDate.capacity;
     }
 
-    enum PatientCalendar {
+    public void addEntry(PatientCalendar patientCalendar, RegularPatient patient){
+        if( isFull() ){
+            throw new RuntimeException("Overbooking! " + appointDate.at);
+        }
+        entries.add(new AppointEntry(patientCalendar, patient));
+    }
+
+    public List<AppointEntry> getEntries(){
+        return new ArrayList<>(entries);
+    }
+
+    public enum PatientCalendar {
         FirstAppoint,
         FirstDone,
         TemporarySecondAppoint,
@@ -131,19 +142,19 @@ class AppointFrame {
         return result;
     }
 
-    public static LocalDateTime findVacancy(LocalDate start, Map<LocalDateTime, AppointFrame> calendar,
-                                            Function<LocalDateTime, Boolean> acceptable) {
-        for (LocalDateTime at : calendar.keySet()) {
-            if (at.toLocalDate().isBefore(start)) {
-                continue;
-            }
-            AppointFrame frame = calendar.get(at);
-            if (frame.isFull() || !acceptable.apply(at)) {
-                continue;
-            }
-            return at;
-        }
-        return null;
-    }
+//    public static LocalDateTime findVacancy(LocalDate start, Map<LocalDateTime, AppointFrame> calendar,
+//                                            Function<LocalDateTime, Boolean> acceptable) {
+//        for (LocalDateTime at : calendar.keySet()) {
+//            if (at.toLocalDate().isBefore(start)) {
+//                continue;
+//            }
+//            AppointFrame frame = calendar.get(at);
+//            if (frame.isFull() || !acceptable.apply(at)) {
+//                continue;
+//            }
+//            return at;
+//        }
+//        return null;
+//    }
 
 }

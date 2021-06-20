@@ -6,6 +6,11 @@ public class NeedConfirm implements PatientState {
         return "*";
     }
 
+    @Override
+    public PatientState copy() {
+        return new NeedConfirm();
+    }
+
     public static NeedConfirm decode(String src){
         if( "*".equals(src) ){
             return new NeedConfirm();

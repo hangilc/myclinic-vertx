@@ -11,11 +11,11 @@ import java.util.regex.Matcher;
 
 public class CovidMisc {
 
-    public static CovidVaccine.RegularPatient patientToRegularPatient(PatientDTO patient){
+    public static RegularPatient patientToRegularPatient(PatientDTO patient){
         int age = Misc.ageAt(LocalDate.parse(patient.birthday), LocalDate.of(2022, 3, 31));
-        return new CovidVaccine.RegularPatient(patient.patientId,
+        return new RegularPatient(patient.patientId,
                 patient.lastName + patient.firstName,
-                age, patient.phone, "*");
+                age, patient.phone, new NeedConfirm());
     }
 
     public static String encodeAppointTime(LocalDateTime at) {

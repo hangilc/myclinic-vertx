@@ -27,6 +27,11 @@ public class SecondShotAppoint implements PatientState {
         return "B" + CovidMisc.encodeAppointTime(at);
     }
 
+    @Override
+    public PatientState copy() {
+        return new SecondShotAppoint(at);
+    }
+
     public static SecondShotAppoint decode(String src){
         Matcher m = SecondShotAppoint.pat.matcher(src);
         if (m.matches()) {
@@ -41,4 +46,5 @@ public class SecondShotAppoint implements PatientState {
             throw new RuntimeException("Cannot convert to SecondShotAppoint: " + src);
         }
     }
+
 }

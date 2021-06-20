@@ -13,6 +13,11 @@ public class FirstShotCandidate implements PatientState, Appointable {
         return "C";
     }
 
+    @Override
+    public PatientState copy() {
+        return new FirstShotCandidate();
+    }
+
     public static FirstShotCandidate decode(String src){
         if( "C".equals(src) ){
             return new FirstShotCandidate();

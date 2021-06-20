@@ -146,24 +146,24 @@ public class CovidVaccine {
     }
 
     private static String calendarLabel(LocalDateTime at, List<RegularPatient> hist){
-        String label = null;
-        for(RegularPatient p: hist){
-            PatientState s = CovidMisc.parsePatientAttr(p.attr);
-            if( s instanceof FirstShotAppoint){
-                FirstShotAppoint firstShotAppoint = (FirstShotAppoint) s;
-                if( at.equals(firstShotAppoint.at) ) {
-                    label = "１回目予約";
-                } else if( at.equals(firstShotAppoint.tmpSecondAppoint) ){
-                    label = "２回目仮予約";
-                }
-            } else if( s instanceof SecondShotAppoint){
-                SecondShotAppoint secondShotAppoint = (SecondShotAppoint) s;
-                if( at.equals(secondShotAppoint.at) ){
-                    label = "２回目予約";
-
-                }
-            }
-        }
+//        String label = null;
+//        for(RegularPatient p: hist){
+//            PatientState s = CovidMisc.parsePatientAttr(p.attr);
+//            if( s instanceof FirstShotAppoint){
+//                FirstShotAppoint firstShotAppoint = (FirstShotAppoint) s;
+//                if( at.equals(firstShotAppoint.at) ) {
+//                    label = "１回目予約";
+//                } else if( at.equals(firstShotAppoint.tmpSecondAppoint) ){
+//                    label = "２回目仮予約";
+//                }
+//            } else if( s instanceof SecondShotAppoint){
+//                SecondShotAppoint secondShotAppoint = (SecondShotAppoint) s;
+//                if( at.equals(secondShotAppoint.at) ){
+//                    label = "２回目予約";
+//
+//                }
+//            }
+//        }
         return null;
     }
 
@@ -220,7 +220,7 @@ public class CovidVaccine {
         RegularPatient regp = CovidMisc.patientToRegularPatient(patient);
         List<PatchCommand> patches = List.of(
                 new PatchAdd(regp),
-                new PatchState(regp.attr, patient.patientId));
+                new PatchState(regp.state.encode(), patient.patientId));
         Map<Integer, RegularPatient> map = new HashMap<>();
         map.put(patient.patientId, regp);
         doApplyPatches(patches, map);
@@ -256,7 +256,7 @@ public class CovidVaccine {
     static List<RegularPatient> getAppointsAt(LocalDateTime at, Collection<RegularPatient> patients) {
         List<RegularPatient> result = new ArrayList<>();
         for (RegularPatient p : patients) {
-            PatientState state = CovidMisc.parsePatientAttr(p.attr);
+            PatientState state = p.state;
             if (state instanceof FirstShotAppoint) {
                 if (at.equals(((FirstShotAppoint) state).at)) {
                     result.add(p);
@@ -310,7 +310,7 @@ public class CovidVaccine {
             if (p == null) {
                 throw new RuntimeException("Unknown patient-id: " + patientId);
             }
-            PatientState state = CovidMisc.parsePatientAttr(p.attr);
+            PatientState state = p.state;
             if (state instanceof Appointable) {
                 PatientState newState = ((Appointable) state).registerAppoint(params.at);
                 patches.add(new PatchState(newState.toString(), patientId));
@@ -472,7 +472,7 @@ public class CovidVaccine {
         if (ap != null && !ap.acceptable(at)) {
             return false;
         }
-        PatientState state = CovidMisc.parsePatientAttr(p.attr);
+        PatientState state = p.state;
         if (state instanceof FirstShotCandidate) {
             return true;
         } else if (state instanceof SecondShotCandidate) {
@@ -533,7 +533,7 @@ public class CovidVaccine {
             System.out.println();
             List<RegularPatient> logbook = executeLogbook();
             List<RegularPatient> patients = logbook.stream().filter(p -> {
-                PatientState state = CovidMisc.parsePatientAttr(p.attr);
+                PatientState state = p.state;
                 if (state instanceof FirstShotAppoint) {
                     FirstShotAppoint fsa = (FirstShotAppoint) state;
                     return fsa.at.equals(params.at);
@@ -607,7 +607,7 @@ public class CovidVaccine {
             } else if (patch instanceof PatchState) {
                 PatchState patchState = (PatchState) patch;
                 RegularPatient patient = patientMap.get(patchState.patientId).copy();
-                patient.attr = patchState.attr;
+                patient.state = CovidMisc.parsePatientAttr(patchState.attr);
                 System.out.printf("STATE %s\n", patient);
             } else if (patch instanceof PatchPhone) {
                 PatchPhone patchPhone = (PatchPhone) patch;
@@ -646,7 +646,7 @@ public class CovidVaccine {
                 if (rp == null) {
                     throw new RuntimeException("Cannot find patient with patient-id: " + ps.patientId);
                 }
-                rp.attr = ps.attr;
+                rp.state = CovidMisc.parsePatientAttr(ps.attr);
                 System.out.printf("STATE %s\n", rp.toString());
             } else {
                 throw new RuntimeException("Unknown patch: " + patchLine);
@@ -695,7 +695,7 @@ public class CovidVaccine {
         List<RegularPatient> patients = executeLogbook();
         Map<LocalDate, List<RegularPatient>> map = new HashMap<>();
         for (RegularPatient patient : patients) {
-            PatientState st = CovidMisc.parsePatientAttr(patient.attr);
+            PatientState st = patient.state;
             if (st instanceof SecondShotCandidate) {
                 SecondShotCandidate ssc = (SecondShotCandidate) st;
                 LocalDate dueDate = ssc.firstShotDate.plus(3, ChronoUnit.WEEKS);
@@ -733,11 +733,10 @@ public class CovidVaccine {
             List<String> logs = new ArrayList<>();
             for (RegularPatient p : patients) {
                 logs.add(logbookAdd(p.patientId, p.name, p.age, p.phone));
-                CovidMisc.parsePatientAttr(p.attr);
-                if (p.attr.equals("*") && p.age < 65) {
-                    p.attr = "U";
+                if (p.state instanceof NeedConfirm && p.age < 65) {
+                    p.state = new Under65();
                 }
-                logs.add(logbookState(p.patientId, p.attr));
+                logs.add(logbookState(p.patientId, p.state.encode()));
             }
             if (Files.exists(logbookPath)) {
                 System.err.printf("logbook (%s) already exists.\n", logbookPath.toString());
@@ -886,7 +885,7 @@ public class CovidVaccine {
                 p.name = items[1];
                 p.age = Integer.parseInt(items[2]);
                 p.phone = items[3];
-                p.attr = p.age >= 65 ? "*" : "U";
+                p.state = p.age >= 65 ? new NeedConfirm() : new Under65();
                 return new PatchAdd(p);
             }
             case "STATE": {
@@ -946,12 +945,12 @@ public class CovidVaccine {
                 PatchState ps = (PatchState) cmd;
                 int patientId = ps.patientId;
                 String attr = ps.attr;
-                CovidMisc.parsePatientAttr(attr);
+                PatientState state = CovidMisc.parsePatientAttr(attr);
                 RegularPatient patient = map.get(patientId);
                 if (patient == null) {
                     throw new RuntimeException("Invalid patient-id: " + String.format("%d", patientId));
                 }
-                patient.attr = attr;
+                patient.state = state;
                 callback.accept(patient);
             } else if (cmd instanceof PatchPhone) {
                 PatchPhone pp = (PatchPhone) cmd;
@@ -992,7 +991,7 @@ public class CovidVaccine {
         List<RegularPatient> patients = executeLogbook();
         Map<String, List<RegularPatient>> groups = new HashMap<>();
         patients.forEach(p -> {
-            String code = p.attr.substring(0, 1);
+            String code = p.state.encode().substring(0, 1);
             List<RegularPatient> list = groups.computeIfAbsent(code, k -> new ArrayList<>());
             list.add(p);
         });
@@ -1086,49 +1085,6 @@ public class CovidVaccine {
     }
 
 
-    static class RegularPatient {
-        int patientId;
-        String name;
-        int age;
-        String phone;
-        String attr;
-
-        public RegularPatient(int patientId, String name, int age, String phone, String attr) {
-            this.patientId = patientId;
-            this.name = name;
-            this.age = age;
-            this.phone = phone;
-            this.attr = attr;
-        }
-
-        RegularPatient() {
-
-        }
-
-        public boolean isExcluded() {
-            return attr.startsWith("x") || attr.startsWith("X");
-        }
-
-        public String toStringWithoutAttr() {
-            return String.format("%d %s %d才 %s", patientId, name, age, phone);
-        }
-
-        @Override
-        public String toString() {
-            return attr + " " + toStringWithoutAttr();
-        }
-
-        RegularPatient copy() {
-            RegularPatient c = new RegularPatient();
-            c.patientId = patientId;
-            c.name = name;
-            c.age = age;
-            c.phone = phone;
-            c.attr = attr;
-            return c;
-        }
-    }
-
     private static RegularPatient parseRegularPatient(String line) {
         if (line == null || line.isEmpty()) {
             return null;
@@ -1141,7 +1097,7 @@ public class CovidVaccine {
             String[] parts = line.split("\\s+", 5);
             //String attr = parts[0];
             //rp.attr = attr.equals("*") ? "" : attr;
-            rp.attr = parts[0];
+            rp.state = CovidMisc.parsePatientAttr(parts[0]);
             rp.patientId = Integer.parseInt(parts[1]);
             rp.name = parts[2];
             rp.age = Integer.parseInt(parts[3]);

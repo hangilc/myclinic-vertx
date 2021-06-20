@@ -6,6 +6,11 @@ public class NotCurrentCandidate implements PatientState {
         return "x";
     }
 
+    @Override
+    public PatientState copy() {
+        return new NotCurrentCandidate();
+    }
+
     public static NotCurrentCandidate decode(String src){
         if( "x".equals(src) ){
             return new NotCurrentCandidate();

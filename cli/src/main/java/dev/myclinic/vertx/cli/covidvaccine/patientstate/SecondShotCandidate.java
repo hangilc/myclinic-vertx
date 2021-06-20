@@ -3,6 +3,7 @@ package dev.myclinic.vertx.cli.covidvaccine.patientstate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SecondShotCandidate implements PatientState, Appointable {
@@ -24,6 +25,23 @@ public class SecondShotCandidate implements PatientState, Appointable {
 
     @Override
     public String encode() {
-        throw new RuntimeException("not implemented");
+        return String.format("S%02d%02d", firstShotDate.getMonthValue(), firstShotDate.getDayOfMonth());
+    }
+
+    @Override
+    public PatientState copy() {
+        return new SecondShotCandidate(firstShotDate);
+    }
+
+    public static SecondShotCandidate decode(String src){
+        Matcher m = SecondShotCandidate.pat.matcher(src);
+        if (m.matches()) {
+            int month = Integer.parseInt(m.group(1));
+            int day = Integer.parseInt(m.group(2));
+            int year = LocalDate.now().getYear();
+            return new SecondShotCandidate(LocalDate.of(year, month, day));
+        } else {
+            throw new RuntimeException("Cannot convert to SecondShotCandidate: " + src);
+        }
     }
 }

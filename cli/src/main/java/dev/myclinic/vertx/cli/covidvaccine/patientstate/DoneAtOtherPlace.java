@@ -6,6 +6,11 @@ public class DoneAtOtherPlace implements PatientState {
         return "T";
     }
 
+    @Override
+    public PatientState copy() {
+        return new DoneAtOtherPlace();
+    }
+
     public static DoneAtOtherPlace decode(String src){
         if( "T".equals(src) ){
             return new DoneAtOtherPlace();

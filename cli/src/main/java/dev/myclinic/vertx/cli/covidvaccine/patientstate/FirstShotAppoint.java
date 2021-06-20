@@ -25,6 +25,11 @@ public class FirstShotAppoint implements PatientState, Appointable {
     }
 
     @Override
+    public PatientState copy() {
+        return new FirstShotAppoint(at, tmpSecondAppoint);
+    }
+
+    @Override
     public String toString() {
         return "A" + CovidMisc.encodeAppointTime(at);
     }

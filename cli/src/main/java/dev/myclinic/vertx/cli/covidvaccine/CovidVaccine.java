@@ -308,12 +308,17 @@ public class CovidVaccine {
             System.err.println("example -- appoints-at 06-19T14:00");
             System.exit(1);
         }
-        List<RegularPatient> logbook = executeLogbook();
+        Map<LocalDateTime, AppointFrame> cal = AppointFrame.readFromLogs(readLogs());
         for (LocalDateTime at : params.atTimes) {
             System.out.printf("%s %02d時%02d分\n",
                     Misc.localDateToKanji(at.toLocalDate(), true, true),
                     at.getHour(), at.getMinute());
-            List<RegularPatient> patients = getAppointsAt(at, logbook);
+            AppointFrame frame = cal.get(at);
+            if( frame == null ){
+                System.err.println("Invalid appoint time: " + at);
+                System.exit(1);
+            }
+            List<RegularPatient> patients = frame.entries.stream().map(e -> e.patient).collect(toList());
             int index = 1;
             for (RegularPatient p : patients) {
                 System.out.printf("%d. %s\n", index++, p);
@@ -322,22 +327,32 @@ public class CovidVaccine {
         }
     }
 
-    static List<RegularPatient> getAppointsAt(LocalDateTime at, Collection<RegularPatient> patients) {
-        List<RegularPatient> result = new ArrayList<>();
-        for (RegularPatient p : patients) {
-            PatientState state = p.state;
-            if (state instanceof FirstShotAppoint) {
-                if (at.equals(((FirstShotAppoint) state).at)) {
-                    result.add(p);
-                }
-            } else if (state instanceof SecondShotAppoint) {
-                if (at.equals(((SecondShotAppoint) state).at)) {
-                    result.add(p);
-                }
-            }
+    static List<RegularPatient> getAppointsAt(LocalDateTime at) {
+        Map<LocalDateTime, AppointFrame> cal = AppointFrame.readFromLogs(readLogs());
+        AppointFrame frame = cal.get(at);
+        if( frame == null ){
+            return Collections.emptyList();
+        } else {
+            return frame.entries.stream().map(e -> e.patient).collect(toList());
         }
-        return result;
     }
+
+//    static List<RegularPatient> getAppointsAt(LocalDateTime at, Collection<RegularPatient> patients) {
+//        List<RegularPatient> result = new ArrayList<>();
+//        for (RegularPatient p : patients) {
+//            PatientState state = p.state;
+//            if (state instanceof FirstShotAppoint) {
+//                if (at.equals(((FirstShotAppoint) state).at)) {
+//                    result.add(p);
+//                }
+//            } else if (state instanceof SecondShotAppoint) {
+//                if (at.equals(((SecondShotAppoint) state).at)) {
+//                    result.add(p);
+//                }
+//            }
+//        }
+//        return result;
+//    }
 
     private static void registerAppoint(String[] args) throws Exception {
         var params = new Object() {
@@ -361,7 +376,8 @@ public class CovidVaccine {
             System.exit(1);
         }
         Map<Integer, RegularPatient> patientMap = executeLogbookAsMap();
-        List<RegularPatient> currentAppoints = getAppointsAt(params.at, patientMap.values());
+        //List<RegularPatient> currentAppoints = getAppointsAt(params.at, patientMap.values());
+        List<RegularPatient> currentAppoints = getAppointsAt(params.at);
         if (appDate.capacity < currentAppoints.size() + params.patientIds.size()) {
             System.err.println("Overbooking!");
             System.exit(1);

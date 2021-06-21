@@ -1,6 +1,6 @@
-package dev.myclinic.vertx.cli.covidvaccine.patientstate;
+package dev.myclinic.vertx.cli.covidvaccine.patientevent;
 
-public class Kakaritsuke implements PatientState {
+public class Kakaritsuke implements PatientEvent {
 
     @Override
     public String encode() {

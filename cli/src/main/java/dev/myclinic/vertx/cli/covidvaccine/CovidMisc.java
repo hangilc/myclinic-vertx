@@ -1,13 +1,11 @@
 package dev.myclinic.vertx.cli.covidvaccine;
 
 import dev.myclinic.vertx.cli.Misc;
-import dev.myclinic.vertx.cli.covidvaccine.patientstate.*;
+import dev.myclinic.vertx.cli.covidvaccine.patientevent.*;
 import dev.myclinic.vertx.dto.PatientDTO;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.regex.Matcher;
 
 public class CovidMisc {
 
@@ -23,7 +21,7 @@ public class CovidMisc {
                 at.getHour(), at.getMinute());
     }
 
-    public static PatientState parsePatientAttr(String attr) {
+    public static PatientEvent parsePatientAttr(String attr) {
         attr = attr.trim();
         if (attr.length() > 0) {
             switch (attr.charAt(0)) {
@@ -39,51 +37,21 @@ public class CovidMisc {
                     return new DoneAtOtherPlace();
                 case 'U':
                     return new Under65();
-                case 'S': {
+                case 'S':
                     return SecondShotCandidate.decode(attr);
-//                    Matcher m = SecondShotCandidate.pat.matcher(attr);
-//                    if (m.matches()) {
-//                        int month = Integer.parseInt(m.group(1));
-//                        int day = Integer.parseInt(m.group(2));
-//                        int year = LocalDate.now().getYear();
-//                        return new SecondShotCandidate(LocalDate.of(year, month, day));
-//                    }
-//                    break;
-                }
-                case 'A': {
+                case 'A':
                     return FirstShotAppoint.decode(attr);
-//                    Matcher m = FirstShotAppoint.pat.matcher(attr);
-//                    if (m.matches()) {
-//                        LocalDateTime at = LocalDateTime.of(
-//                                LocalDate.parse(m.group(1)),
-//                                LocalTime.of(
-//                                        Integer.parseInt(m.group(2)),
-//                                        Integer.parseInt(m.group(3)))
-//                        );
-//                        return new FirstShotAppoint(at);
-//                    }
-//                    break;
-                }
-                case 'B': {
+                case 'B':
                     return SecondShotAppoint.decode(attr);
-//                    Matcher m = SecondShotAppoint.pat.matcher(attr);
-//                    if (m.matches()) {
-//                        LocalDateTime at = LocalDateTime.of(
-//                                LocalDate.parse(m.group(1)),
-//                                LocalTime.of(
-//                                        Integer.parseInt(m.group(2)),
-//                                        Integer.parseInt(m.group(3)))
-//                        );
-//                        return new SecondShotAppoint(at);
-//                    }
-//                    break;
-                }
-                case 'D': {
+                case 'D':
                     return new Done();
-                }
-                case 'K': {
+                case 'F':
+                    return new FirstShotDone();
+                case 'G': return new FirstShotCancel();
+                case 'H': return new SecondShotCancel();
+                case 'I': return new SecondShotExternal();
+                case 'K':
                     return new Kakaritsuke();
-                }
                 case 'E': return EphemeralSecondShotAppoint.decode(attr);
             }
         }

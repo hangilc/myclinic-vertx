@@ -1,13 +1,13 @@
-package dev.myclinic.vertx.cli.covidvaccine.patientstate;
+package dev.myclinic.vertx.cli.covidvaccine.patientevent;
 
-public class NeedConfirm implements PatientState {
+public class NeedConfirm implements PatientEvent {
     @Override
     public String encode() {
         return "*";
     }
 
     @Override
-    public PatientState copy() {
+    public PatientEvent copy() {
         return new NeedConfirm();
     }
 

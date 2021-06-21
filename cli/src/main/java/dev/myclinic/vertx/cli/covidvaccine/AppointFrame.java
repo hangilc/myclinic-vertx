@@ -1,17 +1,7 @@
 package dev.myclinic.vertx.cli.covidvaccine;
 
-import dev.myclinic.vertx.cli.covidvaccine.patientstate.EphemeralSecondShotAppoint;
-import dev.myclinic.vertx.cli.covidvaccine.patientstate.FirstShotAppoint;
-import dev.myclinic.vertx.cli.covidvaccine.patientstate.PatientState;
-import dev.myclinic.vertx.cli.covidvaccine.patientstate.SecondShotAppoint;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 
 class AppointFrame {
 
@@ -35,14 +25,14 @@ class AppointFrame {
         return entries.size() >= appointDate.capacity;
     }
 
-    public void addEntry(PatientCalendar patientCalendar, RegularPatient patient){
-        if( isFull() ){
+    public void addEntry(PatientCalendar patientCalendar, RegularPatient patient) {
+        if (isFull()) {
             throw new RuntimeException("Overbooking! " + appointDate.at);
         }
         entries.add(new AppointEntry(patientCalendar, patient));
     }
 
-    public List<AppointEntry> getEntries(){
+    public List<AppointEntry> getEntries() {
         return new ArrayList<>(entries);
     }
 

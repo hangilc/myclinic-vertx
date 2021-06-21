@@ -1,15 +1,15 @@
 package dev.myclinic.vertx.cli.covidvaccine;
 
-import dev.myclinic.vertx.cli.covidvaccine.patientstate.PatientState;
+import dev.myclinic.vertx.cli.covidvaccine.patientevent.PatientEvent;
 
 public class RegularPatient {
     int patientId;
     String name;
     int age;
     String phone;
-    PatientState state;
+    PatientEvent state;
 
-    public RegularPatient(int patientId, String name, int age, String phone, PatientState state) {
+    public RegularPatient(int patientId, String name, int age, String phone, PatientEvent state) {
         this.patientId = patientId;
         this.name = name;
         this.age = age;

@@ -1,13 +1,13 @@
-package dev.myclinic.vertx.cli.covidvaccine.patientstate;
+package dev.myclinic.vertx.cli.covidvaccine.patientevent;
 
-public class DoneAtOtherPlace implements PatientState {
+public class DoneAtOtherPlace implements PatientEvent {
     @Override
     public String encode() {
         return "T";
     }
 
     @Override
-    public PatientState copy() {
+    public PatientEvent copy() {
         return new DoneAtOtherPlace();
     }
 

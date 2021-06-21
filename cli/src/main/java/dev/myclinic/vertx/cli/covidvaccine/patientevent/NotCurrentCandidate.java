@@ -1,13 +1,13 @@
-package dev.myclinic.vertx.cli.covidvaccine.patientstate;
+package dev.myclinic.vertx.cli.covidvaccine.patientevent;
 
-public class NotCurrentCandidate implements PatientState {
+public class NotCurrentCandidate implements PatientEvent {
     @Override
     public String encode() {
         return "x";
     }
 
     @Override
-    public PatientState copy() {
+    public PatientEvent copy() {
         return new NotCurrentCandidate();
     }
 

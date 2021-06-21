@@ -1,4 +1,4 @@
-package dev.myclinic.vertx.cli.covidvaccine.patientstate;
+package dev.myclinic.vertx.cli.covidvaccine.patientevent;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -6,7 +6,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class SecondShotCandidate implements PatientState, Appointable {
+public class SecondShotCandidate implements PatientEvent, Appointable {
     public static Pattern pat = Pattern.compile("S(\\d\\d)(\\d\\d)");
     public LocalDate firstShotDate;
 
@@ -15,7 +15,7 @@ public class SecondShotCandidate implements PatientState, Appointable {
     }
 
     @Override
-    public PatientState registerAppoint(LocalDateTime at) {
+    public PatientEvent registerAppoint(LocalDateTime at) {
         LocalDate dueDate = firstShotDate.plus(21, ChronoUnit.DAYS);
         if (at.toLocalDate().isBefore(dueDate)) {
             throw new RuntimeException("Too early second shot appointment.");
@@ -29,7 +29,7 @@ public class SecondShotCandidate implements PatientState, Appointable {
     }
 
     @Override
-    public PatientState copy() {
+    public PatientEvent copy() {
         return new SecondShotCandidate(firstShotDate);
     }
 

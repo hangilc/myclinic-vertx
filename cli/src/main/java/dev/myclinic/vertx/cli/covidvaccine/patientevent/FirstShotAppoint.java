@@ -1,7 +1,6 @@
-package dev.myclinic.vertx.cli.covidvaccine.patientstate;
+package dev.myclinic.vertx.cli.covidvaccine.patientevent;
 
 import dev.myclinic.vertx.cli.covidvaccine.CovidMisc;
-import dev.myclinic.vertx.cli.covidvaccine.CovidVaccine;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,7 +10,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class FirstShotAppoint implements PatientState, Appointable {
+public class FirstShotAppoint implements PatientEvent, Appointable {
     public static Pattern pat = Pattern.compile("A(\\d+-\\d+-\\d+)T(\\d+):(\\d+)(>E(\\d+-\\d+-\\d+)T(\\d+):(\\d+))?");
     public LocalDateTime at;
     public LocalDateTime tmpSecondAppoint;
@@ -36,7 +35,7 @@ public class FirstShotAppoint implements PatientState, Appointable {
     }
 
     @Override
-    public PatientState registerAppoint(LocalDateTime registerAt) {
+    public PatientEvent registerAppoint(LocalDateTime registerAt) {
         LocalDate due = at.toLocalDate().plus(21, ChronoUnit.DAYS);
         if (registerAt.toLocalDate().equals(due) || registerAt.toLocalDate().isAfter(due)) {
             return new SecondShotAppoint(registerAt);

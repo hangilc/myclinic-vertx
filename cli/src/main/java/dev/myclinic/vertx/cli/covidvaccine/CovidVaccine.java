@@ -1,7 +1,7 @@
 package dev.myclinic.vertx.cli.covidvaccine;
 
 import dev.myclinic.vertx.cli.Misc;
-import dev.myclinic.vertx.cli.covidvaccine.patientstate.*;
+import dev.myclinic.vertx.cli.covidvaccine.patientevent.*;
 import dev.myclinic.vertx.client2.Client;
 import dev.myclinic.vertx.dto.PatientDTO;
 
@@ -61,7 +61,7 @@ public class CovidVaccine {
                     current();
                     break;
                 case "patient-ids": {
-                    patientIds();
+                    patientIds(args);
                     break;
                 }
                 case "search": {
@@ -151,7 +151,7 @@ public class CovidVaccine {
         System.out.println("  list-patches");
         System.out.println("  apply-patches");
         System.out.println("  current");
-        System.out.println("  patient-ids");
+        System.out.println("  patient-ids CANDIDATE-STATE");
         System.out.println("  search SEARCH-TEXT");
         System.out.println("  candidates-at APPOINT-TIME");
         System.out.println("  list-appoint-dates");
@@ -188,7 +188,7 @@ public class CovidVaccine {
 
     private static void batchRegisterEphemeralSecondAppoint() throws Exception {
         Context ctx = new Context();
-        AppointCalendar cal = ctx.getCalendar();
+        AppointCalendarOld cal = ctx.getCalendar();
         Map<Integer, PatientAppointPref> prefMap = readPatientAppointPrefs();
         Map<Integer, RegularPatient> patMap = executeLogbookAsMap(ctx.getLogs());
         List<RegularPatient> patients = patMap.values().stream()
@@ -302,20 +302,65 @@ public class CovidVaccine {
     }
 
     private static void calendar() throws Exception {
-        Context ctx = new Context();
-        AppointCalendar calendar = ctx.getCalendar();
-        for(AppointFrame frame: calendar.listFrames()){
-            LocalDateTime at = frame.appointDate.at;
-            System.out.printf("%s (%d)\n", appointTimeRep(at), frame.appointDate.capacity);
-            if (frame.getEntries().size() > frame.appointDate.capacity) {
-                System.err.printf("Overbooking ! %s", CovidMisc.encodeAppointTime(at));
-                System.exit(1);
-            }
-            int i = 1;
-            for (AppointFrame.AppointEntry e : frame.getEntries()) {
-                System.out.printf("%d. %s\n", i++, e.toString());
-            }
+        Map<Integer, PatientState> stateMap = new HashMap<>();
+        Map<Integer, RegularPatient> patientMap = new HashMap<>();
+        executeLogbook(readLogs(), patient -> {
+            PatientState ps = stateMap.computeIfAbsent(patient.patientId, k -> new PatientState());
+            ps.apply(patient.state);
+            patientMap.put(patient.patientId, patient);
+        });
+        AppointCalendar cal = new AppointCalendar();
+        cal.init();
+        for(int patientId: stateMap.keySet()){
+            cal.add(patientId, stateMap.get(patientId));
+        }
+        for(AppointDate appointDate: cal.listAppointDates()){
+            System.out.printf("%s (%d)\n", appointTimeRep(appointDate.at),appointDate.capacity);
+            var ctx = new Object(){
+                int index = 1;
+            };
+            cal.iterItem(appointDate.at, (patientId, firstShotState) -> {
+                RegularPatient patient = patientMap.get(patientId);
+                System.out.printf("%d. (%d) %s %s\n", ctx.index++, patient.patientId, patient.name,
+                        PatientState.renderFirstShotState(firstShotState));
+            }, (patientId, secondShotState) -> {
+                RegularPatient patient = patientMap.get(patientId);
+                System.out.printf("%d. (%d) %s %s\n", ctx.index++, patient.patientId, patient.name,
+                        PatientState.renderSecondShotState(secondShotState));
+            });
             System.out.println();
+        }
+
+        if( false ) {
+            for (int patientId : stateMap.keySet()) {
+                RegularPatient patient = patientMap.get(patientId);
+                PatientState ps = stateMap.get(patientId);
+                System.out.printf("(%04d) %s\n", patient.patientId, patient.name);
+                System.out.printf("%s %s\n",
+                        PatientState.renderFirstShotState(ps.firstShotState),
+                        ps.firstShotTime == null ? "" : appointTimeRep(ps.firstShotTime));
+                System.out.printf("%s %s\n",
+                        PatientState.renderSecondShotState(ps.secondShotState),
+                        ps.secondShotTime == null ? "" : appointTimeRep(ps.secondShotTime));
+            }
+        }
+
+        if( false ) {
+            Context ctx = new Context();
+            AppointCalendarOld calendar = ctx.getCalendar();
+            for (AppointFrame frame : calendar.listFrames()) {
+                LocalDateTime at = frame.appointDate.at;
+                System.out.printf("%s (%d)\n", appointTimeRep(at), frame.appointDate.capacity);
+                if (frame.getEntries().size() > frame.appointDate.capacity) {
+                    System.err.printf("Overbooking ! %s", CovidMisc.encodeAppointTime(at));
+                    System.exit(1);
+                }
+                int i = 1;
+                for (AppointFrame.AppointEntry e : frame.getEntries()) {
+                    System.out.printf("%d. %s\n", i++, e.toString());
+                }
+                System.out.println();
+            }
         }
     }
 
@@ -383,7 +428,7 @@ public class CovidVaccine {
             System.exit(1);
         }
         Context ctx = new Context();
-        AppointCalendar cal = ctx.getCalendar();
+        AppointCalendarOld cal = ctx.getCalendar();
         for(LocalDateTime at: params.atTimes){
             System.out.printf("%s %02d時%02d分\n",
                     Misc.localDateToKanji(at.toLocalDate(), true, true),
@@ -400,7 +445,7 @@ public class CovidVaccine {
     }
 
     static List<RegularPatient> getAppointsAt(LocalDateTime at) {
-        AppointCalendar cal = ctx.getCalendar();
+        AppointCalendarOld cal = ctx.getCalendar();
         return cal.getFrame(at).getEntries().stream()
                 .map(e -> e.patient).collect(toList());
 //        Map<LocalDateTime, AppointFrame> cal = AppointFrame.readFromLogs(readLogs());
@@ -470,9 +515,9 @@ public class CovidVaccine {
             if (p == null) {
                 throw new RuntimeException("Unknown patient-id: " + patientId);
             }
-            PatientState state = p.state;
+            PatientEvent state = p.state;
             if (state instanceof Appointable) {
-                PatientState newState = ((Appointable) state).registerAppoint(params.at);
+                PatientEvent newState = ((Appointable) state).registerAppoint(params.at);
                 patches.add(new PatchState(newState.toString(), patientId));
             } else {
                 System.err.printf("Cannot register appointment: %s\n", p);
@@ -596,7 +641,7 @@ public class CovidVaccine {
         if (ap != null && !ap.acceptable(at)) {
             return false;
         }
-        PatientState state = p.state;
+        PatientEvent state = p.state;
         if (state instanceof FirstShotCandidate) {
             return true;
         } else if (state instanceof SecondShotCandidate) {
@@ -657,7 +702,7 @@ public class CovidVaccine {
             System.out.println();
             List<RegularPatient> logbook = executeLogbook();
             List<RegularPatient> patients = logbook.stream().filter(p -> {
-                PatientState state = p.state;
+                PatientEvent state = p.state;
                 if (state instanceof FirstShotAppoint) {
                     FirstShotAppoint fsa = (FirstShotAppoint) state;
                     return fsa.at.equals(params.at);
@@ -842,7 +887,7 @@ public class CovidVaccine {
         List<RegularPatient> patients = executeLogbook();
         Map<LocalDate, List<RegularPatient>> map = new HashMap<>();
         for (RegularPatient patient : patients) {
-            PatientState st = patient.state;
+            PatientEvent st = patient.state;
             if (st instanceof SecondShotCandidate) {
                 SecondShotCandidate ssc = (SecondShotCandidate) st;
                 LocalDate dueDate = ssc.firstShotDate.plus(3, ChronoUnit.WEEKS);
@@ -1098,7 +1143,7 @@ public class CovidVaccine {
                 PatchState ps = (PatchState) cmd;
                 int patientId = ps.patientId;
                 String attr = ps.attr;
-                PatientState state = CovidMisc.parsePatientAttr(attr);
+                PatientEvent state = CovidMisc.parsePatientAttr(attr);
                 RegularPatient patient = map.get(patientId);
                 if (patient == null) {
                     throw new RuntimeException("Invalid patient-id: " + String.format("%d", patientId));
@@ -1213,18 +1258,51 @@ public class CovidVaccine {
         Misc.saveLines(currentPath.toString(), lines);
     }
 
-    private static void patientIds() throws Exception {
-        Map<String, List<RegularPatient>> groups = prepareGroupsForListing();
-        for (String code : groups.keySet()) {
-            List<RegularPatient> list = groups.computeIfAbsent(code, k -> Collections.emptyList());
-            List<String> patientIds = list.stream()
-                    .sorted(Comparator.comparing(p -> p.patientId))
-                    .map(p -> String.format("%d", p.patientId))
-                    .collect(toList());
-            System.out.println(code);
-            System.out.println(String.join(", ", patientIds));
-            System.out.println();
+    private static void patientIds(String[] args) throws Exception {
+        String target = null;
+        if( args.length == 2 ){
+            target = args[1];
+        } else {
+            System.err.println("Invalid arg to patient-ids");
+            System.exit(1);
         }
+        Set<Integer> set = new HashSet<>();
+        Map<Integer, RegularPatient> patMap = new HashMap<>();
+        executeLogbook(readLogs(), patient -> {
+            PatientEvent e = patient.state;
+            if( e instanceof Kakaritsuke ){
+                set.add(patient.patientId);
+            } else if( e instanceof Under65 ){
+                if( set.contains(patient.patientId) ){
+                    set.remove(patient.patientId);
+                }
+            }
+            patMap.put(patient.patientId, patient);
+        });
+        List<Integer> list = new ArrayList<>(set);
+        list.sort(Comparator.naturalOrder());
+        for(int i=0;i<list.size();i++){
+            System.out.print(list.get(i));
+            if( i != list.size() - 1 ){
+                System.out.print(", ");
+            }
+        }
+        System.out.println();
+        list.forEach(patientId -> {
+            System.out.printf("%d %s\n", patientId, patMap.get(patientId).name);
+        });
+
+//        Map<String, List<RegularPatient>> groups = prepareGroupsForListing();
+//        for (String code : groups.keySet()) {
+//            List<RegularPatient> list = groups.computeIfAbsent(code, k -> Collections.emptyList());
+//            List<String> patientIds = list.stream()
+//                    .sorted(Comparator.comparing(p -> p.patientId))
+//                    .map(p -> String.format("%d", p.patientId))
+//                    .collect(toList());
+//            System.out.println(code);
+//            System.out.println(String.join(", ", patientIds));
+//            System.out.println();
+//        }
     }
 
     private static final Pattern patAppointTime = Pattern.compile("(\\d+-\\d+-\\d+)T(\\d+):(\\d+)");

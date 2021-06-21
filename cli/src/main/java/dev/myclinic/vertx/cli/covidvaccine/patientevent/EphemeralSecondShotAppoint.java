@@ -1,4 +1,4 @@
-package dev.myclinic.vertx.cli.covidvaccine.patientstate;
+package dev.myclinic.vertx.cli.covidvaccine.patientevent;
 
 import dev.myclinic.vertx.cli.covidvaccine.CovidMisc;
 
@@ -8,7 +8,7 @@ import java.time.LocalTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class EphemeralSecondShotAppoint implements PatientState {
+public class EphemeralSecondShotAppoint implements PatientEvent {
 
     public LocalDateTime at;
     public LocalDate firstShotAt;
@@ -39,7 +39,7 @@ public class EphemeralSecondShotAppoint implements PatientState {
     }
 
     @Override
-    public PatientState copy() {
+    public PatientEvent copy() {
         return new EphemeralSecondShotAppoint(at, firstShotAt);
     }
 }

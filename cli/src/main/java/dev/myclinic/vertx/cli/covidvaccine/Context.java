@@ -6,7 +6,7 @@ public class Context {
 
     private List<String> logs;
     private List<AppointDate> appointDates;
-    private AppointCalendar cal;
+    private AppointCalendarOld cal;
 
     private void ensureLogs(){
         if( logs == null ){
@@ -24,7 +24,7 @@ public class Context {
         if( cal == null ){
             ensureLogs();
             ensureAppointDates();
-            cal = new AppointCalendar();
+            cal = new AppointCalendarOld();
             cal.init(logs, appointDates);
         }
     }
@@ -34,7 +34,7 @@ public class Context {
         return logs;
     }
 
-    public AppointCalendar getCalendar(){
+    public AppointCalendarOld getCalendar(){
         ensureCalendar();
         return cal;
     }

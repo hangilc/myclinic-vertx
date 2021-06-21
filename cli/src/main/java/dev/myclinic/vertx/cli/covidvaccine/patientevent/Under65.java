@@ -1,13 +1,13 @@
-package dev.myclinic.vertx.cli.covidvaccine.patientstate;
+package dev.myclinic.vertx.cli.covidvaccine.patientevent;
 
-public class Under65 implements PatientState {
+public class Under65 implements PatientEvent {
     @Override
     public String encode() {
         return "U";
     }
 
     @Override
-    public PatientState copy() {
+    public PatientEvent copy() {
         return new Under65();
     }
 

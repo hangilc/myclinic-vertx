@@ -1,10 +1,10 @@
-package dev.myclinic.vertx.cli.covidvaccine.patientstate;
+package dev.myclinic.vertx.cli.covidvaccine.patientevent;
 
 import java.time.LocalDateTime;
 
-public class FirstShotCandidate implements PatientState, Appointable {
+public class FirstShotCandidate implements PatientEvent, Appointable {
     @Override
-    public PatientState registerAppoint(LocalDateTime at) {
+    public PatientEvent registerAppoint(LocalDateTime at) {
         return new FirstShotAppoint(at);
     }
 
@@ -14,7 +14,7 @@ public class FirstShotCandidate implements PatientState, Appointable {
     }
 
     @Override
-    public PatientState copy() {
+    public PatientEvent copy() {
         return new FirstShotCandidate();
     }
 

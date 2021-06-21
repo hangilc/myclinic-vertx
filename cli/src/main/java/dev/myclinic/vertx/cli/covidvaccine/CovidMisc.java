@@ -81,6 +81,9 @@ public class CovidMisc {
                 case 'D': {
                     return new Done();
                 }
+                case 'K': {
+                    return new Kakaritsuke();
+                }
                 case 'E': return EphemeralSecondShotAppoint.decode(attr);
             }
         }

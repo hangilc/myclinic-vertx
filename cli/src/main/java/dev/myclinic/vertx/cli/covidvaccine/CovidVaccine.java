@@ -25,6 +25,7 @@ public class CovidVaccine {
     private final static String CovidVaccineDir = System.getenv("COVID_VACCINE_DIR");
     private final static Path logbookPath = Path.of(CovidVaccineDir, "logbook.txt");
     private final static Path patchPath = Path.of(CovidVaccineDir, "logbook-patch.txt");
+    private final static Context ctx = new Context();
 
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
@@ -123,6 +124,14 @@ public class CovidVaccine {
                     batchRegisterEphemeralSecondAppoint();
                     break;
                 }
+                case "batch-convert-u-to-k": {
+                    batchConvertUtoK();
+                    break;
+                }
+                case "patch": {
+                    patch(args);
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -158,7 +167,23 @@ public class CovidVaccine {
         System.out.println("  history PATIENT-ID");
         System.out.println("  register-ephemeral-second-appoint PATIENT-ID PATIENT-ID ...");
         System.out.println("  batch-register-ephemeral-second-appoint");
+        System.out.println("  batch-convert-u-to-k");
+        System.out.println("  patch ATTR PATIENT-ID PATIENT-ID ...");
         System.out.println("  help");
+    }
+
+    private static void batchConvertUtoK() throws Exception {
+        Map<Integer, RegularPatient> patientMap = executeLogbookAsMap();
+        Collection<RegularPatient> patients = patientMap.values();
+        List<PatchCommand> patches = patients.stream()
+                .filter( p -> p.state instanceof Under65 )
+                .map(p -> {
+                    p = p.copy();
+                    p.state = new Kakaritsuke();
+                    return new PatchState(p.state.encode(), p.patientId);
+                })
+                .collect(toList());
+        doApplyPatches(patches, patientMap);
     }
 
     private static void batchRegisterEphemeralSecondAppoint() throws Exception {
@@ -357,33 +382,34 @@ public class CovidVaccine {
             System.err.println("example -- appoints-at 06-19T14:00");
             System.exit(1);
         }
-        Map<LocalDateTime, AppointFrame> cal = AppointFrame.readFromLogs(readLogs());
-        for (LocalDateTime at : params.atTimes) {
+        Context ctx = new Context();
+        AppointCalendar cal = ctx.getCalendar();
+        for(LocalDateTime at: params.atTimes){
             System.out.printf("%s %02d時%02d分\n",
                     Misc.localDateToKanji(at.toLocalDate(), true, true),
                     at.getHour(), at.getMinute());
-            AppointFrame frame = cal.get(at);
-            if (frame == null) {
-                System.err.println("Invalid appoint time: " + at);
-                System.exit(1);
-            }
+            AppointFrame frame = cal.getFrame(at);
             List<RegularPatient> patients = frame.getEntries().stream().map(e -> e.patient).collect(toList());
             int index = 1;
             for (RegularPatient p : patients) {
                 System.out.printf("%d. %s\n", index++, p);
             }
             System.out.println();
+
         }
     }
 
     static List<RegularPatient> getAppointsAt(LocalDateTime at) {
-        Map<LocalDateTime, AppointFrame> cal = AppointFrame.readFromLogs(readLogs());
-        AppointFrame frame = cal.get(at);
-        if (frame == null) {
-            return Collections.emptyList();
-        } else {
-            return frame.getEntries().stream().map(e -> e.patient).collect(toList());
-        }
+        AppointCalendar cal = ctx.getCalendar();
+        return cal.getFrame(at).getEntries().stream()
+                .map(e -> e.patient).collect(toList());
+//        Map<LocalDateTime, AppointFrame> cal = AppointFrame.readFromLogs(readLogs());
+//        AppointFrame frame = cal.get(at);
+//        if (frame == null) {
+//            return Collections.emptyList();
+//        } else {
+//            return frame.getEntries().stream().map(e -> e.patient).collect(toList());
+//        }
     }
 
 //    static List<RegularPatient> getAppointsAt(LocalDateTime at, Collection<RegularPatient> patients) {
@@ -787,6 +813,29 @@ public class CovidVaccine {
         CovidMisc.parsePatientAttr(attr);
         String patch = logbookState(patientId, attr);
         Misc.appendLines(patchPath.toString(), Collections.singletonList(patch));
+    }
+
+    private static void patch(String[] args) throws Exception {
+        if( args.length >= 3 ){
+            String attr = args[1];
+            CovidMisc.parsePatientAttr(attr);
+            List<PatchCommand> patches = new ArrayList<>();
+            Map<Integer, RegularPatient> patientMap = executeLogbookAsMap();
+            for(int i=2;i<args.length;i++){
+                int patientId = Integer.parseInt(args[i]);
+                if( patientMap.get(patientId) == null ){
+                    throw new RuntimeException("Unknown patient: " + patientId);
+                }
+                patches.add(new PatchState(attr, patientId));
+            }
+            if( patches.size() > 0 ) {
+                doApplyPatches(patches, patientMap);
+            }
+        } else {
+            System.err.println("Invalid argss to patch.");
+            printHelp();
+            System.exit(1);
+        }
     }
 
     private static void dueSecondShot() throws Exception {

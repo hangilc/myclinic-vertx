@@ -48,7 +48,7 @@ public class AppointCalendar {
         return result;
     }
 
-    private AppointFrame getFrame(LocalDateTime at){
+    public AppointFrame getFrame(LocalDateTime at){
         AppointFrame frame = cal.get(at);
         if( frame == null ){
             throw new RuntimeException("Invalid appoint time: " + at);

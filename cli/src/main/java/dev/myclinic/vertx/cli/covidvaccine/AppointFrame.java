@@ -16,7 +16,7 @@ import java.util.function.Function;
 class AppointFrame {
 
     public AppointDate appointDate;
-    private List<AppointEntry> entries = new ArrayList<>();
+    private final List<AppointEntry> entries = new ArrayList<>();
 
     public AppointFrame(AppointDate appointDate) {
         this.appointDate = appointDate;
@@ -87,60 +87,64 @@ class AppointFrame {
         }
     }
 
-    public static Map<LocalDateTime, AppointFrame> readFromLogs(List<String> logs) {
-        Map<LocalDateTime, AppointFrame> result = new LinkedHashMap<>();
-        CovidVaccine.readAppointDates().forEach(appointDate -> {
-            result.put(appointDate.at, new AppointFrame(appointDate));
-        });
-        CovidVaccine.executeLogbook(logs, (regularPatient, stateChanged) -> {
-            PatientState state = regularPatient.state;
-            if (state instanceof FirstShotAppoint && stateChanged) {
-                FirstShotAppoint firstShotAppoint = (FirstShotAppoint) state;
-                AppointFrame frame = result.get(firstShotAppoint.at);
-                if (frame == null) {
-                    throw new RuntimeException("Invalid appoint date: " + firstShotAppoint);
-                }
-                if (frame.isFull()) {
-                    throw new RuntimeException("Overbooking! " + firstShotAppoint.at);
-                }
-                AppointEntry entry = frame.findByPatientId(regularPatient.patientId);
-                if (entry == null) {
-                    frame.entries.add(new AppointEntry(PatientCalendar.FirstAppoint, regularPatient));
-                } else {
-                    entry.patient = regularPatient;
-                }
-            } else if (state instanceof SecondShotAppoint && stateChanged) {
-                SecondShotAppoint secondShotAppoint = (SecondShotAppoint) state;
-                AppointFrame frame = result.get(secondShotAppoint.at);
-                if (frame == null) {
-                    throw new RuntimeException("Invalid appoint date: " + secondShotAppoint);
-                }
-                if (frame.isFull()) {
-                    throw new RuntimeException("Overbooking! " + secondShotAppoint.at);
-                }
-                AppointEntry entry = frame.findByPatientId(regularPatient.patientId);
-                if (entry != null) {
-                    throw new RuntimeException("Duplicate appointments (2nd): " + regularPatient);
-                }
-                frame.entries.add(new AppointEntry(PatientCalendar.SecondAppoint, regularPatient));
-            } else if (state instanceof EphemeralSecondShotAppoint && stateChanged) {
-                EphemeralSecondShotAppoint estate = (EphemeralSecondShotAppoint) state;
-                AppointFrame frame = result.get(estate.at);
-                if (frame == null) {
-                    throw new RuntimeException("Invalid appoint date: " + estate.at);
-                }
-                if (frame.isFull()) {
-                    throw new RuntimeException("Overbooking! " + estate.at);
-                }
-                AppointEntry entry = frame.findByPatientId(regularPatient.patientId);
-                if (entry != null) {
-                    throw new RuntimeException("Duplicate appointments (ephemeral 2nd): " + regularPatient);
-                }
-                frame.entries.add(new AppointEntry(PatientCalendar.TemporarySecondAppoint, regularPatient));
-            }
-        });
-        return result;
-    }
+//    public static Map<LocalDateTime, AppointFrame> readFromLogs(List<String> logs) {
+//        Map<LocalDateTime, AppointFrame> result = new LinkedHashMap<>();
+//        CovidVaccine.readAppointDates().forEach(appointDate -> {
+//            result.put(appointDate.at, new AppointFrame(appointDate));
+//        });
+//        CovidVaccine.executeLogbook(logs, (regularPatient, stateChanged) -> {
+//            PatientState state = regularPatient.state;
+//            if (state instanceof FirstShotAppoint && stateChanged) {
+//                FirstShotAppoint firstShotAppoint = (FirstShotAppoint) state;
+//                AppointFrame frame = result.get(firstShotAppoint.at);
+//                if (frame == null) {
+//                    throw new RuntimeException("Invalid appoint date: " + firstShotAppoint);
+//                }
+//                if (frame.isFull()) {
+//                    frame.getEntries().forEach(e -> {
+//                        System.out.println(e.patient);
+//                    });
+//                    System.out.println(regularPatient);
+//                    throw new RuntimeException("Overbooking! " + firstShotAppoint.at);
+//                }
+//                AppointEntry entry = frame.findByPatientId(regularPatient.patientId);
+//                if (entry == null) {
+//                    frame.entries.add(new AppointEntry(PatientCalendar.FirstAppoint, regularPatient));
+//                } else {
+//                    entry.patient = regularPatient;
+//                }
+//            } else if (state instanceof SecondShotAppoint && stateChanged) {
+//                SecondShotAppoint secondShotAppoint = (SecondShotAppoint) state;
+//                AppointFrame frame = result.get(secondShotAppoint.at);
+//                if (frame == null) {
+//                    throw new RuntimeException("Invalid appoint date: " + secondShotAppoint);
+//                }
+//                if (frame.isFull()) {
+//                    throw new RuntimeException("Overbooking! " + secondShotAppoint.at);
+//                }
+//                AppointEntry entry = frame.findByPatientId(regularPatient.patientId);
+//                if (entry != null) {
+//                    throw new RuntimeException("Duplicate appointments (2nd): " + regularPatient);
+//                }
+//                frame.entries.add(new AppointEntry(PatientCalendar.SecondAppoint, regularPatient));
+//            } else if (state instanceof EphemeralSecondShotAppoint && stateChanged) {
+//                EphemeralSecondShotAppoint estate = (EphemeralSecondShotAppoint) state;
+//                AppointFrame frame = result.get(estate.at);
+//                if (frame == null) {
+//                    throw new RuntimeException("Invalid appoint date: " + estate.at);
+//                }
+//                if (frame.isFull()) {
+//                    throw new RuntimeException("Overbooking! " + estate.at);
+//                }
+//                AppointEntry entry = frame.findByPatientId(regularPatient.patientId);
+//                if (entry != null) {
+//                    throw new RuntimeException("Duplicate appointments (ephemeral 2nd): " + regularPatient);
+//                }
+//                frame.entries.add(new AppointEntry(PatientCalendar.TemporarySecondAppoint, regularPatient));
+//            }
+//        });
+//        return result;
+//    }
 
 //    public static LocalDateTime findVacancy(LocalDate start, Map<LocalDateTime, AppointFrame> calendar,
 //                                            Function<LocalDateTime, Boolean> acceptable) {

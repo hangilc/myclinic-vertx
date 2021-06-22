@@ -328,4 +328,43 @@ class AppointPref {
         }
     }
 
+    private static class ExcludeRange implements Pref {
+        private LocalDate from;
+        private LocalDate upto;
+
+        ExcludeRange(LocalDate from, LocalDate upto) {
+            this.from = from;
+            this.upto = upto;
+        }
+
+        private static final Pattern pat = Pattern.compile("exclude-range=(\\d+)-(\\d+)~(\\d+)-(\\d+)");
+
+        public static ExcludeRange parse(String src){
+            Matcher m = pat.matcher(src);
+            if( m.matches() ){
+                LocalDate from = LocalDate.of(
+                        LocalDate.now().getYear(),
+                        Integer.parseInt(m.group(1)),
+                        Integer.parseInt(m.group(2)));
+                LocalDate upto = LocalDate.of(
+                        LocalDate.now().getYear(),
+                        Integer.parseInt(m.group(3)),
+                        Integer.parseInt(m.group(4)));
+                return new ExcludeRange(from, upto);
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public boolean acceptable(LocalDateTime at) {
+            LocalDate d = at.toLocalDate();
+            if( (d.equals(from) || d.isAfter(from)) && (d.equals(upto) || d.isBefore(upto)) ){
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+
 }

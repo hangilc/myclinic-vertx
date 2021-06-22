@@ -82,4 +82,8 @@ public class AppointCalendar {
         cal.get(at).iter(firstHandler, secondHandler);
     }
 
+    public AppointDate getAppointDate(LocalDateTime at){
+        return cal.get(at).appointDate;
+    }
+
 }

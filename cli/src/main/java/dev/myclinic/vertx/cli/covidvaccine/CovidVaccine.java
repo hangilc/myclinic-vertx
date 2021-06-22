@@ -301,6 +301,32 @@ public class CovidVaccine {
         });
     }
 
+    private static class PrepareCalendarResult {
+        AppointCalendar appointCalendar;
+        Map<Integer, RegularPatient> patientMap;
+
+        public PrepareCalendarResult(AppointCalendar appointCalendar, Map<Integer, RegularPatient> patientMap) {
+            this.appointCalendar = appointCalendar;
+            this.patientMap = patientMap;
+        }
+    }
+
+    private static PrepareCalendarResult prepareCalendar(){
+        Map<Integer, PatientState> stateMap = new HashMap<>();
+        Map<Integer, RegularPatient> patientMap = new HashMap<>();
+        executeLogbook(readLogs(), patient -> {
+            PatientState ps = stateMap.computeIfAbsent(patient.patientId, k -> new PatientState());
+            ps.apply(patient.state);
+            patientMap.put(patient.patientId, patient);
+        });
+        AppointCalendar cal = new AppointCalendar();
+        cal.init();
+        for(int patientId: stateMap.keySet()){
+            cal.add(patientId, stateMap.get(patientId));
+        }
+        return new PrepareCalendarResult(cal, patientMap);
+    }
+
     private static void calendar() throws Exception {
         Map<Integer, PatientState> stateMap = new HashMap<>();
         Map<Integer, RegularPatient> patientMap = new HashMap<>();
@@ -692,43 +718,71 @@ public class CovidVaccine {
             System.err.println("example -- appoint-sheet 06-19T14:00");
             System.exit(1);
         }
-        Map<LocalDateTime, AppointDate> appointMap = readAppointDatesAsMap();
-        AppointDate ap = appointMap.get(params.at);
-        if (ap == null) {
-            System.err.printf("Not an appoint date: %s", params.at);
-            System.exit(1);
-        } else {
-            System.out.printf("%s\n", appointTimeRep(params.at));
-            System.out.println();
-            List<RegularPatient> logbook = executeLogbook();
-            List<RegularPatient> patients = logbook.stream().filter(p -> {
-                PatientEvent state = p.state;
-                if (state instanceof FirstShotAppoint) {
-                    FirstShotAppoint fsa = (FirstShotAppoint) state;
-                    return fsa.at.equals(params.at);
-                } else if (state instanceof SecondShotAppoint) {
-                    SecondShotAppoint ssa = (SecondShotAppoint) state;
-                    return ssa.at.equals(params.at);
-                } else {
-                    return false;
-                }
-            }).collect(toList());
-            var locals = new Object() {
-                int index = 1;
-            };
-            int capacity = ap.capacity;
-            patients.forEach(p -> System.out.printf("%d. %s\n", locals.index++, p));
-            for (int i = locals.index; i <= capacity; i++) {
-                System.out.printf("%d. \n", i);
-            }
-            System.out.println();
-            if (capacity < patients.size()) {
-                System.err.println("Overbooking!");
+        PrepareCalendarResult prepResult = prepareCalendar();
+        AppointCalendar cal = prepResult.appointCalendar;
+        System.out.printf("%s (%d)\n\n", appointTimeRep(params.at),
+                cal.getAppointDate(params.at).capacity);
+        var ctx = new Object(){
+            int index = 1;
+        };
+        cal.iterItem(params.at, (patientId, firstShotState) -> {
+            RegularPatient p = prepResult.patientMap.get(patientId);
+            System.out.printf("%d. (%d) %s %s\n", ctx.index++, p.patientId, p.name,
+                    PatientState.renderFirstShotState(firstShotState));
+        }, (patientId, secondShotState) -> {
+            RegularPatient p = prepResult.patientMap.get(patientId);
+            System.out.printf("%d. (%d) %s %s\n", ctx.index++, p.patientId, p.name,
+                    PatientState.renderSecondShotState(secondShotState));
+        });
+        for(int i=ctx.index;i<=cal.getAppointDate(params.at).capacity;i++){
+            System.out.printf("%d.\n", i);
+        }
+        System.out.println();
+        List<RegularPatient> candidates = executeLogbook().stream()
+                .filter(p -> p.state instanceof FirstShotCandidate || p.state instanceof Kakaritsuke )
+                .collect(toList());
+        Collections.shuffle(candidates);
+        candidates.subList(0, 30).forEach(System.out::println);
+
+        if( false ) {
+            Map<LocalDateTime, AppointDate> appointMap = readAppointDatesAsMap();
+            AppointDate ap = appointMap.get(params.at);
+            if (ap == null) {
+                System.err.printf("Not an appoint date: %s", params.at);
                 System.exit(1);
-            } else if (capacity > patients.size()) {
-                Map<Integer, PatientAppointPref> prefMap = readPatientAppointPrefs();
-                List<RegularPatient> candidates = listCandidates(logbook, params.at, prefMap, 30);
-                candidates.forEach(System.out::println);
+            } else {
+                System.out.printf("%s\n", appointTimeRep(params.at));
+                System.out.println();
+                List<RegularPatient> logbook = executeLogbook();
+                List<RegularPatient> patients = logbook.stream().filter(p -> {
+                    PatientEvent state = p.state;
+                    if (state instanceof FirstShotAppoint) {
+                        FirstShotAppoint fsa = (FirstShotAppoint) state;
+                        return fsa.at.equals(params.at);
+                    } else if (state instanceof SecondShotAppoint) {
+                        SecondShotAppoint ssa = (SecondShotAppoint) state;
+                        return ssa.at.equals(params.at);
+                    } else {
+                        return false;
+                    }
+                }).collect(toList());
+                var locals = new Object() {
+                    int index = 1;
+                };
+                int capacity = ap.capacity;
+                patients.forEach(p -> System.out.printf("%d. %s\n", locals.index++, p));
+                for (int i = locals.index; i <= capacity; i++) {
+                    System.out.printf("%d. \n", i);
+                }
+                System.out.println();
+                if (capacity < patients.size()) {
+                    System.err.println("Overbooking!");
+                    System.exit(1);
+                } else if (capacity > patients.size()) {
+                    Map<Integer, PatientAppointPref> prefMap = readPatientAppointPrefs();
+                    List<RegularPatient> cs = listCandidates(logbook, params.at, prefMap, 30);
+                    cs.forEach(System.out::println);
+                }
             }
         }
     }

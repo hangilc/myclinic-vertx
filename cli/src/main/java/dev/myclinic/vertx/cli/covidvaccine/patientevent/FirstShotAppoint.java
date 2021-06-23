@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 public class FirstShotAppoint implements PatientEvent {
     public static Pattern oldPattern = Pattern.compile("(A\\d+-\\d+-\\d+T\\d+:\\d+)>(E\\d+-\\d+-\\d+T\\d+:\\d+)");
-    public static Pattern pat = Pattern.compile("A(\\d+-\\d+-\\d+)T(\\d+):(\\d+)");
+    public static Pattern pat = Pattern.compile("A(\\d+-\\d+-\\d+)T(\\d+):(\\d+).*");
     public LocalDateTime at;
 
     public FirstShotAppoint(LocalDateTime at) {

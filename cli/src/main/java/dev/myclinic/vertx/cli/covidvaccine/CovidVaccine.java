@@ -2,6 +2,8 @@ package dev.myclinic.vertx.cli.covidvaccine;
 
 import dev.myclinic.vertx.cli.Misc;
 import dev.myclinic.vertx.cli.covidvaccine.appointslot.AppointSlot;
+import dev.myclinic.vertx.cli.covidvaccine.appointslot.FirstShotSlot;
+import dev.myclinic.vertx.cli.covidvaccine.appointslot.SecondShotSlot;
 import dev.myclinic.vertx.cli.covidvaccine.patientevent.*;
 import dev.myclinic.vertx.client2.Client;
 import dev.myclinic.vertx.dto.PatientDTO;
@@ -133,6 +135,10 @@ public class CovidVaccine {
                     patch(args);
                     break;
                 }
+                case "injection-done": {
+                    injectionDone(args);
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -170,7 +176,31 @@ public class CovidVaccine {
         System.out.println("  batch-register-ephemeral-second-appoint");
         System.out.println("  batch-convert-u-to-k");
         System.out.println("  patch ATTR PATIENT-ID PATIENT-ID ...");
+        System.out.println("  injection-done APPOINT-TIME");
         System.out.println("  help");
+    }
+
+    private static void injectionDone(String[] args) throws Exception {
+        LocalDateTime at = null;
+        if( args.length == 2 ){
+            at = parseAppointTime(args[1]);
+        } else {
+            System.err.println("Invalid args to injection-done");
+            System.exit(1);
+        }
+        AppointBlock block = book.getAppointBlock(at);
+        List<PatchCommand> patches = new ArrayList<>();
+        for(AppointSlot slot: block.slots){
+            int patientId = slot.patientId;
+            if( slot instanceof FirstShotSlot){
+                patches.add(new PatchState("F", patientId));
+            } else if( slot instanceof SecondShotSlot){
+                patches.add(new PatchState("D", patientId));
+            } else {
+                throw new RuntimeException("Unkonwn slot: " + slot);
+            }
+        }
+        doApplyPatches(patches);
     }
 
     private static void batchConvertUtoK() throws Exception {
@@ -508,42 +538,45 @@ public class CovidVaccine {
             System.err.println("example -- register-appoint APPOINT-TIME PATIENT-ID PATIENT-ID ...");
             System.exit(1);
         }
-        Map<LocalDateTime, AppointDate> appointMap = readAppointDatesAsMap();
-        AppointDate appDate = appointMap.get(params.at);
-        if (appDate == null) {
-            System.err.println("Invalid appoint date: " + params.at);
-            System.exit(1);
-        }
-        Map<Integer, RegularPatient> patientMap = executeLogbookAsMap();
-        //List<RegularPatient> currentAppoints = getAppointsAt(params.at, patientMap.values());
-        List<RegularPatient> currentAppoints = getAppointsAt(params.at);
-        if (appDate.capacity < currentAppoints.size() + params.patientIds.size()) {
-            System.err.println("Overbooking!");
-            System.exit(1);
-        }
-        Set<Integer> appointIds = new HashSet<>();
-        appointIds.addAll(currentAppoints.stream().map(p -> p.patientId).collect(toList()));
-        appointIds.addAll(params.patientIds);
-        if (appointIds.size() != currentAppoints.size() + params.patientIds.size()) {
-            System.err.println("Duplicate patient appointments.");
-            System.exit(1);
-        }
-        List<PatchCommand> patches = new ArrayList<>();
-        for (int patientId : params.patientIds) {
-            RegularPatient p = patientMap.get(patientId);
-            if (p == null) {
-                throw new RuntimeException("Unknown patient-id: " + patientId);
-            }
-            PatientEvent state = p.state;
-            if (state instanceof Appointable) {
-                PatientEvent newState = ((Appointable) state).registerAppoint(params.at);
-                patches.add(new PatchState(newState.toString(), patientId));
-            } else {
-                System.err.printf("Cannot register appointment: %s\n", p);
+
+        if( false ) {
+            Map<LocalDateTime, AppointDate> appointMap = readAppointDatesAsMap();
+            AppointDate appDate = appointMap.get(params.at);
+            if (appDate == null) {
+                System.err.println("Invalid appoint date: " + params.at);
                 System.exit(1);
             }
+            Map<Integer, RegularPatient> patientMap = executeLogbookAsMap();
+            //List<RegularPatient> currentAppoints = getAppointsAt(params.at, patientMap.values());
+            List<RegularPatient> currentAppoints = getAppointsAt(params.at);
+            if (appDate.capacity < currentAppoints.size() + params.patientIds.size()) {
+                System.err.println("Overbooking!");
+                System.exit(1);
+            }
+            Set<Integer> appointIds = new HashSet<>();
+            appointIds.addAll(currentAppoints.stream().map(p -> p.patientId).collect(toList()));
+            appointIds.addAll(params.patientIds);
+            if (appointIds.size() != currentAppoints.size() + params.patientIds.size()) {
+                System.err.println("Duplicate patient appointments.");
+                System.exit(1);
+            }
+            List<PatchCommand> patches = new ArrayList<>();
+            for (int patientId : params.patientIds) {
+                RegularPatient p = patientMap.get(patientId);
+                if (p == null) {
+                    throw new RuntimeException("Unknown patient-id: " + patientId);
+                }
+                PatientEvent state = p.state;
+                if (state instanceof Appointable) {
+                    PatientEvent newState = ((Appointable) state).registerAppoint(params.at);
+                    patches.add(new PatchState(newState.toString(), patientId));
+                } else {
+                    System.err.printf("Cannot register appointment: %s\n", p);
+                    System.exit(1);
+                }
+            }
+            doApplyPatches(patches, patientMap);
         }
-        doApplyPatches(patches, patientMap);
     }
 
     private static final Path appointPrefFile = Path.of(CovidVaccineDir, "appoint-pref.txt");
@@ -814,20 +847,18 @@ public class CovidVaccine {
         }
     }
 
-    private static boolean doApplyPatches(List<PatchCommand> patches, Map<Integer, RegularPatient> patientMap)
-            throws Exception {
+    private static boolean doApplyPatches(List<PatchCommand> patches) throws Exception {
         for (PatchCommand patch : patches) {
             if (patch instanceof PatchAdd) {
                 PatchAdd patchAdd = (PatchAdd) patch;
                 System.out.printf("ADD %s\n", patchAdd.patient);
             } else if (patch instanceof PatchState) {
                 PatchState patchState = (PatchState) patch;
-                RegularPatient patient = patientMap.get(patchState.patientId).copy();
-                patient.state = CovidMisc.parsePatientAttr(patchState.attr);
-                System.out.printf("STATE %s\n", patient);
+                Patient patient = book.getPatient(patchState.patientId);
+                System.out.printf("STATE %s %s\n", patchState.attr, patient);
             } else if (patch instanceof PatchPhone) {
                 PatchPhone patchPhone = (PatchPhone) patch;
-                RegularPatient patient = patientMap.get(patchPhone.patientId).copy();
+                Patient patient = book.getPatient(patchPhone.patientId);
                 patient.phone = patchPhone.phone;
                 System.out.printf("PHONE %s\n", patient);
             } else {
@@ -844,6 +875,39 @@ public class CovidVaccine {
         } else {
             return false;
         }
+    }
+
+    private static boolean doApplyPatches(List<PatchCommand> patches, Map<Integer, RegularPatient> patientMap)
+            throws Exception {
+        throw new RuntimeException("Not implemented");
+//        for (PatchCommand patch : patches) {
+//            if (patch instanceof PatchAdd) {
+//                PatchAdd patchAdd = (PatchAdd) patch;
+//                System.out.printf("ADD %s\n", patchAdd.patient);
+//            } else if (patch instanceof PatchState) {
+//                PatchState patchState = (PatchState) patch;
+//                RegularPatient patient = patientMap.get(patchState.patientId).copy();
+//                patient.state = CovidMisc.parsePatientAttr(patchState.attr);
+//                System.out.printf("STATE %s\n", patient);
+//            } else if (patch instanceof PatchPhone) {
+//                PatchPhone patchPhone = (PatchPhone) patch;
+//                RegularPatient patient = patientMap.get(patchPhone.patientId).copy();
+//                patient.phone = patchPhone.phone;
+//                System.out.printf("PHONE %s\n", patient);
+//            } else {
+//                throw new RuntimeException("Unknown patch: " + patch);
+//            }
+//        }
+//        System.console().writer().print("Apply these patches? (Y/N) ");
+//        System.console().writer().flush();
+//        String input = System.console().readLine();
+//        if (input.startsWith("Y")) {
+//            List<String> patchLines = patches.stream().map(PatchCommand::encode).collect(toList());
+//            Misc.appendLines(logbookPath.toString(), patchLines);
+//            return true;
+//        } else {
+//            return false;
+//        }
     }
 
     private static void applyPatches() throws Exception {
@@ -921,7 +985,7 @@ public class CovidVaccine {
                 patches.add(new PatchState(attr, patientId));
             }
             if (patches.size() > 0) {
-                doApplyPatches(patches, patientMap);
+                doApplyPatches(patches);
             }
         } else {
             System.err.println("Invalid argss to patch.");

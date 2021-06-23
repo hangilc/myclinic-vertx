@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -90,6 +91,20 @@ public class Misc {
             }
         } else {
             return ifFileMissing.get();
+        }
+    }
+
+    public static void forEachLine(Path path, Consumer<String> handler){
+        try {
+            try (InputStream ins = new FileInputStream(path.toString())) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(ins, StandardCharsets.UTF_8));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    handler.accept(line);
+                }
+            }
+        } catch(Exception ex){
+            throw new RuntimeException(ex);
         }
     }
 

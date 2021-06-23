@@ -1,6 +1,7 @@
 package dev.myclinic.vertx.cli.covidvaccine;
 
 import dev.myclinic.vertx.cli.Misc;
+import dev.myclinic.vertx.cli.covidvaccine.appointslot.AppointSlot;
 import dev.myclinic.vertx.cli.covidvaccine.patientevent.*;
 import dev.myclinic.vertx.client2.Client;
 import dev.myclinic.vertx.dto.PatientDTO;
@@ -25,7 +26,7 @@ public class CovidVaccine {
     private final static String CovidVaccineDir = System.getenv("COVID_VACCINE_DIR");
     private final static Path logbookPath = Path.of(CovidVaccineDir, "logbook.txt");
     private final static Path patchPath = Path.of(CovidVaccineDir, "logbook-patch.txt");
-    private final static Context ctx = new Context();
+    private final static AppointBook book = new AppointBook(CovidVaccineDir);
 
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
@@ -176,7 +177,7 @@ public class CovidVaccine {
         Map<Integer, RegularPatient> patientMap = executeLogbookAsMap();
         Collection<RegularPatient> patients = patientMap.values();
         List<PatchCommand> patches = patients.stream()
-                .filter( p -> p.state instanceof Under65 )
+                .filter(p -> p.state instanceof Under65)
                 .map(p -> {
                     p = p.copy();
                     p.state = new Kakaritsuke();
@@ -187,45 +188,46 @@ public class CovidVaccine {
     }
 
     private static void batchRegisterEphemeralSecondAppoint() throws Exception {
-        Context ctx = new Context();
-        AppointCalendarOld cal = ctx.getCalendar();
-        Map<Integer, PatientAppointPref> prefMap = readPatientAppointPrefs();
-        Map<Integer, RegularPatient> patMap = executeLogbookAsMap(ctx.getLogs());
-        List<RegularPatient> patients = patMap.values().stream()
-                .filter(p -> {
-                    return p.state instanceof FirstShotAppoint &&
-                            ((FirstShotAppoint) p.state).tmpSecondAppoint == null;
-                })
-                .collect(toList());
-        Collections.shuffle(patients);
-        List<PatchCommand> patches = new ArrayList<>();
-        for (RegularPatient patient : patients) {
-            FirstShotAppoint state = (FirstShotAppoint) patient.state;
-            PatientAppointPref pref = prefMap.get(patient.patientId);
-            LocalDateTime at = cal.findVacancy(
-                    state.at.toLocalDate().plus(21, ChronoUnit.DAYS),
-                    candidate -> {
-                        if (pref != null) {
-                            return pref.appointPref.acceptable(candidate);
-                        } else {
-                            return true;
-                        }
-                    }
-            );
-            if (at == null) {
-                System.err.println("(No Vacancy: " + patient);
-            } else {
-                state = state.copy();
-                state.tmpSecondAppoint = at;
-                patient = patient.copy();
-                patient.state = state;
-                cal.setEntry(at, AppointFrame.PatientCalendar.TemporarySecondAppoint, patient);
-                patches.add(new PatchState(state.encode(), patient.patientId));
-            }
-        }
-        if (patches.size() > 0) {
-            doApplyPatches(patches, patMap);
-        }
+        throw new RuntimeException("Not implemented");
+//        Context ctx = new Context();
+//        AppointCalendarOld cal = ctx.getCalendar();
+//        Map<Integer, PatientAppointPref> prefMap = readPatientAppointPrefs();
+//        Map<Integer, RegularPatient> patMap = executeLogbookAsMap(ctx.getLogs());
+//        List<RegularPatient> patients = patMap.values().stream()
+//                .filter(p -> {
+//                    return p.state instanceof FirstShotAppoint &&
+//                            ((FirstShotAppoint) p.state).tmpSecondAppoint == null;
+//                })
+//                .collect(toList());
+//        Collections.shuffle(patients);
+//        List<PatchCommand> patches = new ArrayList<>();
+//        for (RegularPatient patient : patients) {
+//            FirstShotAppoint state = (FirstShotAppoint) patient.state;
+//            PatientAppointPref pref = prefMap.get(patient.patientId);
+//            LocalDateTime at = cal.findVacancy(
+//                    state.at.toLocalDate().plus(21, ChronoUnit.DAYS),
+//                    candidate -> {
+//                        if (pref != null) {
+//                            return pref.appointPref.acceptable(candidate);
+//                        } else {
+//                            return true;
+//                        }
+//                    }
+//            );
+//            if (at == null) {
+//                System.err.println("(No Vacancy: " + patient);
+//            } else {
+//                state = state.copy();
+//                state.tmpSecondAppoint = at;
+//                patient = patient.copy();
+//                patient.state = state;
+//                cal.setEntry(at, AppointFrame.PatientCalendar.TemporarySecondAppoint, patient);
+//                patches.add(new PatchState(state.encode(), patient.patientId));
+//            }
+//        }
+//        if (patches.size() > 0) {
+//            doApplyPatches(patches, patMap);
+//        }
     }
 
     private static void registerEphemeralSecondAppoint(String[] args) throws Exception {
@@ -311,7 +313,7 @@ public class CovidVaccine {
         }
     }
 
-    private static PrepareCalendarResult prepareCalendar(){
+    private static PrepareCalendarResult prepareCalendar() {
         Map<Integer, PatientState> stateMap = new HashMap<>();
         Map<Integer, RegularPatient> patientMap = new HashMap<>();
         executeLogbook(readLogs(), patient -> {
@@ -321,70 +323,59 @@ public class CovidVaccine {
         });
         AppointCalendar cal = new AppointCalendar();
         cal.init();
-        for(int patientId: stateMap.keySet()){
+        for (int patientId : stateMap.keySet()) {
             cal.add(patientId, stateMap.get(patientId));
         }
         return new PrepareCalendarResult(cal, patientMap);
     }
 
     private static void calendar() throws Exception {
-        Map<Integer, PatientState> stateMap = new HashMap<>();
-        Map<Integer, RegularPatient> patientMap = new HashMap<>();
-        executeLogbook(readLogs(), patient -> {
-            PatientState ps = stateMap.computeIfAbsent(patient.patientId, k -> new PatientState());
-            ps.apply(patient.state);
-            patientMap.put(patient.patientId, patient);
-        });
-        AppointCalendar cal = new AppointCalendar();
-        cal.init();
-        for(int patientId: stateMap.keySet()){
-            cal.add(patientId, stateMap.get(patientId));
-        }
-        for(AppointDate appointDate: cal.listAppointDates()){
-            System.out.printf("%s (%d)\n", appointTimeRep(appointDate.at),appointDate.capacity);
-            var ctx = new Object(){
+        for (LocalDateTime at : book.listAppointTime()) {
+            AppointDate appointDate = book.getAppointDate(at);
+            System.out.printf("%s (%d)\n", appointTimeRep(at), appointDate.capacity);
+            AppointBlock block = book.getAppointBlock(at);
+            if( block.slots.size() > 0 ) {
+                int capacity = book.getAppointDate(at).capacity;
                 int index = 1;
-            };
-            cal.iterItem(appointDate.at, (patientId, firstShotState) -> {
-                RegularPatient patient = patientMap.get(patientId);
-                System.out.printf("%d. (%d) %s %s\n", ctx.index++, patient.patientId, patient.name,
-                        PatientState.renderFirstShotState(firstShotState));
-            }, (patientId, secondShotState) -> {
-                RegularPatient patient = patientMap.get(patientId);
-                System.out.printf("%d. (%d) %s %s\n", ctx.index++, patient.patientId, patient.name,
-                        PatientState.renderSecondShotState(secondShotState));
-            });
+                for (AppointSlot slot : block.slots) {
+                    Patient patient = book.getPatient(slot.patientId);
+                    System.out.printf("%d. (%d) %s %s\n", index++, patient.patientId, patient.name,
+                            slot.renderState());
+                }
+                for(;index<=capacity;index++){
+                    System.out.printf("%d.\n", index);
+                }
+            }
             System.out.println();
         }
 
-        if( false ) {
+        if (false) {
+            Map<Integer, PatientState> stateMap = new HashMap<>();
+            Map<Integer, RegularPatient> patientMap = new HashMap<>();
+            executeLogbook(readLogs(), patient -> {
+                PatientState ps = stateMap.computeIfAbsent(patient.patientId, k -> new PatientState());
+                ps.apply(patient.state);
+                patientMap.put(patient.patientId, patient);
+            });
+            AppointCalendar cal = new AppointCalendar();
+            cal.init();
             for (int patientId : stateMap.keySet()) {
-                RegularPatient patient = patientMap.get(patientId);
-                PatientState ps = stateMap.get(patientId);
-                System.out.printf("(%04d) %s\n", patient.patientId, patient.name);
-                System.out.printf("%s %s\n",
-                        PatientState.renderFirstShotState(ps.firstShotState),
-                        ps.firstShotTime == null ? "" : appointTimeRep(ps.firstShotTime));
-                System.out.printf("%s %s\n",
-                        PatientState.renderSecondShotState(ps.secondShotState),
-                        ps.secondShotTime == null ? "" : appointTimeRep(ps.secondShotTime));
+                cal.add(patientId, stateMap.get(patientId));
             }
-        }
-
-        if( false ) {
-            Context ctx = new Context();
-            AppointCalendarOld calendar = ctx.getCalendar();
-            for (AppointFrame frame : calendar.listFrames()) {
-                LocalDateTime at = frame.appointDate.at;
-                System.out.printf("%s (%d)\n", appointTimeRep(at), frame.appointDate.capacity);
-                if (frame.getEntries().size() > frame.appointDate.capacity) {
-                    System.err.printf("Overbooking ! %s", CovidMisc.encodeAppointTime(at));
-                    System.exit(1);
-                }
-                int i = 1;
-                for (AppointFrame.AppointEntry e : frame.getEntries()) {
-                    System.out.printf("%d. %s\n", i++, e.toString());
-                }
+            for (AppointDate appointDate : cal.listAppointDates()) {
+                System.out.printf("%s (%d)\n", appointTimeRep(appointDate.at), appointDate.capacity);
+                var ctx = new Object() {
+                    int index = 1;
+                };
+                cal.iterItem(appointDate.at, (patientId, firstShotState) -> {
+                    RegularPatient patient = patientMap.get(patientId);
+                    System.out.printf("%d. (%d) %s %s\n", ctx.index++, patient.patientId, patient.name,
+                            firstShotState.toString());
+                }, (patientId, secondShotState) -> {
+                    RegularPatient patient = patientMap.get(patientId);
+                    System.out.printf("%d. (%d) %s %s\n", ctx.index++, patient.patientId, patient.name,
+                            secondShotState.toString());
+                });
                 System.out.println();
             }
         }
@@ -441,39 +432,41 @@ public class CovidVaccine {
     }
 
     private static void appointsAt(String[] args) {
-        var params = new Object() {
-            final List<LocalDateTime> atTimes = new ArrayList<>();
-        };
-        if (args.length >= 2) {
-            for (int i = 1; i < args.length; i++) {
-                params.atTimes.add(parseAppointTime(args[i]));
-            }
-        } else {
-            System.err.println("Invalid arg to appoints-at");
-            System.err.println("example -- appoints-at 06-19T14:00");
-            System.exit(1);
-        }
-        Context ctx = new Context();
-        AppointCalendarOld cal = ctx.getCalendar();
-        for(LocalDateTime at: params.atTimes){
-            System.out.printf("%s %02d時%02d分\n",
-                    Misc.localDateToKanji(at.toLocalDate(), true, true),
-                    at.getHour(), at.getMinute());
-            AppointFrame frame = cal.getFrame(at);
-            List<RegularPatient> patients = frame.getEntries().stream().map(e -> e.patient).collect(toList());
-            int index = 1;
-            for (RegularPatient p : patients) {
-                System.out.printf("%d. %s\n", index++, p);
-            }
-            System.out.println();
-
-        }
+        throw new RuntimeException("Not implemented");
+//        var params = new Object() {
+//            final List<LocalDateTime> atTimes = new ArrayList<>();
+//        };
+//        if (args.length >= 2) {
+//            for (int i = 1; i < args.length; i++) {
+//                params.atTimes.add(parseAppointTime(args[i]));
+//            }
+//        } else {
+//            System.err.println("Invalid arg to appoints-at");
+//            System.err.println("example -- appoints-at 06-19T14:00");
+//            System.exit(1);
+//        }
+//        Context ctx = new Context();
+//        AppointCalendarOld cal = ctx.getCalendar();
+//        for (LocalDateTime at : params.atTimes) {
+//            System.out.printf("%s %02d時%02d分\n",
+//                    Misc.localDateToKanji(at.toLocalDate(), true, true),
+//                    at.getHour(), at.getMinute());
+//            AppointFrame frame = cal.getFrame(at);
+//            List<RegularPatient> patients = frame.getEntries().stream().map(e -> e.patient).collect(toList());
+//            int index = 1;
+//            for (RegularPatient p : patients) {
+//                System.out.printf("%d. %s\n", index++, p);
+//            }
+//            System.out.println();
+//
+//        }
     }
 
     static List<RegularPatient> getAppointsAt(LocalDateTime at) {
-        AppointCalendarOld cal = ctx.getCalendar();
-        return cal.getFrame(at).getEntries().stream()
-                .map(e -> e.patient).collect(toList());
+        throw new RuntimeException("Not implemented");
+//        AppointCalendarOld cal = ctx.getCalendar();
+//        return cal.getFrame(at).getEntries().stream()
+//                .map(e -> e.patient).collect(toList());
 //        Map<LocalDateTime, AppointFrame> cal = AppointFrame.readFromLogs(readLogs());
 //        AppointFrame frame = cal.get(at);
 //        if (frame == null) {
@@ -722,29 +715,29 @@ public class CovidVaccine {
         AppointCalendar cal = prepResult.appointCalendar;
         System.out.printf("%s (%d)\n\n", appointTimeRep(params.at),
                 cal.getAppointDate(params.at).capacity);
-        var ctx = new Object(){
+        var ctx = new Object() {
             int index = 1;
         };
         cal.iterItem(params.at, (patientId, firstShotState) -> {
             RegularPatient p = prepResult.patientMap.get(patientId);
             System.out.printf("%d. (%d) %s %s\n", ctx.index++, p.patientId, p.name,
-                    PatientState.renderFirstShotState(firstShotState));
+                    firstShotState.toString());
         }, (patientId, secondShotState) -> {
             RegularPatient p = prepResult.patientMap.get(patientId);
             System.out.printf("%d. (%d) %s %s\n", ctx.index++, p.patientId, p.name,
-                    PatientState.renderSecondShotState(secondShotState));
+                    secondShotState.toString());
         });
-        for(int i=ctx.index;i<=cal.getAppointDate(params.at).capacity;i++){
+        for (int i = ctx.index; i <= cal.getAppointDate(params.at).capacity; i++) {
             System.out.printf("%d.\n", i);
         }
         System.out.println();
         List<RegularPatient> candidates = executeLogbook().stream()
-                .filter(p -> p.state instanceof FirstShotCandidate || p.state instanceof Kakaritsuke )
+                .filter(p -> p.state instanceof FirstShotCandidate || p.state instanceof Kakaritsuke)
                 .collect(toList());
         Collections.shuffle(candidates);
         candidates.subList(0, 30).forEach(System.out::println);
 
-        if( false ) {
+        if (false) {
             Map<LocalDateTime, AppointDate> appointMap = readAppointDatesAsMap();
             AppointDate ap = appointMap.get(params.at);
             if (ap == null) {
@@ -915,19 +908,19 @@ public class CovidVaccine {
     }
 
     private static void patch(String[] args) throws Exception {
-        if( args.length >= 3 ){
+        if (args.length >= 3) {
             String attr = args[1];
             CovidMisc.parsePatientAttr(attr);
             List<PatchCommand> patches = new ArrayList<>();
             Map<Integer, RegularPatient> patientMap = executeLogbookAsMap();
-            for(int i=2;i<args.length;i++){
+            for (int i = 2; i < args.length; i++) {
                 int patientId = Integer.parseInt(args[i]);
-                if( patientMap.get(patientId) == null ){
+                if (patientMap.get(patientId) == null) {
                     throw new RuntimeException("Unknown patient: " + patientId);
                 }
                 patches.add(new PatchState(attr, patientId));
             }
-            if( patches.size() > 0 ) {
+            if (patches.size() > 0) {
                 doApplyPatches(patches, patientMap);
             }
         } else {
@@ -1314,7 +1307,7 @@ public class CovidVaccine {
 
     private static void patientIds(String[] args) throws Exception {
         String target = null;
-        if( args.length == 2 ){
+        if (args.length == 2) {
             target = args[1];
         } else {
             System.err.println("Invalid arg to patient-ids");
@@ -1324,10 +1317,10 @@ public class CovidVaccine {
         Map<Integer, RegularPatient> patMap = new HashMap<>();
         executeLogbook(readLogs(), patient -> {
             PatientEvent e = patient.state;
-            if( e instanceof Kakaritsuke ){
+            if (e instanceof Kakaritsuke) {
                 set.add(patient.patientId);
-            } else if( e instanceof Under65 ){
-                if( set.contains(patient.patientId) ){
+            } else if (e instanceof Under65) {
+                if (set.contains(patient.patientId)) {
                     set.remove(patient.patientId);
                 }
             }
@@ -1335,9 +1328,9 @@ public class CovidVaccine {
         });
         List<Integer> list = new ArrayList<>(set);
         list.sort(Comparator.naturalOrder());
-        for(int i=0;i<list.size();i++){
+        for (int i = 0; i < list.size(); i++) {
             System.out.print(list.get(i));
-            if( i != list.size() - 1 ){
+            if (i != list.size() - 1) {
                 System.out.print(", ");
             }
         }

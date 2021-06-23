@@ -11,17 +11,15 @@ import java.util.regex.Pattern;
 public class EphemeralSecondShotAppoint implements PatientEvent {
 
     public LocalDateTime at;
-    public LocalDate firstShotAt;
-    private static final Pattern pat = Pattern.compile("E(\\d+-\\d+-\\d+)T(\\d+):(\\d+)<(\\d+-\\d+-\\d+)");
+    private static final Pattern pat = Pattern.compile("E(\\d+-\\d+-\\d+)T(\\d+):(\\d+).*");
 
-    public EphemeralSecondShotAppoint(LocalDateTime at, LocalDate firstShotAt) {
+    public EphemeralSecondShotAppoint(LocalDateTime at) {
         this.at = at;
-        this.firstShotAt = firstShotAt;
     }
 
     @Override
     public String encode() {
-        return String.format("E%s<%s", CovidMisc.encodeAppointTime(at), firstShotAt.toString());
+        return String.format("E%s", CovidMisc.encodeAppointTime(at));
     }
 
     public static EphemeralSecondShotAppoint decode(String src){
@@ -31,8 +29,7 @@ public class EphemeralSecondShotAppoint implements PatientEvent {
                     LocalDate.parse(m.group(1)),
                     LocalTime.of(Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3)))
             );
-            LocalDate firstShotAt = LocalDate.parse(m.group(4));
-            return new EphemeralSecondShotAppoint(at, firstShotAt);
+            return new EphemeralSecondShotAppoint(at);
         } else {
             throw new RuntimeException("Cannot convert to EphemeralSecondShotAppoint: " + src);
         }
@@ -40,6 +37,6 @@ public class EphemeralSecondShotAppoint implements PatientEvent {
 
     @Override
     public PatientEvent copy() {
-        return new EphemeralSecondShotAppoint(at, firstShotAt);
+        return new EphemeralSecondShotAppoint(at);
     }
 }

@@ -139,6 +139,10 @@ public class CovidVaccine {
                     injectionDone(args);
                     break;
                 }
+                case "ephemeral-to-real": {
+                    ephemeralToReal(args);
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -177,7 +181,36 @@ public class CovidVaccine {
         System.out.println("  batch-convert-u-to-k");
         System.out.println("  patch ATTR PATIENT-ID PATIENT-ID ...");
         System.out.println("  injection-done APPOINT-TIME");
+        System.out.println("  ephemeral-to-real PATIENT-ID ...");
         System.out.println("  help");
+    }
+
+    private static void ephemeralToReal(String[] args) throws Exception {
+        List<Integer> patientIds = new ArrayList<>();
+        if( args.length >= 2 ){
+            for(int i=1;i<args.length;i++){
+                patientIds.add(Integer.parseInt(args[i]));
+            }
+        } else {
+            System.err.println("Invalid args to ephemeral-to-real.");
+            printHelp();
+            System.exit(1);
+        }
+        List<PatchCommand> patches = new ArrayList<>();
+        for(int patientId: patientIds){
+            PatientState ps = book.getPatientState(patientId);
+            if( ps.secondShotState == SecondShotState.Ephemeral ){
+                SecondShotAppoint appoint = new SecondShotAppoint(ps.secondShotTime);
+                PatchState patchState = new PatchState(appoint.encode(), patientId);
+                patches.add(patchState);
+            } else {
+                Patient patient = book.getPatient(patientId);
+                System.err.printf("Patient (%d) %s has no ephemeral 2nd shot appoint.",
+                        patientId, patient.name);
+                System.exit(1);
+            }
+        }
+        doApplyPatches(patches);
     }
 
     private static void injectionDone(String[] args) throws Exception {

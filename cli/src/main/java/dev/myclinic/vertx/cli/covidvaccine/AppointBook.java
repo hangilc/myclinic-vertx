@@ -119,6 +119,11 @@ class AppointBook {
         return patientMap.get(patientId);
     }
 
+    public PatientState getPatientState(int patientId){
+        ensurePatientStateMap();
+        return patientStateMap.get(patientId);
+    }
+
     public List<LocalDateTime> listAppointTime(){
         ensureAppointDateMap();
         return new ArrayList<>(appointDateMap.keySet());

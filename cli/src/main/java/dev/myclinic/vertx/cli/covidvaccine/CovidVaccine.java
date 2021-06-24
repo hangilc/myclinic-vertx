@@ -4,6 +4,7 @@ import dev.myclinic.vertx.cli.Misc;
 import dev.myclinic.vertx.cli.covidvaccine.appointslot.AppointSlot;
 import dev.myclinic.vertx.cli.covidvaccine.appointslot.FirstShotSlot;
 import dev.myclinic.vertx.cli.covidvaccine.appointslot.SecondShotSlot;
+import dev.myclinic.vertx.cli.covidvaccine.logentry.StateLog;
 import dev.myclinic.vertx.cli.covidvaccine.patientevent.*;
 import dev.myclinic.vertx.client2.Client;
 import dev.myclinic.vertx.dto.PatientDTO;
@@ -572,51 +573,83 @@ public class CovidVaccine {
             System.exit(1);
         }
         AppointBlock block = book.getAppointBlock(params.at);
+        if( block == null ){
+            System.err.printf("Invalid appoint date: %s\n", params.at);
+            System.exit(1);
+        }
         int avail = block.getCapacity() - block.slots.size();
         if( avail < params.patientIds.size() ){
             System.err.println("Not enough available slots.");
             System.exit(1);
         }
-
-
-        if( false ) {
-            Map<LocalDateTime, AppointDate> appointMap = readAppointDatesAsMap();
-            AppointDate appDate = appointMap.get(params.at);
-            if (appDate == null) {
-                System.err.println("Invalid appoint date: " + params.at);
-                System.exit(1);
-            }
-            Map<Integer, RegularPatient> patientMap = executeLogbookAsMap();
-            //List<RegularPatient> currentAppoints = getAppointsAt(params.at, patientMap.values());
-            List<RegularPatient> currentAppoints = getAppointsAt(params.at);
-            if (appDate.capacity < currentAppoints.size() + params.patientIds.size()) {
-                System.err.println("Overbooking!");
-                System.exit(1);
-            }
-            Set<Integer> appointIds = new HashSet<>();
-            appointIds.addAll(currentAppoints.stream().map(p -> p.patientId).collect(toList()));
-            appointIds.addAll(params.patientIds);
-            if (appointIds.size() != currentAppoints.size() + params.patientIds.size()) {
-                System.err.println("Duplicate patient appointments.");
-                System.exit(1);
-            }
-            List<PatchCommand> patches = new ArrayList<>();
-            for (int patientId : params.patientIds) {
-                RegularPatient p = patientMap.get(patientId);
-                if (p == null) {
-                    throw new RuntimeException("Unknown patient-id: " + patientId);
-                }
-                PatientEvent state = p.state;
-                if (state instanceof Appointable) {
-                    PatientEvent newState = ((Appointable) state).registerAppoint(params.at);
-                    patches.add(new PatchState(newState.toString(), patientId));
-                } else {
-                    System.err.printf("Cannot register appointment: %s\n", p);
+        LocalDateTime at = params.at;
+        List<PatchCommand> patches = new ArrayList<>();
+        for(int patientId: params.patientIds){
+            PatientState ps = book.getPatientState(patientId);
+            if( ps.firstShotTime == null && ps.secondShotTime == null ){
+                FirstShotAppoint e = new FirstShotAppoint(at);
+                PatchState patch = new PatchState(e.encode(), patientId);
+                patches.add(patch);
+                LocalDate due = at.toLocalDate().plus(21, ChronoUnit.DAYS);
+                AppointPref pref = book.getAppointPref(patientId);
+                LocalDateTime second = book.findVacancy(due, pref);
+                if( second == null ){
+                    Patient patient = book.getPatient(patientId);
+                    System.err.printf("Cannot find 2nd shot appoint for (%d) %s\n", patientId, patient.name);
                     System.exit(1);
                 }
+                EphemeralSecondShotAppoint secondEvt = new EphemeralSecondShotAppoint(second);
+                PatchState secondPatch = new PatchState(secondEvt.encode(), patientId);
+                patches.add(secondPatch);
+                StateLog stateLog = new StateLog(patientId, secondEvt);
+                book.addStateLog(stateLog);
+            } else {
+                System.err.printf("Not eligible for first shot appoint: (%d) %s\n",
+                        patientId,
+                        book.getPatient(patientId).name);
             }
-            doApplyPatches(patches, patientMap);
         }
+        doApplyPatches(patches);
+
+
+//        if( false ) {
+//            Map<LocalDateTime, AppointDate> appointMap = readAppointDatesAsMap();
+//            AppointDate appDate = appointMap.get(params.at);
+//            if (appDate == null) {
+//                System.err.println("Invalid appoint date: " + params.at);
+//                System.exit(1);
+//            }
+//            Map<Integer, RegularPatient> patientMap = executeLogbookAsMap();
+//            //List<RegularPatient> currentAppoints = getAppointsAt(params.at, patientMap.values());
+//            List<RegularPatient> currentAppoints = getAppointsAt(params.at);
+//            if (appDate.capacity < currentAppoints.size() + params.patientIds.size()) {
+//                System.err.println("Overbooking!");
+//                System.exit(1);
+//            }
+//            Set<Integer> appointIds = new HashSet<>();
+//            appointIds.addAll(currentAppoints.stream().map(p -> p.patientId).collect(toList()));
+//            appointIds.addAll(params.patientIds);
+//            if (appointIds.size() != currentAppoints.size() + params.patientIds.size()) {
+//                System.err.println("Duplicate patient appointments.");
+//                System.exit(1);
+//            }
+//            List<PatchCommand> patches = new ArrayList<>();
+//            for (int patientId : params.patientIds) {
+//                RegularPatient p = patientMap.get(patientId);
+//                if (p == null) {
+//                    throw new RuntimeException("Unknown patient-id: " + patientId);
+//                }
+//                PatientEvent state = p.state;
+//                if (state instanceof Appointable) {
+//                    PatientEvent newState = ((Appointable) state).registerAppoint(params.at);
+//                    patches.add(new PatchState(newState.toString(), patientId));
+//                } else {
+//                    System.err.printf("Cannot register appointment: %s\n", p);
+//                    System.exit(1);
+//                }
+//            }
+//            doApplyPatches(patches, patientMap);
+//        }
     }
 
     private static final Path appointPrefFile = Path.of(CovidVaccineDir, "appoint-pref.txt");

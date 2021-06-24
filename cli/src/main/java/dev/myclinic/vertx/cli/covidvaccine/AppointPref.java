@@ -50,6 +50,11 @@ class AppointPref {
                     prefOpt.add(pref);
                     continue;
                 }
+                pref = ExcludeRange.parse(arg);
+                if( pref != null ){
+                    prefOpt.add(pref);
+                    continue;
+                }
                 throw new RuntimeException("Invalid appoint pref: " + arg);
             }
             ap.addPrefOpt(prefOpt);

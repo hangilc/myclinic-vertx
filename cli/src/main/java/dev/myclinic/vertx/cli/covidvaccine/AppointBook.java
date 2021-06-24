@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 
 class AppointBook {
 
@@ -21,9 +22,18 @@ class AppointBook {
     private Map<LocalDateTime, AppointDate> appointDateMap;
     private Map<Integer, PatientState> patientStateMap;
     private Map<LocalDateTime, AppointBlock> blockMap;
+    private Map<Integer, AppointPref> appointPrefMap;
 
     AppointBook(String baseDir){
         this.baseDir = Path.of(baseDir);
+    }
+
+    public void addStateLog(StateLog stateLog){
+        ensureLogs();
+        logs.add(stateLog);
+        patientMap = null;
+        patientStateMap = null;
+        blockMap = null;
     }
 
     private void ensureLogs(){
@@ -96,13 +106,37 @@ class AppointBook {
                     AppointBlock block = blockMap.get(ps.firstShotTime);
                     block.addSlot(slot);
                 }
-                if (ps.secondShotTime != null && ps.secondShotState != SecondShotState.Done) {
+                if (ps.secondShotTime != null) {
                     SecondShotSlot slot = new SecondShotSlot(patientId, ps.secondShotState);
                     AppointBlock block = blockMap.get(ps.secondShotTime);
                     block.addSlot(slot);
                 }
             }
             checkOverbooking();
+        }
+    }
+
+    private void ensureAppointPrefMap() {
+        if( appointPrefMap == null ){
+            this.appointPrefMap = new HashMap<>();
+            Misc.forEachLine(baseDir.resolve("appoint-pref.txt"), line -> {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("%")) {
+                    return;
+                }
+                String[] items = line.split("\\s+", 3);
+                int patientId = Integer.parseInt(items[0]);
+                String name = items[1];
+                AppointPref ap = AppointPref.parse(items[2]);
+                if( appointPrefMap.containsKey(patientId) ){
+                    throw new RuntimeException("Duplicate appoint pref definition: " + patientId);
+                }
+                Patient patient = getPatient(patientId);
+                if( !name.equals(patient.name) ){
+                    throw new RuntimeException("Inconsistent patient name in pref: " + name);
+                }
+                appointPrefMap.put(patientId, ap);
+            });
         }
     }
 
@@ -140,14 +174,32 @@ class AppointBook {
         return blockMap.get(at);
     }
 
-    public LocalDateTime findVacancy(LocalDate startFrom) {
+    public LocalDateTime findVacancy(LocalDate startFrom, Function<LocalDateTime, Boolean> accept) {
         for(LocalDateTime at: listAppointTime()){
+            if( at.toLocalDate().isBefore(startFrom) ){
+                continue;
+            }
             AppointBlock block = getAppointBlock(at);
-            if( block.hasVacancy() ){
+            if( block.hasVacancy() && accept.apply(at) ){
                 return at;
             }
         }
         return null;
+    }
+
+    public LocalDateTime findVacancy(LocalDate startFrom, AppointPref pref){
+        return findVacancy(startFrom, at -> {
+            if( pref == null ){
+                return true;
+            } else {
+                return pref.acceptable(at);
+            }
+        });
+    }
+
+    public AppointPref getAppointPref(int patientId){
+        ensureAppointPrefMap();
+        return appointPrefMap.get(patientId);
     }
 
 }

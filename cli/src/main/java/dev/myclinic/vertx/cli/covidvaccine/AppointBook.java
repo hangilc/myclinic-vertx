@@ -9,6 +9,7 @@ import dev.myclinic.vertx.cli.covidvaccine.logentry.PhoneLog;
 import dev.myclinic.vertx.cli.covidvaccine.logentry.StateLog;
 
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -95,7 +96,7 @@ class AppointBook {
                     AppointBlock block = blockMap.get(ps.firstShotTime);
                     block.addSlot(slot);
                 }
-                if (ps.secondShotTime != null) {
+                if (ps.secondShotTime != null && ps.secondShotState != SecondShotState.Done) {
                     SecondShotSlot slot = new SecondShotSlot(patientId, ps.secondShotState);
                     AppointBlock block = blockMap.get(ps.secondShotTime);
                     block.addSlot(slot);
@@ -137,6 +138,16 @@ class AppointBook {
     public AppointBlock getAppointBlock(LocalDateTime at){
         ensureBlockMap();
         return blockMap.get(at);
+    }
+
+    public LocalDateTime findVacancy(LocalDate startFrom) {
+        for(LocalDateTime at: listAppointTime()){
+            AppointBlock block = getAppointBlock(at);
+            if( block.hasVacancy() ){
+                return at;
+            }
+        }
+        return null;
     }
 
 }

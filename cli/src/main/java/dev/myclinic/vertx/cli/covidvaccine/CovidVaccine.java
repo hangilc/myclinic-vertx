@@ -571,6 +571,13 @@ public class CovidVaccine {
             System.err.println("example -- register-appoint APPOINT-TIME PATIENT-ID PATIENT-ID ...");
             System.exit(1);
         }
+        AppointBlock block = book.getAppointBlock(params.at);
+        int avail = block.getCapacity() - block.slots.size();
+        if( avail < params.patientIds.size() ){
+            System.err.println("Not enough available slots.");
+            System.exit(1);
+        }
+
 
         if( false ) {
             Map<LocalDateTime, AppointDate> appointMap = readAppointDatesAsMap();

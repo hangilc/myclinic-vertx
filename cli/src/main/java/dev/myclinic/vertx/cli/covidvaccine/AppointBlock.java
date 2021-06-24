@@ -21,4 +21,12 @@ public class AppointBlock {
     public boolean isOverbooking(){
         return appointDate.capacity < slots.size();
     }
+
+    public int getCapacity(){
+        return appointDate.capacity;
+    }
+
+    public boolean hasVacancy(){
+        return slots.size() < appointDate.capacity;
+    }
 }

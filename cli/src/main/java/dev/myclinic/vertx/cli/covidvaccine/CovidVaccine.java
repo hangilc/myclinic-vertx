@@ -144,6 +144,10 @@ public class CovidVaccine {
                     ephemeralToReal(args);
                     break;
                 }
+                case "remaining": {
+                    remaining();
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -184,6 +188,20 @@ public class CovidVaccine {
         System.out.println("  injection-done APPOINT-TIME");
         System.out.println("  ephemeral-to-real PATIENT-ID ...");
         System.out.println("  help");
+    }
+
+    private static void remaining() throws Exception {
+        List<Integer> patientIds = book.listPatientId();
+        int count = 0;
+        for(int patientId: patientIds){
+            PatientState ps = book.getPatientState(patientId);
+            if( ps.firstShotTime == null && ps.candidateEvent != null ){
+                count++;
+                Patient patient = book.getPatient(patientId);
+                System.out.printf("%s (%d) %s\n", ps.candidateEvent.encode(), patientId, patient.name);
+            }
+        }
+        System.out.printf("(%d)\n", count);
     }
 
     private static void ephemeralToReal(String[] args) throws Exception {

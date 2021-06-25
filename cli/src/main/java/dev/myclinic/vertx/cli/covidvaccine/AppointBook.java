@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 
+import static java.util.stream.Collectors.toList;
+
 class AppointBook {
 
     private final Path baseDir;
@@ -200,6 +202,11 @@ class AppointBook {
     public AppointPref getAppointPref(int patientId){
         ensureAppointPrefMap();
         return appointPrefMap.get(patientId);
+    }
+
+    public List<Integer> listPatientId(){
+        ensurePatientStateMap();
+        return new ArrayList<>(patientStateMap.keySet());
     }
 
 }

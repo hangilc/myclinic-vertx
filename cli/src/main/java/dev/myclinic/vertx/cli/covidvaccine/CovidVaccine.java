@@ -490,9 +490,7 @@ public class CovidVaccine {
         List<PatchCommand> patches = List.of(
                 new PatchAdd(regp),
                 new PatchState(regp.state.encode(), patient.patientId));
-        Map<Integer, RegularPatient> map = new HashMap<>();
-        map.put(patient.patientId, regp);
-        doApplyPatches(patches, map);
+        doApplyPatches(patches);
     }
 
     private static void appointsAt(String[] args) {
@@ -586,6 +584,10 @@ public class CovidVaccine {
         List<PatchCommand> patches = new ArrayList<>();
         for(int patientId: params.patientIds){
             PatientState ps = book.getPatientState(patientId);
+            if( ps == null ){
+                System.err.printf("Unknown patient: %d\n", patientId);
+                System.exit(1);
+            }
             if( ps.firstShotTime == null && ps.secondShotTime == null ){
                 FirstShotAppoint e = new FirstShotAppoint(at);
                 PatchState patch = new PatchState(e.encode(), patientId);

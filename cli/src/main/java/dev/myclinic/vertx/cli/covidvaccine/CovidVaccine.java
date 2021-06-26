@@ -859,9 +859,14 @@ public class CovidVaccine {
         System.out.println();
         List<RegularPatient> candidates = executeLogbook().stream()
                 .filter(p -> p.state instanceof FirstShotCandidate || p.state instanceof Kakaritsuke)
+                .filter(p -> {
+                    AppointPref pref = book.getAppointPref(p.patientId);
+                    return pref == null || pref.acceptable(params.at);
+                })
                 .collect(toList());
         Collections.shuffle(candidates);
-        candidates.subList(0, 38).forEach(System.out::println);
+        //candidates.subList(0, 38).forEach(System.out::println);
+        candidates.forEach(System.out::println);
 
 //        if (false) {
 //            Map<LocalDateTime, AppointDate> appointMap = readAppointDatesAsMap();

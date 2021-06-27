@@ -48,14 +48,15 @@ public class CovidVac2ndShot {
         Box box = new Box(p.getX(), p.getY(), p.getX(), p.getY());
         c.setFont("title");
         c.textAt("コロナワクチン２回目接種の日時", p.getX(), p.getY(), HAlign.Center, VAlign.Center);
+        c.setFont("regular");
         c.addMark("patient", "患者氏名", new Box(30, 60, 30, 60), List.of(Hints.vCenter(), Hints.font("regular")));
-        c.multi(new Box(30, 95, 30, 95), VAlign.Center, List.of(
+        c.multi(new Box(30, 85, 30, 85), VAlign.Center, List.of(
                 c.mLabel("接種日時："),
                 c.mSpace(70).mark("at", "接種日時")
         ));
         double x = 30;
         double y = 111;
-        c.addMark("potal-code", "郵便番号", new Box(x, y, x, y), List.of(Hints.vCenter(), Hints.font("regular")));
+        c.addMark("postal-code", "郵便番号", new Box(x, y, x, y), List.of(Hints.vCenter(), Hints.font("regular")));
         y += 13;
         c.addMark("address", "住所", new Box(x, y, x, y), List.of(Hints.vCenter(), Hints.font("regular")));
         y += 13;

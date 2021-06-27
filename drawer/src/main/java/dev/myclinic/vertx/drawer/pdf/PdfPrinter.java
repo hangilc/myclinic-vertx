@@ -171,6 +171,9 @@ public class PdfPrinter {
                 String s = data.markTexts.get(key);
                 CustomRenderer cr = data.customRenderers.get(key);
                 Box box = formPage.marks.get(key).toBox();
+                if( box == null ){
+                    throw new RuntimeException("Unknown mark key: " + key);
+                }
                 Hint h = ch.get(key);
                 if (cr != null) {
                     cr.render(c, box, key, s, h);

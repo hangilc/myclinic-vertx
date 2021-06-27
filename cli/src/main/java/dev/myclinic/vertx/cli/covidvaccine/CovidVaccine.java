@@ -9,7 +9,9 @@ import dev.myclinic.vertx.cli.covidvaccine.logentry.StateLog;
 import dev.myclinic.vertx.cli.covidvaccine.patientevent.*;
 import dev.myclinic.vertx.client2.Client;
 import dev.myclinic.vertx.drawer.form.Form;
+import dev.myclinic.vertx.drawer.form.Page;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
+import dev.myclinic.vertx.dto.ClinicInfoDTO;
 import dev.myclinic.vertx.dto.PatientDTO;
 
 import java.io.FileNotFoundException;
@@ -213,15 +215,49 @@ public class CovidVaccine {
         URL url = CovidVaccine.class.getClassLoader().getResource("covidvaccine/covid-vac-2nd-shot.json");
         ObjectMapper mapper = Misc.createObjectMapper();
         Form form = mapper.readValue(url, Form.class);
+        List<Page> pages = new ArrayList<>();
+        Page origPage = form.pages.get(0);
+        form.pages = pages;
         PdfPrinter printer = new PdfPrinter(form.paper);
         List<PdfPrinter.FormPageData> dataList = new ArrayList<>();
-        PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
-        pageData.pageId = 0;
-        pageData.markTexts = new HashMap<>();
-        pageData.customRenderers = new HashMap<>();
-        dataList.add(pageData);
-        try(OutputStream os = new FileOutputStream("work/second-shot-appoints.pdf")){
-            printer.print(form, dataList, os);
+        Client client = Misc.getClient();
+        ClinicInfoDTO clinicInfo = client.getClinicInfo();
+        AppointBlock block = book.getAppointBlock(at);
+        int pageId = 0;
+        for(AppointSlot slot: block.slots){
+            if( slot instanceof FirstShotSlot ){
+                int patientId = slot.patientId;
+                Patient patient = book.getPatient(patientId);
+                PatientState ps = book.getPatientState(patientId);
+                if( ps.secondShotState == SecondShotState.Ephemeral ){
+                    pages.add(origPage);
+                    LocalDateTime secondAt = ps.secondShotTime;
+                    PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
+                    Map<String, String> marks = new HashMap<>();
+                    marks.put("patient", String.format("%s 様", patient.name));
+                    marks.put("at", appointTimeRep(secondAt));
+                    marks.put("postal-code", clinicInfo.postalCode);
+                    marks.put("address", clinicInfo.address);
+                    marks.put("phone", clinicInfo.tel);
+                    marks.put("clinic-name", clinicInfo.name);
+                    marks.put("doctor", clinicInfo.doctorName);
+                    pageData.pageId = pageId++;
+                    pageData.markTexts = marks;
+                    pageData.customRenderers = new HashMap<>();
+                    dataList.add(pageData);
+                }
+            }
+        }
+        if( dataList.size() > 0 ) {
+            String file = String.format("second-shot-appoints-%d%02d%02d-%02d%02d.pdf",
+                    at.getYear(), at.getMonthValue(), at.getDayOfMonth(),
+                    at.getHour(), at.getMinute());
+            try (OutputStream os = new FileOutputStream("work" + "/" + file)) {
+                printer.print(form, dataList, os);
+            }
+            System.out.printf("Written to work/%s\n", file);
+        } else {
+            System.out.println("No output");
         }
     }
 

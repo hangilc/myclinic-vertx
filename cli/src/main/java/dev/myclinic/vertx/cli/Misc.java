@@ -1,7 +1,12 @@
 package dev.myclinic.vertx.cli;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import dev.myclinic.vertx.client2.Client;
 import dev.myclinic.vertx.db.MysqlDataSourceFactory;
+import dev.myclinic.vertx.drawer.JacksonOpDeserializer;
+import dev.myclinic.vertx.drawer.JacksonOpSerializer;
+import dev.myclinic.vertx.drawer.Op;
 import dev.myclinic.vertx.util.DateTimeUtil;
 import dev.myclinic.vertx.util.kanjidate.GengouNenPair;
 import dev.myclinic.vertx.util.kanjidate.KanjiDate;
@@ -188,6 +193,15 @@ public class Misc {
     public static Client getClient(){
         String url = System.getenv("MYCLINIC_SERVICE");
         return new Client(url);
+    }
+
+    public static ObjectMapper createObjectMapper(){
+        ObjectMapper mapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(Op.class, new JacksonOpSerializer());
+        module.addDeserializer(Op.class, new JacksonOpDeserializer());
+        mapper.registerModule(module);
+        return mapper;
     }
 
 }

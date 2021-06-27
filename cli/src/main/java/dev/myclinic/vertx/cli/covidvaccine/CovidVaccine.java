@@ -1,5 +1,6 @@
 package dev.myclinic.vertx.cli.covidvaccine;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.cli.Misc;
 import dev.myclinic.vertx.cli.covidvaccine.appointslot.AppointSlot;
 import dev.myclinic.vertx.cli.covidvaccine.appointslot.FirstShotSlot;
@@ -7,9 +8,14 @@ import dev.myclinic.vertx.cli.covidvaccine.appointslot.SecondShotSlot;
 import dev.myclinic.vertx.cli.covidvaccine.logentry.StateLog;
 import dev.myclinic.vertx.cli.covidvaccine.patientevent.*;
 import dev.myclinic.vertx.client2.Client;
+import dev.myclinic.vertx.drawer.form.Form;
+import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
 import dev.myclinic.vertx.dto.PatientDTO;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -148,6 +154,10 @@ public class CovidVaccine {
                     remaining();
                     break;
                 }
+                case "print-2nd-shot-appoints": {
+                    printSecondShotAppoints(args);
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -187,7 +197,32 @@ public class CovidVaccine {
         System.out.println("  patch ATTR PATIENT-ID PATIENT-ID ...");
         System.out.println("  injection-done APPOINT-TIME");
         System.out.println("  ephemeral-to-real PATIENT-ID ...");
+        System.out.println("  print-2nd-shot-appoints APPOINT-TIME");
         System.out.println("  help");
+    }
+
+    private static void printSecondShotAppoints(String[] args) throws Exception {
+        LocalDateTime at = null;
+        if( args.length == 2 ){
+            at = parseAppointTime(args[1]);
+        } else {
+            System.err.println("Invalid args to print-2nd-shot-appoints");
+            printHelp();
+            System.exit(1);
+        }
+        URL url = CovidVaccine.class.getClassLoader().getResource("covidvaccine/covid-vac-2nd-shot.json");
+        ObjectMapper mapper = Misc.createObjectMapper();
+        Form form = mapper.readValue(url, Form.class);
+        PdfPrinter printer = new PdfPrinter(form.paper);
+        List<PdfPrinter.FormPageData> dataList = new ArrayList<>();
+        PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
+        pageData.pageId = 0;
+        pageData.markTexts = new HashMap<>();
+        pageData.customRenderers = new HashMap<>();
+        dataList.add(pageData);
+        try(OutputStream os = new FileOutputStream("work/second-shot-appoints.pdf")){
+            printer.print(form, dataList, os);
+        }
     }
 
     private static void remaining() throws Exception {

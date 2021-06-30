@@ -521,16 +521,25 @@ public class CovidVaccine {
     }
 
     private static void batchUpdatePhone() throws Exception {
-        Map<Integer, RegularPatient> patientMap = executeLogbookAsMap();
         Client client = Misc.getClient();
         List<PatchCommand> patches = new ArrayList<>();
-        for (RegularPatient regp : patientMap.values()) {
-            PatientDTO p = client.getPatient(regp.patientId);
-            if (p.phone != null && !p.phone.equals(regp.phone)) {
-                patches.add(new PatchPhone(regp.patientId, p.phone));
+        for(Patient patient: book.listPatient()){
+            PatientDTO dto = client.getPatient(patient.patientId);
+            if( patient.phone == null || !patient.phone.equals(dto.phone) ){
+                patches.add(new PatchPhone(patient.patientId, dto.phone));
             }
         }
-        doApplyPatches(patches, patientMap);
+        doApplyPatches(patches);
+//        Map<Integer, RegularPatient> patientMap = executeLogbookAsMap();
+//        Client client = Misc.getClient();
+//        List<PatchCommand> patches = new ArrayList<>();
+//        for (RegularPatient regp : patientMap.values()) {
+//            PatientDTO p = client.getPatient(regp.patientId);
+//            if (p.phone != null && !p.phone.equals(regp.phone)) {
+//                patches.add(new PatchPhone(regp.patientId, p.phone));
+//            }
+//        }
+//        doApplyPatches(patches);
     }
 
     private static List<PatchCommand> composeAddPatientPatches(Client client, int patientId) {

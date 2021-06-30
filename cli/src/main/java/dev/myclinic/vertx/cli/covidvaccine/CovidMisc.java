@@ -1,19 +1,33 @@
 package dev.myclinic.vertx.cli.covidvaccine;
 
 import dev.myclinic.vertx.cli.Misc;
+import dev.myclinic.vertx.cli.covidvaccine.logentry.AddPatientLog;
+import dev.myclinic.vertx.cli.covidvaccine.logentry.LogEntry;
+import dev.myclinic.vertx.cli.covidvaccine.logentry.PhoneLog;
+import dev.myclinic.vertx.cli.covidvaccine.logentry.StateLog;
 import dev.myclinic.vertx.cli.covidvaccine.patientevent.*;
 import dev.myclinic.vertx.dto.PatientDTO;
+import static dev.myclinic.vertx.cli.covidvaccine.CovidVaccine.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class CovidMisc {
 
-    public static RegularPatient patientToRegularPatient(PatientDTO patient){
+    public static RegularPatient patientDtoToRegularPatient(PatientDTO patient){
         int age = Misc.ageAt(LocalDate.parse(patient.birthday), LocalDate.of(2022, 3, 31));
         return new RegularPatient(patient.patientId,
                 patient.lastName + patient.firstName,
                 age, patient.phone, new NeedConfirm());
+    }
+
+    public static Patient regularPatientToPatient(RegularPatient patient){
+        return new Patient(
+                patient.patientId,
+                patient.name,
+                patient.age,
+                patient.phone
+        );
     }
 
     public static String encodeAppointTime(LocalDateTime at) {
@@ -56,5 +70,21 @@ public class CovidMisc {
             }
         }
         throw new RuntimeException("Invalid attribute: " + attr);
+    }
+
+    public static LogEntry patchCommandToLogEntry(PatchCommand patch){
+        if( patch instanceof PatchAdd ){
+            PatchAdd patchAdd = (PatchAdd) patch;
+            Patient patient = regularPatientToPatient(patchAdd.patient);
+            return new AddPatientLog(patient);
+        } else if( patch instanceof PatchState ){
+            PatchState patchState = (PatchState) patch;
+            return new StateLog(patchState.patientId, parsePatientAttr(patchState.attr));
+        } else if( patch instanceof PatchPhone ){
+            PatchPhone patchPhone = (PatchPhone) patch;
+            return new PhoneLog(patchPhone.patientId, patchPhone.phone);
+        } else {
+            throw new RuntimeException("Unknown patch command: " + patch);
+        }
     }
 }

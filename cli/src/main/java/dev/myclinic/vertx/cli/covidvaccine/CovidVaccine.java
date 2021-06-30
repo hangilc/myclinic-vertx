@@ -482,53 +482,24 @@ public class CovidVaccine {
         return new PrepareCalendarResult(cal, patientMap);
     }
 
-    private static void calendar() throws Exception {
+    private static void calendar() {
         for (LocalDateTime at : book.listAppointTime()) {
             AppointDate appointDate = book.getAppointDate(at);
-            System.out.printf("%s (%d)\n", appointTimeRep(at), appointDate.capacity);
-            AppointBlock block = book.getAppointBlock(at);
-            if( block.slots.size() > 0 ) {
-                int capacity = book.getAppointDate(at).capacity;
-                int index = 1;
-                for (AppointSlot slot : block.slots) {
-                    Patient patient = book.getPatient(slot.patientId);
-                    System.out.printf("%d. (%d) %s %s\n", index++, patient.patientId, patient.name,
-                            slot.renderState());
-                }
-                for(;index<=capacity;index++){
-                    System.out.printf("%d.\n", index);
-                }
-            }
-            System.out.println();
-        }
-
-        if (false) {
-            Map<Integer, PatientState> stateMap = new HashMap<>();
-            Map<Integer, RegularPatient> patientMap = new HashMap<>();
-            executeLogbook(readLogs(), patient -> {
-                PatientState ps = stateMap.computeIfAbsent(patient.patientId, k -> new PatientState());
-                ps.apply(patient.state);
-                patientMap.put(patient.patientId, patient);
-            });
-            AppointCalendar cal = new AppointCalendar();
-            cal.init();
-            for (int patientId : stateMap.keySet()) {
-                cal.add(patientId, stateMap.get(patientId));
-            }
-            for (AppointDate appointDate : cal.listAppointDates()) {
-                System.out.printf("%s (%d)\n", appointTimeRep(appointDate.at), appointDate.capacity);
-                var ctx = new Object() {
+            if( appointDate.capacity > 0 ) {
+                System.out.printf("%s (%d)\n", appointTimeRep(at), appointDate.capacity);
+                AppointBlock block = book.getAppointBlock(at);
+                if (block.slots.size() > 0) {
+                    int capacity = book.getAppointDate(at).capacity;
                     int index = 1;
-                };
-                cal.iterItem(appointDate.at, (patientId, firstShotState) -> {
-                    RegularPatient patient = patientMap.get(patientId);
-                    System.out.printf("%d. (%d) %s %s\n", ctx.index++, patient.patientId, patient.name,
-                            firstShotState.toString());
-                }, (patientId, secondShotState) -> {
-                    RegularPatient patient = patientMap.get(patientId);
-                    System.out.printf("%d. (%d) %s %s\n", ctx.index++, patient.patientId, patient.name,
-                            secondShotState.toString());
-                });
+                    for (AppointSlot slot : block.slots) {
+                        Patient patient = book.getPatient(slot.patientId);
+                        System.out.printf("%d. (%d) %s %s\n", index++, patient.patientId, patient.name,
+                                slot.renderState());
+                    }
+                    for (; index <= capacity; index++) {
+                        System.out.printf("%d.\n", index);
+                    }
+                }
                 System.out.println();
             }
         }
@@ -562,6 +533,13 @@ public class CovidVaccine {
         doApplyPatches(patches, patientMap);
     }
 
+    private static void populateAddPatientPatches(Client client, int patientId, List<PatchCommand> patches) {
+        PatientDTO patient = client.getPatient(patientId);
+        RegularPatient regp = CovidMisc.patientDtoToRegularPatient(patient);
+        patches.add(new PatchAdd(regp));
+        patches.add(new PatchState(regp.state.encode(), patient.patientId));
+    }
+
     private static void addPatient(String[] args) throws Exception {
         var params = new Object() {
             int patientId;
@@ -573,12 +551,19 @@ public class CovidVaccine {
             printHelp();
             System.exit(1);
         }
+        Patient patient = book.getPatient(params.patientId);
+        if( patient != null ){
+            System.err.printf("Patient (%d) %s is already added.", patient.patientId, patient.name);
+            System.exit(1);
+        }
         Client client = Misc.getClient();
-        PatientDTO patient = client.getPatient(params.patientId);
-        RegularPatient regp = CovidMisc.patientToRegularPatient(patient);
-        List<PatchCommand> patches = List.of(
-                new PatchAdd(regp),
-                new PatchState(regp.state.encode(), patient.patientId));
+        List<PatchCommand> patches = new ArrayList<>();
+        populateAddPatientPatches(client, params.patientId, patches);
+//        PatientDTO patient = client.getPatient(params.patientId);
+//        RegularPatient regp = CovidMisc.patientToRegularPatient(patient);
+//        List<PatchCommand> patches = List.of(
+//                new PatchAdd(regp),
+//                new PatchState(regp.state.encode(), patient.patientId));
         doApplyPatches(patches);
     }
 
@@ -656,7 +641,6 @@ public class CovidVaccine {
             }
         } else {
             System.err.println("Invalid arg to register-appoint.");
-            System.err.println("example -- register-appoint APPOINT-TIME PATIENT-ID PATIENT-ID ...");
             System.exit(1);
         }
         AppointBlock block = book.getAppointBlock(params.at);
@@ -671,11 +655,16 @@ public class CovidVaccine {
         }
         LocalDateTime at = params.at;
         List<PatchCommand> patches = new ArrayList<>();
+        Client client = null;
         for(int patientId: params.patientIds){
             PatientState ps = book.getPatientState(patientId);
             if( ps == null ){
-                System.err.printf("Unknown patient: %d\n", patientId);
-                System.exit(1);
+                if( client == null ){
+                    client = Misc.getClient();
+                }
+                populateAddPatientPatches(client, patientId, patches);
+//                System.err.printf("Unknown patient: %d\n", patientId);
+//                System.exit(1);
             }
             if( ps.firstShotTime == null && ps.secondShotTime == null ){
                 FirstShotAppoint e = new FirstShotAppoint(at);
@@ -1290,11 +1279,11 @@ public class CovidVaccine {
         }
     }
 
-    private interface PatchCommand {
+    interface PatchCommand {
         String encode();
     }
 
-    private static class PatchAdd implements PatchCommand {
+    static class PatchAdd implements PatchCommand {
         public RegularPatient patient;
 
         public PatchAdd(RegularPatient patient) {
@@ -1308,7 +1297,7 @@ public class CovidVaccine {
         }
     }
 
-    private static class PatchState implements PatchCommand {
+    static class PatchState implements PatchCommand {
         public String attr;
         public int patientId;
 
@@ -1324,7 +1313,7 @@ public class CovidVaccine {
         }
     }
 
-    private static class PatchPhone implements PatchCommand {
+    static class PatchPhone implements PatchCommand {
         public int patientId;
         public String phone;
 

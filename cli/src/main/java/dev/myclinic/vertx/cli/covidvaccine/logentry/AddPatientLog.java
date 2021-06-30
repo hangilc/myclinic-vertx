@@ -10,7 +10,7 @@ public class AddPatientLog implements LogEntry {
 
     public Patient patient;
 
-    AddPatientLog(Patient patient) {
+    public AddPatientLog(Patient patient) {
         this.patient = patient;
     }
 

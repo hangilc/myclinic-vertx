@@ -533,11 +533,13 @@ public class CovidVaccine {
         doApplyPatches(patches, patientMap);
     }
 
-    private static void populateAddPatientPatches(Client client, int patientId, List<PatchCommand> patches) {
+    private static List<PatchCommand> composeAddPatientPatches(Client client, int patientId) {
+        List<PatchCommand> patches = new ArrayList<>();
         PatientDTO patient = client.getPatient(patientId);
         RegularPatient regp = CovidMisc.patientDtoToRegularPatient(patient);
         patches.add(new PatchAdd(regp));
         patches.add(new PatchState(regp.state.encode(), patient.patientId));
+        return patches;
     }
 
     private static void addPatient(String[] args) throws Exception {
@@ -557,8 +559,7 @@ public class CovidVaccine {
             System.exit(1);
         }
         Client client = Misc.getClient();
-        List<PatchCommand> patches = new ArrayList<>();
-        populateAddPatientPatches(client, params.patientId, patches);
+        List<PatchCommand> patches = composeAddPatientPatches(client, params.patientId);
 //        PatientDTO patient = client.getPatient(params.patientId);
 //        RegularPatient regp = CovidMisc.patientToRegularPatient(patient);
 //        List<PatchCommand> patches = List.of(
@@ -662,7 +663,10 @@ public class CovidVaccine {
                 if( client == null ){
                     client = Misc.getClient();
                 }
-                populateAddPatientPatches(client, patientId, patches);
+                List<PatchCommand> localPatches = composeAddPatientPatches(client, patientId);
+                patches.addAll(localPatches);
+                book.applyPatches(localPatches);
+                ps = book.getPatientState(patientId);
 //                System.err.printf("Unknown patient: %d\n", patientId);
 //                System.exit(1);
             }

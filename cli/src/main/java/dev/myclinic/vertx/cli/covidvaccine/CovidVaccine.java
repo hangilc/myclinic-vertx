@@ -160,6 +160,10 @@ public class CovidVaccine {
                     printSecondShotAppoints(args);
                     break;
                 }
+                case "vial-balance": {
+                    vialBalance();
+                    break;
+                }
                 case "help": // fall through
                 default:
                     printHelp();
@@ -200,7 +204,26 @@ public class CovidVaccine {
         System.out.println("  injection-done APPOINT-TIME");
         System.out.println("  ephemeral-to-real PATIENT-ID ...");
         System.out.println("  print-2nd-shot-appoints APPOINT-TIME");
+        System.out.println("  vial-balance");
         System.out.println("  help");
+    }
+
+    private static void vialBalance() throws Exception {
+        int balance = 0;
+        for(LocalDateTime at: book.listAppointTime()){
+            AppointDate appointDate = book.getAppointDate(at);
+            AppointBlock block = book.getAppointBlock(at);
+            if( appointDate.capacity > 0 && block.slots.size() > 0 ){
+                int capacity = appointDate.capacity;
+                if( capacity % 6 != 0 ){
+                    System.err.printf("Invalid capacity (%d) at %s\n", capacity, at);
+                    System.exit(1);
+                }
+                int req = capacity / 6;
+                balance -= req;
+                System.out.printf("%s %d\n", appointTimeRep(at), balance);
+            }
+        }
     }
 
     private static void printSecondShotAppoints(String[] args) throws Exception {

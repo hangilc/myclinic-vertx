@@ -22,7 +22,7 @@ public class PatientState {
         } else if (e instanceof FirstShotDone) {
             firstShotState = FirstShotState.Done;
         } else if (e instanceof FirstShotCancel) {
-            if (firstShotState == FirstShotState.Appointed) {
+            if (firstShotState == FirstShotState.Appointed || firstShotState == FirstShotState.External) {
                 firstShotState = FirstShotState.None;
                 firstShotTime = null;
             } else {

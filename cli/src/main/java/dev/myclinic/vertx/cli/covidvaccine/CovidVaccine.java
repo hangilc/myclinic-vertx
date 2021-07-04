@@ -312,10 +312,13 @@ public class CovidVaccine {
         List<PatchCommand> patches = new ArrayList<>();
         for(int patientId: patientIds){
             PatientState ps = book.getPatientState(patientId);
-            if( ps.secondShotState == SecondShotState.Ephemeral ){
+            if( ps.secondShotState == SecondShotState.Ephemeral ) {
                 SecondShotAppoint appoint = new SecondShotAppoint(ps.secondShotTime);
                 PatchState patchState = new PatchState(appoint.encode(), patientId);
                 patches.add(patchState);
+            } else if( ps.secondShotState == SecondShotState.Appointed ){
+                Patient patient = book.getPatient(patientId);
+                System.out.printf("(%d) %s has already 2nd shot appointed.\n", patientId, patient.name);
             } else {
                 Patient patient = book.getPatient(patientId);
                 System.err.printf("Patient (%d) %s has no ephemeral 2nd shot appoint.",
@@ -1042,6 +1045,10 @@ public class CovidVaccine {
     }
 
     private static boolean doApplyPatches(List<PatchCommand> patches) throws Exception {
+        if( patches.size() == 0 ){
+            System.out.println("Nothing to apply.");
+            return false;
+        }
         for (PatchCommand patch : patches) {
             if (patch instanceof PatchAdd) {
                 PatchAdd patchAdd = (PatchAdd) patch;

@@ -121,7 +121,7 @@ public class CovidVaccine {
                     break;
                 }
                 case "calendar": {
-                    calendar();
+                    calendar(args);
                     break;
                 }
                 case "history": {
@@ -195,7 +195,7 @@ public class CovidVaccine {
         System.out.println("  add-patient PATIENT-ID");
         System.out.println("  batch-update-phone");
         System.out.println("  random MIN MAX");
-        System.out.println("  calendar");
+        System.out.println("  calendar [APPOINT-DATE]");
         System.out.println("  history PATIENT-ID");
         System.out.println("  register-ephemeral-second-appoint PATIENT-ID PATIENT-ID ...");
         System.out.println("  batch-register-ephemeral-second-appoint");
@@ -508,8 +508,33 @@ public class CovidVaccine {
         return new PrepareCalendarResult(cal, patientMap);
     }
 
-    private static void calendar() {
-        for (LocalDateTime at : book.listAppointTime()) {
+    private static void calendar(String[] args) {
+        List<LocalDateTime> targetTimes = null;
+        if( args.length == 1 ) {
+            targetTimes = book.listAppointTime();
+        } else if( args.length == 2 ){
+            String arg = args[1];
+            Pattern pat = Pattern.compile("(\\d+)-(\\d+)");
+            Matcher m = pat.matcher(arg);
+            if( m.matches() ){
+                int year = LocalDate.now().getYear();
+                int month = Integer.parseInt(m.group(1));
+                int day = Integer.parseInt(m.group(2));
+                LocalDate at = LocalDate.of(year, month, day);
+                targetTimes = new ArrayList<>();
+                for(LocalDateTime dt: book.listAppointTime()){
+                    if( dt.toLocalDate().equals(at) ){
+                        targetTimes.add(dt);
+                    }
+                }
+            }
+        }
+        if( targetTimes == null ){
+            System.err.println("Invalid args to calendar.");
+            printHelp();
+            System.exit(1);
+        }
+        for (LocalDateTime at : targetTimes) {
             AppointDate appointDate = book.getAppointDate(at);
             if( appointDate.capacity > 0 ) {
                 System.out.printf("%s (%d)\n", appointTimeRep(at), appointDate.capacity);

@@ -252,7 +252,8 @@ public class CovidVaccine {
                 int patientId = slot.patientId;
                 Patient patient = book.getPatient(patientId);
                 PatientState ps = book.getPatientState(patientId);
-                if( ps.secondShotState == SecondShotState.Ephemeral ){
+                if( ps.secondShotState == SecondShotState.Ephemeral ||
+                    ps.secondShotState == SecondShotState.Appointed ){
                     pages.add(origPage);
                     LocalDateTime secondAt = ps.secondShotTime;
                     PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();

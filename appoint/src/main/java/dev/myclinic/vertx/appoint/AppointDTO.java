@@ -4,36 +4,33 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 
 public class AppointDTO {
 
-    public LocalDate appointDate;
-    public LocalTime appointTime;
+    public LocalDate date;
+    public LocalTime time;
     public String patientName;
-    public Map<String, Object> attributes;
+    public Integer patientId;
+    public LocalDateTime appointedAt;
 
-    public AppointDTO() {
-
+    public AppointDTO(LocalDate date, LocalTime time) {
+        this.date = date;
+        this.time = time;
     }
 
-    public String getAttrsAsJson(ObjectMapper mapper) throws JsonProcessingException {
-        if( attributes == null ){
-            return null;
-        } else {
-            return mapper.writeValueAsString(attributes);
-        }
-    }
-
-    public Map<String, Object> toJsonObject(){
-        Map<String, Object> map = new HashMap<>();
-        map.put("appointDate", appointDate.toString());
-        map.put("appointTime", Misc.toSqlTime(appointTime));
-        map.put("patientName", patientName);
-        map.put("attributes", attributes);
-        return map;
+    @Override
+    public String toString() {
+        return "AppointDTO{" +
+                "date=" + date +
+                ", time=" + time +
+                ", patientName='" + patientName + '\'' +
+                ", patientId=" + patientId +
+                ", appointedAt=" + appointedAt +
+                '}';
     }
 
 }

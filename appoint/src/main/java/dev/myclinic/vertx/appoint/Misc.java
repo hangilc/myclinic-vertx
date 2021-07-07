@@ -17,4 +17,13 @@ class Misc {
     public static String toSqlDatetime(LocalDateTime dateTime){
         return dateTime.format(sqlDateTimeFormatter);
     }
+
+    public static LocalDateTime fromSqlDatetime(String datetime){
+        return LocalDateTime.parse(datetime, sqlDateTimeFormatter);
+    }
+
+    public static LocalTime fromSqlTime(String time){
+        return LocalTime.parse(time, sqlTimeFormatter);
+    }
+
 }

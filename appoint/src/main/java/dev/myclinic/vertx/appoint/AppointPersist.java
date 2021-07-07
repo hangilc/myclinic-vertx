@@ -1,8 +1,6 @@
 package dev.myclinic.vertx.appoint;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,99 +13,105 @@ import java.util.List;
 
 public class AppointPersist {
 
-    public static void enterAppoint(Connection conn, ObjectMapper mapper, AppointDTO appoint)
+    private static void enterAppoint(Connection conn, AppointDTO appoint)
             throws SQLException, JsonProcessingException {
-        String sql = "insert into appoint values(?, ?, ?, ?)";
-        try(PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setString(1, appoint.appointDate.toString());
-            stmt.setString(2, Misc.toSqlTime(appoint.appointTime));
-            stmt.setString(3, appoint.patientName);
-            stmt.setString(4, appoint.getAttrsAsJson(mapper));
+        String sql = "insert into appoint values(?, ?, ?, ?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, appoint.date.toString());
+            stmt.setString(2, Misc.toSqlTime(appoint.time));
+            if (appoint.patientName == null) {
+                stmt.setNull(3, java.sql.Types.NULL);
+            } else {
+                stmt.setString(3, appoint.patientName);
+            }
+            if (appoint.patientId == null) {
+                stmt.setNull(4, java.sql.Types.NULL);
+            } else {
+                stmt.setInt(4, appoint.patientId);
+            }
+            if (appoint.appointedAt == null) {
+                stmt.setNull(5, java.sql.Types.NULL);
+            } else {
+                stmt.setString(5, Misc.toSqlDatetime(appoint.appointedAt));
+            }
             stmt.executeUpdate();
         }
     }
 
-    public static void cancelAppoint(Connection conn, AppointDTO appoint) throws SQLException {
-        String sql = "delete from appoint where appoint_date = ? and appoint_time = ?";
-        try(PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setString(1, appoint.appointDate.toString());
-            stmt.setString(2, Misc.toSqlTime(appoint.appointTime));
-            stmt.executeUpdate();
-        }
-    }
-
-    public static void logAppointCreated(Connection conn, ObjectMapper mapper, AppointDTO created)
-            throws SQLException, JsonProcessingException {
-        AppointLogDTO log = AppointLogDTO.created(mapper, created);
-        String sql = "insert into appoint_log values(?, ?, ?)";
-        try(PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setInt(1, 0);
-            stmt.setObject(2, Misc.toSqlDatetime(log.createdAt));
-            stmt.setString(3, mapper.writeValueAsString(log.logData));
-            stmt.executeUpdate();
-        }
-    }
-
-    public static void logAppointCanceled(Connection conn, ObjectMapper mapper, AppointDTO canceled)
-            throws SQLException, JsonProcessingException {
-        AppointLogDTO log = AppointLogDTO.canceled(mapper, canceled);
-        String sql = "insert into appoint_log values(?, ?, ?)";
-        try(PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setInt(1, 0);
-            stmt.setObject(2, Misc.toSqlDatetime(log.createdAt));
-            stmt.setString(3, mapper.writeValueAsString(log.logData));
-            stmt.executeUpdate();
-        }
-    }
-
-    public static AppointDTO resultSetToAppointDTO(ResultSet rs, ObjectMapper mapper)
-            throws SQLException, JsonProcessingException {
-        int startIndex = 1;
-        AppointDTO dto = new AppointDTO();
-        dto.appointDate = rs.getObject(startIndex, LocalDate.class);
-        dto.appointTime = rs.getObject(startIndex + 1, LocalTime.class);
-        dto.patientName = rs.getString(startIndex + 2);
-        String attr = rs.getString(startIndex + 3);
-        dto.attributes = attr == null ? null : mapper.readValue(attr, new TypeReference<>(){});
-        return dto;
-    }
-
-    public static AppointDTO getAppoint(Connection conn, ObjectMapper mapper, LocalDate atDate, LocalTime atTime)
-            throws SQLException, JsonProcessingException {
-        String sql = "select * from appoint where appoint_date = ? and appoint_time = ?";
-        try(PreparedStatement stmt = conn.prepareStatement(sql)){
-            AppointDTO appoint = null;
+    public static AppointDTO getAppoint(Connection conn, LocalDate atDate, LocalTime atTime)
+            throws SQLException {
+        String sql = "select * from appoint where date = ? and time = ?";
+        List<AppointDTO> result = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, atDate.toString());
             stmt.setString(2, Misc.toSqlTime(atTime));
-            try(ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    appoint = resultSetToAppointDTO(rs, mapper);
-                    if (rs.next()) {
-                        String msg = String.format("Multiple result. getAppoint. %s %s",
-                                atDate.toString(), Misc.toSqlTime(atTime));
-                        throw new RuntimeException(msg);
-                    }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    result.add(resultSetToAppointDTO(rs));
                 }
-                return appoint;
+                if (result.size() == 1) {
+                    return result.get(0);
+                } else if (result.size() == 0) {
+                    return null;
+                } else {
+                    String msg = String.format("Multiple appoints at %s %s.", atDate, atTime);
+                    throw new RuntimeException(msg);
+                }
             }
         }
     }
 
-    public static List<AppointDTO> listAppoint(Connection conn, ObjectMapper mapper, LocalDate from, LocalDate upto)
-            throws SQLException, JsonProcessingException{
-        String sql = "select * from appoint where appoint_date >= ? and appoint_date <= ?";
-        try(PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setString(1, from.toString());
-            stmt.setString(2, upto.toString());
-            List<AppointDTO> result = new ArrayList<>();
-            try(ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    AppointDTO appoint = resultSetToAppointDTO(rs, mapper);
-                    result.add(appoint);
-                }
-                return result;
+    public static int updateAppoint(Connection conn, AppointDTO appoint) throws SQLException {
+        String sql = "update appoint set patient_name = ?, patient_id = ?, appointed_at = ? " +
+                " where date = ? and time = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (appoint.patientName == null) {
+                stmt.setNull(1, java.sql.Types.NULL);
+            } else {
+                stmt.setString(1, appoint.patientName);
             }
+            if (appoint.patientId == null) {
+                stmt.setNull(2, java.sql.Types.NULL);
+            } else {
+                stmt.setInt(2, appoint.patientId);
+            }
+            if (appoint.appointedAt == null) {
+                stmt.setNull(3, java.sql.Types.NULL);
+            } else {
+                stmt.setString(3, Misc.toSqlDatetime(appoint.appointedAt));
+            }
+            stmt.setString(4, appoint.date.toString());
+            stmt.setString(5, Misc.toSqlTime(appoint.time));
+            return stmt.executeUpdate();
         }
+    }
+
+    public static int deleteAppoint(Connection conn, LocalDate date, LocalTime time) throws SQLException {
+        String sql = "delete from appoint where date = ? and time - ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, date.toString());
+            stmt.setString(2, Misc.toSqlTime(time));
+            return stmt.executeUpdate();
+        }
+    }
+
+    public static AppointDTO resultSetToAppointDTO(ResultSet rs)
+            throws SQLException {
+        return resultSetToAppointDTO(rs, 1);
+    }
+
+    public static AppointDTO resultSetToAppointDTO(ResultSet rs, int startIndex)
+            throws SQLException {
+        LocalDate date = rs.getObject(startIndex, LocalDate.class);
+        LocalTime time = Misc.fromSqlTime(rs.getString(startIndex + 1));
+        AppointDTO dto = new AppointDTO(date, time);
+        dto.patientName = rs.getString(startIndex + 2);
+        dto.patientId = rs.getInt(startIndex + 3);
+        if (rs.wasNull()) {
+            dto.patientId = null;
+        }
+        dto.appointedAt = Misc.fromSqlDatetime(rs.getString(startIndex + 4));
+        return dto;
     }
 
 }

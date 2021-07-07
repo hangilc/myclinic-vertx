@@ -1,10 +1,11 @@
 package dev.myclinic.vertx.appoint;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-class Misc {
+public class Misc {
 
     private static final DateTimeFormatter sqlDateFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd");
     private static final DateTimeFormatter sqlDateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
@@ -16,6 +17,10 @@ class Misc {
 
     public static String toSqlDatetime(LocalDateTime dateTime){
         return dateTime.format(sqlDateTimeFormatter);
+    }
+
+    public static LocalDate fromSqlDate(String sqldate){
+        return LocalDate.parse(sqldate, sqlDateFormatter);
     }
 
     public static LocalDateTime fromSqlDatetime(String datetime){

@@ -13,7 +13,7 @@ import java.util.List;
 
 public class AppointPersist {
 
-    private static void enterAppoint(Connection conn, AppointDTO appoint)
+    public static void enterAppoint(Connection conn, AppointDTO appoint)
             throws SQLException, JsonProcessingException {
         String sql = "insert into appoint values(?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {

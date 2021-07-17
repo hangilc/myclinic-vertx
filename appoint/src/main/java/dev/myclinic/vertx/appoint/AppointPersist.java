@@ -95,6 +95,16 @@ public class AppointPersist {
         }
     }
 
+    public static List<AppointDTO> listAppointByDateRange(Connection conn, LocalDate from, LocalDate upto)
+        throws SQLException {
+        String sql = "select * from appoint where date >= ? and date <= ?";
+        try(PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setString(1, from.toString());
+            stmt.setString(2, upto.toString());
+
+        }
+    }
+
     public static AppointDTO resultSetToAppointDTO(ResultSet rs)
             throws SQLException {
         return resultSetToAppointDTO(rs, 1);

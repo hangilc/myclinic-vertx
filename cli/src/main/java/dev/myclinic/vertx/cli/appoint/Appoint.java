@@ -39,7 +39,7 @@ public class Appoint {
         System.err.println("  add-appoint-time DATE TIME...");
     }
 
-    private static void addAppointTime(String[] args) throws Exception {
+    private static void addAppointTime(String[] args) {
         var params = new Object(){
             LocalDate date;
         };
@@ -54,12 +54,16 @@ public class Appoint {
             printHelp();
             System.exit(1);
         }
-        try(Connection conn = AppointMisc.openConnection()) {
-            for(LocalTime t: times){
-                AppointDTO app = new AppointDTO(params.date, t);
-                AppointPersist.enterAppoint(conn, app);
+        AppointMisc.withConnection(conn -> {
+            try {
+                for (LocalTime t : times) {
+                    AppointDTO app = new AppointDTO(params.date, t);
+                    AppointPersist.enterAppoint(conn, app);
+                }
+            } catch(Exception ex){
+                throw new RuntimeException(ex);
             }
-        }
+        });
     }
 
 }

@@ -24,11 +24,15 @@ class AppointMisc {
         }
     }
 
-    public static void withConnection(Consumer<Connection> consumer) {
+    public interface SqlProc {
+        void execute(Connection conn) throws Exception;
+    }
+
+    public static void withConnection(SqlProc consumer) {
         Connection conn = openConnection();
         try {
             conn.setAutoCommit(false);
-            consumer.accept(conn);
+            consumer.execute(conn);
             conn.commit();
         } catch(Exception ex){
             try {

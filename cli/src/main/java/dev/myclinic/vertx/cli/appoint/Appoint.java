@@ -2,15 +2,14 @@ package dev.myclinic.vertx.cli.appoint;
 
 import dev.myclinic.vertx.appoint.AppointDTO;
 import dev.myclinic.vertx.appoint.AppointPersist;
-import dev.myclinic.vertx.cli.Misc;
+import dev.myclinic.vertx.appoint.Misc;
 
-import java.sql.Connection;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static dev.myclinic.vertx.appoint.AppointPersist.enterAppoint;
 import static dev.myclinic.vertx.appoint.Misc.fromSqlDate;
 import static dev.myclinic.vertx.appoint.Misc.fromSqlTime;
 
@@ -26,6 +25,10 @@ public class Appoint {
                 addAppointTime(args);
                 break;
             }
+            case "put-appoint": {
+                putAppoint(args);
+                break;
+            }
             default: {
                 System.err.printf("Unknown command %s.\n", args[0]);
                 printHelp();
@@ -37,6 +40,33 @@ public class Appoint {
     private static void printHelp(){
         System.err.println("Appoint COMMAND [ARGS..]");
         System.err.println("  add-appoint-time DATE TIME...");
+        System.err.println("  put-appoint-time DATE TIME NAME [PATIENT-ID]");
+    }
+
+    private static void putAppoint(String[] args) throws Exception {
+        LocalDate date = null;
+        LocalTime time = null;
+        String name = null;
+        Integer patientId = null;
+        if( args.length == 4 || args.length == 5 ){
+            date = Misc.readAppointDate(args[1]);
+            time = Misc.readAppointTime(args[2]);
+            name = args[3];
+            if( args.length >= 5 ){
+                patientId = Integer.parseInt(args[4]);
+            }
+        } else {
+            System.err.println("Invalid args to put-appoint");
+            printHelp();
+            System.exit(1);
+        }
+        AppointDTO app = new AppointDTO(date, time);
+        app.patientName = name;
+        app.patientId = patientId;
+        app.appointedAt = LocalDateTime.now();
+        AppointMisc.withConnection(conn -> {
+            AppointPersist.enterAppoint(conn, app);
+        });
     }
 
     private static void addAppointTime(String[] args) {

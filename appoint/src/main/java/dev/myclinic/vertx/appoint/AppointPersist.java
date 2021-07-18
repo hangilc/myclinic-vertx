@@ -101,7 +101,9 @@ public class AppointPersist {
         try(PreparedStatement stmt = conn.prepareStatement(sql)){
             stmt.setString(1, from.toString());
             stmt.setString(2, upto.toString());
-
+            try(ResultSet rs = stmt.executeQuery()){
+                return resultSetToList(rs);
+            }
         }
     }
 
@@ -122,6 +124,15 @@ public class AppointPersist {
         }
         dto.appointedAt = Misc.fromSqlDatetime(rs.getString(startIndex + 4));
         return dto;
+    }
+
+    public static List<AppointDTO> resultSetToList(ResultSet rs) throws SQLException {
+        List<AppointDTO> list = new ArrayList<>();
+        while(rs.next()){
+            AppointDTO app = resultSetToAppointDTO(rs);
+            list.add(app);
+        }
+        return list;
     }
 
 }

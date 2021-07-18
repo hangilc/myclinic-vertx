@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Misc {
 
@@ -31,4 +33,35 @@ public class Misc {
         return LocalTime.parse(time, sqlTimeFormatter);
     }
 
+    public static LocalDate readAppointDate(String str){
+        Pattern pat = Pattern.compile("(\\d+-)?(\\d+)-(\\d+)");
+        Matcher m = pat.matcher(str);
+        if( m.matches() ){
+            int year;
+            if( m.group(1) == null ){
+                year = LocalDate.now().getYear();
+            } else {
+                year = Integer.parseInt(m.group(1));
+            }
+            int month, day;
+            month = Integer.parseInt(m.group(2));
+            day = Integer.parseInt(m.group(3));
+            return LocalDate.of(year, month, day);
+        } else {
+            throw new RuntimeException("Invalid date: " + str);
+        }
+    }
+
+    public static LocalTime readAppointTime(String str){
+        Pattern pat = Pattern.compile("(\\d+):(\\d+)");
+        Matcher m = pat.matcher(str);
+        if( m.matches() ){
+            return LocalTime.of(
+                    Integer.parseInt(m.group(1)),
+                    Integer.parseInt(m.group(2))
+            );
+        } else {
+            throw new RuntimeException("Invalid time: " + str);
+        }
+    }
 }

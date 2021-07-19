@@ -113,6 +113,15 @@ public class Misc {
         }
     }
 
+    public static <T> List<T> parseLines(Path path, Function<String, T> conv){
+        List<T> result = new ArrayList<>();
+        forEachLine(path, line -> {
+            T t = conv.apply(line);
+            result.add(t);
+        });
+        return result;
+    }
+
     public static void saveLines(String file, List<String> lines, Charset charset) {
         try (OutputStream os = new FileOutputStream(file);
              PrintWriter writer = new PrintWriter(os, false, charset)) {

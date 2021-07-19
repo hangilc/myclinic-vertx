@@ -36,6 +36,10 @@ class AppointBook {
         blockMap = null;
     }
 
+    public void applyLogEntries(Collection<LogEntry> entries){
+        entries.forEach(this::applyLogEntry);
+    }
+
     public void applyPatch(CovidVaccine.PatchCommand patch){
         LogEntry entry = CovidMisc.patchCommandToLogEntry(patch);
         applyLogEntry(entry);
@@ -57,6 +61,10 @@ class AppointBook {
                 LogBook.parseLog(line, entry -> logs.add(entry));
             });
         }
+    }
+
+    public void readLogs(){
+        ensureLogs();
     }
 
     private void ensurePatientMap() {
@@ -154,12 +162,19 @@ class AppointBook {
     }
 
     public void checkOverbooking() {
-        for (AppointBlock block : blockMap.values()) {
+        for(LocalDateTime at: listAppointTime()){
+            AppointBlock block = getAppointBlock(at);
             if (block.isOverbooking()) {
                 String msg = String.format("Overbooking at %s!", CovidMisc.encodeAppointTime(block.appointDate.at));
                 throw new RuntimeException(msg);
             }
         }
+//        for (AppointBlock block : blockMap.values()) {
+//            if (block.isOverbooking()) {
+//                String msg = String.format("Overbooking at %s!", CovidMisc.encodeAppointTime(block.appointDate.at));
+//                throw new RuntimeException(msg);
+//            }
+//        }
     }
 
     public Patient getPatient(int patientId) {

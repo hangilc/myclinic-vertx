@@ -253,13 +253,25 @@ public class CovidVaccine {
             dummyAppoints.add(DummyAppoint.parse(args[i]));
         }
         book.readLogs();
-        dummyAppoints.forEach(da -> {
-            List<LogEntry> entries = dummyAppoint(da.at, da.n);
+        int dummyPatientId = -1;
+        for(DummyAppoint da: dummyAppoints){
+            List<LogEntry> entries = new ArrayList<>();
+            for(int i=0;i<da.n;i++){
+                int patientId = dummyPatientId--;
+                StateLog log = new StateLog(patientId, new FirstShotAppoint(da.at));
+                entries.add(log);
+                LocalDateTime at2 = book.findVacancy(da.at.toLocalDate(), dt -> true);
+                if( at2 == null ){
+                    throw new RuntimeException("Cannot reserve 2nd shot: " + da.at);
+                }
+                StateLog log2 = new StateLog(patientId, new EphemeralSecondShotAppoint(at2));
+                entries.add(log2);
+            }
             book.applyLogEntries(entries);
-        });
+        }
         book.checkOverbooking();
         Path supplyFile = Path.of(CovidVaccineDir, "supply.txt");
-        List<Vial> vials = Misc.parseLines(supplyFile, Vial::parse);
+        List<VialDelivered> vialDelivereds = Misc.parseLines(supplyFile, VialDelivered::parse);
         for (LocalDateTime at : book.listAppointTime()) {
             AppointDate appointDate = book.getAppointDate(at);
             AppointBlock block = book.getAppointBlock(at);
@@ -267,9 +279,9 @@ public class CovidVaccine {
                 int capacity = appointDate.capacity;
                 int apps = block.slots.size();
                 int req = (apps + 5) / 6;
-                int available = Vial.availableAt(vials, at.toLocalDate());
+                int available = VialDelivered.availableAt(vialDelivereds, at.toLocalDate());
                 int balance = available - req;
-                Vial.consume(vials, at.toLocalDate(), req);
+                VialDelivered.consume(vialDelivereds, at.toLocalDate(), req);
                 System.out.printf("%s %d/%d %d\n",
                         appointTimeRep(at),
                         apps,

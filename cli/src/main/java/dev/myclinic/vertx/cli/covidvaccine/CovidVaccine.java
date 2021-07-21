@@ -284,8 +284,8 @@ public class CovidVaccine {
             String arg = args[i];
             VialDelivered vialDelivered = tryParseVialArg(arg);
             if( vialDelivered != null ){
-                System.out.println(vialDelivered);
                 vialDelivereds.add(vialDelivered);
+                System.out.println(vialDelivered);
                 continue;
             }
             DummyAppoint dummyAppoint = DummyAppoint.tryParse(arg);
@@ -301,6 +301,7 @@ public class CovidVaccine {
                     }
                     StateLog log2 = new StateLog(patientId, new EphemeralSecondShotAppoint(at2));
                     book.applyLogEntry(log2);
+                    System.out.printf("[Dummy Appoint] %s -- %s\n", appointTimeRep(dummyAppoint.at), appointTimeRep(at2));
                 }
                 continue;
             }

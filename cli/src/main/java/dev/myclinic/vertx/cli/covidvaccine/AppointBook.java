@@ -169,12 +169,6 @@ class AppointBook {
                 throw new RuntimeException(msg);
             }
         }
-//        for (AppointBlock block : blockMap.values()) {
-//            if (block.isOverbooking()) {
-//                String msg = String.format("Overbooking at %s!", CovidMisc.encodeAppointTime(block.appointDate.at));
-//                throw new RuntimeException(msg);
-//            }
-//        }
     }
 
     public Patient getPatient(int patientId) {

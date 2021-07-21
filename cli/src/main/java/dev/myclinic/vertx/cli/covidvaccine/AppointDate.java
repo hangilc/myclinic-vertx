@@ -17,7 +17,7 @@ class AppointDate {
         this.capacity = capacity;
     }
 
-    private static final Pattern pat = Pattern.compile("^(\\d+-\\d+-\\d+)\\s+(\\d+):(\\d+)\\s+(\\d+)");
+    private static final Pattern pat = Pattern.compile("^(\\d+-\\d+-\\d+)\\s+(\\d+):(\\d+)\\s+(\\d+).*");
 
     public static AppointDate parse(String line) {
         Matcher m = pat.matcher(line);

@@ -205,8 +205,28 @@ public class CovidVaccine {
         System.out.println("  injection-done APPOINT-TIME");
         System.out.println("  ephemeral-to-real PATIENT-ID ...");
         System.out.println("  print-2nd-shot-appoints APPOINT-TIME");
-        System.out.println("  vial-balance [APPOINT-TIME+=N]...");
+        System.out.println("  vial-balance [APPOINT-TIME+=N|SUPPLY-DATE=N]...");
         System.out.println("  help");
+    }
+
+    private static VialDelivered tryParseVialArg(String s){
+        int index = s.indexOf("=");
+        if( index < 0 ){
+            return null;
+        }
+        String dateArg = s.substring(0, index);
+        String nArg = s.substring(index+1);
+        LocalDate date = CovidMisc.tryParseDate(dateArg);
+        if( date != null ){
+            try {
+                int n = Integer.parseInt(nArg);
+                return new VialDelivered(date, n);
+            } catch(NumberFormatException e){
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 
     private static class DummyAppoint {
@@ -248,9 +268,16 @@ public class CovidVaccine {
     }
 
     private static void vialBalance(String[] args) throws Exception {
+        Path supplyFile = Path.of(CovidVaccineDir, "supply.txt");
+        List<VialDelivered> vialDelivereds = Misc.parseLines(supplyFile, VialDelivered::parse);
         List<DummyAppoint> dummyAppoints = new ArrayList<>();
         for (int i = 1; i < args.length; i++) {
-            dummyAppoints.add(DummyAppoint.parse(args[i]));
+            String arg = args[i];
+            VialDelivered vialDelivered = tryParseVialArg(arg);
+            if( vialDelivered != null ){
+                System.out.println(vialDelivered);
+                vialDelivereds.add(vialDelivered);
+            }
         }
         book.readLogs();
         int dummyPatientId = -1;
@@ -270,8 +297,6 @@ public class CovidVaccine {
             book.applyLogEntries(entries);
         }
         book.checkOverbooking();
-        Path supplyFile = Path.of(CovidVaccineDir, "supply.txt");
-        List<VialDelivered> vialDelivereds = Misc.parseLines(supplyFile, VialDelivered::parse);
         for (LocalDateTime at : book.listAppointTime()) {
             AppointDate appointDate = book.getAppointDate(at);
             AppointBlock block = book.getAppointBlock(at);
@@ -281,7 +306,9 @@ public class CovidVaccine {
                 int req = (apps + 5) / 6;
                 int available = VialDelivered.availableAt(vialDelivereds, at.toLocalDate());
                 int balance = available - req;
-                VialDelivered.consume(vialDelivereds, at.toLocalDate(), req);
+                if( req > 0 ) {
+                    VialDelivered.consume(vialDelivereds, at.toLocalDate(), req);
+                }
                 System.out.printf("%s %d/%d %d\n",
                         appointTimeRep(at),
                         apps,

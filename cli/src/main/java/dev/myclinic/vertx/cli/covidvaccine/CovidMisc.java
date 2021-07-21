@@ -11,6 +11,8 @@ import static dev.myclinic.vertx.cli.covidvaccine.CovidVaccine.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CovidMisc {
 
@@ -85,6 +87,27 @@ public class CovidMisc {
             return new PhoneLog(patchPhone.patientId, patchPhone.phone);
         } else {
             throw new RuntimeException("Unknown patch command: " + patch);
+        }
+    }
+
+    public static LocalDate tryParseDate(String src){
+        Pattern pat = Pattern.compile("((\\d+)-)?(\\d+)-(\\d+)");
+        Matcher m = pat.matcher(src);
+        if( m.matches() ){
+            int month = Integer.parseInt(m.group(3));
+            int day = Integer.parseInt(m.group(4));
+            int year;
+            if( m.group(1) == null ){
+                year = LocalDate.now().getYear();
+                if( month == 12 || month == 11 ){
+                    year += 1;
+                }
+            } else {
+                year = Integer.parseInt(m.group(2));
+            }
+            return LocalDate.of(year, month, day);
+        } else {
+            return null;
         }
     }
 }

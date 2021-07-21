@@ -238,16 +238,24 @@ public class CovidVaccine {
             this.n = n;
         }
 
-        static DummyAppoint parse(String str) {
+        static DummyAppoint tryParse(String str) {
             int i = str.indexOf("+=");
             if (i < 0) {
                 throw new RuntimeException("Invalid dummy appoint: " + str);
             }
             String left = str.substring(0, i);
             String right = str.substring(i + 2);
-            LocalDateTime at = parseAppointTime(left);
-            int n = Integer.parseInt(right);
-            return new DummyAppoint(at, n);
+            LocalDateTime at = tryParseAppointTime(left);
+            if( at != null ){
+                try {
+                    int n = Integer.parseInt(right);
+                    return new DummyAppoint(at, n);
+                } catch(NumberFormatException e){
+                    return null;
+                }
+            } else {
+                return null;
+            }
         }
     }
 
@@ -270,31 +278,33 @@ public class CovidVaccine {
     private static void vialBalance(String[] args) throws Exception {
         Path supplyFile = Path.of(CovidVaccineDir, "supply.txt");
         List<VialDelivered> vialDelivereds = Misc.parseLines(supplyFile, VialDelivered::parse);
-        List<DummyAppoint> dummyAppoints = new ArrayList<>();
+        book.readLogs();
+        int dummyPatientId = -1;
         for (int i = 1; i < args.length; i++) {
             String arg = args[i];
             VialDelivered vialDelivered = tryParseVialArg(arg);
             if( vialDelivered != null ){
                 System.out.println(vialDelivered);
                 vialDelivereds.add(vialDelivered);
+                continue;
             }
-        }
-        book.readLogs();
-        int dummyPatientId = -1;
-        for(DummyAppoint da: dummyAppoints){
-            List<LogEntry> entries = new ArrayList<>();
-            for(int i=0;i<da.n;i++){
-                int patientId = dummyPatientId--;
-                StateLog log = new StateLog(patientId, new FirstShotAppoint(da.at));
-                entries.add(log);
-                LocalDateTime at2 = book.findVacancy(da.at.toLocalDate(), dt -> true);
-                if( at2 == null ){
-                    throw new RuntimeException("Cannot reserve 2nd shot: " + da.at);
+            DummyAppoint dummyAppoint = DummyAppoint.tryParse(arg);
+            if( dummyAppoint != null ){
+                for(int j=0;j<dummyAppoint.n;j++){
+                    int patientId = dummyPatientId--;
+                    StateLog log1 = new StateLog(patientId, new FirstShotAppoint(dummyAppoint.at));
+                    book.applyLogEntry(log1);
+                    LocalDateTime at2 = book.findVacancy(dummyAppoint.at.toLocalDate().plus(21, ChronoUnit.DAYS),
+                            dt -> true);
+                    if( at2 == null ){
+                        throw new RuntimeException("Cannot find 2nd shot for: " + dummyAppoint.at);
+                    }
+                    StateLog log2 = new StateLog(patientId, new EphemeralSecondShotAppoint(at2));
+                    book.applyLogEntry(log2);
                 }
-                StateLog log2 = new StateLog(patientId, new EphemeralSecondShotAppoint(at2));
-                entries.add(log2);
+                continue;
             }
-            book.applyLogEntries(entries);
+            throw new RuntimeException("Invalid arg: " + arg);
         }
         book.checkOverbooking();
         for (LocalDateTime at : book.listAppointTime()) {
@@ -1631,6 +1641,14 @@ public class CovidVaccine {
             );
         }
         throw new RuntimeException("Cannot parse appoint time: " + src);
+    }
+
+    static LocalDateTime tryParseAppointTime(String src){
+        try {
+            return parseAppointTime(src);
+        } catch(Exception e){
+            return null;
+        }
     }
 
     static String appointTimeRep(LocalDateTime at) {

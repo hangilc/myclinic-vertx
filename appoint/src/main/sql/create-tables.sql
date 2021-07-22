@@ -7,3 +7,14 @@ create table if not exists appoint (
     primary key(date, time)
 );
 
+create table if not exists appoint_cancel (
+    date text not null,
+    time text not null,
+    patient_name text not null,
+    patient_id integer,
+    canceled_at text not null,
+    primary key(date, time, patient_name, canceled_at)
+);
+
+
+

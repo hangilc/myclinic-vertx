@@ -1,7 +1,5 @@
 package dev.myclinic.vertx.appoint;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,10 +9,10 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AppointPersist {
+class AppointPersist {
 
     public static void enterAppoint(Connection conn, AppointDTO appoint)
-            throws SQLException, JsonProcessingException {
+            throws SQLException {
         String sql = "insert into appoint values(?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, appoint.date.toString());
@@ -95,18 +93,6 @@ public class AppointPersist {
         }
     }
 
-    public static List<AppointDTO> listAppointByDateRange(Connection conn, LocalDate from, LocalDate upto)
-        throws SQLException {
-        String sql = "select * from appoint where date >= ? and date <= ?";
-        try(PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setString(1, from.toString());
-            stmt.setString(2, upto.toString());
-            try(ResultSet rs = stmt.executeQuery()){
-                return resultSetToList(rs);
-            }
-        }
-    }
-
     public static AppointDTO resultSetToAppointDTO(ResultSet rs)
             throws SQLException {
         return resultSetToAppointDTO(rs, 1);
@@ -114,7 +100,7 @@ public class AppointPersist {
 
     public static AppointDTO resultSetToAppointDTO(ResultSet rs, int startIndex)
             throws SQLException {
-        LocalDate date = rs.getObject(startIndex, LocalDate.class);
+        LocalDate date = LocalDate.parse(rs.getString(startIndex));
         LocalTime time = Misc.fromSqlTime(rs.getString(startIndex + 1));
         AppointDTO dto = new AppointDTO(date, time);
         dto.patientName = rs.getString(startIndex + 2);
@@ -122,17 +108,56 @@ public class AppointPersist {
         if (rs.wasNull()) {
             dto.patientId = null;
         }
-        dto.appointedAt = Misc.fromSqlDatetime(rs.getString(startIndex + 4));
+        String appointedAtRep = rs.getString(startIndex + 4);
+        dto.appointedAt = appointedAtRep == null ? null : Misc.fromSqlDatetime(appointedAtRep);
         return dto;
     }
 
-    public static List<AppointDTO> resultSetToList(ResultSet rs) throws SQLException {
+    public static List<AppointDTO> resultSetToAppointList(ResultSet rs) throws SQLException {
         List<AppointDTO> list = new ArrayList<>();
         while(rs.next()){
             AppointDTO app = resultSetToAppointDTO(rs);
             list.add(app);
         }
         return list;
+    }
+
+    static void enterCancel(Connection conn, AppointCancelDTO cancel) throws SQLException {
+        String sql = "insert into appoint_cancel values(?, ?, ?, ?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, cancel.date.toString());
+            stmt.setString(2, Misc.toSqlTime(cancel.time));
+            if (cancel.patientName == null) {
+                stmt.setNull(3, java.sql.Types.NULL);
+            } else {
+                stmt.setString(3, cancel.patientName);
+            }
+            if (cancel.patientId == null) {
+                stmt.setNull(4, java.sql.Types.NULL);
+            } else {
+                stmt.setInt(4, cancel.patientId);
+            }
+            if (cancel.canceledAt == null) {
+                stmt.setNull(5, java.sql.Types.NULL);
+            } else {
+                stmt.setString(5, Misc.toSqlDatetime(cancel.canceledAt));
+            }
+            stmt.executeUpdate();
+        }
+    }
+
+    public static AppointCancelDTO resultSetToAppointCancelDTO(ResultSet rs, int startIndex)
+            throws SQLException {
+        AppointCancelDTO dto = new AppointCancelDTO();
+        dto.date = LocalDate.parse(rs.getString(startIndex));
+        dto.time = Misc.fromSqlTime(rs.getString(startIndex + 1));
+        dto.patientName = rs.getString(startIndex + 2);
+        dto.patientId = rs.getInt(startIndex + 3);
+        if (rs.wasNull()) {
+            dto.patientId = null;
+        }
+        dto.canceledAt = Misc.fromSqlDatetime(rs.getString(startIndex + 4));
+        return dto;
     }
 
 }

@@ -1,6 +1,7 @@
 package dev.myclinic.vertx.appoint;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,53 +10,69 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AppointAPI {
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private AppointAPI() {
 
     }
 
     public static void createAppointTime(Connection conn, LocalDate date, LocalTime time)
-            throws SQLException {
-        AppointDTO app = new AppointDTO(date, time);
-        AppointPersist.enterAppoint(conn, app);
+            throws SQLException, JsonProcessingException {
+        AppointPersist.enterAppoint(conn, date, time);
+        Map<String, Object> e = new HashMap<>();
+        e.put("kind", "created");
+        e.put("date", date);
+        e.put("time", time);
+        String body = mapper.writeValueAsString(e);
+        AppointPersist.enterAppointEvent(conn, body);
     }
 
-    public static void putAppoint(Connection conn, LocalDate date, LocalTime time, String patientName)
-            throws SQLException {
-        AppointDTO app = AppointPersist.getAppoint(conn, date, time);
-        if( app == null ){
-            String msg = String.format("Cannot make appoint at: %s %s", date, time);
+    public static void putAppoint(Connection conn, AppointDTO appoint)
+            throws SQLException, JsonProcessingException {
+        AppointDTO curr = AppointPersist.getAppoint(conn, appoint.date, appoint.time);
+        if( curr == null ){
+            String msg = String.format("Cannot make appoint at: %s %s", appoint.date, appoint.time);
             throw new RuntimeException(msg);
         }
-        if( app.patientName != null || app.patientId != null ){
+        if( curr.patientName != null ){
             throw new RuntimeException("Appoint already exists.");
         }
-        app.patientName = patientName;
-        app.appointedAt = LocalDateTime.now();
-        int mod = AppointPersist.updateAppoint(conn, app);
-        if( mod != 1 ){
-            throw new RuntimeException("Update appoint failed.");
-        }
+        AppointPersist.updateAppoint(conn, appoint);
+        Map<String, Object> e = new HashMap<>();
+        e.put("kind", "updated");
+        e.put("date", appoint.date);
+        e.put("time", appoint.time);
+        e.put("patient_name", appoint.patientName);
+        e.put("patient_id", appoint.patientId);
+        e.put("memo", appoint.memo);
+        String body = mapper.writeValueAsString(e);
+        AppointPersist.enterAppointEvent(conn, body);
     }
 
-    public static void cancelAppoint(Connection conn, LocalDate date, LocalTime time) throws SQLException {
+    public static void cancelAppoint(Connection conn, LocalDate date, LocalTime time)
+            throws SQLException, JsonProcessingException {
         AppointDTO app = AppointPersist.getAppoint(conn, date, time);
         if( app == null || app.patientName == null ){
             throw new RuntimeException("No such appoint.");
         }
-        AppointCancelDTO cancel = new AppointCancelDTO();
-        cancel.date = app.date;
-        cancel.time = app.time;
-        cancel.patientName = app.patientName;
-        cancel.patientId = app.patientId;
-        cancel.canceledAt = LocalDateTime.now();
-        AppointPersist.enterCancel(conn, cancel);
+        Map<String, Object> e = new HashMap<>();
+        e.put("kind", "canceled");
+        e.put("date", app.date);
+        e.put("time", app.time);
+        e.put("patient_name", app.patientName);
+        e.put("patient_id", app.patientId);
+        e.put("memo", app.memo);
+        String body = mapper.writeValueAsString(e);
+        AppointPersist.enterAppointEvent(conn, body);
         app.patientName = null;
-        app.patientId = null;
-        app.appointedAt = null;
+        app.patientId = 0;
+        app.memo = "";
         AppointPersist.updateAppoint(conn, app);
     }
 
@@ -70,7 +87,5 @@ public class AppointAPI {
             }
         }
     }
-
-
 
 }

@@ -48,7 +48,7 @@ public class Appoint {
             LocalDate date;
             LocalTime time;
             String name;
-            Integer patientId;
+            int patientId;
         };
         if (args.length == 4 || args.length == 5) {
             params.date = AppointMisc.readAppointDate(args[1]);
@@ -63,7 +63,10 @@ public class Appoint {
             System.exit(1);
         }
         AppointMisc.withConnection(conn -> {
-            AppointAPI.putAppoint(conn, params.date, params.time, params.name);
+            AppointDTO dto = new AppointDTO(params.date, params.time);
+            dto.patientName = params.name;
+            dto.patientId = params.patientId;
+            AppointAPI.putAppoint(conn, dto);
         });
     }
 

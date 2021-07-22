@@ -11,27 +11,46 @@ import java.util.List;
 
 class AppointPersist {
 
-    public static void enterAppoint(Connection conn, AppointDTO appoint)
+    public static void enterAppoint(Connection conn, LocalDate date, LocalTime time)
             throws SQLException {
-        String sql = "insert into appoint values(?, ?, ?, ?, ?)";
+        String sql = "insert into appoint values(?, ?, null, 0, '')";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, appoint.date.toString());
-            stmt.setString(2, Misc.toSqlTime(appoint.time));
+            stmt.setString(1, date.toString());
+            stmt.setString(2, Misc.toSqlTime(time));
+            stmt.executeUpdate();
+        }
+    }
+
+    public static int updateAppoint(Connection conn, AppointDTO appoint) throws SQLException {
+        String sql = "update appoint set patient_name = ?, patient_id = ?, memo = ? " +
+                " where date = ? and time = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             if (appoint.patientName == null) {
-                stmt.setNull(3, java.sql.Types.NULL);
+                stmt.setNull(1, java.sql.Types.NULL);
             } else {
-                stmt.setString(3, appoint.patientName);
+                stmt.setString(1, appoint.patientName);
             }
-            if (appoint.patientId == null) {
-                stmt.setNull(4, java.sql.Types.NULL);
-            } else {
-                stmt.setInt(4, appoint.patientId);
-            }
-            if (appoint.appointedAt == null) {
-                stmt.setNull(5, java.sql.Types.NULL);
-            } else {
-                stmt.setString(5, Misc.toSqlDatetime(appoint.appointedAt));
-            }
+            stmt.setInt(2, appoint.patientId);
+            stmt.setString(3, appoint.memo);
+            stmt.setString(4, appoint.date.toString());
+            stmt.setString(5, Misc.toSqlTime(appoint.time));
+            return stmt.executeUpdate();
+        }
+    }
+
+    public static int deleteAppoint(Connection conn, LocalDate date, LocalTime time) throws SQLException {
+        String sql = "delete from appoint where date = ? and time - ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, date.toString());
+            stmt.setString(2, Misc.toSqlTime(time));
+            return stmt.executeUpdate();
+        }
+    }
+
+    public static void enterAppointEvent(Connection conn, String body) throws SQLException {
+        String sql = "insert into appoint_event(body) values(?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, body);
             stmt.executeUpdate();
         }
     }
@@ -59,57 +78,14 @@ class AppointPersist {
         }
     }
 
-    public static int updateAppoint(Connection conn, AppointDTO appoint) throws SQLException {
-        String sql = "update appoint set patient_name = ?, patient_id = ?, appointed_at = ? " +
-                " where date = ? and time = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            if (appoint.patientName == null) {
-                stmt.setNull(1, java.sql.Types.NULL);
-            } else {
-                stmt.setString(1, appoint.patientName);
-            }
-            if (appoint.patientId == null) {
-                stmt.setNull(2, java.sql.Types.NULL);
-            } else {
-                stmt.setInt(2, appoint.patientId);
-            }
-            if (appoint.appointedAt == null) {
-                stmt.setNull(3, java.sql.Types.NULL);
-            } else {
-                stmt.setString(3, Misc.toSqlDatetime(appoint.appointedAt));
-            }
-            stmt.setString(4, appoint.date.toString());
-            stmt.setString(5, Misc.toSqlTime(appoint.time));
-            return stmt.executeUpdate();
-        }
-    }
-
-    public static int deleteAppoint(Connection conn, LocalDate date, LocalTime time) throws SQLException {
-        String sql = "delete from appoint where date = ? and time - ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, date.toString());
-            stmt.setString(2, Misc.toSqlTime(time));
-            return stmt.executeUpdate();
-        }
-    }
-
     public static AppointDTO resultSetToAppointDTO(ResultSet rs)
             throws SQLException {
-        return resultSetToAppointDTO(rs, 1);
-    }
-
-    public static AppointDTO resultSetToAppointDTO(ResultSet rs, int startIndex)
-            throws SQLException {
-        LocalDate date = LocalDate.parse(rs.getString(startIndex));
-        LocalTime time = Misc.fromSqlTime(rs.getString(startIndex + 1));
-        AppointDTO dto = new AppointDTO(date, time);
-        dto.patientName = rs.getString(startIndex + 2);
-        dto.patientId = rs.getInt(startIndex + 3);
-        if (rs.wasNull()) {
-            dto.patientId = null;
-        }
-        String appointedAtRep = rs.getString(startIndex + 4);
-        dto.appointedAt = appointedAtRep == null ? null : Misc.fromSqlDatetime(appointedAtRep);
+        AppointDTO dto = new AppointDTO();
+        dto.date = LocalDate.parse(rs.getString(1));
+        dto.time = Misc.fromSqlTime(rs.getString(2));
+        dto.patientName = rs.getString(3);
+        dto.patientId = rs.getInt(4);
+        dto.memo = rs.getString(5);
         return dto;
     }
 
@@ -120,44 +96,6 @@ class AppointPersist {
             list.add(app);
         }
         return list;
-    }
-
-    static void enterCancel(Connection conn, AppointCancelDTO cancel) throws SQLException {
-        String sql = "insert into appoint_cancel values(?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, cancel.date.toString());
-            stmt.setString(2, Misc.toSqlTime(cancel.time));
-            if (cancel.patientName == null) {
-                stmt.setNull(3, java.sql.Types.NULL);
-            } else {
-                stmt.setString(3, cancel.patientName);
-            }
-            if (cancel.patientId == null) {
-                stmt.setNull(4, java.sql.Types.NULL);
-            } else {
-                stmt.setInt(4, cancel.patientId);
-            }
-            if (cancel.canceledAt == null) {
-                stmt.setNull(5, java.sql.Types.NULL);
-            } else {
-                stmt.setString(5, Misc.toSqlDatetime(cancel.canceledAt));
-            }
-            stmt.executeUpdate();
-        }
-    }
-
-    public static AppointCancelDTO resultSetToAppointCancelDTO(ResultSet rs, int startIndex)
-            throws SQLException {
-        AppointCancelDTO dto = new AppointCancelDTO();
-        dto.date = LocalDate.parse(rs.getString(startIndex));
-        dto.time = Misc.fromSqlTime(rs.getString(startIndex + 1));
-        dto.patientName = rs.getString(startIndex + 2);
-        dto.patientId = rs.getInt(startIndex + 3);
-        if (rs.wasNull()) {
-            dto.patientId = null;
-        }
-        dto.canceledAt = Misc.fromSqlDatetime(rs.getString(startIndex + 4));
-        return dto;
     }
 
 }

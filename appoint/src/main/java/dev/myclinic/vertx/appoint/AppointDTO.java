@@ -14,12 +14,17 @@ public class AppointDTO {
     public LocalDate date;
     public LocalTime time;
     public String patientName;
-    public Integer patientId;
-    public LocalDateTime appointedAt;
+    public int patientId;
+    public String memo;
+
+    public AppointDTO(){
+
+    }
 
     public AppointDTO(LocalDate date, LocalTime time) {
         this.date = date;
         this.time = time;
+        this.memo = "";
     }
 
     @Override
@@ -29,7 +34,7 @@ public class AppointDTO {
                 ", time=" + time +
                 ", patientName='" + patientName + '\'' +
                 ", patientId=" + patientId +
-                ", appointedAt=" + appointedAt +
+                ", memo=" + memo +
                 '}';
     }
 

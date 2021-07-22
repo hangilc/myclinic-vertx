@@ -13,6 +13,10 @@ public class Misc {
     private static final DateTimeFormatter sqlDateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
     private static final DateTimeFormatter sqlTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
+    public static String toSqlDate(LocalDate date) {
+        return date.toString();
+    }
+
     public static String toSqlTime(LocalTime time){
         return time.format(sqlTimeFormatter);
     }

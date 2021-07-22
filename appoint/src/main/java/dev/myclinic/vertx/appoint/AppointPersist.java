@@ -55,29 +55,6 @@ class AppointPersist {
         }
     }
 
-    public static AppointDTO getAppoint(Connection conn, LocalDate atDate, LocalTime atTime)
-            throws SQLException {
-        String sql = "select * from appoint where date = ? and time = ?";
-        List<AppointDTO> result = new ArrayList<>();
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, atDate.toString());
-            stmt.setString(2, Misc.toSqlTime(atTime));
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(resultSetToAppointDTO(rs));
-                }
-                if (result.size() == 1) {
-                    return result.get(0);
-                } else if (result.size() == 0) {
-                    return null;
-                } else {
-                    String msg = String.format("Multiple appoints at %s %s.", atDate, atTime);
-                    throw new RuntimeException(msg);
-                }
-            }
-        }
-    }
-
     public static AppointDTO resultSetToAppointDTO(ResultSet rs)
             throws SQLException {
         AppointDTO dto = new AppointDTO();

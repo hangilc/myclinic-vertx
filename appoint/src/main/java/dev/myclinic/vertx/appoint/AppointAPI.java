@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ public class AppointAPI {
 
     public static void putAppoint(Connection conn, AppointDTO appoint)
             throws SQLException, JsonProcessingException {
-        AppointDTO curr = AppointPersist.getAppoint(conn, appoint.date, appoint.time);
+        AppointDTO curr = getAppoint(conn, appoint.date, appoint.time);
         if (curr == null) {
             String msg = String.format("Cannot make appoint at: %s %s", appoint.date, appoint.time);
             throw new RuntimeException(msg);
@@ -56,7 +57,7 @@ public class AppointAPI {
 
     public static void cancelAppoint(Connection conn, LocalDate date, LocalTime time)
             throws SQLException, JsonProcessingException {
-        AppointDTO app = AppointPersist.getAppoint(conn, date, time);
+        AppointDTO app = getAppoint(conn, date, time);
         if (app == null || app.patientName == null) {
             throw new RuntimeException("No such appoint.");
         }
@@ -73,6 +74,27 @@ public class AppointAPI {
         app.patientId = 0;
         app.memo = "";
         AppointPersist.updateAppoint(conn, app);
+    }
+
+    public static AppointDTO getAppoint(Connection conn, LocalDate atDate, LocalTime atTime)
+            throws SQLException {
+        String sql = "select * from appoint where date = ? and time = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, atDate.toString());
+            stmt.setString(2, Misc.toSqlTime(atTime));
+            try (ResultSet rs = stmt.executeQuery()) {
+                if( rs.next() ){
+                    AppointDTO app = AppointPersist.resultSetToAppointDTO(rs);
+                    if( rs.next() ){
+                        throw new RuntimeException("Cannot happen (mutltiple appoint).");
+                    } else {
+                        return app;
+                    }
+                } else {
+                    return null;
+                }
+            }
+        }
     }
 
     public static List<AppointDTO> listAppointTime(Connection conn, LocalDate from, LocalDate upto)

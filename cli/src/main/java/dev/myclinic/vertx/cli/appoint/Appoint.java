@@ -31,6 +31,10 @@ public class Appoint {
                 putAppoint(args);
                 break;
             }
+            case "cancel-appoint": {
+                cancelAppoint(args);
+                break;
+            }
             default: {
                 System.err.printf("Unknown command %s.\n", args[0]);
                 printHelp();
@@ -43,7 +47,41 @@ public class Appoint {
         System.err.println("Appoint COMMAND [ARGS..]");
         System.err.println("  add-appoint-time DATE TIME...");
         System.err.println("  list-appoint-time");
-        System.err.println("  put-appoint-time DATE TIME NAME [PATIENT-ID]");
+        System.err.println("  put-appoint DATE TIME NAME [PATIENT-ID]");
+        System.err.println("  cancel-appoint DATE TIME");
+    }
+
+    private static void cancelAppoint(String[] args) throws Exception {
+        var params = new Object(){
+            LocalDate date;
+            LocalTime time;
+        };
+        if( args.length == 3 ){
+            params.date = AppointMisc.readAppointDate(args[1]);
+            params.time = AppointMisc.readAppointTime(args[2]);
+        } else {
+            System.err.println("Invalid args to cancel-appoint");
+            printHelp();
+            System.exit(1);
+        }
+        AppointMisc.withConnection(conn -> {
+            AppointDTO app = AppointAPI.getAppoint(conn, params.date, params.time);
+            if( app == null || app.patientName == null ){
+                System.out.println("Cannot find appoint.");
+                System.exit(1);
+            } else {
+                confirmProceed(() -> {
+                    System.out.println("予約のキャンセル");
+                    System.out.println(app.date);
+                    System.out.println(app.time);
+                    System.out.println(app.patientName);
+                    if( app.patientId > 0 ){
+                        System.out.printf("patient-id: %d\n", app.patientId);
+                    }
+                });
+                AppointAPI.cancelAppoint(conn, params.date, params.time);
+            }
+        });
     }
 
     private static void putAppoint(String[] args) throws Exception {
@@ -65,6 +103,14 @@ public class Appoint {
             printHelp();
             System.exit(1);
         }
+        confirmProceed(() -> {
+            System.out.println(params.date);
+            System.out.println(params.time);
+            System.out.println(params.name);
+            if( params.patientId > 0 ) {
+                System.out.println(params.patientId);
+            }
+        });
         AppointMisc.withConnection(conn -> {
             AppointDTO dto = new AppointDTO(params.date, params.time);
             dto.patientName = params.name;

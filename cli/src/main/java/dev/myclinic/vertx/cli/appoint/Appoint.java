@@ -2,11 +2,14 @@ package dev.myclinic.vertx.cli.appoint;
 
 import dev.myclinic.vertx.appoint.AppointAPI;
 import dev.myclinic.vertx.appoint.AppointDTO;
+import dev.myclinic.vertx.cli.Misc;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 public class Appoint {
 
@@ -78,7 +81,6 @@ public class Appoint {
             for (AppointDTO app : apps) {
                 System.out.println(app);
             }
-
         });
     }
 
@@ -97,11 +99,25 @@ public class Appoint {
             printHelp();
             System.exit(1);
         }
+        confirmProceed(() -> {
+            System.out.println(params.date);
+            times.forEach(System.out::println);
+        });
         AppointMisc.withConnection(conn -> {
             for (LocalTime t : times) {
                 AppointAPI.createAppointTime(conn, params.date, t);
             }
         });
+    }
+
+    private static void confirmProceed(Runnable prompt){
+        prompt.run();
+        System.console().writer().print("Proceed? (Y/N) ");
+        System.console().writer().flush();
+        String input = System.console().readLine();
+        if (!input.startsWith("Y")) {
+            System.exit(1);
+        }
     }
 
 }

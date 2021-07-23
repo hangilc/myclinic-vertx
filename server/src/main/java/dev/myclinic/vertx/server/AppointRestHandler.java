@@ -1,15 +1,24 @@
 package dev.myclinic.vertx.server;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import dev.myclinic.vertx.appoint.AppointAPI;
 import dev.myclinic.vertx.util.DateTimeUtil;
+import io.jsonwebtoken.io.SerializationException;
+import io.jsonwebtoken.io.Serializer;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Map;
 
@@ -21,7 +30,39 @@ public class AppointRestHandler implements Handler<RoutingContext> {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(LocalDate.class, new LocalDateSerializer());
+        module.addSerializer(LocalTime.class, new LocalTimeSerializer());
+        mapper.registerModule(module);
+    }
 
+    public static class LocalDateSerializer extends JsonSerializer<LocalDate> {
+
+        private static final DateTimeFormatter sqlDateFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd");
+
+        @Override
+        public void serialize(LocalDate localDate, JsonGenerator gen, SerializerProvider provider)
+                throws IOException {
+            if( localDate == null ){
+                gen.writeNull();
+            } else {
+                gen.writeString(localDate.format(sqlDateFormatter));
+            }
+        }
+    }
+
+    public static class LocalTimeSerializer extends JsonSerializer<LocalTime> {
+        private static final DateTimeFormatter sqlTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+        @Override
+        public void serialize(LocalTime localTime, JsonGenerator gen, SerializerProvider provider)
+                throws IOException {
+            if( localTime == null ){
+                gen.writeNull();
+            } else {
+                gen.writeString(localTime.format(sqlTimeFormatter));
+            }
+        }
     }
 
     @Override

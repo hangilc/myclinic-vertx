@@ -116,9 +116,11 @@ public class AppointAPI {
             stmt.setString(1, from.toString());
             stmt.setString(2, upto.toString());
             try (ResultSet rs = stmt.executeQuery()) {
-                return new WithEventId<>(
-                        AppointPersist.resultSetToAppointList(rs),
-                        getLastAppointEventId(conn));
+                List<AppointDTO> result = new ArrayList<>();
+                while(rs.next()) {
+                    result.add(AppointPersist.resultSetToAppointDTO(rs));
+                }
+                return new WithEventId<>(result, getLastAppointEventId(conn));
             }
         }
     }

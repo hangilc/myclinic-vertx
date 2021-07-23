@@ -19,7 +19,6 @@ import dev.myclinic.vertx.meisai.SectionItem;
 import dev.myclinic.vertx.util.DateTimeUtil;
 import dev.myclinic.vertx.util.HokenUtil;
 import dev.myclinic.vertx.util.RcptUtil;
-import dev.myclinic.vertx.util.kanjidate.KanjiDate;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -2445,7 +2444,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("resolve-shinryou-master-by-name", this::resolveShinryouMasterByName);
         funcMap.put("enter-xp", this::enterXp);
         funcMap.put("list-0410-no-pay", this::list0410NoPay);
-        AppointRestHandler.register(funcMap, mapper);
     }
 
     private CallResult updateVisitAttr(RoutingContext ctx, Connection conn) throws Exception {

@@ -27,6 +27,16 @@ public class AppointDTO {
         this.memo = "";
     }
 
+    public Map<String, Object> toJsonObject(){
+        Map<String, Object> m = new HashMap<>();
+        m.put("date", date.toString());
+        m.put("time", Misc.toSqlTime(time));
+        m.put("patientName", patientName);
+        m.put("patientId", patientId);
+        m.put("memo", memo);
+        return m;
+    }
+
     @Override
     public String toString() {
         return "AppointDTO{" +

@@ -22,7 +22,7 @@ public class AppointAPI {
 
     }
 
-    public static void createAppointTime(Connection conn, LocalDate date, LocalTime time)
+    public static int createAppointTime(Connection conn, LocalDate date, LocalTime time)
             throws SQLException, JsonProcessingException {
         AppointPersist.enterAppoint(conn, date, time);
         Map<String, Object> e = new HashMap<>();
@@ -30,17 +30,17 @@ public class AppointAPI {
         e.put("date", Misc.toSqlDate(date));
         e.put("time", Misc.toSqlTime(time));
         String body = mapper.writeValueAsString(e);
-        AppointPersist.enterAppointEvent(conn, body);
+        return AppointPersist.enterAppointEvent(conn, body);
     }
 
-    public static void putAppoint(Connection conn, AppointDTO appoint)
+    public static int putAppoint(Connection conn, AppointDTO appoint)
             throws SQLException, JsonProcessingException {
-        AppointDTO curr = getAppoint(conn, appoint.date, appoint.time);
+        WithEventId<AppointDTO> curr = getAppoint(conn, appoint.date, appoint.time);
         if (curr == null) {
             String msg = String.format("Cannot make appoint at: %s %s", appoint.date, appoint.time);
             throw new RuntimeException(msg);
         }
-        if (curr.patientName != null) {
+        if (curr.value.patientName != null) {
             throw new RuntimeException("Appoint already exists.");
         }
         AppointPersist.updateAppoint(conn, appoint);
@@ -52,15 +52,16 @@ public class AppointAPI {
         e.put("patient_id", appoint.patientId);
         e.put("memo", appoint.memo);
         String body = mapper.writeValueAsString(e);
-        AppointPersist.enterAppointEvent(conn, body);
+        return AppointPersist.enterAppointEvent(conn, body);
     }
 
-    public static void cancelAppoint(Connection conn, LocalDate date, LocalTime time)
+    public static int cancelAppoint(Connection conn, LocalDate date, LocalTime time)
             throws SQLException, JsonProcessingException {
-        AppointDTO app = getAppoint(conn, date, time);
-        if (app == null || app.patientName == null) {
+        WithEventId<AppointDTO> curr = getAppoint(conn, date, time);
+        if (curr == null || curr.value.patientName == null) {
             throw new RuntimeException("No such appoint.");
         }
+        AppointDTO app = curr.value;
         Map<String, Object> e = new HashMap<>();
         e.put("kind", "canceled");
         e.put("date", Misc.toSqlDate(app.date));
@@ -73,10 +74,20 @@ public class AppointAPI {
         app.patientName = null;
         app.patientId = 0;
         app.memo = "";
-        AppointPersist.updateAppoint(conn, app);
+        return AppointPersist.updateAppoint(conn, app);
     }
 
-    public static AppointDTO getAppoint(Connection conn, LocalDate atDate, LocalTime atTime)
+    public static class WithEventId<T> {
+        public T value;
+        public int eventId;
+
+        public WithEventId(T value, int eventId) {
+            this.value = value;
+            this.eventId = eventId;
+        }
+    }
+
+    public static WithEventId<AppointDTO> getAppoint(Connection conn, LocalDate atDate, LocalTime atTime)
             throws SQLException {
         String sql = "select * from appoint where date = ? and time = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -88,7 +99,8 @@ public class AppointAPI {
                     if( rs.next() ){
                         throw new RuntimeException("Cannot happen (mutltiple appoint).");
                     } else {
-                        return app;
+                        int eventId = getLastAppointEventId(conn);
+                        return new WithEventId<>(app, eventId);
                     }
                 } else {
                     return null;
@@ -97,14 +109,43 @@ public class AppointAPI {
         }
     }
 
-    public static List<AppointDTO> listAppointTime(Connection conn, LocalDate from, LocalDate upto)
+    public static WithEventId<List<AppointDTO>> listAppointTime(Connection conn, LocalDate from, LocalDate upto)
             throws SQLException {
         String sql = "select * from appoint where date >= ? and date <= ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, from.toString());
             stmt.setString(2, upto.toString());
             try (ResultSet rs = stmt.executeQuery()) {
-                return AppointPersist.resultSetToAppointList(rs);
+                return new WithEventId<>(
+                        AppointPersist.resultSetToAppointList(rs),
+                        getLastAppointEventId(conn));
+            }
+        }
+    }
+
+    public static List<AppointEventDTO> listAppointEvent(Connection conn, int after, int before) throws SQLException {
+        String sql = "select * from appoint_event where id > ? and id < ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, after);
+            stmt.setInt(2, before);
+            try(ResultSet rs = stmt.executeQuery()){
+                List<AppointEventDTO> result = new ArrayList<>();
+                while(rs.next()){
+                    result.add(AppointPersist.resultSetToAppointEventDTO(rs));
+                }
+                return result;
+            }
+        }
+    }
+
+    private static int getLastAppointEventId(Connection conn) throws SQLException {
+        String sql = "select id from appoint_event order by id desc limit 1";
+        try(PreparedStatement stmt = conn.prepareStatement(sql)){
+            ResultSet rs = stmt.executeQuery();
+            if( rs.next() ){
+                return rs.getInt(1);
+            } else {
+                return 0;
             }
         }
     }

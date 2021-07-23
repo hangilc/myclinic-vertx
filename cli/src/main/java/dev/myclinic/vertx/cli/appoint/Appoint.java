@@ -1,15 +1,13 @@
 package dev.myclinic.vertx.cli.appoint;
 
 import dev.myclinic.vertx.appoint.AppointAPI;
+import static dev.myclinic.vertx.appoint.AppointAPI.WithEventId;
 import dev.myclinic.vertx.appoint.AppointDTO;
-import dev.myclinic.vertx.cli.Misc;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 public class Appoint {
 
@@ -52,11 +50,11 @@ public class Appoint {
     }
 
     private static void cancelAppoint(String[] args) throws Exception {
-        var params = new Object(){
+        var params = new Object() {
             LocalDate date;
             LocalTime time;
         };
-        if( args.length == 3 ){
+        if (args.length == 3) {
             params.date = AppointMisc.readAppointDate(args[1]);
             params.time = AppointMisc.readAppointTime(args[2]);
         } else {
@@ -65,17 +63,18 @@ public class Appoint {
             System.exit(1);
         }
         AppointMisc.withConnection(conn -> {
-            AppointDTO app = AppointAPI.getAppoint(conn, params.date, params.time);
-            if( app == null || app.patientName == null ){
+            WithEventId<AppointDTO> appWithEventId = AppointAPI.getAppoint(conn, params.date, params.time);
+            if (appWithEventId == null || appWithEventId.value.patientName == null) {
                 System.out.println("Cannot find appoint.");
                 System.exit(1);
             } else {
+                AppointDTO app = appWithEventId.value;
                 confirmProceed(() -> {
                     System.out.println("予約のキャンセル");
                     System.out.println(app.date);
                     System.out.println(app.time);
                     System.out.println(app.patientName);
-                    if( app.patientId > 0 ){
+                    if (app.patientId > 0) {
                         System.out.printf("patient-id: %d\n", app.patientId);
                     }
                 });
@@ -107,7 +106,7 @@ public class Appoint {
             System.out.println(params.date);
             System.out.println(params.time);
             System.out.println(params.name);
-            if( params.patientId > 0 ) {
+            if (params.patientId > 0) {
                 System.out.println(params.patientId);
             }
         });
@@ -115,7 +114,8 @@ public class Appoint {
             AppointDTO dto = new AppointDTO(params.date, params.time);
             dto.patientName = params.name;
             dto.patientId = params.patientId;
-            AppointAPI.putAppoint(conn, dto);
+            int eventId = AppointAPI.putAppoint(conn, dto);
+            System.out.printf("event-id: %d\n", eventId);
         });
     }
 
@@ -123,10 +123,11 @@ public class Appoint {
         LocalDate from = LocalDate.of(2020, 1, 1);
         LocalDate upto = LocalDate.of(2099, 12, 31);
         AppointMisc.withConnection(conn -> {
-            List<AppointDTO> apps = AppointAPI.listAppointTime(conn, from, upto);
-            for (AppointDTO app : apps) {
+            WithEventId<List<AppointDTO>> apps = AppointAPI.listAppointTime(conn, from, upto);
+            for (AppointDTO app : apps.value) {
                 System.out.println(app);
             }
+            System.out.printf("event-id: %d\n", apps.eventId);
         });
     }
 
@@ -149,14 +150,18 @@ public class Appoint {
             System.out.println(params.date);
             times.forEach(System.out::println);
         });
+        var env = new Object(){
+            int eventId;
+        };
         AppointMisc.withConnection(conn -> {
             for (LocalTime t : times) {
-                AppointAPI.createAppointTime(conn, params.date, t);
+                env.eventId = AppointAPI.createAppointTime(conn, params.date, t);
             }
+            System.out.printf("event-id: %d\n", env.eventId);
         });
     }
 
-    private static void confirmProceed(Runnable prompt){
+    private static void confirmProceed(Runnable prompt) {
         prompt.run();
         System.console().writer().print("Proceed? (Y/N) ");
         System.console().writer().flush();

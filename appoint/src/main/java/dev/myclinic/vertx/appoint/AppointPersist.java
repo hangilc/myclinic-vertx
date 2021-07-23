@@ -1,9 +1,6 @@
 package dev.myclinic.vertx.appoint;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -47,11 +44,15 @@ class AppointPersist {
         }
     }
 
-    public static void enterAppointEvent(Connection conn, String body) throws SQLException {
+    public static int enterAppointEvent(Connection conn, String body) throws SQLException {
         String sql = "insert into appoint_event(body) values(?)";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, body);
             stmt.executeUpdate();
+            try(ResultSet rs = stmt.getGeneratedKeys()){
+                rs.next();
+                return rs.getInt(1);
+            }
         }
     }
 
@@ -73,6 +74,12 @@ class AppointPersist {
             list.add(app);
         }
         return list;
+    }
+
+    public static AppointEventDTO resultSetToAppointEventDTO(ResultSet rs) throws SQLException {
+        int id = rs.getInt(1);
+        String body = rs.getString(2);
+        return new AppointEventDTO(id, body);
     }
 
 }

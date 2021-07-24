@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import dev.myclinic.vertx.appoint.AppointAPI;
+import dev.myclinic.vertx.appoint.AppointDTO;
 import dev.myclinic.vertx.jackson.time.TimeModule;
 import dev.myclinic.vertx.util.DateTimeUtil;
 import io.jsonwebtoken.io.SerializationException;
@@ -37,14 +38,22 @@ public class AppointRestHandler implements Handler<RoutingContext> {
     @Override
     public void handle(RoutingContext ctx) {
         String action = ctx.request().getParam("action");
-        switch(action){
-            case "list-appoint-time": {
-                listAppointTime(ctx);
-                break;
+        try {
+            switch (action) {
+                case "list-appoint-time": {
+                    listAppointTime(ctx);
+                    break;
+                }
+                case "put-appoint": {
+                    putAppoint(ctx);
+                    break;
+                }
+                default: {
+                    ctx.fail(new RuntimeException("Unknown action (appoint): " + action));
+                }
             }
-            default: {
-                throw new RuntimeException("Unknown action (appoint): " + action);
-            }
+        } catch(Exception e){
+            ctx.fail(e);
         }
     }
 
@@ -100,6 +109,12 @@ public class AppointRestHandler implements Handler<RoutingContext> {
             ctx.response().headers().add("content-type", "application/json");
             ctx.response().end(json);
         });
+    }
+
+    private void putAppoint(RoutingContext ctx) throws IOException {
+        AppointDTO app = mapper.readValue(ctx.getBody().getBytes(), AppointDTO.class);
+        System.out.println(app);
+        ctx.response().end("ok");
     }
 
 

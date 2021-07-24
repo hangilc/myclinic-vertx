@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import dev.myclinic.vertx.appoint.AppointAPI;
+import dev.myclinic.vertx.jackson.time.TimeModule;
 import dev.myclinic.vertx.util.DateTimeUtil;
 import io.jsonwebtoken.io.SerializationException;
 import io.jsonwebtoken.io.Serializer;
@@ -30,39 +31,7 @@ public class AppointRestHandler implements Handler<RoutingContext> {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
-        SimpleModule module = new SimpleModule();
-        module.addSerializer(LocalDate.class, new LocalDateSerializer());
-        module.addSerializer(LocalTime.class, new LocalTimeSerializer());
-        mapper.registerModule(module);
-    }
-
-    public static class LocalDateSerializer extends JsonSerializer<LocalDate> {
-
-        private static final DateTimeFormatter sqlDateFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd");
-
-        @Override
-        public void serialize(LocalDate localDate, JsonGenerator gen, SerializerProvider provider)
-                throws IOException {
-            if( localDate == null ){
-                gen.writeNull();
-            } else {
-                gen.writeString(localDate.format(sqlDateFormatter));
-            }
-        }
-    }
-
-    public static class LocalTimeSerializer extends JsonSerializer<LocalTime> {
-        private static final DateTimeFormatter sqlTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-
-        @Override
-        public void serialize(LocalTime localTime, JsonGenerator gen, SerializerProvider provider)
-                throws IOException {
-            if( localTime == null ){
-                gen.writeNull();
-            } else {
-                gen.writeString(localTime.format(sqlTimeFormatter));
-            }
-        }
+        mapper.registerModule(new TimeModule());
     }
 
     @Override

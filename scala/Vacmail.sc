@@ -47,7 +47,7 @@ def printMessage(m: Message): Unit = {
 	println(m.getHeader("Message-Id")(0))
 	println(m.getSentDate)
 	println("**" + getSubject(m) + "**")
-	println(getBodyContent(m))
+	// println(getBodyContent(m))
 }
 
 def getSubject(m: Message): String = {

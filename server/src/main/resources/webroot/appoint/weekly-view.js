@@ -53,6 +53,13 @@ export class WeeklyView {
         this.props.startingMonday = sqldate;
     }
 
+    async updateDerivedData(){
+        let from = this.getStartingMonday();
+        let upto = kanjidate.advanceDays(from, 5);
+        let times = await this.props.appointRest.listAppointTime(from, upto);
+        console.log(times);
+    }
+
     updateUI(){
         console.log(this.getStartingMonday());
         // this.updateStartDateUI();

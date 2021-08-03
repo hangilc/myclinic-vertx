@@ -75,17 +75,18 @@ export class Appoint {
         Object.assign(this.props, {
             startingMonday: this.props.startingMonday || startingMonday(kanjidate.todayAsSqldate())
         });
+        console.log(props.appointRest);
         this.ele = createElementFrom(tmpl)
         this.map = parseElement(this.ele);
-        this.showWeeklyView(this.props);
     }
 
     async init(){
-
+        await this.showWeeklyView(this.props);
     }
 
-    showWeeklyView(sqldate){
+    async showWeeklyView(sqldate){
         const view = new WeeklyView(sqldate);
+        await view.updateDerivedData();
         this.ele.innerHTML = "";
         this.ele.append(view.ele);
     }

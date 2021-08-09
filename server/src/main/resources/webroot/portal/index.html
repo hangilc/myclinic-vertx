@@ -73,6 +73,7 @@
         let {MedCert} = await import("./medcert/medcert.js");
         let {Appoint} = await import("../appoint/appoint.js");
         let {initPhone} = await import("../js/phone.js");
+        let {AppointRest} = await import("../js/appoint-rest.js");
 
         let printAPI = null;
         (function(){
@@ -91,7 +92,8 @@
         window.addEventListener("unhandledrejection", event => alert(event.reason));
         let prop = {
             rest,
-            printAPI
+            printAPI,
+            appointRest: new AppointRest()
         }
 
         initPhone(rest);

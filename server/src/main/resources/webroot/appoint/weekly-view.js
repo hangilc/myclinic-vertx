@@ -35,34 +35,38 @@ const tmpl = `
 `;
 
 export class WeeklyView {
-    constructor(sqldate) {
+    constructor(props) {
+        this.props = props;
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
-        this.setupProps(sqldate);
         this.updateUI();
         this.setupNextWeekLink(this.map.nextWeekLink);
         this.setupPrevWeekLink(this.map.prevWeekLink);
         this.setupThisWeekLink(this.map.thisWeekLink);
     }
 
-    setupProps(sqldate){
-        let startDate = kanjidate.startOfWeek(sqldate, 1);
-        this.props = {
-            days: kanjidate.consecutiveDays(startDate, 6)
-        };
+    getStartingMonday(){
+        return this.props.startingMonday;
+    }
+
+    setStartingMonday(sqldate){
+        this.props.startingMonday = sqldate;
+    }
+
+    async updateDerivedData(){
+        let from = this.getStartingMonday();
+        let upto = kanjidate.advanceDays(from, 5);
+        let times = await this.props.appointRest.listAppointTime(from, upto);
+        console.log(times);
     }
 
     updateUI(){
-        this.updateStartDateUI();
-        this.updateEndDateUI();
-        this.map.weeklyView.innerHTML = "";
-        const self = this;
-        this.props.days.forEach(date => self.enterDate(date));
-        // const days = selectWorkingDays();
-        // days.forEach(day => {
-        //     const col = new DayColumn(day);
-        //     this.map.weeklyView.append(col.ele);
-        // })
+        console.log(this.getStartingMonday());
+        // this.updateStartDateUI();
+        // this.updateEndDateUI();
+        // this.map.weeklyView.innerHTML = "";
+        // const self = this;
+        // this.props.days.forEach(date => self.enterDate(date));
     }
 
     updateStartDateUI(){
@@ -89,26 +93,24 @@ export class WeeklyView {
 
     setupNextWeekLink(e){
         e.addEventListener("click", event => {
-            let date = this.props.days[0];
-            date = kanjidate.advanceDays(date, 7);
-            this.setupProps(date);
+            let date = kanjidate.advanceDays(this.getStartingMonday(), 7);
+            this.setStartingMonday(date);
             this.updateUI();
         });
     }
 
     setupPrevWeekLink(e){
         e.addEventListener("click", event => {
-            let date = this.props.days[0];
-            date = kanjidate.advanceDays(date, -7);
-            this.setupProps(date);
+            let date = kanjidate.advanceDays(this.getStartingMonday(), -7);
+            this.setStartingMonday(date);
             this.updateUI();
         });
     }
 
     setupThisWeekLink(e){
         e.addEventListener("click", event => {
-            let date = kanjidate.todayAsSqldate();
-            this.setupProps(date);
+            let date = kanjidate.startOfWeek(kanjidate.todayAsSqldate(), 1);
+            this.setStartingMonday(date);
             this.updateUI();
         });
     }

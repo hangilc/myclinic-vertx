@@ -71,21 +71,29 @@ const tmpl = `
 
 export class Appoint {
     constructor(props) {
-        this.props = props;
+        this.props = Object.create(props);
+        Object.assign(this.props, {
+            startingMonday: this.props.startingMonday || startingMonday(kanjidate.todayAsSqldate())
+        });
+        console.log(props.appointRest);
         this.ele = createElementFrom(tmpl)
         this.map = parseElement(this.ele);
-        this.showWeeklyView(kanjidate.todayAsSqldate());
     }
 
     async init(){
-
+        await this.showWeeklyView(this.props);
     }
 
-    showWeeklyView(sqldate){
+    async showWeeklyView(sqldate){
         const view = new WeeklyView(sqldate);
+        await view.updateDerivedData();
         this.ele.innerHTML = "";
         this.ele.append(view.ele);
     }
+}
+
+function startingMonday(sqldate){
+    return kanjidate.startOfWeek(sqldate, 1);
 }
 
 const entryTmpl = `

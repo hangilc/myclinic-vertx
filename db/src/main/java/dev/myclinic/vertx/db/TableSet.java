@@ -40,6 +40,7 @@ public class TableSet {
     public TextTable textTable;
     public VisitTable visitTable;
     public WqueueTable wqueueTable;
+    public EdabanTable edabanTable;
 
     public MysqlDialect dialect;
     
@@ -83,6 +84,7 @@ public class TableSet {
         ts.textTable = new TextTable();
         ts.visitTable = new VisitTable();
         ts.wqueueTable = new WqueueTable();
+        ts.edabanTable = new EdabanTable();
 
         ts.dialect = new MysqlDialect();
         return ts;

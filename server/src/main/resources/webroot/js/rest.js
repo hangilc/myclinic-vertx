@@ -249,4 +249,24 @@ export class Rest extends HttpClient {
         return this.GET("/twilio-webphone-token", {});
     }
 
+    async enterEdaban(edaban){
+        return this.POST("/enter-edaban", edaban, {})
+    }
+
+    async updateEdaban(edaban){
+        return this.POST("/update-edaban", edaban, {});
+    }
+
+    async deleteEdaban(shahokokuhoId){
+        return this.POST("/delete-edaban", {}, {"shahokokuho-id": shahokokuhoId});
+    }
+
+    async getEdaban(shahokokuhoId){
+        return this.GET("/get-edaban", {"shahokokuho-id": shahokokuhoId});
+    }
+
+    async batchResolveEdaban(shinryouIds){
+        return this.POST("/batch-resolve-edaban", shinryouIds, {});
+    }
+
 }

@@ -2419,6 +2419,11 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("list-shinryou", this::listShinryou);
         funcMap.put("batch-get-patient", this::batchGetPatient);
         funcMap.put("get-most-recent-visit-of-patient", this::getMostRecentVisitOfPatient);
+        funcMap.put("enter-edaban", this::enterEdaban);
+        funcMap.put("update-edaban", this::updateEdaban);
+        funcMap.put("delete-edaban", this::deleteEdaban);
+        funcMap.put("get-edaban", this::getEdaban);
+        funcMap.put("batch-resolve-edaban", this::batchResolveEdaban);
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3035,6 +3040,70 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
+        return new CallResult(backend);
+    }
+
+    private CallResult enterEdaban(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        EdabanDTO edaban = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
+        });
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        backend.enterEdaban(edaban);
+        conn.commit();
+        req.response().end(jsonEncode("ok"));
+        return new CallResult(backend);
+    }
+
+    private CallResult updateEdaban(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        EdabanDTO edaban = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
+        });
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        backend.updateEdaban(edaban);
+        conn.commit();
+        req.response().end(jsonEncode("ok"));
+        return new CallResult(backend);
+    }
+
+    private CallResult deleteEdaban(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        int shahokokuhoId = Integer.parseInt(params.get("shahokokuho-id"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        backend.deleteEdaban(shahokokuhoId);
+        conn.commit();
+        req.response().end(jsonEncode("ok"));
+        return new CallResult(backend);
+    }
+
+    private CallResult getEdaban(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        MultiMap params = req.params();
+        int shahokokuhoId = Integer.parseInt(params.get("shahokokuho-id"));
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        EdabanDTO dto = backend.getEdaban(shahokokuhoId);
+        conn.commit();
+        req.response().end(jsonEncode(dto));
+        return new CallResult(backend);
+    }
+
+    private CallResult batchResolveEdaban(RoutingContext ctx, Connection conn) throws Exception {
+        HttpServerRequest req = ctx.request();
+        List<Integer> shahokokuhoIds = _convertParam(ctx.getBody().getBytes(), new TypeReference<>() {
+        });
+        Query query = new Query(conn);
+        Backend backend = new Backend(ts, query);
+        Map<Integer, String> edabanMap = new HashMap<>();
+        shahokokuhoIds.forEach(shahokokuhoId -> {
+            EdabanDTO dto = backend.getEdaban(shahokokuhoId);
+            edabanMap.put(shahokokuhoId, dto.edaban);
+        });
+        conn.commit();
+        req.response().end(jsonEncode(edabanMap));
         return new CallResult(backend);
     }
 

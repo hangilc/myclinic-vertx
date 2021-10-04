@@ -25,4 +25,5 @@ dev-env.bat
 master-files/
 !dto/db-migration/*.sql
 !appoint/src/main/sql/*.sql
-
+scala/.bsp/
+scala/project/

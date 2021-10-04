@@ -5,7 +5,7 @@ export class ShahokokuhoDisp extends DispTable {
     constructor(shahokokuho){
         super();
         this.add("保険者番号", shahokokuho.hokenshaBangou);
-        this.add("被保険者", `${shahokokuho.hihokenshaKigou} - ${shahokokuho.hihokenshaBangou}`);
+        this.add("被保険者", hihokenshaRep(shahokokuho));
         this.add("本人・家族", honninRep(shahokokuho.honnin));
         this.add("開始日", validFromRep(shahokokuho.validFrom));
         this.add("終了日", validUptoRep(shahokokuho.validUpto));
@@ -28,5 +28,13 @@ function koureiRep(kourei){
     } else {
         return "";
     }
+}
+
+function hihokenshaRep(shahokokuho){
+    let rep = `${shahokokuho.hihokenshaKigou} - ${shahokokuho.hihokenshaBangou}`
+    if( shahokokuho.edaban !== "  " ){
+        rep += ` 枝番 ${shahokokuho.edaban}`
+    }
+    return rep;
 }
 

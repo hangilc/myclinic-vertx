@@ -2930,24 +2930,6 @@ public class Backend {
                 itemsPerPage, page * itemsPerPage);
     }
 
-    // Edaban ///////////////////////////////////////////////////////////////////
-
-    public void enterEdaban(EdabanDTO dto) {
-        ts.edabanTable.insert(query, dto);
-    }
-
-    public void updateEdaban(EdabanDTO dto) {
-        ts.edabanTable.update(query, dto);
-    }
-
-    public void deleteEdaban(int shahokokuhoId) {
-        ts.edabanTable.delete(query, shahokokuhoId);
-    }
-
-    public EdabanDTO getEdaban(int shahokokuhoId) {
-        return ts.edabanTable.getById(query, shahokokuhoId);
-    }
-
     // IntraclinicComment /////////////////////////////////////////////////////////////////////
 
     public IntraclinicCommentDTO getIntraclinicComment(int id) {

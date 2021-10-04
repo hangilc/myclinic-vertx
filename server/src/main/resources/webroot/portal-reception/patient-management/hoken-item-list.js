@@ -48,8 +48,6 @@ export class HokenItemList {
             hokenList = await this.rest.listAllHoken(this.patientId);
         }
         let repMap = await this.rest.batchResolveHokenRep(hokenList);
-        let shahokokuhoIds = hokenList.shahokokuhoList.map(h => h.shahokokuhoId);
-        let edabanMap = await this.rest.batchResolveEdaban(shahokokuhoIds)
         hokenList.shahokokuhoList.forEach(shahokokuho => {
             let rep = repMap[`shahokokuho:${shahokokuho.shahokokuhoId}`];
             let item = new HokenItem(rep, shahokokuho.validFrom, shahokokuho.validUpto);
@@ -58,8 +56,7 @@ export class HokenItemList {
                 if( e ){
                     this.workarea.prepend(e);
                 } else {
-                    let edaban = edabanMap[shahokokuho.shahokokuhoId] || "";
-                    let box = new ShahokokuhoBox(shahokokuho, this.rest, edaban);
+                    let box = new ShahokokuhoBox(shahokokuho, this.rest);
                     box.ele.addEventListener("updated", event => {
                         this.broadcastChange();
                     });

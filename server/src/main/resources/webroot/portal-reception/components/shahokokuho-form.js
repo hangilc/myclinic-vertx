@@ -115,6 +115,7 @@ export class ShahokokuhoForm {
         this.map.hokenshaBangou.value = shahokokuho.hokenshaBangou;
         this.map.hihokenshaKigou.value = shahokokuho.hihokenshaKigou;
         this.map.hihokenshaBangou.value = shahokokuho.hihokenshaBangou;
+        this.map.hihokenshaEdaban.value = shahokokuho.edaban;
         this.setHonnin(shahokokuho.honnin);
         this.validFromInput.set(shahokokuho.validFrom);
         this.validUptoInput.set(shahokokuho.validUpto);
@@ -172,7 +173,6 @@ export class ShahokokuhoForm {
             return error("高齢の入力が不適切です。");
         }
         return success({
-            "shahokokuho": {
                 shahokokuhoId,
                 patientId,
                 hokenshaBangou,
@@ -181,10 +181,9 @@ export class ShahokokuhoForm {
                 honnin,
                 validFrom,
                 validUpto,
-                kourei
-            },
-            "edaban": edaban
-        });
+                kourei,
+                edaban
+            });
     }
 
     toHankaku(s) {

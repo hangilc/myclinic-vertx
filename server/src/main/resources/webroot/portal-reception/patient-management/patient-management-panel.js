@@ -9,8 +9,10 @@ let tmpl = `
     <div class="mb-3 form-inline">
         <div class="h3">患者管理</div>
         <button class="btn btn-sm btn-primary ml-auto mr-2 x-new-patient">新規患者</button>
+        <form class="x-patient-search-form" onsubmit="return false;">
         <input class="form-control form-control-sm mr-2 x-patient-search-text"/>
-        <button class="btn btn-sm btn-primary x-patient-search-button">検索</button>
+        <button type="submit" class="btn btn-sm btn-primary x-patient-search-button">検索</button>
+        </form>
     </div>
     <div class="mb-3 x-patient-search-result"></div>
    <div class="x-workarea pt-2"></div>
@@ -23,7 +25,8 @@ export class PatientManagementPanel {
         this.ele = createElementFrom(tmpl);
         this.map = parseElement(this.ele);
         this.map.newPatient.addEventListener("click", event => this.doNewPatient());
-        this.map.patientSearchButton.addEventListener("click", async event => await this.doPatientSearch());
+        //this.map.patientSearchButton.addEventListener("click", async event => await this.doPatientSearch());
+        this.map.patientSearchForm.addEventListener("submit", async event => await this.doPatientSearch())
     }
 
     async doPatientSearch(){

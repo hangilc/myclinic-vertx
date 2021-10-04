@@ -7,7 +7,7 @@ import {numberOfPages} from "../../js/general-util.js";
 const bodyTmpl = `
     <form class="form-inline x-form" onsubmit="return false;">
         <input type="text" class="form-control mr-2 x-search-text" style="width: 60px; flex-grow: 1"/>
-        <buttn type="submit" class="btn btn-primary btn-sm">検索</buttn>
+        <button type="submit" class="btn btn-primary btn-sm">検索</button>
     </form>
     <div class="d-none x-nav"></div>
     <div class="x-list"></div>
@@ -30,9 +30,10 @@ export class SearchWidget extends Widget{
             this.props.page = page;
             this.updateUI();
         });
-        submit(bmap.form, async event => {
+        bmap.form.addEventListener("submit", async event => {
             await this.doSearch();
             this.updateUI();
+
         });
     }
 

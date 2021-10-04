@@ -58,7 +58,8 @@ export class HokenItemList {
                 if( e ){
                     this.workarea.prepend(e);
                 } else {
-                    let box = new ShahokokuhoBox(shahokokuho, this.rest);
+                    let edaban = edabanMap[shahokokuho.shahokokuhoId] || "";
+                    let box = new ShahokokuhoBox(shahokokuho, this.rest, edaban);
                     box.ele.addEventListener("updated", event => {
                         this.broadcastChange();
                     });

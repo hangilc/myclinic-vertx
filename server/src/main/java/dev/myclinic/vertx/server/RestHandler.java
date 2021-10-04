@@ -3100,7 +3100,9 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         Map<Integer, String> edabanMap = new HashMap<>();
         shahokokuhoIds.forEach(shahokokuhoId -> {
             EdabanDTO dto = backend.getEdaban(shahokokuhoId);
-            edabanMap.put(shahokokuhoId, dto.edaban);
+            if( dto != null ) {
+                edabanMap.put(shahokokuhoId, dto.edaban);
+            }
         });
         conn.commit();
         req.response().end(jsonEncode(edabanMap));

@@ -23,8 +23,10 @@ let formCommandsTmpl = `
 `;
 
 export class ShahokokuhoBox {
-    constructor(shahokokuho, rest) {
+    constructor(shahokokuho, rest, edaban) {
+        console.log("ShahokokuhoBox(edaban)", edaban);
         this.shahokokuho = shahokokuho;
+        this.edaban = edaban;
         this.rest = rest;
         this.ele = createElementFrom(tmpl);
         this.ele.classList.add(`shahokokuho-box-${shahokokuho.shahokokuhoId}`);

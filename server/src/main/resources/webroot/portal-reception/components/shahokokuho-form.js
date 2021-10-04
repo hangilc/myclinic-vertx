@@ -16,7 +16,8 @@ let tmpl = `
         <div class="col-sm-2 col-form-label d-flex justify-content-end">被保険者</div>
         <div class="col-sm-10 form-inline">
             記号：<input type="text" class="form-control x-hihokensha-kigou mr-3"/>
-            番号：<input type="text" class="form-control x-hihokensha-bangou"/>
+            番号：<input type="text" class="form-control x-hihokensha-bangou mr-3"/>
+            枝番：<input type="text" class="form-control x-hihokensha-edaban" size="4"/>
         </div>
     </div>
     <div class="form-group row">
@@ -64,8 +65,9 @@ let tmpl = `
 </form>
 `;
 
+// noinspection NonAsciiCharacters
 export class ShahokokuhoForm {
-    constructor(shahokokuho){
+    constructor(shahokokuho) {
         this.ele = createElementFrom(tmpl);
         this.validFromInput = new DateInput();
         this.validFromInput.setGengouRecent();
@@ -78,36 +80,36 @@ export class ShahokokuhoForm {
         this.map.validUpto.appendChild(this.validUptoInput.ele);
         this.shahokokuhoId = 0;
         this.patientId = 0;
-        if( shahokokuho ){
+        if (shahokokuho) {
             this.set(shahokokuho);
         }
     }
 
-    getHonnin(){
+    getHonnin() {
         let value = this.map.form.querySelector("input[type='radio'][name='honnin']:checked").value;
         let honnin = parseInt(value);
         return isNaN(honnin) ? error("本人・家族の入力が不適切です。") : success(honnin);
     }
 
-    setHonnin(honnin){
+    setHonnin(honnin) {
         setRadioValue(this.map.form, "honnin", honnin);
     }
 
-    getKourei(){
+    getKourei() {
         let value = this.map.form.querySelector("input[type='radio'][name='kourei']:checked").value;
         let kourei = parseInt(value);
         return isNaN(kourei) ? error("高齢の入力が不適切です。") : success(kourei);
     }
 
-    setKourei(kourei){
+    setKourei(kourei) {
         setRadioValue(this.map.form, "kourei", kourei);
     }
 
-    setPatientId(patientId){
+    setPatientId(patientId) {
         this.patientId = patientId;
     }
 
-    set(shahokokuho){
+    set(shahokokuho) {
         this.shahokokuhoId = shahokokuho.shahokokuhoId;
         this.patientId = shahokokuho.patientId;
         this.map.hokenshaBangou.value = shahokokuho.hokenshaBangou;
@@ -122,7 +124,7 @@ export class ShahokokuhoForm {
     get() {
         let shahokokuhoId = this.shahokokuhoId;
         let patientId = this.patientId;
-        if( !patientId ){
+        if (!patientId) {
             return error("患者番号が設定されていません。");
         }
         let hokenshaBangouInput = this.map.hokenshaBangou.value;
@@ -138,8 +140,13 @@ export class ShahokokuhoForm {
         if (hihokenshaKigou === "" && hihokenshaBangou === "") {
             return error("被保険者情報が入力されていません。");
         }
+        let edaban = this.toHankaku(this.map.hihokenshaEdaban.value);
+        if (edaban.length > 2) {
+            return error("枝番が２文字以上です。");
+        }
+
         let honninOpt = this.getHonnin();
-        if( !honninOpt.ok ){
+        if (!honninOpt.ok) {
             return error(honninOpt.message);
         }
         let honnin = honninOpt.value;
@@ -147,17 +154,17 @@ export class ShahokokuhoForm {
             return error("本人・家族の入力が不適切です。");
         }
         let validFromOpt = this.validFromInput.get();
-        if( !validFromOpt.ok ){
+        if (!validFromOpt.ok) {
             return error("開始日：" + validFromOpt.message);
         }
         let validFrom = validFromOpt.value;
         let validUptoOpt = this.validUptoInput.get();
-        if( !validUptoOpt.ok ){
+        if (!validUptoOpt.ok) {
             return error("終了日：" + validUptoOpt.message);
         }
         let validUpto = validUptoOpt.value;
         let koureiOpt = this.getKourei();
-        if( !koureiOpt.ok ){
+        if (!koureiOpt.ok) {
             return error("高齢：" + koureiOpt.message);
         }
         let kourei = koureiOpt.value;
@@ -165,16 +172,43 @@ export class ShahokokuhoForm {
             return error("高齢の入力が不適切です。");
         }
         return success({
-            shahokokuhoId,
-            patientId,
-            hokenshaBangou,
-            hihokenshaKigou,
-            hihokenshaBangou,
-            honnin,
-            validFrom,
-            validUpto,
-            kourei
+            "shahokokuho": {
+                shahokokuhoId,
+                patientId,
+                hokenshaBangou,
+                hihokenshaKigou,
+                hihokenshaBangou,
+                honnin,
+                validFrom,
+                validUpto,
+                kourei
+            },
+            "edaban": edaban
         });
+    }
+
+    toHankaku(s) {
+        return this.mapString(s, ch => this.zenkakuToHankaku(ch));
+    }
+
+    mapString(s, f) {
+        return s.split("").map(ch => f(ch)).join("");
+    }
+
+    zenkakuToHankaku(ch) {
+        let map = {
+            "０": "0",
+            "１": "1",
+            "２": "2",
+            "３": "3",
+            "４": "4",
+            "５": "5",
+            "６": "6",
+            "７": "7",
+            "８": "8",
+            "９": "9",
+        }
+        return map[ch] || ch
     }
 
 }

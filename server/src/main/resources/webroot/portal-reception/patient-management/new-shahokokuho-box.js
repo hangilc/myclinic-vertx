@@ -28,7 +28,8 @@ export class NewShahokokuhoBox {
     async doEnter(){
         let shahokokuhoOpt = this.form.get();
         if( shahokokuhoOpt.ok ){
-            let shahokokuho = shahokokuhoOpt.value;
+            let shahokokuho = shahokokuhoOpt.value.shahokokuho;
+            let edaban = shahokokuhoOpt.value.edaban;
             shahokokuho.shahokokuhoId = await this.rest.enterShahokokuho(shahokokuho);
             this.ele.dispatchEvent(new CustomEvent("shahokokuho-entered", {detail: shahokokuho}));
         } else {

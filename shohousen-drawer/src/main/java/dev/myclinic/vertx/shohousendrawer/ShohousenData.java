@@ -235,17 +235,24 @@ public class ShohousenData {
     private String composeHihokensha(ShahokokuhoDTO shahokokuho){
         String kigou = shahokokuho.hihokenshaKigou;
         String bangou = shahokokuho.hihokenshaBangou;
+        String edaban = shahokokuho.edaban;
+        String edabanRep;
+        if( edaban.equals("") || edaban.equals(" ") || edaban.equals("  ") ){
+            edabanRep = "";
+        } else {
+            edabanRep = " (枝番)" + edaban;
+        }
         if( kigou == null || kigou.isEmpty() ){
             if( bangou == null || bangou.isEmpty() ){
                 return "";
             } else {
-                return bangou;
+                return bangou + edabanRep;
             }
         } else {
             if( bangou == null || bangou.isEmpty() ){
-                return kigou;
+                return kigou + edabanRep;
             } else {
-                return kigou + " ・ " + bangou;
+                return kigou + " ・ " + bangou + edabanRep;
             }
         }
     }

@@ -131,6 +131,7 @@ public class ShohousenDrawer {
         box = box.shrinkWidth(5, HorizAnchor.Right);
         c.setTextColor(0, 0, 0);
         c.setFont("gothic-4");
+        //c.setFont("gothic-3.5");
         c.textIn(str, box, HAlign.Left, VAlign.Center);
     }
 
@@ -301,6 +302,8 @@ public class ShohousenDrawer {
         compiler.createFont("mincho-1.4", "MS Mincho", 1.4);
         compiler.createFont("gothic-4.5", "MS Gothic", 4.5);
         compiler.createFont("gothic-4", "MS Gothic", 4);
+        compiler.createFont("gothic-4", "MS Gothic", 4);
+        compiler.createFont("gothic-3.5", "MS Gothic", 3.5);
         compiler.createFont("gothic-3", "MS Gothic", 3);
         compiler.createFont("gothic-2.5", "MS Gothic", 2.5);
         this.NAME_FONT = "mincho-4.5";

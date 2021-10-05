@@ -28,6 +28,8 @@ public class Seikyuu {
     public String hihokenshaKigou;
     @JsonProperty("被保険者番号")
     public  String hihokenshaBangou;
+    @JsonProperty("被保険者枝番")
+    public  String hihokenshaEdaban;
     @JsonProperty("氏名")
     public String shimei;
     @JsonProperty("性別")

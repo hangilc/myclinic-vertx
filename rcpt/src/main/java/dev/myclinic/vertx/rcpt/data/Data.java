@@ -315,6 +315,7 @@ class Data {
             xml.element("保険者番号", shaho.hokenshaBangou);
             xml.element("被保険者記号", shaho.hihokenshaKigou);
             xml.element("被保険者番号", shaho.hihokenshaBangou);
+            xml.element("被保険者枝番", shaho.edaban);
         } else if (hoken.koukikourei != null) {
             KoukikoureiDTO kouki = hoken.koukikourei;
             xml.element("保険者番号", kouki.hokenshaBangou);

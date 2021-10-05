@@ -98,7 +98,15 @@ class PatientBill {
         );
         ifNotEmpty(seikyuu.hihokenshaKigou, seikyuu.hihokenshaBangou,
                 (a, b) -> {
-                    String value = String.format("%s     %s", a, b);
+//                    String value = String.format("%s     %s", a, b);
+//                    out.printStr("hihokenshashou", value);
+                    String value = String.format("%s   %s", a, b);
+                    String edaban = seikyuu.hihokenshaEdaban;
+                    if( edaban.equals("") || edaban.equals(" ") || edaban.equals("  ") ){
+                        // nop
+                    } else {
+                        value += String.format(" (枝番)%s", edaban);
+                    }
                     out.printStr("hihokenshashou", value);
                 },
                 () -> System.err.printf("%d: 被保険者記号番号なし\n", seikyuu.patientId)

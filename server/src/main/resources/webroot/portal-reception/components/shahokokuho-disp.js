@@ -32,7 +32,10 @@ function koureiRep(kourei){
 
 function hihokenshaRep(shahokokuho){
     let rep = `${shahokokuho.hihokenshaKigou} - ${shahokokuho.hihokenshaBangou}`
-    if( shahokokuho.edaban !== "  " ){
+    let edaban = shahokokuho.edaban;
+    if( !edaban || edaban === "" || edaban === " " || edaban === "  " ){
+        // nop
+    } else {
         rep += ` 枝番 ${shahokokuho.edaban}`
     }
     return rep;

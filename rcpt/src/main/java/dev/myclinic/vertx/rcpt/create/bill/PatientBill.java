@@ -102,7 +102,7 @@ class PatientBill {
 //                    out.printStr("hihokenshashou", value);
                     String value = String.format("%s   %s", a, b);
                     String edaban = seikyuu.hihokenshaEdaban;
-                    if( edaban.equals("") || edaban.equals(" ") || edaban.equals("  ") ){
+                    if( edaban == null || edaban.equals("") || edaban.equals(" ") || edaban.equals("  ") ){
                         // nop
                     } else {
                         value += String.format(" (枝番)%s", edaban);

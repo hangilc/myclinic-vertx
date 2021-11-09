@@ -56,7 +56,7 @@ export class CashierDialog extends Dialog {
     }
 
     async getReceiptOps() {
-        let clinicInfo = this.rest.getClinicInfo();
+        let clinicInfo = await this.rest.getClinicInfo();
         let chargeValue = this.charge == null ? 0 : this.charge.charge;
         let req = {
             meisai: this.meisai,

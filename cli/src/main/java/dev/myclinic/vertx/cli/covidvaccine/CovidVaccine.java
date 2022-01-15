@@ -722,8 +722,6 @@ public class CovidVaccine {
                                 candidate = ThirdShotCandidate.Elder;
                             }
                             LocalDate dueDate = thirdShotDue(at.toLocalDate(), candidate);
-                            System.out.printf("(%04d) %s %d才 %s <- %s\n", patient.patientId, patient.name,
-                                    patient.age, dueDate, at.toLocalDate());
                             SecondShotData data = new SecondShotData(at.toLocalDate(), slot2);
                             if( map.containsKey(dueDate) ){
                                 map.get(dueDate).add(data);
@@ -740,7 +738,13 @@ public class CovidVaccine {
         List<LocalDate> dueDates = new ArrayList<>(map.keySet());
         dueDates.sort(Comparator.naturalOrder());
         dueDates.forEach(due -> {
-
+            System.out.printf("%s\n", due);
+            List<SecondShotData> items = map.get(due);
+            items.forEach(item -> {
+                Patient patient = book.getPatient(item.slot.patientId);
+                System.out.printf("  (%04d) %s %d才 %s\n", patient.patientId, patient.name,
+                        patient.age, item.at);
+            });
         });
         int totalCount = 0;
         for(List<SecondShotData> items: map.values()){

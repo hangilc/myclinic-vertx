@@ -125,6 +125,10 @@ public class CovidVaccine {
                     calendar(args);
                     break;
                 }
+                case "calendar-2nd": {
+                    calendar2nd(args);
+                    break;
+                }
                 case "history": {
                     history(args);
                     break;
@@ -197,6 +201,7 @@ public class CovidVaccine {
         System.out.println("  batch-update-phone");
         System.out.println("  random MIN MAX");
         System.out.println("  calendar [APPOINT-DATE]");
+        System.out.println("  calendar-2nd");
         System.out.println("  history PATIENT-ID");
         System.out.println("  register-ephemeral-second-appoint PATIENT-ID PATIENT-ID ...");
         System.out.println("  batch-register-ephemeral-second-appoint");
@@ -658,6 +663,90 @@ public class CovidVaccine {
                 System.out.println();
             }
         }
+    }
+
+    private enum ThirdShotCandidate {
+        Medical, Elder, Other
+    }
+
+    private static LocalDate thirdShotDue(LocalDate secondShotDate, ThirdShotCandidate candidate) {
+        switch(candidate){
+            case Medical: {
+                secondShotDate.plusMonths(6);
+            }
+            case Elder: {
+                LocalDate d = secondShotDate.plusMonths(7);
+                if( d.getMonthValue() <= 2 ){
+                    return d;
+                }
+                return secondShotDate.plusMonths(6);
+            }
+            case Other: {
+                LocalDate d = secondShotDate.plusMonths(8);
+                if( d.getMonthValue() <= 2 ){
+                    return d;
+                }
+                return secondShotDate.plusMonths(7);
+            }
+            default: {
+                throw new RuntimeException("cannot happen");
+            }
+        }
+    }
+
+    private static class SecondShotData {
+        public LocalDate at;
+        public SecondShotSlot slot;
+
+        public SecondShotData(LocalDate at, SecondShotSlot slot) {
+            this.at = at;
+            this.slot = slot;
+        }
+    }
+
+    private static void calendar2nd(String[] args){
+        List<LocalDateTime> targetTimes = book.listAppointTime();
+        Map<LocalDate, List<SecondShotData>> map = new HashMap<>();
+        for(LocalDateTime at: targetTimes) {
+            AppointBlock block = book.getAppointBlock(at);
+            if( block.slots.size() > 0) {
+                for(AppointSlot slot: block.slots){
+                    if(slot instanceof SecondShotSlot){
+                        SecondShotSlot slot2 = (SecondShotSlot)slot;
+                        if( slot2.state == SecondShotState.Done ){
+                            Patient patient = book.getPatient(slot2.patientId);
+                            ThirdShotCandidate candidate = ThirdShotCandidate.Other;
+                            if( patient.patientId == 3835 ){
+                                candidate = ThirdShotCandidate.Medical;
+                            } else if( patient.age >= 65 ){
+                                candidate = ThirdShotCandidate.Elder;
+                            }
+                            LocalDate dueDate = thirdShotDue(at.toLocalDate(), candidate);
+                            System.out.printf("(%04d) %s %d才 %s <- %s\n", patient.patientId, patient.name,
+                                    patient.age, dueDate, at.toLocalDate());
+                            SecondShotData data = new SecondShotData(at.toLocalDate(), slot2);
+                            if( map.containsKey(dueDate) ){
+                                map.get(dueDate).add(data);
+                            } else {
+                                List<SecondShotData> items = new ArrayList<>();
+                                items.add(data);
+                                map.put(dueDate, items);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        List<LocalDate> dueDates = new ArrayList<>(map.keySet());
+        dueDates.sort(Comparator.naturalOrder());
+        dueDates.forEach(due -> {
+
+        });
+        int totalCount = 0;
+        for(List<SecondShotData> items: map.values()){
+            totalCount += items.size();
+        }
+        System.out.printf("Total: %d名\n", totalCount);
     }
 
     private static void pickRandom(String[] args) {

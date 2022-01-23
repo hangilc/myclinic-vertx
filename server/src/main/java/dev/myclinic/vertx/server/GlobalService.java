@@ -1,6 +1,5 @@
 package dev.myclinic.vertx.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.client2.Client;
 
 import java.io.*;

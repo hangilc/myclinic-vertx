@@ -75,6 +75,9 @@ public class Main {
         Router integrationRouter = IntegrationHandler.createRouter(vertx, mapper);
         router.route("/integration/*").handler(BodyHandler.create());
         router.mountSubRouter("/integration", integrationRouter);
+        router.route("/appoint/:action")
+                .handler(BodyHandler.create())
+                .blockingHandler(new AppointRestHandler());
         router.route("/*").failureHandler(errorHandler);
         Route portalRoute = router.route("/web/*");
         StaticHandler staticHandler;

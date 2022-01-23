@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import dev.myclinic.vertx.drawer.form.Form;
 import dev.myclinic.vertx.drawer.form.Page;
 import dev.myclinic.vertx.drawer.form.Rect;
+import dev.myclinic.vertx.drawerform2.forms.CovidVac2ndShot;
 import dev.myclinic.vertx.drawerform2.forms.HoumonKango;
 import dev.myclinic.vertx.drawer.*;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
@@ -38,6 +39,10 @@ public class Main {
             case "refer": {
                 Refer refer = new Refer();
                 form = refer.createForm();
+                break;
+            }
+            case "covid-vac-2nd-shot": {
+                form = CovidVac2ndShot.createForm();
                 break;
             }
             default: {

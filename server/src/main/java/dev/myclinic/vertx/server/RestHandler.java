@@ -19,7 +19,6 @@ import dev.myclinic.vertx.meisai.SectionItem;
 import dev.myclinic.vertx.util.DateTimeUtil;
 import dev.myclinic.vertx.util.HokenUtil;
 import dev.myclinic.vertx.util.RcptUtil;
-import dev.myclinic.vertx.util.kanjidate.KanjiDate;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -50,7 +49,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private final HoukatsuKensa houkatsuKensa;
     private final Vertx vertx;
 
-    private static class CallResult {
+    static class CallResult {
         public List<HotlineLogDTO> hotlineLogs;
         public List<PracticeLogDTO> practiceLogs;
 
@@ -62,6 +61,11 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         public CallResult() {
             this.hotlineLogs = new ArrayList<>();
             this.practiceLogs = new ArrayList<>();
+        }
+
+        public CallResult(List<HotlineLogDTO> hotlineLogs, List<PracticeLogDTO> practiceLogs) {
+            this.hotlineLogs = hotlineLogs;
+            this.practiceLogs = practiceLogs;
         }
     }
 

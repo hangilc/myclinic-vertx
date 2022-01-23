@@ -1,6 +1,5 @@
 package dev.myclinic.vertx.server;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.myclinic.vertx.mastermap.MasterMap;
@@ -24,10 +23,6 @@ class RestHandlerBase {
             throw new RuntimeException(ex);
         }
     }
-
-//    protected <T> T _convertParam(String src, TypeReference<T> typeRef) throws JsonProcessingException {
-//        return mapper.readValue(src, typeRef);
-//    }
 
     protected <T> T _convertParam(byte[] bytes, TypeReference<T> typeRef) throws IOException {
         return mapper.readValue(bytes, typeRef);

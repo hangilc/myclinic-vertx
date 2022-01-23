@@ -13,6 +13,7 @@
     <script src="../vendor/twilio.min.js"></script>
     <link rel="stylesheet" href="../css/modal-dialog.css">
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="../css/appoint.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body class="pb-5">
@@ -30,6 +31,7 @@
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-practice-link">診察</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-cashier-link">会計</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-reception-link">受付</a></li>
+                <li><a href="javascript:void(0)" class="scroll-link" id="index-appoint-link">予約</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-faxed-shohousen-link">ファックス済処方箋</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-houmon-kango-link">訪問看護</a></li>
                 <li><a href="javascript:void(0)" class="scroll-link" id="index-shujii-link">主治医意見書</a></li>
@@ -69,7 +71,9 @@
         let printerSetting = await import("./printer-setting/printer-setting.js");
         let refer = await import("./refer/refer.js");
         let {MedCert} = await import("./medcert/medcert.js");
+        let {Appoint} = await import("../appoint/appoint.js");
         let {initPhone} = await import("../js/phone.js");
+        let {AppointRest} = await import("../js/appoint-rest.js");
 
         let printAPI = null;
         (function(){
@@ -88,7 +92,8 @@
         window.addEventListener("unhandledrejection", event => alert(event.reason));
         let prop = {
             rest,
-            printAPI
+            printAPI,
+            appointRest: new AppointRest()
         }
 
         initPhone(rest);
@@ -119,6 +124,14 @@
                 reloadHook: async () => e.dispatchEvent(new Event("onreloaded"))
             }
         }, document.getElementById("index-reception-link"));
+        menu.addItem("appoint", e => {
+            const app = new Appoint(prop);
+            e.append(app.ele);
+            return {
+                postConstruct: async () => await app.init(),
+                reloadHook: async () => app.ele.dispatchEvent(new Event("onreloaded"))
+            }
+        }, document.getElementById("index-appoint-link"));
         menu.addItem("faxed-shohousen", e => {
             e.innerHTML = faxedShohousen.getHtml();
             return {

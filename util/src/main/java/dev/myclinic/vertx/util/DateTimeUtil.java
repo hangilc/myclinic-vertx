@@ -2,17 +2,20 @@ package dev.myclinic.vertx.util;
 
 import dev.myclinic.vertx.util.kanjidate.KanjiDateRepBuilder;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.function.Function;
 
 public class DateTimeUtil {
 
-    private static DateTimeFormatter sqlDateFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd");
-    private static DateTimeFormatter sqlDateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
-    private static DateTimeFormatter packedSqlDateTimeFormatter = DateTimeFormatter.ofPattern("uuuuMMddHHmmss");
+    private static final DateTimeFormatter sqlDateFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd");
+    private static final DateTimeFormatter sqlDateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter sqlTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private static final DateTimeFormatter packedSqlDateTimeFormatter = DateTimeFormatter.ofPattern("uuuuMMddHHmmss");
     public static Function<KanjiDateRepBuilder, KanjiDateRepBuilder> kanjiFormatter1 = KanjiDateRepBuilder::format1;
 //    public static Function<KanjiDateRepBuilder, KanjiDateRepBuilder> kanjiFormatter2 = KanjiDateRepBuilder::format2;
 //    public static Function<KanjiDateRepBuilder, KanjiDateRepBuilder> kanjiFormatter3 = KanjiDateRepBuilder::format3;
@@ -58,6 +61,10 @@ public class DateTimeUtil {
         return LocalDate.parse(sqlDate, sqlDateFormatter);
     }
 
+    public static LocalTime parseSqlTime(String sqlTime){
+        return LocalTime.parse(sqlTime, sqlTimeFormatter);
+    }
+
 	public static String sqlDateToKanji(String sqlDate,
                                         Function<KanjiDateRepBuilder, KanjiDateRepBuilder> formatter){
         LocalDate date = parseSqlDate(sqlDate);
@@ -94,5 +101,20 @@ public class DateTimeUtil {
 
     public static int calcAge(LocalDate birthday) {
         return calcAge(birthday, LocalDate.now());
+    }
+
+    private static final String[] youbiKanji = new String[]{
+            "日", "月", "火", "水", "木", "金", "土"
+    };
+
+    public static String youbiIndexToKanji(int index){
+        if( index == 7 ){
+            index = 0;
+        }
+        return youbiKanji[index];
+    }
+
+    public static String youbiAsKanji(DayOfWeek dow){
+        return youbiIndexToKanji(dow.getValue());
     }
 }

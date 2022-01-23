@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Call</title>
+    <script src="./vendor/twilio.min.js"></script>
+    <script src="./js/misc.js"></script>
+</head>
+<body>
+<input type="text" id="phone-number-input"/>
+<button id="callout-button">発信</button>
+<button id="hangup-button">終了</button>
+
+<script>
+    (async function () {
+        const {detectPhoneNumber} = await import("./js/phone-number.js");
+        const {Api} = await import("./js/api.js");
+        const {Phone} = await import("./js/phone.js");
+
+        const api = new Api("/");
+        const phone = new Phone(async () => api.getTwilioToken());
+
+        document.getElementById("callout-button").addEventListener("click", async e => {
+            const input = document.getElementById("phone-number-input").value.trim();
+            if (input !== "") {
+                const result = detectPhoneNumber(input);
+                if (result && result.length > 0) {
+                    const num = result[0].phone;
+                    await phone.callout(num);
+                }
+            }
+        });
+        document.getElementById("hangup-button").addEventListener("click", async e => {
+            phone.disconnectAll();
+        });
+    })();
+</script>
+</body>
+</html>

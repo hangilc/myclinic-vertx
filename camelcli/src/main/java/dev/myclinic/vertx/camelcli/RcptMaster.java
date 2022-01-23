@@ -1,4 +1,4 @@
-package dev.myclinic.vertx.camelcomp;
+package dev.myclinic.vertx.camelcli;
 
 import dev.myclinic.vertx.camelcomp.file.FileName;
 import dev.myclinic.vertx.camelcomp.rcpt.RcptMasterDownloadProcessor;
@@ -15,7 +15,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.util.concurrent.CompletableFuture;
 
-public class Main {
+public class RcptMaster {
 
     public static void main(String[] args) throws Exception {
         CmdOpts cmdOpts = CmdOpts.parse(args);
@@ -49,7 +49,7 @@ public class Main {
                                     }
                                 })
                                 .split(body(), ",").parallelProcessing()
-                                    .process(new RcptMasterDownloadProcessor(dstDir))
+                                .process(new RcptMasterDownloadProcessor(dstDir))
                                 .end()
                                 .to("stream:out")
                                 .process(ex -> control.complete(null));
@@ -76,12 +76,12 @@ public class Main {
                                 .convertBodyTo(String.class, "MS932")
                                 .process(new ShinryouMasterContentProcessor())
                                 .split(body())
-                                    .process(ex -> {
-                                        ShinryouMasterCSV rec = ex.getIn().getBody(ShinryouMasterCSV.class);
-                                        if( rec.name.contains("感染症対策実施加算") ){
-                                            MasterHandler.enterShinryouMaster(conn, rec, "2021-04-01");
-                                        }
-                                    })
+                                .process(ex -> {
+                                    ShinryouMasterCSV rec = ex.getIn().getBody(ShinryouMasterCSV.class);
+                                    if( rec.name.contains("感染症対策実施加算") ){
+                                        MasterHandler.enterShinryouMaster(conn, rec, "2021-04-01");
+                                    }
+                                })
                                 .end()
                                 .process(ex -> control.complete(null));
                     }

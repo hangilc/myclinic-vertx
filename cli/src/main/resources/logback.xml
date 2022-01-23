@@ -8,7 +8,13 @@
         </encoder>
     </appender>
 
-    <root level="info">
+<!--    <logger name="com.zaxxer.hikari.pool.PoolBase" level="ERROR"/>-->
+<!--    <logger name="com.zaxxer.hikari.pool.HikariPool" level="ERROR"/>-->
+<!--    <logger name="com.zaxxer.hikari.HikariDataSource" level="ERROR"/>-->
+<!--    <logger name="com.zaxxer.hikari.HikariConfig" level="ERROR"/>-->
+    <logger name="com.zaxxer.hikari" level="ERROR"/>
+
+    <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
 

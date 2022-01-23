@@ -13,6 +13,11 @@ public class OpCreateFont extends Op {
 
     public OpCreateFont(String name, String fontName, double size, int weight, boolean italic){
         super(OpCode.CreateFont);
+        if( fontName.equals("serif") ){
+            fontName = "MS Mincho";
+        } else if( fontName.equals("sans-serif") ){
+            fontName = "MS Gothic";
+        }
         this.name = name;
         this.fontName = fontName;
         this.size = size;

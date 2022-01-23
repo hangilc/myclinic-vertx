@@ -232,6 +232,15 @@ export function jsdateToSqldate(jsdate){
     return toSqldate(jsdate.getFullYear(), jsdate.getMonth() + 1, jsdate.getDate());
 }
 
+export function sqldateToJsdate(sqldate){
+    const {year, month, day} = parseSqldate(sqldate);
+    return new Date(year, month - 1, day);
+}
+
+export function youbiIndexOfSqldate(sqldate){
+    return sqldateToJsdate(sqldate).getDay();
+}
+
 export function advanceDays(sqldate, n=1){
     let {year, month, day} = parseSqldate(sqldate);
     let d = new Date(year, month - 1, day + n);
@@ -258,4 +267,17 @@ export function advanceYears(sqldate, n=1){
     const lastDay = lastDayOfMonth(year, month);
     const day = startDay > lastDay ? lastDay : startDay;
     return toSqldate(year, month, day);
+}
+
+export function startOfWeek(sqldate, offset=0){
+    const youbiIndex = youbiIndexOfSqldate(sqldate);
+    return advanceDays(sqldate, -youbiIndex + offset);
+}
+
+export function consecutiveDays(startSqldate, n){
+    const days = [];
+    for(let i = 0; i<n;i++){
+        days.push(advanceDays(startSqldate, i));
+    }
+    return days;
 }

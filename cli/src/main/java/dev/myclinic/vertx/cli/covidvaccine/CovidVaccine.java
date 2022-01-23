@@ -129,6 +129,10 @@ public class CovidVaccine {
                     calendar2nd(args);
                     break;
                 }
+                case "calendar-2nd-list": {
+                    calendar2ndList(args);
+                    break;
+                }
                 case "history": {
                     history(args);
                     break;
@@ -214,19 +218,19 @@ public class CovidVaccine {
         System.out.println("  help");
     }
 
-    private static VialDelivered tryParseVialArg(String s){
+    private static VialDelivered tryParseVialArg(String s) {
         int index = s.indexOf("=");
-        if( index < 0 ){
+        if (index < 0) {
             return null;
         }
         String dateArg = s.substring(0, index);
-        String nArg = s.substring(index+1);
+        String nArg = s.substring(index + 1);
         LocalDate date = CovidMisc.tryParseDate(dateArg);
-        if( date != null ){
+        if (date != null) {
             try {
                 int n = Integer.parseInt(nArg);
                 return new VialDelivered(date, n);
-            } catch(NumberFormatException e){
+            } catch (NumberFormatException e) {
                 return null;
             }
         } else {
@@ -251,11 +255,11 @@ public class CovidVaccine {
             String left = str.substring(0, i);
             String right = str.substring(i + 2);
             LocalDateTime at = tryParseAppointTime(left);
-            if( at != null ){
+            if (at != null) {
                 try {
                     int n = Integer.parseInt(right);
                     return new DummyAppoint(at, n);
-                } catch(NumberFormatException e){
+                } catch (NumberFormatException e) {
                     return null;
                 }
             } else {
@@ -288,20 +292,20 @@ public class CovidVaccine {
         for (int i = 1; i < args.length; i++) {
             String arg = args[i];
             VialDelivered vialDelivered = tryParseVialArg(arg);
-            if( vialDelivered != null ){
+            if (vialDelivered != null) {
                 vialDelivereds.add(vialDelivered);
                 System.out.println(vialDelivered);
                 continue;
             }
             DummyAppoint dummyAppoint = DummyAppoint.tryParse(arg);
-            if( dummyAppoint != null ){
-                for(int j=0;j<dummyAppoint.n;j++){
+            if (dummyAppoint != null) {
+                for (int j = 0; j < dummyAppoint.n; j++) {
                     int patientId = dummyPatientId--;
                     StateLog log1 = new StateLog(patientId, new FirstShotAppoint(dummyAppoint.at));
                     book.applyLogEntry(log1);
                     LocalDateTime at2 = book.findVacancy(dummyAppoint.at.toLocalDate().plus(21, ChronoUnit.DAYS),
                             dt -> true);
-                    if( at2 == null ){
+                    if (at2 == null) {
                         throw new RuntimeException("Cannot find 2nd shot for: " + dummyAppoint.at);
                     }
                     StateLog log2 = new StateLog(patientId, new EphemeralSecondShotAppoint(at2));
@@ -322,7 +326,7 @@ public class CovidVaccine {
                 int req = (apps + 5) / 6;
                 int available = VialDelivered.availableAt(vialDelivereds, at.toLocalDate());
                 int balance = available - req;
-                if( req > 0 ) {
+                if (req > 0) {
                     VialDelivered.consume(vialDelivereds, at.toLocalDate(), req);
                 }
                 System.out.printf("%s %d/%d %d\n",
@@ -670,20 +674,20 @@ public class CovidVaccine {
     }
 
     private static LocalDate thirdShotDue(LocalDate secondShotDate, ThirdShotCandidate candidate) {
-        switch(candidate){
+        switch (candidate) {
             case Medical: {
-                secondShotDate.plusMonths(6);
+                return secondShotDate.plusMonths(6);
             }
             case Elder: {
                 LocalDate d = secondShotDate.plusMonths(7);
-                if( d.getMonthValue() <= 2 ){
+                if (d.getMonthValue() <= 2) {
                     return d;
                 }
                 return secondShotDate.plusMonths(6);
             }
             case Other: {
                 LocalDate d = secondShotDate.plusMonths(8);
-                if( d.getMonthValue() <= 2 ){
+                if (d.getMonthValue() <= 2) {
                     return d;
                 }
                 return secondShotDate.plusMonths(7);
@@ -704,26 +708,26 @@ public class CovidVaccine {
         }
     }
 
-    private static void calendar2nd(String[] args){
+    private static void calendar2nd(String[] args) {
         List<LocalDateTime> targetTimes = book.listAppointTime();
         Map<LocalDate, List<SecondShotData>> map = new HashMap<>();
-        for(LocalDateTime at: targetTimes) {
+        for (LocalDateTime at : targetTimes) {
             AppointBlock block = book.getAppointBlock(at);
-            if( block.slots.size() > 0) {
-                for(AppointSlot slot: block.slots){
-                    if(slot instanceof SecondShotSlot){
-                        SecondShotSlot slot2 = (SecondShotSlot)slot;
-                        if( slot2.state == SecondShotState.Done ){
+            if (block.slots.size() > 0) {
+                for (AppointSlot slot : block.slots) {
+                    if (slot instanceof SecondShotSlot) {
+                        SecondShotSlot slot2 = (SecondShotSlot) slot;
+                        if (slot2.state == SecondShotState.Done) {
                             Patient patient = book.getPatient(slot2.patientId);
                             ThirdShotCandidate candidate = ThirdShotCandidate.Other;
-                            if( patient.patientId == 3835 ){
+                            if (patient.patientId == 3835) {
                                 candidate = ThirdShotCandidate.Medical;
-                            } else if( patient.age >= 65 ){
+                            } else if (patient.age >= 65) {
                                 candidate = ThirdShotCandidate.Elder;
                             }
                             LocalDate dueDate = thirdShotDue(at.toLocalDate(), candidate);
                             SecondShotData data = new SecondShotData(at.toLocalDate(), slot2);
-                            if( map.containsKey(dueDate) ){
+                            if (map.containsKey(dueDate)) {
                                 map.get(dueDate).add(data);
                             } else {
                                 List<SecondShotData> items = new ArrayList<>();
@@ -747,10 +751,34 @@ public class CovidVaccine {
             });
         });
         int totalCount = 0;
-        for(List<SecondShotData> items: map.values()){
+        for (List<SecondShotData> items : map.values()) {
             totalCount += items.size();
         }
         System.out.printf("Total: %d名\n", totalCount);
+    }
+
+    private static void calendar2ndList(String[] args) {
+        List<LocalDateTime> targetTimes = book.listAppointTime();
+        for (LocalDateTime at : targetTimes) {
+            AppointBlock block = book.getAppointBlock(at);
+            for (AppointSlot slot : block.slots) {
+                if (slot instanceof SecondShotSlot) {
+                    SecondShotSlot slot2 = (SecondShotSlot) slot;
+                    if (slot2.state == SecondShotState.Done) {
+                        Patient patient = book.getPatient(slot2.patientId);
+                        ThirdShotCandidate candidate = ThirdShotCandidate.Other;
+                        if (patient.patientId == 3835) {
+                            candidate = ThirdShotCandidate.Medical;
+                        } else if (patient.age >= 65) {
+                            candidate = ThirdShotCandidate.Elder;
+                        }
+                        LocalDate dueDate = thirdShotDue(at.toLocalDate(), candidate);
+                        System.out.printf("%d %d %s %s\n", patient.patientId, patient.age,
+                                at.toLocalDate(), dueDate);
+                    }
+                }
+            }
+        }
     }
 
     private static void pickRandom(String[] args) {
@@ -1737,10 +1765,10 @@ public class CovidVaccine {
         throw new RuntimeException("Cannot parse appoint time: " + src);
     }
 
-    static LocalDateTime tryParseAppointTime(String src){
+    static LocalDateTime tryParseAppointTime(String src) {
         try {
             return parseAppointTime(src);
-        } catch(Exception e){
+        } catch (Exception e) {
             return null;
         }
     }

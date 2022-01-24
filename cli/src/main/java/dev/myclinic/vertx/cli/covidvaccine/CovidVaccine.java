@@ -683,14 +683,26 @@ public class CovidVaccine {
                 if (d.getMonthValue() <= 2) {
                     return d;
                 }
-                return secondShotDate.plusMonths(6);
+                d = secondShotDate.plusMonths(6);
+                LocalDate march = LocalDate.of(2022, 3, 1);
+                if( d.isBefore(march) ){
+                    return march;
+                } else {
+                    return d;
+                }
             }
             case Other: {
                 LocalDate d = secondShotDate.plusMonths(8);
                 if (d.getMonthValue() <= 2) {
                     return d;
                 }
-                return secondShotDate.plusMonths(7);
+                d = secondShotDate.plusMonths(7);
+                LocalDate march = LocalDate.of(2022, 3, 1);
+                if( d.isBefore(march) ){
+                    return march;
+                } else {
+                    return d;
+                }
             }
             default: {
                 throw new RuntimeException("cannot happen");

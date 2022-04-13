@@ -35,8 +35,8 @@ export class RegisteredDrugDialog extends Dialog {
     }
 
     async doSelected(exampleFull){
-        let master = await this.rest.resolveIyakuhinMaster(exampleFull.prescExample.iyakuhincode, this.at);
-        exampleFull = Object.assign({}, exampleFull, {master: master});
+        // let master = await this.rest.resolveIyakuhinMaster(exampleFull.prescExample.iyakuhincode, this.at);
+        // exampleFull = Object.assign({}, exampleFull, {master: master});
         this.disp.add(exampleFull);
         this.disp.show();
     }

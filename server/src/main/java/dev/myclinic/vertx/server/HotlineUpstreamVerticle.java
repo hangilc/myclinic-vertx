@@ -8,6 +8,12 @@ import io.vertx.core.json.JsonObject;
 public class HotlineUpstreamVerticle extends AbstractVerticle {
     private WebSocket ws = null;
 
+    public static JsonObject encodeListTodaysHotline(){
+        JsonObject req = new JsonObject();
+        req.put("request", "list-todays-hotline");
+        return req;
+    }
+
     public static JsonObject encodePostHotline(String sender, String recipient, String message) {
         JsonObject data = new JsonObject();
         data.put("sender", sender);

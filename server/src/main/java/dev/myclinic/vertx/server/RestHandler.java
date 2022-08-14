@@ -2101,6 +2101,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         // List<HotlineDTO> _value = backend.listTodaysHotline();
+        JsonObject hotlineReq = HotlineUpstreamVerticle.encodeListTodaysHotline();
+        vertx.eventBus().send("hotline-request", hotlineReq);
         List<HotlineDTO> _value = List.of();
         conn.commit();
         String result = mapper.writeValueAsString(_value);

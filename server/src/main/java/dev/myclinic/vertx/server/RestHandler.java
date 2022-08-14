@@ -25,6 +25,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +75,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     }
 
     public RestHandler(DataSource ds, TableSet ts, ObjectMapper mapper, MasterMap masterMap,
-                       HoukatsuKensa houkatsuKensa, Vertx vertx) {
+            HoukatsuKensa houkatsuKensa, Vertx vertx) {
         super(mapper, masterMap);
         this.ds = ds;
         this.ts = ts;
@@ -114,7 +115,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     }
 
     private CallResult batchGetVisit(RoutingContext ctx, Connection conn) throws Exception {
-        List<Integer> visitIds = mapper.readValue(ctx.getBody().getBytes(), new TypeReference<>(){});
+        List<Integer> visitIds = mapper.readValue(ctx.getBody().getBytes(), new TypeReference<>() {
+        });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<VisitDTO> _value = backend.batchGetVisit(visitIds);
@@ -428,7 +430,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
     private CallResult listConductFullByIds(RoutingContext ctx, Connection conn) throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
-        List<Integer> conductId = mapper.readValue(ctx.getBody().getBytes(), new TypeReference<>(){});
+        List<Integer> conductId = mapper.readValue(ctx.getBody().getBytes(), new TypeReference<>() {
+        });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
         List<ConductFullDTO> _value = backend.listConductFullByIds(conductId);
@@ -697,14 +700,16 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return new CallResult(backend);
     }
 
-    private CallResult listVisitIdVisitedAtByPatientAndIyakuhincode(RoutingContext ctx, Connection conn) throws Exception {
+    private CallResult listVisitIdVisitedAtByPatientAndIyakuhincode(RoutingContext ctx, Connection conn)
+            throws Exception {
         HttpServerRequest req = ctx.request();
         MultiMap params = req.params();
         int patientId = Integer.parseInt(params.get("patient-id"));
         int iyakuhincode = Integer.parseInt(params.get("iyakuhincode"));
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        List<VisitIdVisitedAtDTO> _value = backend.listVisitIdVisitedAtByPatientAndIyakuhincode(patientId, iyakuhincode);
+        List<VisitIdVisitedAtDTO> _value = backend.listVisitIdVisitedAtByPatientAndIyakuhincode(patientId,
+                iyakuhincode);
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
@@ -990,7 +995,11 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         });
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        int _value = backend.enterHotline(hotline);
+        JsonObject hotlineReq = HotlineUpstreamVerticle.encodePostHotline(hotline.sender, hotline.recipient,
+                hotline.message);
+        vertx.eventBus().send("hotline-request", hotlineReq);
+        // int _value = backend.enterHotline(hotline);
+        int _value = 0;
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
@@ -2254,7 +2263,6 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         return new CallResult(backend);
     }
 
-
     {
         funcMap.put("search-byoumei-master", this::searchByoumeiMaster);
         funcMap.put("list-visit-by-patient-having-hoken", this::listVisitByPatientHavingHoken);
@@ -2294,7 +2302,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("delete-shouki", this::deleteShouki);
         funcMap.put("find-drug-attr", this::findDrugAttr);
         funcMap.put("update-hoken", this::updateHoken);
-        funcMap.put("list-visit-text-drug-by-patient-and-iyakuhincode", this::listVisitTextDrugByPatientAndIyakuhincode);
+        funcMap.put("list-visit-text-drug-by-patient-and-iyakuhincode",
+                this::listVisitTextDrugByPatientAndIyakuhincode);
         funcMap.put("get-wqueue-full", this::getWqueueFull);
         funcMap.put("list-shinryou-full", this::listShinryouFull);
         funcMap.put("search-shinryou-master", this::searchShinryouMaster);
@@ -2305,7 +2314,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         funcMap.put("list-payment", this::listPayment);
         funcMap.put("batch-enter-payment", this::batchEnterPayment);
         funcMap.put("batch-get-last-payment", this::batchGetLastPayment);
-        funcMap.put("list-visit-id-visited-at-by-patient-and-iyakuhincode", this::listVisitIdVisitedAtByPatientAndIyakuhincode);
+        funcMap.put("list-visit-id-visited-at-by-patient-and-iyakuhincode",
+                this::listVisitIdVisitedAtByPatientAndIyakuhincode);
         funcMap.put("batch-delete-shinryou", this::batchDeleteShinryou);
         funcMap.put("list-current-disease-full", this::listCurrentDiseaseFull);
         funcMap.put("enter-disease", this::enterDisease);
@@ -2935,8 +2945,7 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         BatchEnterRequestDTO req = BatchEnterRequestDTO.create();
         for (var src : backend.listConductFull(sourceVisitId)) {
             String gazouLabel = src.gazouLabel != null ? src.gazouLabel.label : null;
-            ConductEnterRequestDTO creq =
-                    ConductEnterRequestDTO.create(targetVisitId, src.conduct.kind, gazouLabel);
+            ConductEnterRequestDTO creq = ConductEnterRequestDTO.create(targetVisitId, src.conduct.kind, gazouLabel);
             src.conductShinryouList.forEach(shinryou -> {
                 ConductShinryouDTO copy = new ConductShinryouDTO();
                 copy.shinryoucode = shinryou.conductShinryou.shinryoucode;
@@ -3047,24 +3056,24 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
 
     private static final Pattern text0410Pattern = Pattern.compile("\\n@0410対応");
 
-    private boolean is0410(String content){
+    private boolean is0410(String content) {
         Matcher m = text0410Pattern.matcher(content);
         return m.find();
     }
 
-    private boolean is0410NoPay(Backend backend, int visitId){
+    private boolean is0410NoPay(Backend backend, int visitId) {
         VisitDTO visit = backend.getVisit(visitId);
         List<TextDTO> texts = backend.listText(visitId);
         boolean found = false;
-        for(TextDTO text: texts){
-            if( is0410(text.content) ){
+        for (TextDTO text : texts) {
+            if (is0410(text.content)) {
                 found = true;
                 break;
             }
         }
-        if( found ){
+        if (found) {
             PaymentDTO payment = backend.findLastPayment(visitId);
-            if( payment == null ){
+            if (payment == null) {
                 return true;
             } else {
                 LocalDate visitDate = DateTimeUtil.parseSqlDateTime(visit.visitedAt).toLocalDate();
@@ -3088,8 +3097,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
                 LocalDate.parse(fromParam),
                 LocalDate.parse(uptoParam));
         List<Integer> result = new ArrayList<>();
-        for(int visitId: visitIds){
-            if( is0410NoPay(backend, visitId) ){
+        for (int visitId : visitIds) {
+            if (is0410NoPay(backend, visitId)) {
                 result.add(visitId);
             }
         }

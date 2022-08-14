@@ -2,9 +2,6 @@ package dev.myclinic.vertx.server;
 
 import javax.sql.DataSource;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
@@ -59,9 +56,9 @@ public class Main {
         AppConfig config = createConfig(vertx);
         MasterMap masterMap = config.getMasterMap();
         HoukatsuKensa houkatsuKensa = config.getHoukatsuKensa();
-        HotlineStreamerVerticle hotlineVerticle = new HotlineStreamerVerticle(mapper);
+        HotlineStreamerVerticle hotlineVerticle = new HotlineStreamerVerticle();
         vertx.deployVerticle(hotlineVerticle);
-        HotlineUpstreamVerticle hotlineUpstreamVerticle = new HotlineUpstreamVerticle(vertx, mapper);
+        HotlineUpstreamVerticle hotlineUpstreamVerticle = new HotlineUpstreamVerticle();
         vertx.deployVerticle(hotlineUpstreamVerticle);
         Router router = Router.router(vertx);
         Route restRoute = router.route("/json/:action");

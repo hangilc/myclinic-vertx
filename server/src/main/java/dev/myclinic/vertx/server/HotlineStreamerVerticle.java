@@ -3,8 +3,6 @@ package dev.myclinic.vertx.server;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.ServerWebSocket;
@@ -12,11 +10,6 @@ import io.vertx.core.http.ServerWebSocket;
 class HotlineStreamerVerticle extends AbstractVerticle {
 
     private final Set<ServerWebSocket> clients = new HashSet<>();
-    private final ObjectMapper mapper;
-
-    public HotlineStreamerVerticle(ObjectMapper mapper) {
-        this.mapper = mapper;
-    }
 
     @Override
     public void start() throws Exception {

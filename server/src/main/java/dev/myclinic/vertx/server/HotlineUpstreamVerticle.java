@@ -1,41 +1,39 @@
 package dev.myclinic.vertx.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Vertx;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.WebSocket;
 import io.vertx.core.json.JsonObject;
 
 public class HotlineUpstreamVerticle extends AbstractVerticle {
-    private final Vertx vertx;
-    private EventBus bus;
-    private final ObjectMapper mapper;
     private WebSocket ws = null;
 
-    public HotlineUpstreamVerticle(Vertx vertx, ObjectMapper mapper) {
-        this.vertx = vertx;
-        this.bus = vertx.eventBus();
-        this.mapper = mapper;
+    public static JsonObject encodePostHotline(String sender, String recipient, String message) {
+        JsonObject data = new JsonObject();
+        data.put("sender", sender);
+        data.put("recipient", recipient);
+        data.put("message", message);
+        JsonObject req = new JsonObject();
+        req.put("request", "post-hotline");
+        req.put("data", data);
+        return req;
     }
 
     @Override
-    public void start(){
+    public void start() {
         HttpClient client = vertx.createHttpClient();
         client.webSocket(5000, "localhost", "/", res -> {
-            if( res.succeeded() ){
+            if (res.succeeded()) {
                 ws = res.result();
                 System.out.println("Hotline upstream connected");
                 ws.frameHandler(frame -> {
                     System.out.println("Got frame");
-                    if( frame.isText() ){
+                    if (frame.isText()) {
                         String message = frame.textData();
                         System.out.printf("hotline upstream message: %s\n", message);
                         try {
                             JsonObject m = new JsonObject(message);
-                            if( m.getString("kind").equals("hotline") ){
+                            if (m.getString("kind").equals("hotline")) {
                                 JsonObject h = new JsonObject();
                                 h.put("hotlineId", m.getInteger("id"));
                                 h.put("message", m.getString("message"));
@@ -48,12 +46,17 @@ public class HotlineUpstreamVerticle extends AbstractVerticle {
                                 r.put("kind", "created");
                                 r.put("body", c.toString());
                                 System.out.println(r.toString());
-                                bus.send("hotline-streamer", r.toString());
+                                vertx.eventBus().send("hotline-streamer", r.toString());
                             }
-                        } catch(Exception ex) {
+                        } catch (Exception ex) {
                             System.err.println("Failed to parse JSON.");
                         }
                     }
+                });
+                vertx.eventBus().<JsonObject>consumer("hotline-request", message -> {
+                    String m = message.body().toString();
+                    System.out.printf("sending hotline request: %s\n", m);
+                    ws.writeTextMessage(m);
                 });
             } else {
                 System.err.println(res.cause());

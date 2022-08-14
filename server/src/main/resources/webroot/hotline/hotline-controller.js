@@ -75,6 +75,7 @@ export class HotlineController {
     }
 
     async doMessage(message){
+        console.log("doMessage", message);
         let log = JSON.parse(message);
         if( log.kind === "created" ){
             let hotline = JSON.parse(log.body).created;

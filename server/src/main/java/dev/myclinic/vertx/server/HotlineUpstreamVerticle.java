@@ -45,7 +45,7 @@ public class HotlineUpstreamVerticle extends AbstractVerticle {
                                 JsonObject c = new JsonObject();
                                 c.put("created", h);
                                 JsonObject r = new JsonObject();
-                                r.put("kind", "hotline");
+                                r.put("kind", "created");
                                 r.put("body", c.toString());
                                 System.out.println(r.toString());
                                 bus.send("hotline-streamer", r.toString());

@@ -143,7 +143,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         int before = Integer.parseInt(params.get("before"));
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        List<HotlineDTO> _value = backend.listTodaysHotlineInRange(after, before);
+        // List<HotlineDTO> _value = backend.listTodaysHotlineInRange(after, before);
+        List<HotlineDTO> _value = List.of();
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
@@ -1997,7 +1998,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         int thresholdHotlineId = Integer.parseInt(params.get("threshold-hotline-id"));
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        List<HotlineDTO> _value = backend.listRecentHotline(thresholdHotlineId);
+        // List<HotlineDTO> _value = backend.listRecentHotline(thresholdHotlineId);
+        List<HotlineDTO> _value = List.of();
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);
@@ -2089,7 +2091,8 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         HttpServerRequest req = ctx.request();
         Query query = new Query(conn);
         Backend backend = new Backend(ts, query);
-        List<HotlineDTO> _value = backend.listTodaysHotline();
+        // List<HotlineDTO> _value = backend.listTodaysHotline();
+        List<HotlineDTO> _value = List.of();
         conn.commit();
         String result = mapper.writeValueAsString(_value);
         req.response().end(result);

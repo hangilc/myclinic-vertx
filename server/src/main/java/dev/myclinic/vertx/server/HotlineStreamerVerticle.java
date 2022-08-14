@@ -26,6 +26,7 @@ class HotlineStreamerVerticle extends AbstractVerticle {
     }
 
     public void addClient(ServerWebSocket client) {
+        System.out.printf("ws client added: %s\n", client);
         client.closeHandler(_dummy -> {
             clients.remove(client);
             System.out.println("client removed: " + client);
@@ -42,6 +43,7 @@ class HotlineStreamerVerticle extends AbstractVerticle {
     }
 
     private void broadcast(String msg) {
+        System.out.printf("broadcasting: %s\n", msg);
         for (var client : clients) {
             client.writeTextMessage(msg);
         }

@@ -1,7 +1,13 @@
 package dev.myclinic.vertx.server;
 
+import javax.sql.DataSource;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+
 import dev.myclinic.vertx.appconfig.AppConfig;
 import dev.myclinic.vertx.appconfig.FileBasedAppConfig;
 import dev.myclinic.vertx.db.MysqlDataSourceConfig;
@@ -22,20 +28,9 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.StaticHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.sql.DataSource;
-import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Main {
-    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    // private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static final ObjectMapper mapper;
 
     static {
@@ -64,8 +59,10 @@ public class Main {
         AppConfig config = createConfig(vertx);
         MasterMap masterMap = config.getMasterMap();
         HoukatsuKensa houkatsuKensa = config.getHoukatsuKensa();
-        HotlineStreamerVerticle hotlineVerticls = new HotlineStreamerVerticle(mapper);
-        vertx.deployVerticle(hotlineVerticls);
+        HotlineStreamerVerticle hotlineVerticle = new HotlineStreamerVerticle(mapper);
+        vertx.deployVerticle(hotlineVerticle);
+        HotlineUpstreamVerticle hotlineUpstreamVerticle = new HotlineUpstreamVerticle(vertx, mapper);
+        vertx.deployVerticle(hotlineUpstreamVerticle);
         Router router = Router.router(vertx);
         Route restRoute = router.route("/json/:action");
         restRoute.handler(BodyHandler.create());
@@ -106,7 +103,7 @@ public class Main {
         server.webSocketHandler(ws -> {
             System.out.println("opened: " + ws.path());
             if( ws.path().equals("/hotline") ){
-                hotlineVerticls.addClient(ws);
+                hotlineVerticle.addClient(ws);
             } else {
                 ws.reject();
             }
@@ -131,7 +128,7 @@ public class Main {
             sslServer.webSocketHandler(ws -> {
                 System.out.println("opened: " + ws.path());
                 if( ws.path().equals("/hotline") ){
-                    hotlineVerticls.addClient(ws);
+                    hotlineVerticle.addClient(ws);
                 } else {
                     ws.reject();
                 }
@@ -144,28 +141,28 @@ public class Main {
         }
     }
 
-    private static void ensureAppDir(String dirToken) throws IOException {
-        Path path = GlobalService.getInstance().resolveAppPath(dirToken);
-        if (!Files.exists(path)) {
-            Files.createDirectories(path);
-        }
-    }
+    // private static void ensureAppDir(String dirToken) throws IOException {
+    //     Path path = GlobalService.getInstance().resolveAppPath(dirToken);
+    //     if (!Files.exists(path)) {
+    //         Files.createDirectories(path);
+    //     }
+    // }
 
-    private static void addStaticPath(Router router, String url, Path root) {
-        if (!url.endsWith("/")) {
-            url += "/";
-        }
-        String urlPrefix = url;
-        router.get(urlPrefix + "*").handler(ctx -> {
-            try {
-                String path = URLDecoder.decode(ctx.request().path(), StandardCharsets.UTF_8)
-                        .substring(urlPrefix.length());
-                ctx.response().sendFile(root.resolve(path).toString());
-            } catch (Exception e) {
-                ctx.fail(e);
-            }
-        });
-    }
+    // private static void addStaticPath(Router router, String url, Path root) {
+    //     if (!url.endsWith("/")) {
+    //         url += "/";
+    //     }
+    //     String urlPrefix = url;
+    //     router.get(urlPrefix + "*").handler(ctx -> {
+    //         try {
+    //             String path = URLDecoder.decode(ctx.request().path(), StandardCharsets.UTF_8)
+    //                     .substring(urlPrefix.length());
+    //             ctx.response().sendFile(root.resolve(path).toString());
+    //         } catch (Exception e) {
+    //             ctx.fail(e);
+    //         }
+    //     });
+    // }
 
     private static AppConfig createConfig(Vertx vertx) {
         String configDir = System.getenv("MYCLINIC_CONFIG_DIR");

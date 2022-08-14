@@ -1,15 +1,13 @@
 package dev.myclinic.vertx.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.myclinic.vertx.dto.HotlineDTO;
-import dev.myclinic.vertx.dto.HotlineLogDTO;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Promise;
-import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.http.ServerWebSocket;
-
 import java.util.HashSet;
 import java.util.Set;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.ServerWebSocket;
 
 class HotlineStreamerVerticle extends AbstractVerticle {
 
@@ -27,7 +25,7 @@ class HotlineStreamerVerticle extends AbstractVerticle {
         bus.<String>consumer("hotline-streamer", message -> this.broadcast(message.body()));
     }
 
-    public void addClient(ServerWebSocket client){
+    public void addClient(ServerWebSocket client) {
         client.closeHandler(_dummy -> {
             clients.remove(client);
             System.out.println("client removed: " + client);
@@ -43,8 +41,8 @@ class HotlineStreamerVerticle extends AbstractVerticle {
         this.clients.add(client);
     }
 
-    private void broadcast(String msg){
-        for(var client: clients){
+    private void broadcast(String msg) {
+        for (var client : clients) {
             client.writeTextMessage(msg);
         }
     }

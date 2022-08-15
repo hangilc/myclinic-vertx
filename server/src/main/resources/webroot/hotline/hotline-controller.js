@@ -83,9 +83,9 @@ export class HotlineController {
                 if( (this.lastHotlineId + 1) < hotline.hotlineId ){
                     await this.fillGapMessages(this.lastHotlineId, hotline.hotlineId);
                 }
-                await this.addMessage(hotline);
+                this.addMessage(hotline);
                 if( hotline.recipient === this.name ){
-                    await this.doBeep();
+                    // await this.doBeep();
                 }
             }
         } else if( log.kind === "beep" ){
@@ -96,9 +96,9 @@ export class HotlineController {
         }
     }
 
-    async doBeep(){
-        await this.printAPI.beep();
-    }
+    // async doBeep(){
+    //     await this.printAPI.beep();
+    // }
 
     isMyMessage(hotline){
         let sender = hotline.sender;

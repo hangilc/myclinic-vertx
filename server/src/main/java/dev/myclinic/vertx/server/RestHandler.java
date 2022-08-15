@@ -1014,13 +1014,15 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
         }
         conn.commit();
         req.response().end(jsonEncode(true));
-        HotlineLogDTO log = new HotlineLogDTO();
-        HotlineBeep body = new HotlineBeep();
-        body.target = target;
-        log.kind = "beep";
-        log.body = mapper.writeValueAsString(body);
+        JsonObject hotlineReq = HotlineUpstreamVerticle.encodeHotlineBeep(target);
+        vertx.eventBus().send("hotline-request", hotlineReq);
+        // HotlineLogDTO log = new HotlineLogDTO();
+        // HotlineBeep body = new HotlineBeep();
+        // body.target = target;
+        // log.kind = "beep";
+        // log.body = mapper.writeValueAsString(body);
         CallResult cr = new CallResult();
-        cr.hotlineLogs.add(log);
+        // cr.hotlineLogs.add(log);
         return cr;
     }
 
@@ -3123,13 +3125,14 @@ class RestHandler extends RestHandlerBase implements Handler<RoutingContext> {
                 conn = ds.getConnection();
                 conn.setAutoCommit(false);
                 CallResult cr = f.call(routingContext, conn);
-                if (cr.hotlineLogs.size() > 0) {
-                    EventBus bus = vertx.eventBus();
-                    for (HotlineLogDTO log : cr.hotlineLogs) {
-                        String msg = mapper.writeValueAsString(log);
-                        bus.send("hotline-streamer", msg);
-                    }
-                }
+                // if (cr.hotlineLogs.size() > 0) {
+                //     EventBus bus = vertx.eventBus();
+                //     for (HotlineLogDTO log : cr.hotlineLogs) {
+                //         String msg = mapper.writeValueAsString(log);
+                //         System.out.println(msg);
+                //         // bus.send("hotline-streamer", msg);
+                //     }
+                // }
             } catch (Exception e) {
                 if (conn != null) {
                     try {

@@ -27,6 +27,15 @@ public class HotlineUpstreamVerticle extends AbstractVerticle {
         return req;
     }
 
+    public static JsonObject encodeHotlineBeep(String recipient){
+        JsonObject data = new JsonObject();
+        data.put("recipient", recipient);
+        JsonObject req = new JsonObject();
+        req.put("request", "hotline-beep");
+        req.put("data", data);
+        return req;
+    }
+
     @Override
     public void start() {
         restart(1);
@@ -68,10 +77,12 @@ public class HotlineUpstreamVerticle extends AbstractVerticle {
                     });
                     ws.exceptionHandler(ex -> {
                         System.err.printf("Error: %s\n", ex);
+                        ws = null;
                         restart(1);
                     });
                     ws.closeHandler(_x -> {
                         System.err.println("Hotline upstread disconnected");
+                        ws = null;
                         restart(1);
                     });
                     vertx.eventBus().<JsonObject>consumer("hotline-request", message -> {

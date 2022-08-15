@@ -138,29 +138,6 @@ public class Main {
         }
     }
 
-    // private static void ensureAppDir(String dirToken) throws IOException {
-    //     Path path = GlobalService.getInstance().resolveAppPath(dirToken);
-    //     if (!Files.exists(path)) {
-    //         Files.createDirectories(path);
-    //     }
-    // }
-
-    // private static void addStaticPath(Router router, String url, Path root) {
-    //     if (!url.endsWith("/")) {
-    //         url += "/";
-    //     }
-    //     String urlPrefix = url;
-    //     router.get(urlPrefix + "*").handler(ctx -> {
-    //         try {
-    //             String path = URLDecoder.decode(ctx.request().path(), StandardCharsets.UTF_8)
-    //                     .substring(urlPrefix.length());
-    //             ctx.response().sendFile(root.resolve(path).toString());
-    //         } catch (Exception e) {
-    //             ctx.fail(e);
-    //         }
-    //     });
-    // }
-
     private static AppConfig createConfig(Vertx vertx) {
         String configDir = System.getenv("MYCLINIC_CONFIG_DIR");
         if (configDir == null) {

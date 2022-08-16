@@ -153,12 +153,13 @@ public class HotlineUpstreamVerticle extends AbstractVerticle {
                     setupFrameHandler(ws);
                     ws.exceptionHandler(ex -> {
                         wsCurrent = null;
-                        System.err.printf("Error: %s\n", ex);
-                        tryConnect();
+                        System.err.printf("upstream relay error: %s\n", ex);
+                        // tryConnect();
                     });
                     ws.closeHandler(_x -> {
                         wsCurrent = null;
                         System.err.println("disconnected from upstream relay");
+                        tryConnect();
                     });
                     System.out.println("connected to upstrea relay");
                 } else {

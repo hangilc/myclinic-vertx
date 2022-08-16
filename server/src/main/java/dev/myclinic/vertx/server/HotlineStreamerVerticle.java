@@ -32,7 +32,9 @@ class HotlineStreamerVerticle extends AbstractVerticle {
             clients.remove(client);
             System.out.println("client throwed: " + client);
         });
+        System.out.printf("before add: %s\n", clients);
         this.clients.add(client);
+        System.out.printf("after add: %s\n", clients);
     }
 
     private void broadcast(String msg) {

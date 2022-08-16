@@ -104,7 +104,6 @@ public class Main {
             } else {
                 ws.reject();
             }
-            ws.closeHandler(e -> System.out.println("closed"));
         });
         String bind = resolveBind(cmdArgs);
         int port = cmdArgs.port;

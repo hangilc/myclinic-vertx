@@ -187,8 +187,15 @@ class Data {
                 if (futan.equals("高齢７")) {
                     return "26区ア";
                 } else {
-                    return "29区エ";
+                    if( futan.equals("高齢８")) {
+                        return "41区カ";
+                    } else {
+                        return "42区キ";
+                    }
                 }
+                // } else {
+                //     return "29区エ";
+                // }
             }
         }
         return "";

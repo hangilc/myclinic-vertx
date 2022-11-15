@@ -165,7 +165,7 @@ class Data {
                 }
             }
             outHokenDetail(hoken);
-            xml.element("氏名", patient.lastName + patient.firstName);
+            xml.element("氏名", patient.lastName + "　" + patient.firstName);
             xml.element("性別",
                     patient.sex.equals("F") ? "女" : "男");
             xml.element("生年月日", patient.birthday);

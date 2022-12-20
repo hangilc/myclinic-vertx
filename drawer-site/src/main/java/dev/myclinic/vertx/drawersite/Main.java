@@ -470,6 +470,7 @@ public class Main {
             List<List<Op>> pages = pr.convertToPages();
             DrawerPrinter printer = new DrawerPrinter();
             if (setting == null) {
+                System.out.println("start printing");
                 printer.printPages(pages);
             } else {
                 PrintSetting printSetting = getSetting(setting);

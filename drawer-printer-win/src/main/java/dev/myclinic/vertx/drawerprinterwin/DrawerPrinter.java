@@ -47,12 +47,16 @@ public class DrawerPrinter {
     }
 
     public void printPages(List<List<Op>> pages) {
+        System.out.println("enter printPages");
         printPages(pages, null, null, null);
     }
 
     public void printPages(List<List<Op>> pages, byte[] devmode, byte[] devnames, AuxSetting auxSetting) {
+        System.out.println("enter printPages (3) ---");
         if (devmode == null && devnames == null) {
+            System.out.println("calling printDialog");
             DialogResult dialogResult = printDialog(null, null);
+            System.out.printf("DialogResult returned: %b\n", dialogResult.ok);
             if (dialogResult.ok) {
                 devmode = dialogResult.devmodeData;
                 devnames = dialogResult.devnamesData;
@@ -86,7 +90,9 @@ public class DrawerPrinter {
         if (endDocResult <= 0) {
             throw new RuntimeException("EndDoc failed");
         }
-        deleteDC(hdc);
+        boolean rc;
+        rc = deleteDC(hdc);
+        System.out.printf("deleteDC %b\n", rc);
     }
 
     public void setDx(double dx) {
@@ -170,6 +176,7 @@ public class DrawerPrinter {
             pd.hDevNames = allocHandle(devnamesBase);
         }
         HRESULT res = Comdlg32.INSTANCE.PrintDlgEx(pd);
+        System.out.printf("PringDlgEx returned %d\n", res.intValue());
         DialogResult result;
         if (res.intValue() == 0 && pd.dwResultAction.intValue() == 1) {
             Pointer pDevMode = MyKernel32.INSTANCE.GlobalLock(pd.hDevMode);
@@ -181,7 +188,6 @@ public class DrawerPrinter {
             MyKernel32.INSTANCE.GlobalUnlock(pd.hDevNames);
             MyKernel32.INSTANCE.GlobalFree(pd.hDevNames);
             result = new DialogResult(true, devmodeData, devnamesData, pd.nCopies.intValue());
-
         } else {
             result = new DialogResult();
         }
@@ -195,13 +201,17 @@ public class DrawerPrinter {
     }
 
     public DialogResult printDialog(byte[] devmodeBase, byte[] devnamesBase) {
-        HWND hwnd = createWindow();
+        System.out.println("enter printDialog");
+        // HWND hwnd = createWindow();
+        HWND hwnd = (HWND)MyKernel32.INSTANCE.GetConsoleWindow();
         if (hwnd == null) {
             throw new RuntimeException("Printer.createWindow failed");
         }
         DialogResult result = printDialog(hwnd, devmodeBase, devnamesBase);
-        User32.INSTANCE.CloseWindow(hwnd);
-        User32.INSTANCE.DestroyWindow(hwnd);
+        // boolean rc = User32.INSTANCE.CloseWindow(hwnd);
+        // System.out.printf("CloseWindow %b\n", rc);
+        // rc = User32.INSTANCE.DestroyWindow(hwnd);
+        // System.out.printf("DestroyWindow %b\n", rc);
         return result;
     }
 

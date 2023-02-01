@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import dev.myclinic.vertx.drawer.form.Form;
 import dev.myclinic.vertx.drawer.form.Page;
-import dev.myclinic.vertx.drawer.form.Rect;
 import dev.myclinic.vertx.drawerform2.forms.CovidVac2ndShot;
 import dev.myclinic.vertx.drawerform2.forms.HoumonKango;
+import dev.myclinic.vertx.drawerform2.forms.HoumonKangoRehab;
 import dev.myclinic.vertx.drawer.*;
 import dev.myclinic.vertx.drawer.pdf.PdfPrinter;
 import dev.myclinic.vertx.drawerform2.forms.Refer;
@@ -34,6 +34,11 @@ public class Main {
             case "houmon-kango": {
                 HoumonKango houmonKango = new HoumonKango();
                 form = houmonKango.createForm();
+                break;
+            }
+            case "houmon-kango-rehab": {
+                HoumonKangoRehab houmonKangoRehab = new HoumonKangoRehab();
+                form = houmonKangoRehab.createForm();
                 break;
             }
             case "refer": {

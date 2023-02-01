@@ -195,13 +195,14 @@ public class DrawerPrinter {
     }
 
     public DialogResult printDialog(byte[] devmodeBase, byte[] devnamesBase) {
-        HWND hwnd = createWindow();
+        // HWND hwnd = createWindow();
+        HWND hwnd = (HWND)MyKernel32.INSTANCE.GetConsoleWindow();
         if (hwnd == null) {
             throw new RuntimeException("Printer.createWindow failed");
         }
         DialogResult result = printDialog(hwnd, devmodeBase, devnamesBase);
-        User32.INSTANCE.CloseWindow(hwnd);
-        User32.INSTANCE.DestroyWindow(hwnd);
+        // User32.INSTANCE.CloseWindow(hwnd);
+        // User32.INSTANCE.DestroyWindow(hwnd);
         return result;
     }
 

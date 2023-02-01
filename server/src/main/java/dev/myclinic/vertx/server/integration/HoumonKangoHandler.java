@@ -126,6 +126,7 @@ public class HoumonKangoHandler {
                 String kangoRsrc = "houmon-kango-form.json";
                 String rehabRsrc = "houmon-kango-rehab-form.json";
                 String rsrc = markTexts.containsKey("title-rehab") ? rehabRsrc : kangoRsrc;
+                markTexts.remove("title-rehab");
                 URL url = getClass().getClassLoader().getResource(rsrc);
                 Form form = mapper.readValue(url, Form.class);
                 PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();

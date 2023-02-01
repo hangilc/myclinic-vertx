@@ -14,7 +14,8 @@ public class MysqlDataSourceFactory {
     public static DataSource create(MysqlDataSourceConfig mysqlConfig){
         String url = String.format("jdbc:mysql://%s:%d/%s?zeroDateTimeBehavior=convertToNull" +
                         "&noDatetimeStringSync=true&useUnicode=true&characterEncoding=utf8" +
-                        "&useSSL=%s&serverTimezone=JST",
+                        // "&useSSL=%s&serverTimezone=JST",
+                        "&useSSL=%s",
                 mysqlConfig.getHost(), mysqlConfig.getPort(), mysqlConfig.getDatabase(),
                 mysqlConfig.getUseSsl() ? "true" : "false");
         HikariConfig config = new HikariConfig();

@@ -40,9 +40,8 @@ class Data {
     }
 
     void run() throws Exception {
-        if( patientIds == null ) {
-            patientIds =
-                    Service.api.listVisitingPatientIdHavingHokenCall(year, month).execute().body();
+        if (patientIds == null) {
+            patientIds = Service.api.listVisitingPatientIdHavingHokenCall(year, month).execute().body();
         }
         System.err.printf("Patients %d\n", patientIds.size());
         xml.prelude();
@@ -54,7 +53,7 @@ class Data {
                 diseases = diseases.stream()
                         .map(d -> {
                             String endDate = d.disease.endDate;
-                            if( !endDate.equals("0000-00-00") && isDateLater(endDate, year, month) ){
+                            if (!endDate.equals("0000-00-00") && isDateLater(endDate, year, month)) {
                                 d.disease.endDate = "0000-00-00";
                             }
                             return d;
@@ -67,7 +66,7 @@ class Data {
                     System.err.printf("Multiple hoken for (%d) %s%s\n", patient.patientId,
                             patient.lastName, patient.firstName);
                 }
-                for(HokenIds hokenIds: bundles.keySet()){
+                for (HokenIds hokenIds : bundles.keySet()) {
                     List<VisitFull2DTO> bundle = bundles.get(hokenIds);
                     outPatient(patient, bundle, diseases);
                 }
@@ -75,7 +74,7 @@ class Data {
         });
     }
 
-    private boolean isDateLater(String date, int year, int month){
+    private boolean isDateLater(String date, int year, int month) {
         LocalDate d = LocalDate.parse(date);
         LocalDate nextDay = LocalDate.of(year, month, 1).plus(1, ChronoUnit.MONTHS);
         return d.isEqual(nextDay) || d.isAfter(nextDay);
@@ -139,33 +138,34 @@ class Data {
     }
 
     private void outPatient(PatientDTO patient, List<VisitFull2DTO> visits,
-                            List<DiseaseFullDTO> diseases) {
-        if( visits.size() == 0 ){
+            List<DiseaseFullDTO> diseases) {
+        if (visits.size() == 0) {
             System.err.println("No visits.");
             System.err.println(patient);
         }
         HokenDTO hoken = visits.get(0).hoken;
         String futan = getFutan(patient, hoken);
         String shouki = getShouki(visits.stream().map(v -> v.visit.visitId).collect(toList()));
-        if( !shouki.isEmpty() ){
+        if (!shouki.isEmpty()) {
             System.err.printf("症状詳記（%d）%s%s：%s\n", patient.patientId,
                     patient.lastName, patient.firstName, shouki);
         }
         xml.unindent();
         xml.element("請求", () -> {
+            String shubetsu = getShubetsu(hoken);
             xml.element("患者番号", patient.patientId);
-            xml.element("保険種別", getShubetsu(hoken));
+            xml.element("保険種別", shubetsu);
             xml.element("保険単独", getTandoku(hoken));
             xml.element("保険負担", futan);
             xml.element("給付割合", getKyuufuWari(futan));
             {
-                String tokki = tokkiJikou(patient, futan);
-                if( !tokki.isEmpty() ){
+                String tokki = tokkiJikou(patient, futan, shubetsu);
+                if (!tokki.isEmpty()) {
                     xml.element("特記事項", tokki);
                 }
             }
             outHokenDetail(hoken);
-            xml.element("氏名", patient.lastName + patient.firstName);
+            xml.element("氏名", patient.lastName + "　" + patient.firstName);
             xml.element("性別",
                     patient.sex.equals("F") ? "女" : "男");
             xml.element("生年月日", patient.birthday);
@@ -175,26 +175,30 @@ class Data {
         });
     }
 
-    private String tokkiJikou(PatientDTO patient, String futan){
+    private String tokkiJikou(PatientDTO patient, String futan, String shubetsu) {
         LocalDate birthday = LocalDate.parse(patient.birthday);
         int age = RcptUtil.calcRcptAge(birthday.getYear(), birthday.getMonthValue(),
                 birthday.getDayOfMonth(), year, month);
-        if( age >= 70 ){
+        if (age >= 70) {
             String tokkijikou = Gendogaku.getTokijikou(patient.patientId);
-            if( tokkijikou != null ){
+            if (tokkijikou != null) {
                 return tokkijikou;
-            } else {
+            } else if (shubetsu.equals("後期高齢")) {
                 if (futan.equals("高齢７")) {
                     return "26区ア";
+                } else if (futan.equals("高齢８")) {
+                    return "41区カ";
                 } else {
-                    return "29区エ";
+                    return "42区キ";
                 }
+            } else {
+                return "29区エ";
             }
         }
         return "";
     }
 
-    private String getShouki(List<Integer> visitIds){
+    private String getShouki(List<Integer> visitIds) {
         try {
             List<ShoukiDTO> shoukiList = Service.api.batchGetShoukiCall(visitIds).execute().body();
             return shoukiList.stream().map(s -> s.shouki).collect(Collectors.joining("\n"));
@@ -344,7 +348,7 @@ class Data {
             xml.element("名称", DiseaseUtil.getFullName(disease));
             xml.element("診療開始日", disease.disease.startDate);
             if (disease.disease.endReason != DiseaseEndReason.NotEnded.getCode()) {
-                if( !disease.disease.endDate.equals("0000-00-00") ) { // for backward compatibility
+                if (!disease.disease.endDate.equals("0000-00-00")) { // for backward compatibility
                     xml.element("転帰", getTenki(disease.disease.endReason));
                     xml.element("診療終了日", disease.disease.endDate);
                 }
@@ -373,7 +377,8 @@ class Data {
             List<ShinryouFullDTO> shinryouList = new ArrayList<>(visit.shinryouList);
             List<Integer> shinryouIds = shinryouList.stream().map(s -> s.shinryou.shinryouId).collect(toList());
             Map<Integer, ShinryouAttrDTO> shinryouAttrMap = collectShinryouAttr(shinryouIds);
-            shinryouList.sort(Comparator.comparingInt(a -> a.shinryou.shinryouId)); // for backwork compatibility (not necessary for funtion)
+            shinryouList.sort(Comparator.comparingInt(a -> a.shinryou.shinryouId)); // for backwork compatibility (not
+                                                                                    // necessary for funtion)
             shinryouList.forEach(s -> outShinryou(s, shinryouAttrMap.get(s.shinryou.shinryouId)));
             List<Integer> drugIds = visit.drugs.stream().map(d -> d.drug.drugId).collect(toList());
             Map<Integer, DrugAttrDTO> drugAttrMap = collectDrugAttr(drugIds);
@@ -382,11 +387,11 @@ class Data {
         });
     }
 
-    private Map<Integer, ShinryouAttrDTO> collectShinryouAttr(List<Integer> shinryouIds){
+    private Map<Integer, ShinryouAttrDTO> collectShinryouAttr(List<Integer> shinryouIds) {
         Map<Integer, ShinryouAttrDTO> map = new HashMap<>();
         try {
             List<ShinryouAttrDTO> list = Service.api.batchGetShinryouAttrCall(shinryouIds).execute().body();
-            for(ShinryouAttrDTO attr: list){
+            for (ShinryouAttrDTO attr : list) {
                 map.put(attr.shinryouId, attr);
             }
         } catch (IOException e) {
@@ -395,11 +400,11 @@ class Data {
         return map;
     }
 
-    private Map<Integer, DrugAttrDTO> collectDrugAttr(List<Integer> drugIds){
+    private Map<Integer, DrugAttrDTO> collectDrugAttr(List<Integer> drugIds) {
         Map<Integer, DrugAttrDTO> map = new HashMap<>();
         try {
             List<DrugAttrDTO> list = Service.api.batchGetDrugAttrCall(drugIds).execute().body();
-            for(DrugAttrDTO attr: list){
+            for (DrugAttrDTO attr : list) {
                 map.put(attr.drugId, attr);
             }
         } catch (IOException e) {
@@ -420,8 +425,8 @@ class Data {
             if (!shinryou.master.kensaGroup.equals("00")) {
                 xml.element("検査グループ", shinryou.master.kensaGroup);
             }
-            if( attr != null ){
-                if( attr.tekiyou != null ){
+            if (attr != null) {
+                if (attr.tekiyou != null) {
                     xml.element("摘要", attr.tekiyou);
                 }
             }
@@ -443,11 +448,11 @@ class Data {
             category = drugCategory.getKanji();
         }
         String tekiyouTmp = null;
-        if( attr != null && attr.tekiyou != null && !attr.tekiyou.isEmpty() ){
+        if (attr != null && attr.tekiyou != null && !attr.tekiyou.isEmpty()) {
             tekiyouTmp = attr.tekiyou;
         }
         final String tekiyou = tekiyouTmp;
-        xml.element(category, () ->{
+        xml.element(category, () -> {
             xml.element("医薬品コード", drug.master.iyakuhincode);
             xml.element("名称", drug.master.name);
             xml.element("用量", NumberUtil.formatNumber(drug.drug.amount));
@@ -460,17 +465,17 @@ class Data {
             } else if (drugCategory == DrugCategory.Tonpuku) {
                 xml.element("回数", drug.drug.days);
             }
-            if( tekiyou != null ){
+            if (tekiyou != null) {
                 xml.element("摘要", tekiyou);
             }
         });
     }
 
-    private void outConduct(ConductFullDTO conduct){
+    private void outConduct(ConductFullDTO conduct) {
         xml.element("行為", () -> {
-            if( conduct.gazouLabel != null ){
+            if (conduct.gazouLabel != null) {
                 String label = conduct.gazouLabel.label;
-                if( !label.isEmpty() ){
+                if (!label.isEmpty()) {
                     xml.element("ラベル", label);
                 }
             }
@@ -481,16 +486,16 @@ class Data {
         });
     }
 
-    private String getConductKindLabel(int code){
+    private String getConductKindLabel(int code) {
         ConductKind kind = ConductKind.fromCode(code);
-        if( kind == null ){
+        if (kind == null) {
             throw new RuntimeException("Unknown conduct kind: " + code);
         } else {
             return kind.getKanjiRep();
         }
     }
 
-    private void outConductShinryou(ConductShinryouFullDTO shinryou){
+    private void outConductShinryou(ConductShinryouFullDTO shinryou) {
         xml.element("診療", () -> {
             xml.element("診療コード", shinryou.master.shinryoucode);
             xml.element("名称", shinryou.master.name);
@@ -498,7 +503,7 @@ class Data {
         });
     }
 
-    private void outConductDrug(ConductDrugFullDTO drug){
+    private void outConductDrug(ConductDrugFullDTO drug) {
         xml.element("薬剤", () -> {
             xml.element("医薬品コード", drug.master.iyakuhincode);
             xml.element("名称", drug.master.name);
@@ -508,7 +513,7 @@ class Data {
         });
     }
 
-    private void outConductKizai(ConductKizaiFullDTO kizai){
+    private void outConductKizai(ConductKizaiFullDTO kizai) {
         xml.element("器材", () -> {
             xml.element("器材コード", kizai.master.kizaicode);
             xml.element("名称", kizai.master.name);
@@ -516,6 +521,6 @@ class Data {
             xml.element("単位", kizai.master.unit);
             xml.element("金額", "%.2f", kizai.master.kingaku);
         });
-   }
+    }
 
 }

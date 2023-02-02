@@ -27,3 +27,4 @@ master-files/
 !appoint/src/main/sql/*.sql
 scala/.bsp/
 scala/project/
+.bloop/

@@ -112,7 +112,7 @@ public class HoumonKangoRehab {
 
     private void drawTitle(Box paperBox) {
         c.setFont("title");
-        c.textAt("訪問看護リハビリテーション指示書", paperBox.getCx(), 13, HAlign.Center, VAlign.Top);
+        c.textAt("訪問リハビリテーション診療情報提供書", paperBox.getCx(), 13, HAlign.Center, VAlign.Top);
         // c.textAt("介護予防訪問看護・訪問看護指示書", paperBox.getCx(), 13, HAlign.Center, VAlign.Top);
         // c.textAt("在宅患者訪問点滴注射指示書", paperBox.getCx(), 18, HAlign.Center, VAlign.Top);
     }

@@ -183,7 +183,7 @@ class Data {
             String tokkijikou = Gendogaku.getTokijikou(patient.patientId);
             if (tokkijikou != null) {
                 return tokkijikou;
-            } else if (shubetsu.equals("後期高齢")) {
+            } else /* if (shubetsu.equals("後期高齢")) */{
                 if (futan.equals("高齢７")) {
                     return "26区ア";
                 } else if (futan.equals("高齢８")) {
@@ -191,9 +191,12 @@ class Data {
                 } else {
                     return "42区キ";
                 }
-            } else {
-                return "29区エ";
-            }
+            }/* else { // 高齢受給（限度額適用認定証なし）
+                // return "29区エ";
+                if( futan.equals("高齢７") ){
+                    return ""
+                }
+            } */
         }
         return "";
     }

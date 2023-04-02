@@ -112,10 +112,7 @@ public class HoumonKangoHandler {
     public void handleCreateShijisho(RoutingContext ctx) {
         vertx.<String>executeBlocking(promise -> {
             try {
-                String rsrc = "houmon-kango-form.json";
-                URL url = getClass().getClassLoader().getResource(rsrc);
-                Form form = mapper.readValue(url, Form.class);
-                DrawerCompiler c = new DrawerCompiler();
+                // DrawerCompiler c = new DrawerCompiler();
                 Map<String, Object> params = mapper.readValue(
                         ctx.getBody().getBytes(),
                         new TypeReference<>() {
@@ -126,6 +123,12 @@ public class HoumonKangoHandler {
                     String value = params.get(key).toString();
                     markTexts.put(key, value);
                 }
+                String kangoRsrc = "houmon-kango-form.json";
+                String rehabRsrc = "houmon-kango-rehab-form.json";
+                String rsrc = markTexts.containsKey("title-rehab") ? rehabRsrc : kangoRsrc;
+                markTexts.remove("title-rehab");
+                URL url = getClass().getClassLoader().getResource(rsrc);
+                Form form = mapper.readValue(url, Form.class);
                 PdfPrinter.FormPageData pageData = new PdfPrinter.FormPageData();
                 pageData.pageId = 0;
                 pageData.markTexts = markTexts;

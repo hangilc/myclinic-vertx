@@ -30,6 +30,7 @@ class CmdArgs {
         System.err.println("--help");
         System.err.println("Available forms are: ");
         System.err.println("houmon-kango");
+        System.err.println("houmon-kango-rehab");
         System.err.println("refer");
     }
 

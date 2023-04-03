@@ -208,6 +208,8 @@ public class FileBasedAppConfig implements AppConfig {
     }
 
     private <T> Future<T> fromYamlFile(File file, TypeReference<T> typeRef) {
+        System.out.println("fromYamlFile");
+        System.out.println(file.toString());
         Promise<T> promise = Promise.promise();
         vertx.executeBlocking(
                 promise2 -> {

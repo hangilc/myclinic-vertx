@@ -159,7 +159,7 @@ class Data {
             xml.element("保険負担", futan);
             xml.element("給付割合", getKyuufuWari(futan));
             {
-                String tokki = tokkiJikou(patient, futan, shubetsu);
+                String tokki = tokkiJikou(patient, futan, shubetsu, hoken);
                 if (!tokki.isEmpty()) {
                     xml.element("特記事項", tokki);
                 }
@@ -175,7 +175,7 @@ class Data {
         });
     }
 
-    private String tokkiJikou(PatientDTO patient, String futan, String shubetsu) {
+    private String tokkiJikou(PatientDTO patient, String futan, String shubetsu, HokenDTO hoken) {
         LocalDate birthday = LocalDate.parse(patient.birthday);
         int age = RcptUtil.calcRcptAge(birthday.getYear(), birthday.getMonthValue(),
                 birthday.getDayOfMonth(), year, month);
@@ -183,7 +183,7 @@ class Data {
             String tokkijikou = Gendogaku.getTokijikou(patient.patientId);
             if (tokkijikou != null) {
                 return tokkijikou;
-            } else /* if (shubetsu.equals("後期高齢")) */{
+            } else if (shubetsu.equals("後期高齢")) {
                 if (futan.equals("高齢７")) {
                     return "26区ア";
                 } else if (futan.equals("高齢８")) {
@@ -191,7 +191,16 @@ class Data {
                 } else {
                     return "42区キ";
                 }
-            }/* else { // 高齢受給（限度額適用認定証なし）
+            } else if( hoken.shahokokuho != null && hoken.shahokokuho.kourei > 0 ){
+                switch(hoken.shahokokuho.kourei) {
+                    case 3: return "26区ア";
+                    case 2: return "29区エ";
+                    case 1: return "29区エ";
+                    default: return "";
+                }
+            }
+            
+            /* else { // 高齢受給（限度額適用認定証なし）
                 // return "29区エ";
                 if( futan.equals("高齢７") ){
                     return ""

@@ -82,6 +82,13 @@ public class Data {
         return m.find();
     }
 
+    private final static Pattern prescOnlinePattern = Pattern.compile("オンライン対応");
+
+    public static boolean isOnline(String content){
+        Matcher m = prescOnlinePattern.matcher(content);
+        return m.find();
+    }
+
     private final static Pattern pharmaFaxPattern = Pattern.compile("^(.+)にファックス（(\\+\\d+)）");
 
     public static class PharmaFax {

@@ -49,6 +49,7 @@ public class Presc {
         List<TextDTO> texts = client.listText(visitId);
         String presc = null;
         boolean is0410 = false;
+        boolean isOnline = false;
         Data.PharmaFax pharmaFax = null;
         boolean handled = false;
         for(TextDTO text: texts) {
@@ -62,6 +63,9 @@ public class Presc {
                 presc = text.content;
                 if( Data.is0410Presc(text.content) ){
                     is0410 = true;
+                }
+                if( Data.isOnline(text.content) ){
+                    isOnline = true;
                 }
                 continue;
             }
@@ -80,7 +84,7 @@ public class Presc {
                 }
             }
         }
-        if( presc != null && is0410 && !handled ){
+        if( presc != null && (is0410 || isOnline) && !handled ){
             if( pharmaFax == null ){
                 throw new PrescError("missing-pharmacy", "ファックス先の薬局が指定されていません。", visitId);
                 //throw new RuntimeException(String.format("Unknown presc handling: visitId=%d", visitId));

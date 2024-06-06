@@ -27,7 +27,7 @@ public class Server {
     public void setAllowedOrigins(String allowedOrigins){
         this.allowedOrigins = allowedOrigins.split(",");
         for(String ori: this.allowedOrigins){
-            System.out.printf("alloed-origin: %s\n", ori);
+            System.out.printf("allowed-origin: %s\n", ori);
         }
     }
 

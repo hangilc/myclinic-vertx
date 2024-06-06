@@ -344,7 +344,7 @@ public class Main {
                 handleSettingDELETE(handler);
                 break;
             case "OPTIONS":
-                handler.respondToOptions(List.of("GET", "OPTIONS"));
+                handler.respondToOptions(List.of("GET", "OPTIONS", "POST", "PUT", "DELETE"));
                 break;
             default:
                 handler.sendError("Invalid setting access.");
@@ -441,6 +441,7 @@ public class Main {
     private static void handleSettingDELETE(Handler handler) throws IOException {
         String[] subpaths = handler.getSubPaths();
         if (subpaths.length == 1) {
+            handler.allowCORS();
             String name = subpaths[0];
             deleteSetting(name);
             handler.sendJson(true);

@@ -395,6 +395,7 @@ public class Main {
     private static void handleSettingPOST(Handler handler) throws IOException {
         String[] subpaths = handler.getSubPaths();
         if (subpaths.length == 1) {
+            handler.allowCORS();
             String name = subpaths[0];
             if (settingExists(name)) {
                 handler.sendError(String.format("%s はすでに存在します。", name));

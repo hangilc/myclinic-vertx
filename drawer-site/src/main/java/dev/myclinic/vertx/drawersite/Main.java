@@ -394,6 +394,13 @@ public class Main {
             handler.sendJson(detail);
             return;
         }
+        if (subpaths.length == 2 && subpaths[1].equals("aux")) {
+            handler.allowCORS();
+            String name = subpaths[0];
+            PrintSetting setting = getSetting(name);
+            handler.sendJson(setting.auxSetting);
+            return;
+        }
         handler.sendError("Invalid setting access.");
     }
 

@@ -3,6 +3,7 @@ package dev.myclinic.vertx.drawersite;
 class CmdArgs {
 
     public boolean isDev;
+    public String bind = "127.0.0.1";
     public int port = 48080;
     public String allowedOrigins = null;
 
@@ -10,6 +11,8 @@ class CmdArgs {
         System.err.println("usage: drawer-site [OPTIONS]");
         System.err.println("  --dev                     serve static files from dev directory");
         System.err.println("  --allowed-origins VALUE   allowed origins (comma separated)");
+        System.err.println("  --bind ADDR");
+        System.err.println("  --port PORT");
         System.err.println("         If not specified, defaults to MYCLINIC_DRAWER_SITE_ALLOWED_ORIGINS env var.");
         System.err.println("         If neither is specified, default to '*'");
     }
@@ -21,6 +24,13 @@ class CmdArgs {
             switch(arg){
                 case "--dev": {
                     cmdArgs.isDev = true;
+                    break;
+                }
+                case "--bind": {
+                    cmdArgs.bind = args[++i];
+                    if( cmdArgs.bind.equals("0.0.0.0") ){
+                        cmdArgs.bind = null;
+                    }
                     break;
                 }
                 case "--port": {

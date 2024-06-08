@@ -20,7 +20,11 @@ public class Server {
     private String[] allowedOrigins;
 
     public Server(String bind, int port, int backlog) throws IOException {
-        this.httpServer = HttpServer.create(new InetSocketAddress(bind, port), backlog);
+        if( bind == null ){
+            this.httpServer = HttpServer.create(new InetSocketAddress(port), backlog);
+        } else {
+            this.httpServer = HttpServer.create(new InetSocketAddress(bind, port), backlog);
+        }
         this.httpServer.setExecutor(createExecutor());
     }
 

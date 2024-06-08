@@ -29,7 +29,8 @@ public class Main {
     public static void main(String[] args) throws Exception {
         CmdArgs cmdArgs = CmdArgs.parse(args);
         Main.allowedOrigins = resolveAllowedOrigins(cmdArgs);
-        String bind = "127.0.0.1";
+        String bind = cmdArgs.bind;
+        // String bind = "127.0.0.1";
         int port = cmdArgs.port;
         Server server = new Server(bind, port, 6);
         server.setAllowedOrigins(Main.allowedOrigins);
@@ -264,6 +265,7 @@ public class Main {
         if (handler.getMethod().equals("GET")) {
             String[] subpaths = handler.getSubPaths();
             if (subpaths.length == 0) {
+                handler.allowCORS();
                 DrawerPrinter printer = new DrawerPrinter();
                 DrawerPrinter.DialogResult result = printer.printDialog();
                 if (result.ok) {
@@ -277,8 +279,10 @@ public class Main {
                 return;
             }
             if (subpaths.length == 1) {
+                handler.allowCORS();
                 String name = subpaths[0];
                 PrintSetting current = getSetting(name);
+                System.out.println(current.toString());
                 DrawerPrinter printer = new DrawerPrinter();
                 DrawerPrinter.DialogResult result = printer.printDialog(
                         current.devmode, current.devnames
@@ -369,6 +373,7 @@ public class Main {
             return;
         }
         if (subpaths.length == 1) {
+            handler.allowCORS();
             String name = subpaths[0];
             handler.sendJson(getSetting(name));
             return;
@@ -411,6 +416,7 @@ public class Main {
     private static void handleSettingPUT(Handler handler) throws IOException {
         String[] subpaths = handler.getSubPaths();
         if (subpaths.length == 1) {
+            handler.allowCORS();
             String name = subpaths[0];
             if (!settingExists(name)) {
                 handler.sendError("No such setting: " + name);
@@ -423,6 +429,7 @@ public class Main {
             return;
         }
         if (subpaths.length == 2 && subpaths[1].equals("aux")) {
+            handler.allowCORS();
             String name = subpaths[0];
             if (!settingExists(name)) {
                 handler.sendError("No such setting: " + name);

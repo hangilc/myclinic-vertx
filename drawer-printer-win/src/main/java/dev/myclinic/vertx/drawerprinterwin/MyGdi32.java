@@ -29,4 +29,5 @@ public interface MyGdi32 extends StdCallLibrary, WinUser, WinNT {
     HPEN ExtCreatePen(int penStyle, int width, LOGBRUSH brush, int cStyle, DWORD[] pStyle);
     boolean Ellipse(HDC hdc, int left, int top, int right, int bottom);
     HANDLE GetStockObject(int fnObject);
+    boolean SetWorldTransform(HDC hdc, XFORM lpxf);
 }

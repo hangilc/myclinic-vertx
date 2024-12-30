@@ -73,6 +73,10 @@ public class DrawerPrinter {
         if (hdc == null) {
             throw new RuntimeException("createDC faield");
         }
+        XFORM xform = new XFORM();
+        xform.eM11 = 2.0f;
+        xform.eM22 = 2.0f;
+        MyGdi32.INSTANCE.SetWorldTransform(hdc, xform);
         int jobId = beginPrint(hdc);
         if (jobId <= 0) {
             throw new RuntimeException("StartDoc failed");

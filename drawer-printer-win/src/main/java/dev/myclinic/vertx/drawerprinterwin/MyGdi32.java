@@ -30,4 +30,6 @@ public interface MyGdi32 extends StdCallLibrary, WinUser, WinNT {
     boolean Ellipse(HDC hdc, int left, int top, int right, int bottom);
     HANDLE GetStockObject(int fnObject);
     boolean SetWorldTransform(HDC hdc, XFORM lpxf);
+    boolean GetWorldTransform(HDC hdc, XFORM lpxf);
+    int SetGraphicsMode(HDC hdc, int iMODE);
 }

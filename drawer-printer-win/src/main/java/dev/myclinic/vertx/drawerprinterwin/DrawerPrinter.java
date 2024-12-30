@@ -73,15 +73,27 @@ public class DrawerPrinter {
         if (hdc == null) {
             throw new RuntimeException("createDC faield");
         }
-        XFORM xform = new XFORM();
-        xform.eM11 = 2.0f;
-        xform.eM22 = 2.0f;
-        MyGdi32.INSTANCE.SetWorldTransform(hdc, xform);
         int jobId = beginPrint(hdc);
+        int gmoderesult = MyGdi32.INSTANCE.SetGraphicsMode(hdc, 2);
+        XFORM xform = new XFORM();
+        xform.eM11 = 0.2f;
+        xform.eM12 = 0.0f;
+        xform.eM21 = 0.0f;
+        xform.eM22 = 0.2f;
+        xform.eDx = 0.0f;
+        xform.eDy = 0.0f;
+        boolean txresult = MyGdi32.INSTANCE.SetWorldTransform(hdc, xform);
+        XFORM probe = new XFORM();
+        boolean proberesult = MyGdi32.INSTANCE.GetWorldTransform(hdc, probe);
+        System.out.println("GetWorldTransform");
+        System.out.println(proberesult);
+        System.out.println(probe);
         if (jobId <= 0) {
             throw new RuntimeException("StartDoc failed");
         }
         int dpix = getDpix(hdc);
+        System.out.println("dpix");
+        System.out.println(dpix);
         int dpiy = getDpiy(hdc);
         MyGdi32.INSTANCE.SetBkMode(hdc, PrinterConsts.TRANSPARENT);
         GDI32.INSTANCE.SelectObject(hdc, MyGdi32.INSTANCE.GetStockObject(PrinterConsts.HOLLOW_BRUSH));
@@ -212,10 +224,6 @@ public class DrawerPrinter {
             throw new RuntimeException("Printer.createWindow failed");
         }
         DialogResult result = printDialog(hwnd, devmodeBase, devnamesBase);
-        // boolean rc = User32.INSTANCE.CloseWindow(hwnd);
-        // System.out.printf("CloseWindow %b\n", rc);
-        // rc = User32.INSTANCE.DestroyWindow(hwnd);
-        // System.out.printf("DestroyWindow %b\n", rc);
         return result;
     }
 

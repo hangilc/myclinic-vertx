@@ -78,8 +78,20 @@ public class DrawerPrinter {
         if (auxSetting != null) {
             xform.eDx = (float) calcCoord(auxSetting.getDx(), dpix);
             xform.eDy = (float) calcCoord(auxSetting.getDy(), dpiy);
-            xform.eM11 = (float) auxSetting.getScale();
-            xform.eM22 = (float) auxSetting.getScale();
+            double scale = auxSetting.getScale();
+            double rotateDegree = auxSetting.getRotate();
+            if( rotateDegree == 0 ){
+                xform.eM11 = (float) scale;
+                xform.eM22 = (float) scale;
+            } else {
+                double rotate = rotateDegree / 180 * Math.PI;
+                double cos = Math.cos(rotate);
+                double sin = Math.sin(rotate);
+                xform.eM11 = (float)(scale * cos);
+                xform.eM12 = (float)(- scale * sin);
+                xform.eM21 = (float)(scale * sin);
+                xform.eM22 = (float)(scale * cos);
+            }
         } else {
             xform.eM11 = 1.0f;
             xform.eM22 = 1.0f;

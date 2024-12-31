@@ -5,6 +5,7 @@ public class AuxSetting {
     private double dx = 0.0;
     private double dy = 0.0;
     private double scale = 1.0;
+    private double rotate = 0.0;
 
     public double getDx() {
         return dx;
@@ -30,12 +31,21 @@ public class AuxSetting {
         this.scale = scale;
     }
 
+    public double getRotate() {
+        return this.rotate;
+    }
+
+    public void setRotate(double rotate) {
+        this.rotate = rotate;
+    }
+
     @Override
     public String toString() {
         return "AuxSetting{" +
                 "dx=" + dx +
                 ", dy=" + dy +
                 ", scale=" + scale +
+                ", rotate=" + rotate +
                 '}';
     }
 }

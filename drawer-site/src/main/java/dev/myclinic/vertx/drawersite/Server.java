@@ -6,7 +6,6 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.URI;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 

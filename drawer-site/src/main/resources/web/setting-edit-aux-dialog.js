@@ -12,7 +12,10 @@ let tmpl = `
     dy: <input name="dy" class="x-dy" size="6"/> mm
 </div>
 <div>
-    scale: <input name="scale" class="x-scale" size="6"/> mm
+    scale: <input name="scale" class="x-scale" size="6"/>
+</div>
+<div>
+    rotate: <input name="rotate" class="x-rotate" size="6"/> degree
 </div>
 `;
 
@@ -29,6 +32,7 @@ export async function openEditAuxSettingDialog(name, auxSetting, api){
     map.dx.value = auxSetting.dx;
     map.dy.value = auxSetting.dy;
     map.scale.value = auxSetting.scale;
+    map.rotate.value = auxSetting.rotate;
     dialog.getCommands().innerHTML = commandsTmpl;
     let cmap = parseElement(dialog.getCommands());
     cmap.enter.addEventListener("click", async event => await doEnter(dialog, name, map, api));
@@ -49,7 +53,11 @@ async function doEnter(dialog, name, map, api){
     if( scale === false ){
         return;
     }
-    let aux = {dx, dy, scale};
+    let rotate = getNumberValue(map.rotate);
+    if( rotate === false ){
+        return;
+    }
+    let aux = {dx, dy, scale, rotate};
     console.log(aux);
     await api.updateAuxSetting(name, aux);
     dialog.close(true);

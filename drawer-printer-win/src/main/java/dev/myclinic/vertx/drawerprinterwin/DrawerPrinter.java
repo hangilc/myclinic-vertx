@@ -25,9 +25,10 @@ import dev.myclinic.vertx.drawer.*;
 
 public class DrawerPrinter {
 
-    private double dx = 0;
-    private double dy = 0;
-    private double scale = 1.0;
+    // private double dx = 0;
+    // private double dy = 0;
+    // private double scale = 1.0;
+    private XFORM xform = new XFORM();
 
     public void print(List<Op> ops) {
         DialogResult dialogResult = printDialog(null, null);
@@ -64,37 +65,30 @@ public class DrawerPrinter {
                 return;
             }
         }
-        if (auxSetting != null) {
-            setDx(auxSetting.getDx());
-            setDy(auxSetting.getDy());
-            setScale(auxSetting.getScale());
-        }
         HDC hdc = createDC(devnames, devmode);
         if (hdc == null) {
             throw new RuntimeException("createDC faield");
         }
         int jobId = beginPrint(hdc);
-        int gmoderesult = MyGdi32.INSTANCE.SetGraphicsMode(hdc, 2);
-        XFORM xform = new XFORM();
-        xform.eM11 = 0.2f;
-        xform.eM12 = 0.0f;
-        xform.eM21 = 0.0f;
-        xform.eM22 = 0.2f;
-        xform.eDx = 0.0f;
-        xform.eDy = 0.0f;
-        boolean txresult = MyGdi32.INSTANCE.SetWorldTransform(hdc, xform);
-        XFORM probe = new XFORM();
-        boolean proberesult = MyGdi32.INSTANCE.GetWorldTransform(hdc, probe);
-        System.out.println("GetWorldTransform");
-        System.out.println(proberesult);
-        System.out.println(probe);
         if (jobId <= 0) {
             throw new RuntimeException("StartDoc failed");
         }
         int dpix = getDpix(hdc);
-        System.out.println("dpix");
-        System.out.println(dpix);
         int dpiy = getDpiy(hdc);
+        if (auxSetting != null) {
+            xform.eDx = (float) calcCoord(auxSetting.getDx(), dpix);
+            xform.eDy = (float) calcCoord(auxSetting.getDy(), dpiy);
+            xform.eM11 = (float) auxSetting.getScale();
+            xform.eM22 = (float) auxSetting.getScale();
+        } else {
+            xform.eM11 = 1.0f;
+            xform.eM22 = 1.0f;
+        }
+        MyGdi32.INSTANCE.SetGraphicsMode(hdc, 2);
+        boolean setwtxresult = MyGdi32.INSTANCE.SetWorldTransform(hdc, xform);
+        if( !setwtxresult ){
+            System.out.println("SetWorldTransform failed.");
+        }
         MyGdi32.INSTANCE.SetBkMode(hdc, PrinterConsts.TRANSPARENT);
         GDI32.INSTANCE.SelectObject(hdc, MyGdi32.INSTANCE.GetStockObject(PrinterConsts.HOLLOW_BRUSH));
         for (List<Op> ops : pages) {
@@ -109,18 +103,6 @@ public class DrawerPrinter {
         boolean rc;
         rc = deleteDC(hdc);
         System.out.printf("deleteDC %b\n", rc);
-    }
-
-    public void setDx(double dx) {
-        this.dx = dx;
-    }
-
-    public void setDy(double dy) {
-        this.dy = dy;
-    }
-
-    public void setScale(double scale) {
-        this.scale = scale;
     }
 
     public static final int PD_ALLPAGES = 0x00000000;
@@ -227,11 +209,15 @@ public class DrawerPrinter {
         return result;
     }
 
-    private HWND createWindow() {
-        HMODULE hInst = Kernel32.INSTANCE.GetModuleHandle(null);
-        return User32.INSTANCE.CreateWindowEx(WinUser.WS_OVERLAPPED, windowClassName, "Dummy Window",
-                0, 0, 0, 0, 0, null, null, hInst, null);
-    }
+    // private HWND createWindow() {
+    //     HMODULE hInst = Kernel32.INSTANCE.GetModuleHandle(null);
+    //     return User32.INSTANCE.CreateWindowEx(WinUser.WS_OVERLAPPED, windowClassName, "Dummy Window",
+    //             0, 0, 0, 0, 0, null, null, hInst, null);
+    // }
+
+    // private boolean disposeWindow(HWND hwnd) {
+    //     return User32.INSTANCE.DestroyWindow(hwnd);
+    // }
 
     private HANDLE allocHandle(byte[] data) {
         UINT flag = new UINT(MyKernel32.GMEM_MOVEABLE);
@@ -241,10 +227,6 @@ public class DrawerPrinter {
         ptr.write(0, data, 0, data.length);
         MyKernel32.INSTANCE.GlobalUnlock(handle);
         return handle;
-    }
-
-    private boolean disposeWindow(HWND hwnd) {
-        return User32.INSTANCE.DestroyWindow(hwnd);
     }
 
     private byte[] copyDevNamesData(Pointer pDevNames) {
@@ -283,9 +265,9 @@ public class DrawerPrinter {
         return MyGdi32.INSTANCE.EndDoc(hdc);
     }
 
-    private int abortPrint(HDC hdc) {
-        return MyGdi32.INSTANCE.AbortDoc(hdc);
-    }
+    // private int abortPrint(HDC hdc) {
+    //     return MyGdi32.INSTANCE.AbortDoc(hdc);
+    // }
 
     private void startPage(HDC hdc) {
         int ret = MyGdi32.INSTANCE.StartPage(hdc);
@@ -395,21 +377,21 @@ public class DrawerPrinter {
             switch (op.getOpCode()) {
                 case MoveTo: {
                     OpMoveTo opMoveTo = (OpMoveTo) op;
-                    int x = calcCoord(opMoveTo.getX() * scale + dx, dpix);
-                    int y = calcCoord(opMoveTo.getY() * scale + dy, dpiy);
+                    int x = calcCoord(opMoveTo.getX(), dpix);
+                    int y = calcCoord(opMoveTo.getY(), dpiy);
                     moveTo(hdc, x, y);
                     break;
                 }
                 case LineTo: {
                     OpLineTo opLineTo = (OpLineTo) op;
-                    int x = calcCoord(opLineTo.getX() * scale + dx, dpix);
-                    int y = calcCoord(opLineTo.getY() * scale + dy, dpiy);
+                    int x = calcCoord(opLineTo.getX(), dpix);
+                    int y = calcCoord(opLineTo.getY(), dpiy);
                     lineTo(hdc, x, y);
                     break;
                 }
                 case CreateFont: {
                     OpCreateFont opCreateFont = (OpCreateFont) op;
-                    int size = (int) (mmToInch(opCreateFont.getSize() * scale) * dpiy);
+                    int size = (int) (mmToInch(opCreateFont.getSize()) * dpiy);
                     HFONT font = createFont(opCreateFont.getFontName(), size, opCreateFont.getWeight(),
                             opCreateFont.isItalic());
                     fontMap.put(opCreateFont.getName(), font);
@@ -429,14 +411,14 @@ public class DrawerPrinter {
                     for (int i = 0; i < chars.length; i++) {
                         double cx, cy;
                         if (i >= xs.size()) {
-                            cx = xs.get(xs.size() - 1) * scale + dx;
+                            cx = xs.get(xs.size() - 1);
                         } else {
-                            cx = xs.get(i) * scale + dx;
+                            cx = xs.get(i);
                         }
                         if (i >= ys.size()) {
-                            cy = ys.get(ys.size() - 1) * scale + dy;
+                            cy = ys.get(ys.size() - 1);
                         } else {
-                            cy = ys.get(i) * scale + dy;
+                            cy = ys.get(i);
                         }
                         int x = calcCoord(cx, dpix);
                         int y = calcCoord(cy, dpiy);
@@ -452,10 +434,10 @@ public class DrawerPrinter {
                 }
                 case CreatePen: {
                     OpCreatePen opCreatePen = (OpCreatePen) op;
-                    int width = calcCoord(opCreatePen.getWidth() * scale, dpix);
+                    int width = calcCoord(opCreatePen.getWidth(), dpix);
                     int rgb = RGB(opCreatePen.getR(), opCreatePen.getG(), opCreatePen.getB());
                     List<Integer> penStyle = opCreatePen.getPenStyle().stream()
-                            .map(d -> calcCoord(d * scale, dpix)).collect(toList());
+                            .map(d -> calcCoord(d, dpix)).collect(toList());
                     HPEN pen = extCreatePen(width, rgb, penStyle);
                     penMap.put(opCreatePen.getName(), pen);
                     break;
@@ -471,10 +453,10 @@ public class DrawerPrinter {
                     double cx = opCircle.getCx();
                     double cy = opCircle.getCy();
                     double r = opCircle.getR();
-                    int left = calcCoord((cx - r) * scale + dx, dpix);
-                    int top = calcCoord((cy - r) * scale + dy, dpiy);
-                    int right = calcCoord((cx + r) * scale + dx, dpix);
-                    int bottom = calcCoord((cy + r) * scale + dy, dpiy);
+                    int left = calcCoord((cx - r), dpix);
+                    int top = calcCoord((cy - r), dpiy);
+                    int right = calcCoord((cx + r), dpix);
+                    int bottom = calcCoord((cy + r), dpiy);
                     ellipse(hdc, left, top, right, bottom);
                     break;
                 }

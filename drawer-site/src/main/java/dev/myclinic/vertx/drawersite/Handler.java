@@ -29,25 +29,25 @@ public class Handler {
         parseQuery(exchange.getRequestURI().getQuery());
     }
 
-    public void setAllowedOrigins(String allowedOrigins){
+    public void setAllowedOrigins(String allowedOrigins) {
         this.allowedOrigins = allowedOrigins;
     }
 
-    private void parseQuery(String query){
-        if( query == null || query.isEmpty() ){
+    private void parseQuery(String query) {
+        if (query == null || query.isEmpty()) {
             return;
         }
         String[] parts = query.split("&");
-        for(String part: parts){
-            if( part.isEmpty() ){
+        for (String part : parts) {
+            if (part.isEmpty()) {
                 continue;
             }
             String[] subs = part.split("=");
             String key, value;
-            if( subs.length == 1 ){
+            if (subs.length == 1) {
                 key = subs[0];
                 value = "";
-            } else if( subs.length == 2 ){
+            } else if (subs.length == 2) {
                 key = subs[0];
                 value = subs[1];
             } else {
@@ -75,12 +75,12 @@ public class Handler {
         if (contextPath.endsWith("/")) {
             String subpath = exchange.getRequestURI().getPath().substring(contextPath.length());
             if (subpath.equals("")) {
-                return new String[]{};
+                return new String[] {};
             } else {
                 return subpath.split("/");
             }
         } else {
-            return new String[]{};
+            return new String[] {};
         }
     }
 
@@ -88,17 +88,17 @@ public class Handler {
         return exchange.getRequestBody().readAllBytes();
     }
 
-    public String getParam(String key){
+    public String getParam(String key) {
         return queryMap.get(key);
     }
 
     public void allowCORS() {
-        if( allowedOrigins != null ){
+        if (allowedOrigins != null) {
             exchange.getResponseHeaders().add("Access-Control-Allow-Origin", allowedOrigins);
         }
     }
 
-    private void doError(Throwable e){
+    private void doError(Throwable e) {
         try {
             String message = e.getMessage();
             byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
@@ -110,12 +110,17 @@ public class Handler {
         }
     }
 
-    public void respondToOptions(List<String> allowedMethods){
+    public void respondToOptions(List<String> allowedMethods) {
         try {
             exchange.getResponseHeaders().add("content-type", "text/plain");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+            if (allowedOrigins != null) {
+                exchange.getResponseHeaders().add("Access-Control-Allow-Origin", allowedOrigins);
+            }
+            // exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
             exchange.getResponseHeaders().add("Access-Control-Allow-Methods",
                     String.join(",", allowedMethods));
+            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Private-Network", "true");
             exchange.sendResponseHeaders(204, -1);
             exchange.getResponseBody().close();
         } catch (Throwable e) {
@@ -125,7 +130,7 @@ public class Handler {
         }
     }
 
-    public void send(InputStream is, long size, String contentType){
+    public void send(InputStream is, long size, String contentType) {
         try {
             exchange.getResponseHeaders().add("content-type", contentType);
             exchange.sendResponseHeaders(200, size);
@@ -190,11 +195,11 @@ public class Handler {
         }
     }
 
-    public void sendJsonBytes(byte[] bytes){
+    public void sendJsonBytes(byte[] bytes) {
         send(bytes, "application/json");
     }
 
-    public void sendEncodedJson(byte[] bytes){
+    public void sendEncodedJson(byte[] bytes) {
         send(bytes, "application/json");
     }
 
@@ -208,9 +213,9 @@ public class Handler {
         mimeMap.put(".jpeg", "image/jpeg");
     }
 
-    private String resolveContentType(String path){
+    private String resolveContentType(String path) {
         int index = path.lastIndexOf('.');
-        if( index >= 0 ){
+        if (index >= 0) {
             String ext = path.substring(index).toLowerCase();
             return mimeMap.getOrDefault(ext, "application/octet-stream");
         } else {
@@ -227,17 +232,17 @@ public class Handler {
     public void sendFile(String path) throws IOException {
         File file = new File(path);
         long size = file.length();
-        try(InputStream is = new FileInputStream(path)){
+        try (InputStream is = new FileInputStream(path)) {
             send(is, size, resolveContentType(path));
         }
     }
 
-    public void sendRedirect(String redirectPath){
+    public void sendRedirect(String redirectPath) {
         try {
             exchange.getResponseHeaders().add("Location", redirectPath);
             exchange.sendResponseHeaders(308, 0);
             exchange.getResponseBody().close();
-        } catch(Throwable e){
+        } catch (Throwable e) {
             e.printStackTrace();
         } finally {
             exchange.close();

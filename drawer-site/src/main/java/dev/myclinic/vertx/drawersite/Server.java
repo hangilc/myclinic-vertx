@@ -53,7 +53,7 @@ public class Server {
                     for(String ori: allowedOrigins){
                         System.out.printf("allowed: %s, origin: %s\n", ori, origin);
                         if( "*".equals(ori) ){
-                            allowedOrigin = "*";
+                            allowedOrigin = origin;
                             break;
                         } else if( ori.equals(origin) ){
                             allowedOrigin = origin;
